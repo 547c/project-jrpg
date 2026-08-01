@@ -1,61 +1,67 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://fsq0jb1kmjlb"]
 
-[ext_resource type="Script" path="res://ui/dialogue_box.gd" id="1_box"]
+[ext_resource type="Script" uid="uid://cstp3jgoomqma" path="res://ui/dialogue_box.gd" id="1_box"]
 
-[node name="DialogueBox" type="Control"]
-visible = false
-anchor_left = 0.0
+[node name="DialogueBox" type="Control" unique_id=2000661388]
+layout_mode = 3
+anchors_preset = 12
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 24.0
-offset_top = -220.0
-offset_right = -24.0
-offset_bottom = -24.0
+offset_left = 5.0
+offset_top = -642.0
+offset_right = -43.0
+offset_bottom = -388.0
+grow_horizontal = 2
+grow_vertical = 0
 mouse_filter = 2
 script = ExtResource("1_box")
 
-[node name="Panel" type="Panel" parent="."]
+[node name="Panel" type="Panel" parent="." unique_id=548070171]
 layout_mode = 1
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 
-[node name="VBox" type="VBoxContainer" parent="Panel"]
+[node name="VBox" type="VBoxContainer" parent="Panel" unique_id=342809686]
 layout_mode = 1
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 16.0
 offset_top = 12.0
 offset_right = -16.0
-offset_bottom = -12.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_constants/separation = 8
 
-[node name="SpeakerLabel" type="Label" parent="Panel/VBox"]
+[node name="SpeakerLabel" type="Label" parent="Panel/VBox" unique_id=1763241064]
 layout_mode = 2
 text = "Speaker"
 
-[node name="TextLabel" type="Label" parent="Panel/VBox"]
+[node name="TextLabel" type="Label" parent="Panel/VBox" unique_id=2124029575]
 layout_mode = 2
 size_flags_vertical = 3
-autowrap_mode = 3
 text = "Dialogue text"
+autowrap_mode = 3
 
-[node name="OptionsContainer" type="VBoxContainer" parent="Panel/VBox"]
+[node name="OptionsContainer" type="VBoxContainer" parent="Panel/VBox" unique_id=323829973]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="OptionButton1" type="Button" parent="Panel/VBox/OptionsContainer"]
+[node name="OptionButton1" type="Button" parent="Panel/VBox/OptionsContainer" unique_id=276540770]
 layout_mode = 2
 text = "Option 1"
 
-[node name="OptionButton2" type="Button" parent="Panel/VBox/OptionsContainer"]
+[node name="OptionButton2" type="Button" parent="Panel/VBox/OptionsContainer" unique_id=329394203]
 layout_mode = 2
 text = "Option 2"
 
-[node name="OptionButton3" type="Button" parent="Panel/VBox/OptionsContainer"]
+[node name="OptionButton3" type="Button" parent="Panel/VBox/OptionsContainer" unique_id=1763947372]
 layout_mode = 2
 text = "Option 3"
 
-[node name="OptionButton4" type="Button" parent="Panel/VBox/OptionsContainer"]
+[node name="OptionButton4" type="Button" parent="Panel/VBox/OptionsContainer" unique_id=140446060]
 layout_mode = 2
 text = "Option 4"

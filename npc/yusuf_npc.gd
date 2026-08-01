@@ -1,8 +1,14 @@
 extends NPC
 
-# 유서프 전용 설정: 대화 트리/시작 노드/met 플래그를 고정한 뒤 기본 NPC 초기화를 이어서 실행
+const SPRITE_FRAMES := preload("res://npc/yusuf_sprite_frames.tres")
+
+# 유서프 전용 설정: 대화 트리/시작 노드/met 플래그/스프라이트를 고정한 뒤 기본 NPC 초기화를 이어서 실행
 func _ready() -> void:
 	dialogue_tree = DialogueData.YUSUF_DIALOGUE
 	dialogue_start_id = "yusuf_greeting"
 	met_flag_name = "met_yusuf"
 	super._ready()
+
+	$AnimatedSprite2D.sprite_frames = SPRITE_FRAMES
+	$AnimatedSprite2D.scale = Vector2(1.3594, 1.3594) # 플레이어(1.45)와의 비율 유지: 1.6875 * (1.45/1.8)
+	$AnimatedSprite2D.play("idle")

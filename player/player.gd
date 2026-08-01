@@ -1,6 +1,6 @@
 extends CharacterBody2D
 
-@export var speed: float = 100.0
+@export var speed: float = 200.0
 
 var _direction_queue: Array[String] = []
 var _last_facing: String = "down"

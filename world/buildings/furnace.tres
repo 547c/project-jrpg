@@ -1,0 +1,7 @@
+[gd_resource type="AtlasTexture" load_steps=2 format=3]
+
+[ext_resource type="Texture2D" uid="uid://cqt42yv1ljryp" path="res://assets/Pixel Crawler - Free Pack/Environment/Structures/Stations/Furnace/Furnace.png" id="1_tex"]
+
+[resource]
+atlas = ExtResource("1_tex")
+region = Rect2(53, 133, 38, 59)
