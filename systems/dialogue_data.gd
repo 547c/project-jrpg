@@ -538,3 +538,58 @@ const MIA_DIALOGUE: Array = [
 		"options": [],
 	},
 ]
+
+# 동굴 수호자 조우 대화 트리
+const GUARDIAN_DIALOGUE: Array = [
+	{
+		"id": "guardian_greeting",
+		"speaker": "???",
+		"text": "...공기가 무거워진다. 어둠 속에서 무언가가 천천히 몸을 일으킨다.",
+		"is_decisive": false,
+		"options": [
+			{"label": "[계속]", "next_id": "guardian_greeting2"},
+		],
+	},
+	{
+		"id": "guardian_greeting2",
+		"speaker": "수호자",
+		"text": "...오랜만이군, 침입자여. 아니... 오랜만인 건, 나 자신인가.",
+		"is_decisive": false,
+		"options": [
+			{"label": "[계속]", "next_id": "guardian_choice"},
+		],
+	},
+	{
+		"id": "guardian_choice",
+		"speaker": "수호자",
+		"text": "물길은 내가 막고 있는 것이 아니다... 내가, 물길 그 자체가 되어버린 것뿐. 자, 결정해라. 나를 부수고 지나갈 텐가, 아니면 나에게 말을 걸어볼 텐가.",
+		"is_decisive": true,
+		"options": [
+			{"label": "[싸운다]", "next_id": "guardian_fight_result", "flag_to_set": "resolved_guardian_peacefully", "flag_value": false},
+			{"label": "[대화로 설득한다]", "next_id": "guardian_peace_result", "flag_to_set": "resolved_guardian_peacefully", "flag_value": true},
+		],
+	},
+	{
+		"id": "guardian_fight_result",
+		"speaker": "???",
+		"text": "짧고 격렬한 싸움 끝에, 수호자는 빛의 조각들로 흩어져 사라진다. 막혀 있던 물길이 거칠게 터져 나온다. 승리했지만... 어딘가 씁쓸한 기분이 남는다.",
+		"is_decisive": false,
+		"options": [],
+	},
+	{
+		"id": "guardian_peace_result",
+		"speaker": "수호자",
+		"text": "...그래. 그거면 됐다. 나는 그저... 누군가 알아봐 주길 기다렸던 건지도 모르지. 이제, 쉴 수 있겠군.",
+		"is_decisive": false,
+		"options": [
+			{"label": "[계속]", "next_id": "guardian_peace_result2"},
+		],
+	},
+	{
+		"id": "guardian_peace_result2",
+		"speaker": "???",
+		"text": "수호자의 몸이 옅어지며 물길 속으로 스며든다. 막혀 있던 물이 다시, 천천히 흐르기 시작한다.",
+		"is_decisive": false,
+		"options": [],
+	},
+]

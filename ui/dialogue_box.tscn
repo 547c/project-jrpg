@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://cstp3jgoomqma" path="res://ui/dialogue_box.gd" id="1_box"]
 
 [node name="DialogueBox" type="Control" unique_id=2000661388]
+visible = false
 layout_mode = 3
 anchors_preset = 12
 anchor_top = 1.0

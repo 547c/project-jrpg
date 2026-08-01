@@ -2,9 +2,14 @@
 
 [ext_resource type="Script" uid="uid://c0qufkd1nkcst" path="res://world/spawn_point.gd" id="1_spawn"]
 [ext_resource type="Script" uid="uid://pt071dvpdb2d" path="res://world/area_transition.gd" id="2_trans"]
+[ext_resource type="PackedScene" path="res://ui/dialogue_box.tscn" id="3_dlgbox"]
+[ext_resource type="Script" path="res://world/guardian_encounter.gd" id="4_guardian"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_door"]
 size = Vector2(40, 600)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_guardian"]
+radius = 60.0
 
 [node name="Cave" type="Node2D" unique_id=1527639492]
 
@@ -26,3 +31,14 @@ destination_spawn_point = "ForestSpawnFromCave"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="ToForest" unique_id=1522130238]
 shape = SubResource("RectangleShape2D_door")
+
+[node name="GuardianEncounter" type="Area2D" parent="."]
+position = Vector2(600, 300)
+script = ExtResource("4_guardian")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="GuardianEncounter"]
+shape = SubResource("CircleShape2D_guardian")
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="DialogueBox" parent="UI" instance=ExtResource("3_dlgbox")]
