@@ -22,18 +22,18 @@ func _ready() -> void:
 	_place_initial_player()
 
 
-# 메인 씬이 트리에 들어온 뒤, 현재 씬의 첫 스폰 지점으로 플레이어를 이동하고 방문 플래그를 기록
+# 메인 씬이 트리에 들어온 뒤, 현재 씬의 "최초 스폰" 지점으로 플레이어를 이동하고 방문 플래그를 기록
 func _place_initial_player() -> void:
 	var current := get_tree().current_scene
 	if current != null:
 		_record_visited(current.scene_file_path)
 
-	var spawn_points := get_tree().get_nodes_in_group("spawn_points")
-	if spawn_points.is_empty():
+	var initial_spawn := _find_initial_spawn_point()
+	if initial_spawn == null:
+		push_warning("SceneManager: is_initial_spawn=true인 스폰 지점을 찾지 못했습니다")
 		return
 
-	var first_spawn := spawn_points[0] as SpawnPoint
-	_move_player_to(first_spawn.spawn_point_name)
+	_move_player_to(initial_spawn.spawn_point_name)
 
 
 # 배경 씬 교체 요청을 받아, 물리 콜백(쿼리 플러시)이 끝난 뒤 안전하게 처리하도록 지연시킴
@@ -95,5 +95,14 @@ func _find_spawn_point(spawn_point_name: String) -> SpawnPoint:
 	for point in get_tree().get_nodes_in_group("spawn_points"):
 		var sp := point as SpawnPoint
 		if sp != null and sp.spawn_point_name == spawn_point_name:
+			return sp
+	return null
+
+
+# "spawn_points" 그룹에서 is_initial_spawn=true로 표시된 스폰 지점을 탐색 (트리 순서에 의존하지 않음)
+func _find_initial_spawn_point() -> SpawnPoint:
+	for point in get_tree().get_nodes_in_group("spawn_points"):
+		var sp := point as SpawnPoint
+		if sp != null and sp.is_initial_spawn:
 			return sp
 	return null

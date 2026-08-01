@@ -27,7 +27,7 @@ spawn_point_name = "ForestSpawnFromCave"
 position = Vector2(20, 300)
 script = ExtResource("2_trans")
 destination_scene_path = "res://world/village.tscn"
-destination_spawn_point = "VillageSpawn"
+destination_spawn_point = "VillageSpawnFromForest"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="ToVillage" unique_id=1071104634]
 shape = SubResource("RectangleShape2D_door")

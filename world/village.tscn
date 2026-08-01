@@ -5033,6 +5033,12 @@ layer_5/tile_data = PackedInt32Array(3145840, 17, 0, 4391021, 196618, 4, 4391020
 position = Vector2(807, 777)
 script = ExtResource("1_spawn")
 spawn_point_name = "VillageSpawn"
+is_initial_spawn = true
+
+[node name="VillageSpawnFromForest" type="Marker2D" parent="."]
+position = Vector2(1450, 317)
+script = ExtResource("1_spawn")
+spawn_point_name = "VillageSpawnFromForest"
 
 [node name="ToForest" type="Area2D" parent="." unique_id=763820564]
 position = Vector2(1587, 310)
