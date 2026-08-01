@@ -17,6 +17,7 @@ config/icon="res://icon.svg"
 
 [autoload]
 
+GameState="*res://systems/game_state.gd"
 SceneManager="*uid://knvov1w0ek8m"
 
 [display]

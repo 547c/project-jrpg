@@ -2,6 +2,13 @@ extends Node
 
 const PLAYER_SCENE: PackedScene = preload("res://player/player.tscn")
 
+# 씬 경로별로 GameState에 기록할 방문 플래그를 매핑
+const VISITED_FLAGS: Dictionary = {
+	"res://world/village.tscn": "visited_village",
+	"res://world/forest.tscn": "visited_forest",
+	"res://world/cave.tscn": "visited_cave",
+}
+
 var _player: Node2D
 var _is_changing_scene: bool = false
 
@@ -15,8 +22,12 @@ func _ready() -> void:
 	_place_initial_player()
 
 
-# 메인 씬이 트리에 들어온 뒤, 현재 씬의 첫 스폰 지점으로 플레이어를 이동
+# 메인 씬이 트리에 들어온 뒤, 현재 씬의 첫 스폰 지점으로 플레이어를 이동하고 방문 플래그를 기록
 func _place_initial_player() -> void:
+	var current := get_tree().current_scene
+	if current != null:
+		_record_visited(current.scene_file_path)
+
 	var spawn_points := get_tree().get_nodes_in_group("spawn_points")
 	if spawn_points.is_empty():
 		return
@@ -45,6 +56,9 @@ func _apply_scene_change(scene_path: String, spawn_point_name: String) -> void:
 	get_tree().root.add_child(new_scene)
 	get_tree().current_scene = new_scene
 
+	# 전환한 구역의 방문 여부를 GameState에 기록
+	_record_visited(scene_path)
+
 	# 새로 추가된 트리거가 물리 서버에 아직 반영되지 않은(오래된) 플레이어 위치로 겹침 판정을 하는 것을 막기 위해 잠시 꺼둠
 	var new_triggers := get_tree().get_nodes_in_group("area_transitions")
 	for trigger in new_triggers:
@@ -68,6 +82,12 @@ func _move_player_to(spawn_point_name: String) -> void:
 		return
 
 	_player.global_position = spawn.global_position
+
+
+# 씬 경로에 대응하는 방문 플래그가 있으면 GameState에 true로 기록
+func _record_visited(scene_path: String) -> void:
+	if VISITED_FLAGS.has(scene_path):
+		GameState.set_flag(VISITED_FLAGS[scene_path], true)
 
 
 # "spawn_points" 그룹에서 이름이 일치하는 SpawnPoint를 탐색
