@@ -4,7 +4,10 @@ A small 2D top-down JRPG built in Godot 4.7, developed as a solo learning projec
 
 ## Why this project
 
-I got into playing open-world RPGs since childhood, and what pulled me in wasn't just the combat or graphics but t was how the world seemed to remember what I did and react to it. NPCs referenced pat choices, areas changed based on progress. I wanted to understand how that actually works under the hood, which is part of what led me to study CS. In high school I built a visual novel with branching choices in Ren'Py, but never implemented a system that accumulated state across choices — that was a skill gap, not a tool limitation. This project is a direct attempt to close that gap by designing a state system myself.
+I got into playing open-world RPGs since childhood, and what pulled me in wasn't just the combat or graphics but t was how the world seemed to remember what I did and react to it.
+NPCs referenced past choices, areas changed based on progress. I wanted to understand how that actually works under the hood, which is part of what led me to study CS.
+In high school I built a visual novel with branching choices in Ren'Py, but never implemented a system that accumulated state across choices — that was a skill gap, not a tool limitation.
+This project is a direct attempt to close that gap by designing a state system myself.
 
 ## Goals
 

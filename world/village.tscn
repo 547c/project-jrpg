@@ -1,0 +1,28 @@
+[gd_scene format=3 uid="uid://dami8mlp3sahn"]
+
+[ext_resource type="Script" uid="uid://c0qufkd1nkcst" path="res://world/spawn_point.gd" id="1_spawn"]
+[ext_resource type="Script" uid="uid://pt071dvpdb2d" path="res://world/area_transition.gd" id="2_trans"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_door"]
+size = Vector2(40, 600)
+
+[node name="Village" type="Node2D" unique_id=969706249]
+
+[node name="Background" type="ColorRect" parent="." unique_id=61374037]
+offset_right = 800.0
+offset_bottom = 600.0
+color = Color(0.55, 0.78, 0.4, 1)
+
+[node name="VillageSpawn" type="Marker2D" parent="." unique_id=289507150]
+position = Vector2(400, 500)
+script = ExtResource("1_spawn")
+spawn_point_name = "VillageSpawn"
+
+[node name="ToForest" type="Area2D" parent="." unique_id=763820564]
+position = Vector2(780, 300)
+script = ExtResource("2_trans")
+destination_scene_path = "res://world/forest.tscn"
+destination_spawn_point = "ForestSpawnFromVillage"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ToForest" unique_id=542239896]
+shape = SubResource("RectangleShape2D_door")

@@ -13,6 +13,11 @@ const _AXIS_VECTORS := {
 }
 
 
+# Area2D 트리거 등이 플레이어를 식별할 수 있도록 "player" 그룹에 등록
+func _ready() -> void:
+	add_to_group("player")
+
+
 # 매 프레임(물리) 입력 처리, 이동, 애니메이션 갱신을 순서대로 실행
 func _physics_process(_delta: float) -> void:
 	var direction := _get_current_direction()

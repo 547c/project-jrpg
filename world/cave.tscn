@@ -1,0 +1,28 @@
+[gd_scene format=3 uid="uid://djfuu1n5jlx4q"]
+
+[ext_resource type="Script" uid="uid://c0qufkd1nkcst" path="res://world/spawn_point.gd" id="1_spawn"]
+[ext_resource type="Script" uid="uid://pt071dvpdb2d" path="res://world/area_transition.gd" id="2_trans"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_door"]
+size = Vector2(40, 600)
+
+[node name="Cave" type="Node2D" unique_id=1527639492]
+
+[node name="Background" type="ColorRect" parent="." unique_id=1294769855]
+offset_right = 800.0
+offset_bottom = 600.0
+color = Color(0.12, 0.12, 0.16, 1)
+
+[node name="CaveSpawn" type="Marker2D" parent="." unique_id=252872524]
+position = Vector2(160, 300)
+script = ExtResource("1_spawn")
+spawn_point_name = "CaveSpawn"
+
+[node name="ToForest" type="Area2D" parent="." unique_id=697838308]
+position = Vector2(20, 300)
+script = ExtResource("2_trans")
+destination_scene_path = "res://world/forest.tscn"
+destination_spawn_point = "ForestSpawnFromCave"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ToForest" unique_id=1522130238]
+shape = SubResource("RectangleShape2D_door")

@@ -11,9 +11,13 @@ config_version=5
 [application]
 
 config/name="project-jrpg"
-run/main_scene="uid://bqx4n8m1yjprs"
+run/main_scene="uid://dami8mlp3sahn"
 config/features=PackedStringArray("4.7", "Forward Plus")
 config/icon="res://icon.svg"
+
+[autoload]
+
+SceneManager="*uid://knvov1w0ek8m"
 
 [display]
 
@@ -49,5 +53,5 @@ move_right={
 
 [rendering]
 
-rendering_device/driver.windows="d3d12"
 textures/canvas_textures/default_texture_filter=0
+rendering_device/driver.windows="d3d12"
