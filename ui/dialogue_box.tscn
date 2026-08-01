@@ -1,0 +1,61 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://ui/dialogue_box.gd" id="1_box"]
+
+[node name="DialogueBox" type="Control"]
+visible = false
+anchor_left = 0.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = -220.0
+offset_right = -24.0
+offset_bottom = -24.0
+mouse_filter = 2
+script = ExtResource("1_box")
+
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 1
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="VBox" type="VBoxContainer" parent="Panel"]
+layout_mode = 1
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 12.0
+offset_right = -16.0
+offset_bottom = -12.0
+theme_override_constants/separation = 8
+
+[node name="SpeakerLabel" type="Label" parent="Panel/VBox"]
+layout_mode = 2
+text = "Speaker"
+
+[node name="TextLabel" type="Label" parent="Panel/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+autowrap_mode = 3
+text = "Dialogue text"
+
+[node name="OptionsContainer" type="VBoxContainer" parent="Panel/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="OptionButton1" type="Button" parent="Panel/VBox/OptionsContainer"]
+layout_mode = 2
+text = "Option 1"
+
+[node name="OptionButton2" type="Button" parent="Panel/VBox/OptionsContainer"]
+layout_mode = 2
+text = "Option 2"
+
+[node name="OptionButton3" type="Button" parent="Panel/VBox/OptionsContainer"]
+layout_mode = 2
+text = "Option 3"
+
+[node name="OptionButton4" type="Button" parent="Panel/VBox/OptionsContainer"]
+layout_mode = 2
+text = "Option 4"
