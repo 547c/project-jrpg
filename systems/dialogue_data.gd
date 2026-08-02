@@ -6,6 +6,8 @@ extends RefCounted
 #     "id": String,
 #     "speaker": String,
 #     "text": String,
+#     "narration": String,          # 기본 "". 괄호로 된 행동 묘사(지문) — 이탤릭으로 별도 표시됨.
+#                                    # text 없이 narration만 있는 노드(순수 지문)도 가능.
 #     "is_decisive": bool,          # 기본 false. UI 강조(금색 테두리) 용도 — 이 노드가 결정적 질문임을 표시
 #     "options": [
 #         {
@@ -22,8 +24,10 @@ extends RefCounted
 # 즉 결정적 노드는 보통 options에 2개(각각 다른 flag_value)를 넣어, 그중 하나를
 # 고르는 행위 자체가 곧 그 선택이 되도록 구성한다.
 #
-# 노드에 "options"가 없거나 비어 있으면(순수 종료 대사) DialogueBox가 자동으로
-# 기본 "닫기" 버튼 하나를 보여준다 — 매 종료 노드마다 종료용 옵션을 직접 넣을 필요는 없다.
+# 노드에 "options"가 없거나 비어 있을 때:
+# - 노드 최상위에 "next_id": String이 있으면(분기 없는 단순 다음 대사) "[계속]" 버튼을 자동으로 보여준다.
+# - 없으면(진짜 종료 대사) 기본 "닫기" 버튼을 보여준다.
+# 매 노드마다 종료/계속용 옵션을 직접 넣을 필요는 없다.
 #
 # 노드에 "text_if_flag": String을 넣으면, 그 flag가 true일 때 "text"를,
 # false일 때 "text_false"를 보여준다 (조건부 대사용, 둘 다 없으면 생략 가능).
@@ -82,6 +86,7 @@ const ELARA_DIALOGUE: Array = [
 			{"label": "[마을에 대해 묻는다]", "next_id": "elara_village"},
 			{"label": "[그냥 안부를 묻는다]", "next_id": "elara_smalltalk"},
 			{"label": "[다른 사람들에 대해 묻는다]", "next_id": "elara_gossip", "show_if_flag": "met_rohan"},
+			{"label": "[다녀왔다고 말한다]", "next_id": "elara_ending_check", "show_if_flag": "guardian_event_done"},
 		],
 	},
 	{
@@ -115,6 +120,57 @@ const ELARA_DIALOGUE: Array = [
 		"id": "elara_well_help",
 		"speaker": "엘라라",
 		"text": "고맙구나. 숲의 로한을 먼저 만나보게. 동굴 근처에서 뭔가 봤다더군.",
+		"is_decisive": false,
+		"next_id": "elara_well_lore",
+	},
+	{
+		"id": "elara_well_lore",
+		"speaker": "엘라라",
+		"text": "...자네도 들어봤을지 모르겠군. 이 물줄기가, 실은 이 마을만의 것이 아니라는 걸.",
+		"is_decisive": false,
+		"options": [
+			{"label": "[무슨 말씀이세요?]", "next_id": "elara_well_lore2"},
+			{"label": "[알겠어요, 가볼게요]", "next_id": ""},
+		],
+	},
+	{
+		"id": "elara_well_lore2",
+		"speaker": "엘라라",
+		"text": "오래전부터... 세상 곳곳의 물줄기가 하나둘 말라간다고 하더군. 다행히 우리 마을은 여태 무사했는데... 결국 이렇게 됐어.",
+		"is_decisive": false,
+		"options": [
+			{"label": "[걱정되네요]", "next_id": "elara_well_lore3"},
+			{"label": "[제가 알아볼게요]", "next_id": ""},
+		],
+	},
+	{
+		"id": "elara_well_lore3",
+		"speaker": "엘라라",
+		"text": "너무 겁먹진 말게. 자네라면... 뭔가 다를 것 같은 예감이 드는군.",
+		"is_decisive": false,
+		"options": [],
+	},
+	{
+		"id": "elara_ending_check",
+		"speaker": "엘라라",
+		"text": "...끝났나 보군. 그래, 결과는 어떻게 됐나?",
+		"is_decisive": false,
+		"options": [
+			{"label": "[자세히 이야기한다]", "next_id": "elara_ending_reflect"},
+			{"label": "[그냥 결과만 말한다]", "next_id": "elara_ending_trigger"},
+		],
+	},
+	{
+		"id": "elara_ending_reflect",
+		"speaker": "엘라라",
+		"text": "...그런가. 자네가 겪은 일이, 그 물줄기의 비밀에 조금은 가까워진 걸지도 모르겠군.",
+		"is_decisive": false,
+		"next_id": "elara_ending_trigger",
+	},
+	{
+		"id": "elara_ending_trigger",
+		"speaker": "엘라라",
+		"text": "...그래. 이제 좀 지켜봐야겠군.",
 		"is_decisive": false,
 		"options": [],
 	},
@@ -458,7 +514,8 @@ const MIA_DIALOGUE: Array = [
 	{
 		"id": "mia_greeting",
 		"speaker": "미아",
-		"text": "...(플레이어를 보고 몸을 움츠린다)",
+		"text": "...",
+		"narration": "(플레이어를 보고 몸을 움츠린다)",
 		"is_decisive": false,
 		"options": [
 			{"label": "[괜찮아? 무서워하지 않아도 돼]", "next_id": "mia_approach_gentle"},
@@ -522,7 +579,8 @@ const MIA_DIALOGUE: Array = [
 	{
 		"id": "mia_smalltalk",
 		"speaker": "미아",
-		"text": "...(미아가 예전보다 편하게 쳐다본다)",
+		"text": "...",
+		"narration": "(미아가 예전보다 편하게 쳐다본다)",
 		"is_decisive": false,
 		"options": [
 			{"label": "[요즘 어때?]", "next_id": "mia_smalltalk_ok"},
@@ -542,53 +600,128 @@ const MIA_DIALOGUE: Array = [
 # 동굴 수호자 조우 대화 트리
 const GUARDIAN_DIALOGUE: Array = [
 	{
-		"id": "guardian_greeting",
+		"id": "guardian_intro_1",
 		"speaker": "???",
-		"text": "...공기가 무거워진다. 어둠 속에서 무언가가 천천히 몸을 일으킨다.",
+		"text": "",
+		"narration": "(동굴 깊은 곳, 물이 흐르지 않는 마른 수로 앞에 무언가가 웅크리고 있다) ...(낮고 갈라진 숨소리가 동굴 벽을 울린다)",
 		"is_decisive": false,
-		"options": [
-			{"label": "[계속]", "next_id": "guardian_greeting2"},
-		],
+		"next_id": "guardian_intro_2",
 	},
 	{
-		"id": "guardian_greeting2",
-		"speaker": "수호자",
-		"text": "...오랜만이군, 침입자여. 아니... 오랜만인 건, 나 자신인가.",
+		"id": "guardian_intro_2",
+		"speaker": "???",
+		"text": "...누구냐. ...또 나를... 없애러 왔나.",
 		"is_decisive": false,
-		"options": [
-			{"label": "[계속]", "next_id": "guardian_choice"},
-		],
+		"next_id": "guardian_intro_3",
 	},
 	{
-		"id": "guardian_choice",
-		"speaker": "수호자",
-		"text": "물길은 내가 막고 있는 것이 아니다... 내가, 물길 그 자체가 되어버린 것뿐. 자, 결정해라. 나를 부수고 지나갈 텐가, 아니면 나에게 말을 걸어볼 텐가.",
+		"id": "guardian_intro_3",
+		"speaker": "???",
+		"text": "물길은... 내가 막은 게 아니다. 나는... 지키던 것뿐인데... 무언가 잘못됐어. 나조차... 왜 이렇게 됐는지 모르겠다.",
+		"is_decisive": false,
+		"next_id": "guardian_decisive",
+	},
+	{
+		"id": "guardian_decisive",
+		"speaker": "???",
+		"text": "",
+		"narration": "(수호자가 몸을 낮춘다. 싸울 준비를 하는 것처럼도, 체념한 것처럼도 보인다)",
 		"is_decisive": true,
 		"options": [
 			{"label": "[싸운다]", "next_id": "guardian_fight_result", "flag_to_set": "resolved_guardian_peacefully", "flag_value": false},
-			{"label": "[대화로 설득한다]", "next_id": "guardian_peace_result", "flag_to_set": "resolved_guardian_peacefully", "flag_value": true},
+			{"label": "[진정하라고 말을 건다]", "next_id": "guardian_peace_1", "flag_to_set": "resolved_guardian_peacefully", "flag_value": true},
 		],
 	},
 	{
 		"id": "guardian_fight_result",
 		"speaker": "???",
-		"text": "짧고 격렬한 싸움 끝에, 수호자는 빛의 조각들로 흩어져 사라진다. 막혀 있던 물길이 거칠게 터져 나온다. 승리했지만... 어딘가 씁쓸한 기분이 남는다.",
+		"text": "...그런가. ...결국은... 이런 식으로...",
+		"narration": "(짧고 격렬한 충돌 끝에, 수호자가 무너져 내린다)",
+		"is_decisive": false,
+		"next_id": "guardian_fight_aftermath",
+	},
+	{
+		"id": "guardian_fight_aftermath",
+		"speaker": "???",
+		"text": "",
+		"narration": "(물길이 다시 흐르기 시작한다. 하지만 어딘가 씁쓸한 기분이 가시지 않는다)",
 		"is_decisive": false,
 		"options": [],
 	},
 	{
-		"id": "guardian_peace_result",
-		"speaker": "수호자",
-		"text": "...그래. 그거면 됐다. 나는 그저... 누군가 알아봐 주길 기다렸던 건지도 모르지. 이제, 쉴 수 있겠군.",
+		"id": "guardian_peace_1",
+		"speaker": "???",
+		"text": "...진정하라고? ...오랜만에 듣는 말이군. 나는... 원래 이 물길을 지키던 존재였다. 그런데 언제부턴가 힘이 빠져나가고, 대신 이상한 것이 나를 좀먹기 시작했어.",
 		"is_decisive": false,
-		"options": [
-			{"label": "[계속]", "next_id": "guardian_peace_result2"},
-		],
+		"next_id": "guardian_peace_2",
 	},
 	{
-		"id": "guardian_peace_result2",
+		"id": "guardian_peace_2",
 		"speaker": "???",
-		"text": "수호자의 몸이 옅어지며 물길 속으로 스며든다. 막혀 있던 물이 다시, 천천히 흐르기 시작한다.",
+		"text": "...그대라면, 이걸 알아챌 수 있을 것 같군. 나쁜 뜻은 없었다. 그저... 버티는 게 버거웠을 뿐.",
+		"narration": "(수호자의 몸에서 옅은 빛이 스며 나온다 — 미아가 보았던 그 빛과 닮았다)",
+		"is_decisive": false,
+		"next_id": "guardian_peace_hint",
+	},
+	{
+		"id": "guardian_peace_hint",
+		"speaker": "???",
+		"text": "...누군가는 알아챌 줄 알았다. 이 땅 곳곳에서... 같은 일이 일어나고 있다는 걸. 나 혼자만의 일이 아니야.",
+		"narration": "(먼 곳을 응시하는 듯한 눈빛, 더는 설명하지 않는다)",
+		"is_decisive": false,
+		"next_id": "guardian_peace_3",
+	},
+	{
+		"id": "guardian_peace_3",
+		"speaker": "???",
+		"text": "...고맙다. 이제야... 제대로 쉴 수 있겠어.",
+		"narration": "(물길이 다시 흐르기 시작한다. 동굴 안 공기가 한결 가벼워진 느낌이다)",
+		"is_decisive": false,
+		"options": [],
+	},
+]
+
+# 게임 최초 시작 시 한 번만 보여주는 오프닝 인트로 (GameState.seen_opening으로 반복 방지)
+const OPENING_DIALOGUE: Array = [
+	{
+		"id": "opening_1",
+		"speaker": "",
+		"narration": "(아주 오래전, 이 땅 아래에는 셀 수 없이 많은 물줄기가 흘렀다고 한다)",
+		"is_decisive": false,
+		"next_id": "opening_2",
+	},
+	{
+		"id": "opening_2",
+		"speaker": "",
+		"narration": "(사람들은 그 물줄기를 그저 '맥(脈)'이라 불렀다 — 마을과 숲, 산과 들판까지, 세상 모든 살아있는 것들이 그 물에 기대어 살았다)",
+		"is_decisive": false,
+		"next_id": "opening_3",
+	},
+	{
+		"id": "opening_3",
+		"speaker": "",
+		"narration": "(그런데 어느 순간부터, 그 맥이 하나둘 마르기 시작했다. 이유를 아는 이는 아무도 없었다)",
+		"is_decisive": false,
+		"next_id": "opening_4",
+	},
+	{
+		"id": "opening_4",
+		"speaker": "",
+		"narration": "(맥이 마른 땅은 서서히 병들었다. 곡식이 시들고, 짐승이 떠나고, 끝내는 사람도 살 수 없는 곳이 되어갔다고 한다)",
+		"is_decisive": false,
+		"next_id": "opening_5",
+	},
+	{
+		"id": "opening_5",
+		"speaker": "",
+		"narration": "(당신이 머물고 있는 이 작은 마을은, 그런 이야기들과는 먼 곳이었다. 변두리라, 다행히도 지금까지는)",
+		"is_decisive": false,
+		"next_id": "opening_6",
+	},
+	{
+		"id": "opening_6",
+		"speaker": "",
+		"narration": "(그런데 오늘 아침, 마을의 우물이 처음으로 말랐다)",
 		"is_decisive": false,
 		"options": [],
 	},

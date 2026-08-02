@@ -24,6 +24,10 @@ This is not meant to be a polished commercial game. The goal is a small, finishe
 * Assets: Pixel Crawler - Free Pack (CC0, itch.io)
 * AI tooling: Claude Code used as an implementation/debugging assistant. All architectural decisions (state structure, signal design, system scope) are made by me first; Claude Code implements based on those decisions.
 
+## Assets
+
+This project uses a licensed GUI asset pack for UI styling that cannot be redistributed. It is excluded from this repository via .gitignore. See the Screenshots section below for how the interface actually looks.
+
 ## Progress
 
 * [x] 4-directional player movement + locked camera

@@ -1,0 +1,40 @@
+[gd_scene format=3]
+
+[node name="EndingBad" type="Node2D"]
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="Background" type="ColorRect" parent="UI"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.04, 0.04, 0.05, 1)
+
+[node name="VBox" type="VBoxContainer" parent="UI"]
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -320.0
+offset_top = -140.0
+offset_right = 320.0
+offset_bottom = 140.0
+theme_override_constants/separation = 28
+
+[node name="TitleLabel" type="Label" parent="UI/VBox"]
+layout_mode = 2
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 32
+text = "씁쓸한 승리"
+
+[node name="BodyLabel" type="Label" parent="UI/VBox"]
+layout_mode = 2
+horizontal_alignment = 1
+autowrap_mode = 3
+text = "우물은 여전히 말라있다. 수호자는 사라졌지만, 그 대가로 무언가 되돌릴 수 없는 것을 잃은 듯하다.
+엘라라의 눈빛에는 실망이 스쳐 지나간다. 미아는 끝내 당신에게 마음을 열지 않았다.
+마을 사람들은 예전과 같은 눈으로 당신을 보지 않는다."
+
+[node name="FooterLabel" type="Label" parent="UI/VBox"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "게임을 종료하려면 아무 키나 누르세요"

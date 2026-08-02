@@ -19,7 +19,23 @@ func _ready() -> void:
 	_player.z_index = 10 # SceneManager가 오토로드라 배경 씬보다 먼저 그려지므로, 배경 위에 보이도록 z_index를 높임
 	add_child(_player)
 	await get_tree().process_frame
+
+	if not GameState.get_flag("seen_opening"):
+		await _play_opening()
+
 	_place_initial_player()
+
+
+# 오프닝 인트로를 (딱 한 번) 현재 씬의 DialogueBox로 재생하고, 끝날 때까지 기다림
+func _play_opening() -> void:
+	GameState.set_flag("seen_opening", true)
+
+	var dialogue_box := get_tree().get_first_node_in_group("dialogue_box") as DialogueBox
+	if dialogue_box == null:
+		return
+
+	dialogue_box.start_dialogue(DialogueData.OPENING_DIALOGUE, "opening_1")
+	await dialogue_box.dialogue_ended
 
 
 # 메인 씬이 트리에 들어온 뒤, 현재 씬의 "최초 스폰" 지점으로 플레이어를 이동하고 방문 플래그를 기록

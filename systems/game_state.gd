@@ -14,6 +14,8 @@ var flags: Dictionary = {
 	"visited_village": false,              # 마을을 방문했는가
 	"visited_forest": false,               # 숲을 방문했는가
 	"visited_cave": false,                 # 동굴을 방문했는가
+	"seen_opening": false,                 # 오프닝 인트로를 이미 봤는가 (재부팅 시 반복 방지)
+	"guardian_event_done": false,          # 동굴 수호자 조우 이벤트를 이미 겪었는가
 }
 
 

@@ -1,0 +1,40 @@
+[gd_scene format=3]
+
+[node name="EndingGood" type="Node2D"]
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="Background" type="ColorRect" parent="UI"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.06, 0.09, 0.07, 1)
+
+[node name="VBox" type="VBoxContainer" parent="UI"]
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -320.0
+offset_top = -140.0
+offset_right = 320.0
+offset_bottom = 140.0
+theme_override_constants/separation = 28
+
+[node name="TitleLabel" type="Label" parent="UI/VBox"]
+layout_mode = 2
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 32
+text = "다시, 생명이 흐르다"
+
+[node name="BodyLabel" type="Label" parent="UI/VBox"]
+layout_mode = 2
+horizontal_alignment = 1
+autowrap_mode = 3
+text = "우물에서 다시 맑은 물이 솟아오른다. 엘라라는 오랜만에 편안한 얼굴로 당신을 바라본다.
+마을 사람들의 눈빛에서 경계심 대신 온기가 느껴진다.
+맥은 다시 흐르기 시작했다 — 그리고 당신은, 이 마을의 일부가 되었다."
+
+[node name="FooterLabel" type="Label" parent="UI/VBox"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "게임을 종료하려면 아무 키나 누르세요"

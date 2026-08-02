@@ -41,6 +41,11 @@ theme_override_constants/separation = 8
 layout_mode = 2
 text = "Speaker"
 
+[node name="NarrationLabel" type="Label" parent="Panel/VBox"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Narration"
+
 [node name="TextLabel" type="Label" parent="Panel/VBox" unique_id=2124029575]
 layout_mode = 2
 size_flags_vertical = 3
@@ -66,3 +71,10 @@ text = "Option 3"
 [node name="OptionButton4" type="Button" parent="Panel/VBox/OptionsContainer" unique_id=140446060]
 layout_mode = 2
 text = "Option 4"
+
+[node name="OptionButton5" type="Button" parent="Panel/VBox/OptionsContainer"]
+layout_mode = 2
+text = "Option 5"
+
+[node name="BleepPlayer" type="AudioStreamPlayer" parent="."]
+volume_db = -8.0

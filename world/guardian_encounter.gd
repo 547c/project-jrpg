@@ -1,6 +1,6 @@
 extends Area2D
 
-const DIALOGUE_START_ID := "guardian_greeting"
+const DIALOGUE_START_ID := "guardian_intro_1"
 const RETURN_SCENE_PATH := "res://world/forest.tscn"
 const RETURN_SPAWN_POINT := "ForestSpawnFromCave"
 
