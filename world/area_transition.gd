@@ -10,7 +10,10 @@ func _ready() -> void:
 	add_to_group("area_transitions")
 
 
-# 겹친 대상이 플레이어일 때만 목적지 씬으로 전환
+# 겹친 대상이 플레이어일 때만 목적지 씬으로 전환.
+# 씬 전환 억제 구간(방금 로드된 직후)에는 오래된 겹침 판정을 무시한다
 func _on_body_entered(body: Node2D) -> void:
+	if SceneManager.is_transition_suppressed():
+		return
 	if body.is_in_group("player"):
 		SceneManager.change_scene(destination_scene_path, destination_spawn_point)

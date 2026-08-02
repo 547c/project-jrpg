@@ -1,0 +1,124 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://ui/pause_menu.gd" id="1_pause"]
+[ext_resource type="Texture2D" path="res://assets/GUI/MedievalUiMega/medieval.png" id="2_medieval"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_panel_wood"]
+atlas = ExtResource("2_medieval")
+region = Rect2(516, 207, 119, 50)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_panel"]
+texture = SubResource("AtlasTexture_panel_wood")
+texture_margin_left = 20.0
+texture_margin_top = 15.0
+texture_margin_right = 20.0
+texture_margin_bottom = 15.0
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_button_wood"]
+atlas = ExtResource("2_medieval")
+region = Rect2(656, 206, 63, 51)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_button_normal"]
+texture = SubResource("AtlasTexture_button_wood")
+texture_margin_left = 14.0
+texture_margin_top = 14.0
+texture_margin_right = 14.0
+texture_margin_bottom = 14.0
+
+[node name="PauseMenu" type="CanvasLayer"]
+layer = 100
+script = ExtResource("1_pause")
+
+[node name="Root" type="Control" parent="." groups=["pause_menu"]]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Dim" type="ColorRect" parent="Root"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0.6)
+
+[node name="Panel" type="Panel" parent="Root"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -160.0
+offset_top = -190.0
+offset_right = 160.0
+offset_bottom = 190.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxTexture_panel")
+
+[node name="VBox" type="VBoxContainer" parent="Root/Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 28.0
+offset_top = 24.0
+offset_right = -28.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 12
+
+[node name="TitleLabel" type="Label" parent="Root/Panel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_font_sizes/font_size = 22
+horizontal_alignment = 1
+text = "일시정지"
+
+[node name="ContinueButton" type="Button" parent="Root/Panel/VBox"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+texture_filter = 1
+theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+text = "계속하기"
+
+[node name="SaveButton" type="Button" parent="Root/Panel/VBox"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+texture_filter = 1
+theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+text = "저장하기"
+
+[node name="LoadButton" type="Button" parent="Root/Panel/VBox"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+texture_filter = 1
+theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+text = "불러오기"
+
+[node name="TitleButton" type="Button" parent="Root/Panel/VBox"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+texture_filter = 1
+theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+text = "타이틀로"
+
+[node name="Toast" type="Label" parent="Root/Panel/VBox"]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.9, 0.55, 1)
+horizontal_alignment = 1
+text = ""

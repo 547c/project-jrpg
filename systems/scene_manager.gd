@@ -14,6 +14,14 @@ const VISITED_FLAGS: Dictionary = {
 
 var _player: Node2D
 var _is_changing_scene: bool = false
+var _transitions_suppressed: bool = false
+
+
+# 씬 전환 직후에는 트리거를 무시해야 하는지 여부 (area_transition이 조회).
+# monitoring을 잠시 꺼도 물리 서버가 이미 큐에 넣어둔 오래된 body_entered가 재활성화 시점에
+# 뒤늦게 발행되어 엉뚱한 전환을 일으킬 수 있어, 콜백 단에서 한 번 더 방어한다
+func is_transition_suppressed() -> bool:
+	return _transitions_suppressed
 
 
 # 타이틀 화면의 PLAY 버튼에서 호출. 플레이어를 생성하고 타이틀 화면을 마을 씬으로 교체한 뒤,
@@ -90,16 +98,28 @@ func _place_initial_player() -> void:
 	_move_player_to(initial_spawn.spawn_point_name)
 
 
-# 배경 씬 교체 요청을 받아, 물리 콜백(쿼리 플러시)이 끝난 뒤 안전하게 처리하도록 지연시킴
+# 배경 씬 교체 요청을 받아, 물리 콜백(쿼리 플러시)이 끝난 뒤 안전하게 처리하도록 지연시킴.
+# 이름 있는 스폰 지점으로 플레이어를 이동한다 (일반적인 구역 이동용)
 func change_scene(scene_path: String, spawn_point_name: String) -> void:
 	if _is_changing_scene:
 		return
 	_is_changing_scene = true
-	_apply_scene_change.call_deferred(scene_path, spawn_point_name)
+	_apply_scene_change.call_deferred(scene_path, spawn_point_name, false, Vector2.ZERO)
 
 
-# 실제 배경 씬 교체와 플레이어 이동을 수행 (call_deferred로 호출되어 물리 콜백 밖에서 실행됨)
-func _apply_scene_change(scene_path: String, spawn_point_name: String) -> void:
+# 이름 있는 스폰 지점 대신 정확한 좌표로 플레이어를 배치하며 씬을 전환 (세이브 로드용)
+func change_scene_to_position(scene_path: String, position: Vector2) -> void:
+	if _is_changing_scene:
+		return
+	_is_changing_scene = true
+	_apply_scene_change.call_deferred(scene_path, "", true, position)
+
+
+# 실제 배경 씬 교체와 플레이어 이동을 수행 (call_deferred로 호출되어 물리 콜백 밖에서 실행됨).
+# use_exact_position이 true면 exact_position 좌표로, 아니면 spawn_point_name 스폰 지점으로 이동
+func _apply_scene_change(scene_path: String, spawn_point_name: String, use_exact_position: bool, exact_position: Vector2) -> void:
+	_transitions_suppressed = true
+
 	var old_scene := get_tree().current_scene
 	if old_scene != null:
 		get_tree().root.remove_child(old_scene)
@@ -118,14 +138,40 @@ func _apply_scene_change(scene_path: String, spawn_point_name: String) -> void:
 	for trigger in new_triggers:
 		(trigger as Area2D).monitoring = false
 
-	_move_player_to(spawn_point_name)
+	if use_exact_position:
+		_player.global_position = exact_position
+	else:
+		_move_player_to(spawn_point_name)
 
 	await get_tree().physics_frame
 
 	for trigger in new_triggers:
 		(trigger as Area2D).monitoring = true
 
+	# monitoring 재활성화 직후 물리 서버가 뒤늦게 발행하는 오래된 body_entered를 한 프레임 더 흘려보낸 뒤
+	# 억제를 해제한다 (그 사이 발행된 전환은 area_transition이 is_transition_suppressed()로 무시함)
+	await get_tree().physics_frame
+
+	_transitions_suppressed = false
 	_is_changing_scene = false
+
+
+# 플레이어가 아직 없으면(타이틀 화면 등에서 로드하는 경우) 생성한다
+func ensure_player_exists() -> void:
+	if _player == null:
+		_player = PLAYER_SCENE.instantiate() as Node2D
+		_player.z_index = 10
+		add_child(_player)
+
+
+# 플레이어가 현재 존재하는지 (게임 진행 중인지) 여부
+func has_player() -> bool:
+	return _player != null
+
+
+# 플레이어의 현재 월드 좌표 (없으면 원점)
+func get_player_position() -> Vector2:
+	return _player.global_position if _player != null else Vector2.ZERO
 
 
 # 이름이 일치하는 스폰 지점을 찾아 (재생성 없이) 기존 플레이어의 위치만 이동

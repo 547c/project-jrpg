@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://ui/title_screen.gd" id="1_title"]
 [ext_resource type="Texture2D" path="res://assets/GUI/MedievalUiMega/medieval.png" id="2_medieval"]
@@ -21,6 +21,17 @@ modulate_color = Color(1.18, 1.18, 1.18, 1)
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_play_pressed"]
 texture = SubResource("AtlasTexture_play_button")
 modulate_color = Color(0.82, 0.82, 0.82, 1)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_button_wood"]
+atlas = ExtResource("2_medieval")
+region = Rect2(656, 206, 63, 51)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_button_normal"]
+texture = SubResource("AtlasTexture_button_wood")
+texture_margin_left = 14.0
+texture_margin_top = 14.0
+texture_margin_right = 14.0
+texture_margin_bottom = 14.0
 
 [node name="TitleScreen" type="Control"]
 anchors_preset = 15
@@ -74,9 +85,35 @@ anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
 offset_left = -135.0
-offset_top = 488.0
+offset_top = 470.0
 offset_right = 135.0
-offset_bottom = 569.0
+offset_bottom = 528.0
 theme_override_styles/normal = SubResource("StyleBoxTexture_play_normal")
 theme_override_styles/hover = SubResource("StyleBoxTexture_play_hover")
 theme_override_styles/pressed = SubResource("StyleBoxTexture_play_pressed")
+
+[node name="LoadButton" type="Button" parent="."]
+texture_filter = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -110.0
+offset_top = 540.0
+offset_right = 110.0
+offset_bottom = 584.0
+theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+text = "불러오기"
+
+[node name="LoadHint" type="Label" parent="."]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -120.0
+offset_top = 588.0
+offset_right = 120.0
+offset_bottom = 610.0
+theme_override_colors/font_color = Color(0.6, 0.55, 0.5, 1)
+theme_override_font_sizes/font_size = 13
+horizontal_alignment = 1
+text = "저장된 게임이 없습니다"

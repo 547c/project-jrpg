@@ -4,9 +4,6 @@ extends Control
 # 전투가 끝났을 때 발행. victory는 몬스터를 물리쳤는지(true) 정신을 잃었는지(false)
 signal battle_ended(victory: bool)
 
-const VILLAGE_SCENE_PATH := "res://world/village.tscn"
-const VILLAGE_SPAWN_POINT := "VillageSpawn"
-
 const HP_TWEEN_DURATION := 0.4
 const DAMAGE_POPUP_RISE := 30.0
 const DAMAGE_POPUP_DURATION := 0.8
@@ -102,21 +99,21 @@ func _run_turn() -> void:
 	_result_label.text = result_text
 
 
-# 승패에 따라 마무리 처리를 하고, 버튼을 "닫기"로 바꿔 결과를 확인할 시간을 줌.
-# 패배 시에는 절반 회복 페널티만 여기서 바로 적용하고(HP바가 결과와 함께 보이도록),
-# 실제 마을로의 강제 이동은 "닫기"를 눌러 창이 닫힐 때(_close_battle) 수행한다
+# 승리 시: 처치 카운트를 올리고 버튼을 "닫기"로 바꿔 결과 확인 시간을 준다.
+# 패배 시: 전투창을 닫고 게임오버 화면으로 넘긴다 (회복/마을 이동 등 실제 페널티 처리는 게임오버 화면이 담당)
 func _finish_battle(result_text: String, victory: bool) -> void:
-	if victory:
-		match _monster_type:
-			"ORC":
-				GameState.increment_orcs_defeated()
-			"SKELETON":
-				GameState.increment_skeletons_defeated()
-	else:
-		GameState.heal_player_half()
-		_animate_hp_bar(_player_hp_bar, GameState.get_flag("player_hp"))
+	if not victory:
+		hide()
+		GameOverScreen.show_game_over()
+		return
 
-	_victory = victory
+	match _monster_type:
+		"ORC":
+			GameState.increment_orcs_defeated()
+		"SKELETON":
+			GameState.increment_skeletons_defeated()
+
+	_victory = true
 	_battle_over = true
 	_attack_button.text = "닫기"
 
@@ -182,11 +179,9 @@ func _lunge_toward(attacker: Node2D, target: Node2D) -> void:
 	tween.tween_property(attacker, "position", original_position, LUNGE_BACK_DURATION)
 
 
-# 전투창을 숨기고, 패배했다면 마을 스폰 지점으로 강제 이동시킨 뒤, 승패 결과와 함께 종료를 알림
+# 전투창을 숨기고 종료를 알림 (승리 시 "닫기"에서만 호출됨 — 패배는 게임오버 화면으로 분기됨)
 func _close_battle() -> void:
 	hide()
-	if not _victory:
-		SceneManager.change_scene(VILLAGE_SCENE_PATH, VILLAGE_SPAWN_POINT)
 	battle_ended.emit(_victory)
 
 

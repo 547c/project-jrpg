@@ -60,6 +60,21 @@ func reset_progress() -> void:
 		set_flag(flag_name, DEFAULT_FLAGS[flag_name])
 
 
+# 저장 데이터로부터 flags를 복원. 먼저 기본값으로 되돌려(임시 키 정리 포함) 저장 당시 없던 값이
+# 남지 않게 한 뒤, 저장된 값을 덮어쓴다. JSON 파싱은 숫자를 float로 주므로 DEFAULT_FLAGS 타입에 맞춰 보정
+func restore_flags(data: Dictionary) -> void:
+	reset_progress()
+	for key in data.keys():
+		var value = data[key]
+		if DEFAULT_FLAGS.has(key):
+			var default_value = DEFAULT_FLAGS[key]
+			if default_value is int:
+				value = int(value)
+			elif default_value is bool:
+				value = bool(value)
+		set_flag(String(key), value)
+
+
 # player_hp를 amount만큼 깎되 0 밑으로 내려가지 않게 함
 func damage_player(amount: int) -> void:
 	set_flag("player_hp", max(0, get_flag("player_hp") - amount))
