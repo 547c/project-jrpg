@@ -65,6 +65,17 @@ color) so the player recognizes them as consequential.
 - **Why the Veins are failing** — an unanswered mystery, intended to span
   future updates.
 
+## Post-v1.0 Playtest Decision
+
+After v1.0 (village/forest/cave, 4 NPCs, guardian event, 3
+endings) is complete, playtest the full experience once
+before deciding on scope. If combat, quests, or additional
+NPCs are still wanted after playtesting, add them as a
+"v1.5" layer on top of the existing structure — inserted
+between existing story beats, not replacing them — starting
+with the smallest possible version (1 class, 1-2 enemy types,
+1-2 side quests) and expanding only after confirming it works.
+
 ## v2 Roadmap (planned, not started) — "Traces of the Watcher"
 
 - New zone(s) beyond the current three.
