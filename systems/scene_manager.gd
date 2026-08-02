@@ -69,7 +69,8 @@ func return_to_title() -> void:
 
 # 오프닝 인트로를 (딱 한 번) 전용 CutsceneBox로 화면 전체에 재생하고, 끝날 때까지 기다림.
 # 특정 월드 씬에 속하지 않도록 CanvasLayer와 함께 직접 생성했다가 끝나면 정리한다
-# (village.tscn 등 월드 씬을 건드리지 않기 위함)
+# (village.tscn 등 월드 씬을 건드리지 않기 위함).
+# 컷신이 나타날 때/사라질 때 모두 페이드로 감싸서 툭 끊기지 않게 한다
 func _play_opening() -> void:
 	GameState.set_flag("seen_opening", true)
 
@@ -78,10 +79,15 @@ func _play_opening() -> void:
 	var cutscene_box := CUTSCENE_BOX_SCENE.instantiate() as CutsceneBox
 	cutscene_layer.add_child(cutscene_box)
 
+	await FadeOverlay.fade_out()
 	cutscene_box.start_cutscene(DialogueData.OPENING_DIALOGUE, "opening_1")
+	await FadeOverlay.fade_in()
+
 	await cutscene_box.cutscene_ended
 
+	await FadeOverlay.fade_out()
 	cutscene_layer.queue_free()
+	await FadeOverlay.fade_in()
 
 
 # 메인 씬이 트리에 들어온 뒤, 현재 씬의 "최초 스폰" 지점으로 플레이어를 이동하고 방문 플래그를 기록
@@ -116,9 +122,13 @@ func change_scene_to_position(scene_path: String, position: Vector2) -> void:
 
 
 # 실제 배경 씬 교체와 플레이어 이동을 수행 (call_deferred로 호출되어 물리 콜백 밖에서 실행됨).
-# use_exact_position이 true면 exact_position 좌표로, 아니면 spawn_point_name 스폰 지점으로 이동
+# use_exact_position이 true면 exact_position 좌표로, 아니면 spawn_point_name 스폰 지점으로 이동.
+# 화면이 완전히 까매진 상태에서 실제 전환이 일어나도록 페이드 아웃/인으로 감싼다
+# (change_scene()/change_scene_to_position()을 거치는 모든 전환 — 엔딩, 게임오버 복귀/로드 포함 — 에 자동 적용됨)
 func _apply_scene_change(scene_path: String, spawn_point_name: String, use_exact_position: bool, exact_position: Vector2) -> void:
 	_transitions_suppressed = true
+
+	await FadeOverlay.fade_out()
 
 	var old_scene := get_tree().current_scene
 	if old_scene != null:
@@ -153,6 +163,9 @@ func _apply_scene_change(scene_path: String, spawn_point_name: String, use_exact
 	await get_tree().physics_frame
 
 	_transitions_suppressed = false
+
+	await FadeOverlay.fade_in()
+
 	_is_changing_scene = false
 
 

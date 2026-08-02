@@ -20,6 +20,7 @@ func save_game() -> bool:
 		"scene_path": current_scene.scene_file_path,
 		"player_position": _vector2_to_dict(SceneManager.get_player_position()),
 		"flags": GameState.flags,
+		"quests": GameState.quests,
 	}
 
 	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
@@ -51,6 +52,7 @@ func load_game() -> bool:
 		return false
 
 	GameState.restore_flags(data.get("flags", {}))
+	GameState.restore_quests(data.get("quests", {}))
 
 	var position := _dict_to_vector2(data.get("player_position", {}))
 	SceneManager.ensure_player_exists()

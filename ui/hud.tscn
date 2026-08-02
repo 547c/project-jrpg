@@ -1,0 +1,158 @@
+[gd_scene format=3 uid="uid://d2el7yuqhjajy"]
+
+[ext_resource type="Script" uid="uid://h24uu154qys7" path="res://ui/hud.gd" id="1_hud"]
+[ext_resource type="Texture2D" uid="uid://fq726ml3dqoh" path="res://assets/GUI/MedievalUiMega/medieval.png" id="2_medieval"]
+[ext_resource type="PackedScene" path="res://ui/quest_log.tscn" id="3_qlog"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_panel_wood"]
+atlas = ExtResource("2_medieval")
+region = Rect2(516, 207, 119, 50)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_panel"]
+texture = SubResource("AtlasTexture_panel_wood")
+texture_margin_left = 20.0
+texture_margin_top = 15.0
+texture_margin_right = 20.0
+texture_margin_bottom = 15.0
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_hp_fill"]
+atlas = ExtResource("2_medieval")
+region = Rect2(240, 181, 46, 6)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_button_wood"]
+atlas = ExtResource("2_medieval")
+region = Rect2(656, 206, 63, 51)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_button_normal"]
+texture = SubResource("AtlasTexture_button_wood")
+texture_margin_left = 14.0
+texture_margin_top = 14.0
+texture_margin_right = 14.0
+texture_margin_bottom = 14.0
+
+[node name="HUD" type="CanvasLayer" unique_id=836659726]
+layer = 5
+script = ExtResource("1_hud")
+
+[node name="MainHud" type="Control" parent="." unique_id=846760609]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Card" type="Panel" parent="MainHud" unique_id=1145772357]
+texture_filter = 1
+layout_mode = 0
+offset_left = 12.0
+offset_top = 12.0
+offset_right = 242.0
+offset_bottom = 90.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxTexture_panel")
+
+[node name="HPLabel" type="Label" parent="MainHud/Card" unique_id=1061413849]
+layout_mode = 0
+offset_left = 18.0
+offset_top = 8.0
+offset_right = 138.0
+offset_bottom = 30.0
+theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_font_sizes/font_size = 15
+text = "HP: 16 / 16"
+
+[node name="LvLabel" type="Label" parent="MainHud/Card" unique_id=2101952983]
+layout_mode = 0
+offset_left = 138.0
+offset_top = 8.0
+offset_right = 212.0
+offset_bottom = 30.0
+theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_font_sizes/font_size = 15
+text = "Lv. 0"
+horizontal_alignment = 2
+
+[node name="HPFrame" type="NinePatchRect" parent="MainHud/Card" unique_id=2028378152]
+texture_filter = 1
+layout_mode = 0
+offset_left = 18.0
+offset_top = 34.0
+offset_right = 212.0
+offset_bottom = 58.0
+texture = ExtResource("2_medieval")
+region_rect = Rect2(240, 147, 61, 12)
+patch_margin_left = 12
+patch_margin_top = 5
+patch_margin_right = 12
+patch_margin_bottom = 5
+
+[node name="HPFill" type="TextureProgressBar" parent="MainHud/Card/HPFrame" unique_id=1581051257]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 9.0
+offset_top = 5.0
+offset_right = -9.0
+offset_bottom = -5.0
+max_value = 16.0
+value = 16.0
+nine_patch_stretch = true
+stretch_margin_left = 6
+stretch_margin_top = 2
+stretch_margin_right = 6
+stretch_margin_bottom = 2
+texture_progress = SubResource("AtlasTexture_hp_fill")
+
+[node name="QuestButton" type="Button" parent="MainHud" unique_id=197298112]
+texture_filter = 1
+layout_mode = 0
+offset_left = 12.0
+offset_top = 100.0
+offset_right = 140.0
+offset_bottom = 142.0
+theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+text = "퀘스트"
+
+[node name="ObjectiveHud" type="Control" parent="." unique_id=424238753]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="ObjectivePanel" type="Panel" parent="ObjectiveHud" unique_id=115353774]
+texture_filter = 1
+layout_mode = 0
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -412.0
+offset_top = 12.0
+offset_right = -12.0
+offset_bottom = 54.0
+grow_horizontal = 0
+theme_override_styles/panel = SubResource("StyleBoxTexture_panel")
+
+[node name="ObjectiveLabel" type="Label" parent="ObjectiveHud/ObjectivePanel" unique_id=1018031829]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 18.0
+offset_top = 4.0
+offset_right = -18.0
+offset_bottom = -4.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_font_sizes/font_size = 15
+text = "목표"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="QuestLog" parent="." unique_id=1347969478 instance=ExtResource("3_qlog")]

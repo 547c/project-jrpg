@@ -259,6 +259,13 @@ const ELARA_DIALOGUE: Array = [
 # 로한(사냥꾼) 대화 트리
 const ROHAN_DIALOGUE: Array = [
 	{
+		"id": "rohan_locked_greeting",
+		"speaker": "로한",
+		"text": "...넌 누구지? 처음 보는 얼굴이군. 볼일 있으면 나중에.",
+		"is_decisive": false,
+		"options": [],
+	},
+	{
 		"id": "rohan_greeting",
 		"speaker": "로한",
 		"text": "거기 서. ...아, 마을에서 온 사람이군.",
@@ -267,8 +274,26 @@ const ROHAN_DIALOGUE: Array = [
 			{"label": "[동굴에 대해 묻는다]", "next_id": "rohan_cave"},
 			{"label": "[숲에 대해 묻는다]", "next_id": "rohan_forest"},
 			{"label": "[사냥은 잘 되냐고 묻는다]", "next_id": "rohan_smalltalk"},
+			{"label": "[오크 처치를 돕겠다고 한다]", "next_id": "rohan_quest_accept", "start_quest": "forest_orcs", "show_if_quest_inactive": "forest_orcs"},
+			{"label": "[오크는 어떻게 되어가요?]", "next_id": "rohan_quest_status", "show_if_quest_active": "forest_orcs"},
 			{"label": "[다른 사람들에 대해 묻는다]", "next_id": "rohan_gossip", "show_if_flag": "met_elara"},
 		],
+	},
+	{
+		"id": "rohan_quest_accept",
+		"speaker": "로한",
+		"text": "고맙군. 숲에 오크 세 마리가 설치고 있어. 놈들을 처치해주면 마을이 한결 안전해질 거야. 조심하고.",
+		"is_decisive": false,
+		"options": [],
+	},
+	{
+		"id": "rohan_quest_status",
+		"speaker": "로한",
+		"text_if_flag": "forest_quest_complete",
+		"text": "오크를 전부 처리했다고? ...대단하군. 정말 고생 많았어.",
+		"text_false": "아직 놈들이 숲에 남아있군. 무리하지 말고 조심해.",
+		"is_decisive": false,
+		"options": [],
 	},
 	{
 		"id": "rohan_cave",
@@ -411,6 +436,13 @@ const ROHAN_DIALOGUE: Array = [
 # 유서프(떠돌이 상인) 대화 트리
 const YUSUF_DIALOGUE: Array = [
 	{
+		"id": "yusuf_locked_greeting",
+		"speaker": "유서프",
+		"text": "오, 낯선 얼굴이군? ...아직은 자네한테 해줄 얘기가 없네. 나중에 보지.",
+		"is_decisive": false,
+		"options": [],
+	},
+	{
 		"id": "yusuf_greeting",
 		"speaker": "유서프",
 		"text": "오, 손님이시군! 뭐 필요한 거라도?",
@@ -419,8 +451,26 @@ const YUSUF_DIALOGUE: Array = [
 			{"label": "[동굴 이야기를 묻는다]", "next_id": "yusuf_cave_hint"},
 			{"label": "[당신은 누구세요?]", "next_id": "yusuf_who"},
 			{"label": "[뭘 팔고 있어요?]", "next_id": "yusuf_wares"},
+			{"label": "[스켈레톤 처치를 돕겠다고 한다]", "next_id": "yusuf_quest_accept", "start_quest": "cave_skeletons", "show_if_quest_inactive": "cave_skeletons"},
+			{"label": "[스켈레톤은 어떻게 되어가요?]", "next_id": "yusuf_quest_status", "show_if_quest_active": "cave_skeletons"},
 			{"label": "[다른 사람들에 대해 묻는다]", "next_id": "yusuf_gossip", "show_if_flag": "met_elara"},
 		],
+	},
+	{
+		"id": "yusuf_quest_accept",
+		"speaker": "유서프",
+		"text": "오, 도와준다니 든든하군! 동굴 입구 쪽에 스켈레톤 셋이 얼쩡거리고 있어. 놈들을 처리해주면 내가 섭섭지 않게 사례하지.",
+		"is_decisive": false,
+		"options": [],
+	},
+	{
+		"id": "yusuf_quest_status",
+		"speaker": "유서프",
+		"text_if_flag": "cave_quest_complete",
+		"text": "스켈레톤을 다 정리했다고? 역시 자네야. 약속대로 사례는 톡톡히 하지.",
+		"text_false": "아직 동굴에 놈들이 남아있군. 서두르지 말고 확실하게 처리하게.",
+		"is_decisive": false,
+		"options": [],
 	},
 	{
 		"id": "yusuf_cave_hint",
@@ -512,6 +562,14 @@ const YUSUF_DIALOGUE: Array = [
 # 미아(아이) 대화 트리
 const MIA_DIALOGUE: Array = [
 	{
+		"id": "mia_locked_greeting",
+		"speaker": "미아",
+		"text": "...",
+		"narration": "(낯선 사람을 경계하며 뒤로 물러선다)",
+		"is_decisive": false,
+		"options": [],
+	},
+	{
 		"id": "mia_greeting",
 		"speaker": "미아",
 		"text": "...",
@@ -537,6 +595,7 @@ const MIA_DIALOGUE: Array = [
 		"id": "mia_scared",
 		"speaker": "미아",
 		"text": "...몰라요. 아무것도 못 봤어요.",
+		"set_flag_on_show": "met_mia_decisive",
 		"is_decisive": false,
 		"options": [
 			{"label": "[미안, 다그치려던 건 아니었어]", "next_id": "mia_scared_apology"},
@@ -554,6 +613,7 @@ const MIA_DIALOGUE: Array = [
 		"id": "mia_relieved",
 		"speaker": "미아",
 		"text": "...고마워요. 사실은... 그날 밤에 이상한 빛을 봤어요, 동굴 쪽에서.",
+		"set_flag_on_show": "met_mia_decisive",
 		"is_decisive": false,
 		"options": [
 			{"label": "[더 자세히 말해줄 수 있어?]", "next_id": "mia_relieved_detail"},

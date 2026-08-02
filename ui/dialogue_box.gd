@@ -48,6 +48,11 @@ func _show_node(node_id: String) -> void:
 	var node: Dictionary = _nodes_by_id[node_id]
 	var is_decisive: bool = node.get("is_decisive", false)
 
+	# 이 노드에 "도달"한 순간 세워둘 flag (예: 결정적 선택을 통과해 결과 노드에 이르렀음을 기록)
+	var flag_on_show: String = node.get("set_flag_on_show", "")
+	if flag_on_show != "":
+		GameState.set_flag(flag_on_show, true)
+
 	_speaker_label.text = node.get("speaker", "")
 
 	var narration: String = node.get("narration", "")
@@ -90,14 +95,33 @@ func _resolve_text(node: Dictionary) -> String:
 	return node.get("text", "") if GameState.get_flag(text_if_flag) else node.get("text_false", "")
 
 
-# show_if_flag가 없거나 해당 flag가 true인 옵션만 남김
+# 표시 조건을 통과한 옵션만 남김
 func _filter_visible_options(options: Array) -> Array:
 	var visible_options: Array = []
 	for option in options:
-		var show_if_flag: String = option.get("show_if_flag", "")
-		if show_if_flag == "" or GameState.get_flag(show_if_flag):
+		if _is_option_visible(option):
 			visible_options.append(option)
 	return visible_options
+
+
+# 옵션의 표시 조건들을 모두 만족하는지 판단.
+# - show_if_flag: 해당 flag가 true여야 함
+# - show_if_quest_inactive: 해당 퀘스트가 아직 수락되지 않았을 때만 (수락 옵션용)
+# - show_if_quest_active: 해당 퀘스트가 수락되어 진행 중일 때만 (진행 확인 옵션용)
+func _is_option_visible(option: Dictionary) -> bool:
+	var show_if_flag: String = option.get("show_if_flag", "")
+	if show_if_flag != "" and not GameState.get_flag(show_if_flag):
+		return false
+
+	var quest_inactive: String = option.get("show_if_quest_inactive", "")
+	if quest_inactive != "" and GameState.is_quest_active(quest_inactive):
+		return false
+
+	var quest_active: String = option.get("show_if_quest_active", "")
+	if quest_active != "" and not GameState.is_quest_active(quest_active):
+		return false
+
+	return true
 
 
 # 표시 조건을 통과한 옵션만큼 버튼에 라벨/연결을 채우고, 남는 버튼은 숨김.
@@ -134,11 +158,15 @@ func _on_button_pressed(option: Dictionary) -> void:
 		_on_option_pressed(option)
 
 
-# 옵션 버튼 클릭 시, 그 옵션에 flag_to_set이 있으면 flag_value로 설정한 뒤 next_id 노드로 이동
+# 옵션 버튼 클릭 시, flag_to_set / start_quest 같은 부수효과를 적용한 뒤 next_id 노드로 이동
 func _on_option_pressed(option: Dictionary) -> void:
 	var flag_to_set: String = option.get("flag_to_set", "")
 	if flag_to_set != "":
 		GameState.set_flag(flag_to_set, option.get("flag_value", false))
+
+	var start_quest: String = option.get("start_quest", "")
+	if start_quest != "":
+		GameState.start_quest(start_quest)
 
 	_show_node(option.get("next_id", ""))
 
