@@ -1,6 +1,9 @@
 extends Node
 
 const PLAYER_SCENE: PackedScene = preload("res://player/player.tscn")
+const CUTSCENE_BOX_SCENE: PackedScene = preload("res://ui/cutscene_box.tscn")
+const VILLAGE_SCENE_PATH := "res://world/village.tscn"
+const TITLE_SCREEN_PATH := "res://ui/title_screen.tscn"
 
 # 씬 경로별로 GameState에 기록할 방문 플래그를 매핑
 const VISITED_FLAGS: Dictionary = {
@@ -13,11 +16,23 @@ var _player: Node2D
 var _is_changing_scene: bool = false
 
 
-# 게임 시작 시 플레이어를 한 번만 생성해 SceneManager의 자식으로 유지 (씬 전환에도 삭제되지 않음)
-func _ready() -> void:
+# 타이틀 화면의 PLAY 버튼에서 호출. 플레이어를 생성하고 타이틀 화면을 마을 씬으로 교체한 뒤,
+# (처음이라면) 오프닝 컷신을 재생하고 최초 스폰 지점으로 플레이어를 배치한다
+func start_game() -> void:
 	_player = PLAYER_SCENE.instantiate() as Node2D
 	_player.z_index = 10 # SceneManager가 오토로드라 배경 씬보다 먼저 그려지므로, 배경 위에 보이도록 z_index를 높임
 	add_child(_player)
+
+	var old_scene := get_tree().current_scene
+	if old_scene != null:
+		get_tree().root.remove_child(old_scene)
+		old_scene.queue_free()
+
+	var village_scene := load(VILLAGE_SCENE_PATH) as PackedScene
+	var new_scene := village_scene.instantiate()
+	get_tree().root.add_child(new_scene)
+	get_tree().current_scene = new_scene
+
 	await get_tree().process_frame
 
 	if not GameState.get_flag("seen_opening"):
@@ -26,16 +41,39 @@ func _ready() -> void:
 	_place_initial_player()
 
 
-# 오프닝 인트로를 (딱 한 번) 현재 씬의 DialogueBox로 재생하고, 끝날 때까지 기다림
+# 엔딩 화면 등에서 타이틀로 돌아갈 때 호출. 플레이어를 정리하고 타이틀 씬으로 교체한다
+# (다음 start_game() 호출 시 플레이어를 새로 만들 수 있도록)
+func return_to_title() -> void:
+	if _player != null:
+		_player.queue_free()
+		_player = null
+
+	var old_scene := get_tree().current_scene
+	if old_scene != null:
+		get_tree().root.remove_child(old_scene)
+		old_scene.queue_free()
+
+	var title_scene := load(TITLE_SCREEN_PATH) as PackedScene
+	var new_scene := title_scene.instantiate()
+	get_tree().root.add_child(new_scene)
+	get_tree().current_scene = new_scene
+
+
+# 오프닝 인트로를 (딱 한 번) 전용 CutsceneBox로 화면 전체에 재생하고, 끝날 때까지 기다림.
+# 특정 월드 씬에 속하지 않도록 CanvasLayer와 함께 직접 생성했다가 끝나면 정리한다
+# (village.tscn 등 월드 씬을 건드리지 않기 위함)
 func _play_opening() -> void:
 	GameState.set_flag("seen_opening", true)
 
-	var dialogue_box := get_tree().get_first_node_in_group("dialogue_box") as DialogueBox
-	if dialogue_box == null:
-		return
+	var cutscene_layer := CanvasLayer.new()
+	add_child(cutscene_layer)
+	var cutscene_box := CUTSCENE_BOX_SCENE.instantiate() as CutsceneBox
+	cutscene_layer.add_child(cutscene_box)
 
-	dialogue_box.start_dialogue(DialogueData.OPENING_DIALOGUE, "opening_1")
-	await dialogue_box.dialogue_ended
+	cutscene_box.start_cutscene(DialogueData.OPENING_DIALOGUE, "opening_1")
+	await cutscene_box.cutscene_ended
+
+	cutscene_layer.queue_free()
 
 
 # 메인 씬이 트리에 들어온 뒤, 현재 씬의 "최초 스폰" 지점으로 플레이어를 이동하고 방문 플래그를 기록

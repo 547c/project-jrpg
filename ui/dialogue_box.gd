@@ -6,48 +6,26 @@ extends Control
 signal dialogue_ended(last_node_id: String)
 
 const MAX_OPTIONS := 5
-const TYPING_CHAR_DELAY := 0.03 # 타이핑 효과 한 글자당 대기 시간(초)
-const BLEEP_DIR := "res://assets/sfx/dmochas-dialogue_bleeps_pack/ogg/"
-const BLEEP_COUNT := 30
-const BLEEP_PITCH_MIN := 0.95
-const BLEEP_PITCH_MAX := 1.05
+const MIN_PANEL_HEIGHT := 180.0 # 화자 + 본문 한두 줄 + 옵션 1개 정도가 들어가는 최소 높이
+const MAX_PANEL_HEIGHT := 440.0 # 옵션 4개가 다 보여도 화면 안에 들어오는 최대 높이
 
-@onready var _panel: Panel = $Panel
+@onready var _decisive_frame: Control = $DecisiveFrame
+@onready var _vbox: VBoxContainer = $Panel/VBox
 @onready var _speaker_label: Label = $Panel/VBox/SpeakerLabel
 @onready var _narration_label: Label = $Panel/VBox/NarrationLabel
 @onready var _text_label: Label = $Panel/VBox/TextLabel
 @onready var _options_container: VBoxContainer = $Panel/VBox/OptionsContainer
 @onready var _bleep_player: AudioStreamPlayer = $BleepPlayer
 
-var _normal_style: StyleBoxFlat
-var _decisive_style: StyleBoxFlat
 var _nodes_by_id: Dictionary = {}
-var _bleep_sounds: Array[AudioStream] = []
 var _last_shown_node_id: String = ""
-
-var _typing_full_text: String = "" # 스킵 시 즉시 표시할, 이번에 보여줘야 할 전체 텍스트
-var _typing_generation: int = 0 # 타이핑 세션 번호 (새 타이핑/스킵마다 증가해 이전 코루틴을 무효화)
-var _is_typing: bool = false
+var _typewriter: Typewriter
 
 
-# 기본/결정적 패널 스타일을 미리 만들고, 다른 씬에서 이 DialogueBox를 찾을 수 있도록 그룹에 등록
+# 다른 씬에서 이 DialogueBox를 찾을 수 있도록 그룹에 등록하고 공용 타이핑 헬퍼를 준비
 func _ready() -> void:
 	add_to_group("dialogue_box")
-
-	_normal_style = StyleBoxFlat.new()
-	_normal_style.bg_color = Color(0.1, 0.1, 0.1, 0.9)
-	_normal_style.border_color = Color.WHITE
-	_normal_style.set_border_width_all(2)
-
-	_decisive_style = _normal_style.duplicate()
-	_decisive_style.border_color = Color(1.0, 0.84, 0.0) # 결정적 선택: 금색 테두리
-	_decisive_style.set_border_width_all(4)
-
-	# 지문(narration)을 본문과 살짝 구분되도록 연한 회색으로 표시
-	_narration_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
-
-	for i in range(1, BLEEP_COUNT + 1):
-		_bleep_sounds.append(load("%sbleep%03d.ogg" % [BLEEP_DIR, i]))
+	_typewriter = Typewriter.new(_text_label, _bleep_player)
 
 
 # 대화 트리를 id 기준으로 인덱싱하고 start_id 노드부터 대화를 시작
@@ -76,10 +54,24 @@ func _show_node(node_id: String) -> void:
 	_narration_label.text = narration
 	_narration_label.visible = narration != ""
 
-	_panel.add_theme_stylebox_override("panel", _decisive_style if is_decisive else _normal_style)
-	_start_typing(_resolve_text(node))
+	_decisive_frame.visible = is_decisive
+	_typewriter.start(_resolve_text(node))
 
 	_populate_options(node.get("options", []), node.get("next_id", ""))
+	_update_panel_height()
+
+
+# 화자/지문/본문/옵션 개수에 맞춰 대화창 높이를 동적으로 조절.
+# 화면 하단(offset_bottom)은 고정한 채 위쪽으로만 자라나게(offset_top만 변경) 해서
+# 옵션이 적을 땐 화면을 덜 가리고, 옵션 4개일 때도 화면 밖으로 잘리지 않게 함
+func _update_panel_height() -> void:
+	await get_tree().process_frame # 버튼 표시/숨김이 반영된 뒤의 실제 최소 크기를 읽기 위해 한 프레임 대기
+
+	var vbox_padding: float = _vbox.offset_top - _vbox.offset_bottom # VBox의 상하 여백(Panel 기준)
+	var content_height: float = _vbox.get_combined_minimum_size().y + vbox_padding
+	var target_height: float = clampf(content_height, MIN_PANEL_HEIGHT, MAX_PANEL_HEIGHT)
+
+	offset_top = offset_bottom - target_height
 
 
 # text_if_flag가 있으면 해당 flag 값에 따라 text(참)/text_false(거짓)를 골라 반환, 없으면 text 그대로
@@ -88,52 +80,6 @@ func _resolve_text(node: Dictionary) -> String:
 	if text_if_flag == "":
 		return node.get("text", "")
 	return node.get("text", "") if GameState.get_flag(text_if_flag) else node.get("text_false", "")
-
-
-# 새 텍스트의 타이핑 애니메이션을 시작. 세대 번호를 올려 이전에 진행 중이던 타이핑 코루틴을 무효화시킴
-# (단순 bool 플래그는 "새 타이핑 시작 → 곧바로 플래그 재설정"이 await 없이 한 프레임 안에 일어나면
-#  낡은 코루틴이 나중에 깨어나서 이미 바뀐(더 짧을 수 있는) _typing_full_text를 낡은 인덱스로 읽어
-#  범위 초과 크래시가 날 수 있어서, 코루틴마다 자기 세대와 텍스트를 지역 변수로 들고 있게 함)
-func _start_typing(full_text: String) -> void:
-	_typing_generation += 1
-	_typing_full_text = full_text
-	_text_label.text = ""
-	_is_typing = true
-	_type_text(full_text, _typing_generation)
-
-
-# 한 글자씩 순차적으로 텍스트를 표시하며, 공백이 아닌 글자마다 bleep 효과음을 재생.
-# 자신의 세대(generation)가 더 이상 최신이 아니면(스킵되었거나 새 타이핑이 시작됐으면) 즉시 중단
-func _type_text(full_text: String, generation: int) -> void:
-	for i in range(full_text.length()):
-		if generation != _typing_generation:
-			return
-		var ch := full_text[i]
-		_text_label.text = full_text.substr(0, i + 1)
-		if ch.strip_edges() != "":
-			_play_bleep()
-		await get_tree().create_timer(TYPING_CHAR_DELAY).timeout
-
-	if generation != _typing_generation:
-		return
-	_text_label.text = full_text
-	_is_typing = false
-
-
-# bleep 효과음 중 하나를 무작위로 골라, 매번 살짝 다른 피치로 재생
-func _play_bleep() -> void:
-	if _bleep_sounds.is_empty():
-		return
-	_bleep_player.stream = _bleep_sounds[randi() % _bleep_sounds.size()]
-	_bleep_player.pitch_scale = randf_range(BLEEP_PITCH_MIN, BLEEP_PITCH_MAX)
-	_bleep_player.play()
-
-
-# 타이핑 중인 텍스트를 즉시 전부 표시 (세대 번호를 올려 진행 중이던 코루틴을 무효화)
-func _skip_typing() -> void:
-	_typing_generation += 1
-	_text_label.text = _typing_full_text
-	_is_typing = false
 
 
 # show_if_flag가 없거나 해당 flag가 true인 옵션만 남김
@@ -174,8 +120,8 @@ func _populate_options(options: Array, default_next_id: String = "") -> void:
 
 # 버튼 클릭 처리: 타이핑 중이면 텍스트만 즉시 완성하고, 다 표시된 상태면 실제로 옵션을 선택해 다음으로 진행
 func _on_button_pressed(option: Dictionary) -> void:
-	if _is_typing:
-		_skip_typing()
+	if _typewriter.is_typing:
+		_typewriter.skip()
 	else:
 		_on_option_pressed(option)
 

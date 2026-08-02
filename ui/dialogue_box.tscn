@@ -1,6 +1,53 @@
-[gd_scene format=3 uid="uid://fsq0jb1kmjlb"]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" uid="uid://cstp3jgoomqma" path="res://ui/dialogue_box.gd" id="1_box"]
+[ext_resource type="Texture2D" path="res://assets/GUI/MedievalUiMega/medieval.png" id="2_medieval"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_panel_wood"]
+atlas = ExtResource("2_medieval")
+region = Rect2(516, 207, 119, 50)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_panel"]
+texture = SubResource("AtlasTexture_panel_wood")
+texture_margin_left = 20.0
+texture_margin_top = 15.0
+texture_margin_right = 20.0
+texture_margin_bottom = 15.0
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_button_wood"]
+atlas = ExtResource("2_medieval")
+region = Rect2(656, 206, 63, 51)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_button_normal"]
+texture = SubResource("AtlasTexture_button_wood")
+texture_margin_left = 14.0
+texture_margin_top = 14.0
+texture_margin_right = 14.0
+texture_margin_bottom = 14.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_button_hover"]
+texture = SubResource("AtlasTexture_button_wood")
+texture_margin_left = 14.0
+texture_margin_top = 14.0
+texture_margin_right = 14.0
+texture_margin_bottom = 14.0
+modulate_color = Color(1.18, 1.18, 1.18, 1)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_button_pressed"]
+texture = SubResource("AtlasTexture_button_wood")
+texture_margin_left = 14.0
+texture_margin_top = 14.0
+texture_margin_right = 14.0
+texture_margin_bottom = 14.0
+modulate_color = Color(0.82, 0.82, 0.82, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_decisive_frame"]
+bg_color = Color(0, 0, 0, 0)
+border_width_left = 6
+border_width_top = 6
+border_width_right = 6
+border_width_bottom = 6
+border_color = Color(1.0, 0.84, 0.0, 1)
 
 [node name="DialogueBox" type="Control" unique_id=2000661388]
 visible = false
@@ -9,10 +56,10 @@ anchors_preset = 12
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 5.0
-offset_top = -642.0
-offset_right = -43.0
-offset_bottom = -388.0
+offset_left = 40.0
+offset_top = -460.0
+offset_right = -40.0
+offset_bottom = -20.0
 grow_horizontal = 2
 grow_vertical = 0
 mouse_filter = 2
@@ -23,6 +70,24 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+texture_filter = 1
+theme_override_styles/panel = SubResource("StyleBoxTexture_panel")
+
+[node name="DecisiveFrame" type="Control" parent="."]
+visible = false
+mouse_filter = 2
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="Frame" type="Panel" parent="DecisiveFrame"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_decisive_frame")
 
 [node name="VBox" type="VBoxContainer" parent="Panel" unique_id=342809686]
 layout_mode = 1
@@ -39,16 +104,19 @@ theme_override_constants/separation = 8
 
 [node name="SpeakerLabel" type="Label" parent="Panel/VBox" unique_id=1763241064]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
 text = "Speaker"
 
 [node name="NarrationLabel" type="Label" parent="Panel/VBox"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.32, 0.24, 1)
 autowrap_mode = 3
 text = "Narration"
 
 [node name="TextLabel" type="Label" parent="Panel/VBox" unique_id=2124029575]
 layout_mode = 2
 size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.25, 0.15, 0.07, 1)
 text = "Dialogue text"
 autowrap_mode = 3
 
@@ -58,22 +126,47 @@ theme_override_constants/separation = 4
 
 [node name="OptionButton1" type="Button" parent="Panel/VBox/OptionsContainer" unique_id=276540770]
 layout_mode = 2
+texture_filter = 1
+theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+theme_override_styles/hover = SubResource("StyleBoxTexture_button_hover")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_button_pressed")
 text = "Option 1"
 
 [node name="OptionButton2" type="Button" parent="Panel/VBox/OptionsContainer" unique_id=329394203]
 layout_mode = 2
+texture_filter = 1
+theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+theme_override_styles/hover = SubResource("StyleBoxTexture_button_hover")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_button_pressed")
 text = "Option 2"
 
 [node name="OptionButton3" type="Button" parent="Panel/VBox/OptionsContainer" unique_id=1763947372]
 layout_mode = 2
+texture_filter = 1
+theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+theme_override_styles/hover = SubResource("StyleBoxTexture_button_hover")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_button_pressed")
 text = "Option 3"
 
 [node name="OptionButton4" type="Button" parent="Panel/VBox/OptionsContainer" unique_id=140446060]
 layout_mode = 2
+texture_filter = 1
+theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+theme_override_styles/hover = SubResource("StyleBoxTexture_button_hover")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_button_pressed")
 text = "Option 4"
 
 [node name="OptionButton5" type="Button" parent="Panel/VBox/OptionsContainer"]
 layout_mode = 2
+texture_filter = 1
+theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+theme_override_styles/hover = SubResource("StyleBoxTexture_button_hover")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_button_pressed")
 text = "Option 5"
 
 [node name="BleepPlayer" type="AudioStreamPlayer" parent="."]

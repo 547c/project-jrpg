@@ -38,6 +38,12 @@ func has_flag(flag_name: String) -> bool:
 	return flags.has(flag_name)
 
 
+# 모든 플래그를 초기값(false)으로 되돌림. 엔딩 후 타이틀로 돌아가 새 게임을 시작할 때 사용
+func reset_progress() -> void:
+	for flag_name in flags.keys():
+		set_flag(flag_name, false)
+
+
 # 두 결정적 플래그의 조합으로 엔딩 종류를 판단해 반환 ("good" / "neutral" / "bad")
 func check_ending() -> String:
 	var count := 0

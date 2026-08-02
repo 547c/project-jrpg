@@ -1,0 +1,65 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://ui/cutscene_box.gd" id="1_box"]
+[ext_resource type="Texture2D" path="res://assets/GUI/MedievalUiMega/medieval.png" id="2_medieval"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_scroll"]
+atlas = ExtResource("2_medieval")
+region = Rect2(454, 803, 150, 89)
+
+[node name="CutsceneBox" type="Control"]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+script = ExtResource("1_box")
+
+[node name="DimBackground" type="ColorRect" parent="."]
+mouse_filter = 2
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.85)
+
+[node name="ScrollPanel" type="TextureRect" parent="."]
+mouse_filter = 2
+texture_filter = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -300.0
+offset_top = -178.0
+offset_right = 300.0
+offset_bottom = 178.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = SubResource("AtlasTexture_scroll")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="TextLabel" type="Label" parent="ScrollPanel"]
+mouse_filter = 2
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 70.0
+offset_top = 90.0
+offset_right = -70.0
+offset_bottom = -90.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.25, 0.18, 0.1, 1)
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+text = "Narration"
+
+[node name="BleepPlayer" type="AudioStreamPlayer" parent="."]
+volume_db = -8.0
