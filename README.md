@@ -32,12 +32,12 @@ This project uses a licensed GUI asset pack for UI styling that cannot be redist
 
 * [x] 4-directional player movement + locked camera
 * [x] Sprite animation (walk/idle, 4 directions) with pixel-art filtering
-* [ ] Scene/map transitions (2–3 zones)
-* [ ] State management system (Autoload, flag-based, signal-driven)
-* [ ] NPC dialogue reacting to state
-* [ ] Branching choices
-* [ ] 2–3 ending paths
-* [ ] Minimal turn-based combat (1 class implemented, 2 more as W.I.P.)
+* [x] Scene/map transitions (2–3 zones)
+* [x] State management system (Autoload, flag-based, signal-driven)
+* [x] NPC dialogue reacting to state
+* [x] Branching choices
+* [x] 2–3 ending paths
+* [x] Minimal turn-based combat (1 class implemented, 2 more as W.I.P.)
 * [ ] Save/load (stretch goal)
 
 ## Screenshots
