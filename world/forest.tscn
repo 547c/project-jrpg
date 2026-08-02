@@ -2,9 +2,14 @@
 
 [ext_resource type="Script" uid="uid://c0qufkd1nkcst" path="res://world/spawn_point.gd" id="1_spawn"]
 [ext_resource type="Script" uid="uid://pt071dvpdb2d" path="res://world/area_transition.gd" id="2_trans"]
+[ext_resource type="Script" path="res://world/monster_encounter.gd" id="3_monster"]
+[ext_resource type="PackedScene" path="res://ui/battle_box.tscn" id="4_battlebox"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_door"]
 size = Vector2(40, 600)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_encounter"]
+radius = 36.0
 
 [node name="Forest" type="Node2D" unique_id=670067937]
 
@@ -40,3 +45,34 @@ destination_spawn_point = "CaveSpawn"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="ToCave" unique_id=1603512116]
 shape = SubResource("RectangleShape2D_door")
+
+[node name="OrcEncounter1" type="Area2D" parent="."]
+position = Vector2(280, 180)
+script = ExtResource("3_monster")
+monster_type = "ORC"
+encounter_id = "orc_1"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="OrcEncounter1"]
+shape = SubResource("CircleShape2D_encounter")
+
+[node name="OrcEncounter2" type="Area2D" parent="."]
+position = Vector2(420, 460)
+script = ExtResource("3_monster")
+monster_type = "ORC"
+encounter_id = "orc_2"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="OrcEncounter2"]
+shape = SubResource("CircleShape2D_encounter")
+
+[node name="OrcEncounter3" type="Area2D" parent="."]
+position = Vector2(560, 200)
+script = ExtResource("3_monster")
+monster_type = "ORC"
+encounter_id = "orc_3"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="OrcEncounter3"]
+shape = SubResource("CircleShape2D_encounter")
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="BattleBox" parent="UI" instance=ExtResource("4_battlebox")]

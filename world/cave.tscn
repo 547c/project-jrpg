@@ -4,12 +4,17 @@
 [ext_resource type="Script" uid="uid://pt071dvpdb2d" path="res://world/area_transition.gd" id="2_trans"]
 [ext_resource type="PackedScene" path="res://ui/dialogue_box.tscn" id="3_dlgbox"]
 [ext_resource type="Script" path="res://world/guardian_encounter.gd" id="4_guardian"]
+[ext_resource type="Script" path="res://world/monster_encounter.gd" id="5_monster"]
+[ext_resource type="PackedScene" path="res://ui/battle_box.tscn" id="6_battlebox"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_door"]
 size = Vector2(40, 600)
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_guardian"]
 radius = 60.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_encounter"]
+radius = 36.0
 
 [node name="Cave" type="Node2D" unique_id=1527639492]
 
@@ -39,6 +44,35 @@ script = ExtResource("4_guardian")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="GuardianEncounter"]
 shape = SubResource("CircleShape2D_guardian")
 
+[node name="SkeletonEncounter1" type="Area2D" parent="."]
+position = Vector2(280, 180)
+script = ExtResource("5_monster")
+monster_type = "SKELETON"
+encounter_id = "skeleton_1"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SkeletonEncounter1"]
+shape = SubResource("CircleShape2D_encounter")
+
+[node name="SkeletonEncounter2" type="Area2D" parent="."]
+position = Vector2(380, 460)
+script = ExtResource("5_monster")
+monster_type = "SKELETON"
+encounter_id = "skeleton_2"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SkeletonEncounter2"]
+shape = SubResource("CircleShape2D_encounter")
+
+[node name="SkeletonEncounter3" type="Area2D" parent="."]
+position = Vector2(480, 200)
+script = ExtResource("5_monster")
+monster_type = "SKELETON"
+encounter_id = "skeleton_3"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SkeletonEncounter3"]
+shape = SubResource("CircleShape2D_encounter")
+
 [node name="UI" type="CanvasLayer" parent="."]
 
 [node name="DialogueBox" parent="UI" instance=ExtResource("3_dlgbox")]
+
+[node name="BattleBox" parent="UI" instance=ExtResource("6_battlebox")]

@@ -20,10 +20,21 @@ func _ready() -> void:
 
 # 매 프레임(물리) 입력 처리, 이동, 애니메이션 갱신을 순서대로 실행
 func _physics_process(_delta: float) -> void:
-	var direction := _get_current_direction()
+	var direction := "" if _is_input_blocked() else _get_current_direction()
 	_update_velocity(direction)
 	move_and_slide()
 	_update_animation(direction)
+
+
+# DialogueBox나 BattleBox가 화면에 열려 있으면 이동 입력을 무시.
+# 각 UI는 "dialogue_box"/"battle_box" 그룹에 스스로 등록하고 visible로 열림 여부를 나타내므로,
+# 별도 전역 플래그 없이 그 상태를 그대로 조회한다
+func _is_input_blocked() -> bool:
+	for group_name in ["dialogue_box", "battle_box"]:
+		var ui := get_tree().get_first_node_in_group(group_name) as CanvasItem
+		if ui != null and ui.visible:
+			return true
+	return false
 
 
 # 방향키 입력의 눌림/뗌 순서를 기록해 대각선 입력 시 마지막으로 누른 방향이 우선되도록 함
