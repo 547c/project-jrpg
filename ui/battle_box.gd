@@ -14,6 +14,7 @@ const SHAKE_STEPS := 3
 const LUNGE_DISTANCE := 20.0
 const LUNGE_OUT_DURATION := 0.08
 const LUNGE_BACK_DURATION := 0.12
+const VICTORY_HEAL_FRACTION := 0.25
 
 @onready var _monster_label: Label = $MonsterCard/VBox/MonsterLabel
 @onready var _monster_hp_bar: ProgressBar = $MonsterCard/VBox/MonsterHPBar
@@ -112,6 +113,10 @@ func _finish_battle(result_text: String, victory: bool) -> void:
 			GameState.increment_orcs_defeated()
 		"SKELETON":
 			GameState.increment_skeletons_defeated()
+
+	GameState.heal_player_partial(VICTORY_HEAL_FRACTION)
+	_animate_hp_bar(_player_hp_bar, GameState.get_flag("player_hp"))
+	result_text += "\n체력을 약간 회복했다."
 
 	_victory = true
 	_battle_over = true

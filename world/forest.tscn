@@ -4,6 +4,8 @@
 [ext_resource type="Script" uid="uid://pt071dvpdb2d" path="res://world/area_transition.gd" id="2_trans"]
 [ext_resource type="Script" path="res://world/monster_encounter.gd" id="3_monster"]
 [ext_resource type="PackedScene" path="res://ui/battle_box.tscn" id="4_battlebox"]
+[ext_resource type="PackedScene" path="res://ui/dialogue_box.tscn" id="5_dlgbox"]
+[ext_resource type="PackedScene" path="res://world/campfire.tscn" id="6_campfire"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_door"]
 size = Vector2(40, 600)
@@ -73,6 +75,11 @@ encounter_id = "orc_3"
 [node name="CollisionShape2D" type="CollisionShape2D" parent="OrcEncounter3"]
 shape = SubResource("CircleShape2D_encounter")
 
+[node name="Campfire" parent="." instance=ExtResource("6_campfire")]
+position = Vector2(450, 320)
+
 [node name="UI" type="CanvasLayer" parent="."]
+
+[node name="DialogueBox" parent="UI" instance=ExtResource("5_dlgbox")]
 
 [node name="BattleBox" parent="UI" instance=ExtResource("4_battlebox")]

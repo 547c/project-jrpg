@@ -90,6 +90,13 @@ func heal_player_half() -> void:
 	set_flag("player_hp", get_flag("player_max_hp") / 2)
 
 
+# player_hp를 player_max_hp의 fraction 비율만큼 추가 회복 (최대치를 넘지 않게 clamp). 전투 승리 보너스 등에 사용
+func heal_player_partial(fraction: float) -> void:
+	var max_hp: int = get_flag("player_max_hp")
+	var new_hp: int = min(max_hp, get_flag("player_hp") + int(round(max_hp * fraction)))
+	set_flag("player_hp", new_hp)
+
+
 # 오크 처치 수를 1 늘리고, 3마리째면 숲 퀘스트를 완료 처리하며 quest_level도 올림
 func increment_orcs_defeated() -> void:
 	var new_count: int = get_flag("orcs_defeated") + 1

@@ -65,12 +65,20 @@ func _show_node(node_id: String) -> void:
 # 화면 하단(offset_bottom)은 고정한 채 위쪽으로만 자라나게(offset_top만 변경) 해서
 # 옵션이 적을 땐 화면을 덜 가리고, 옵션 4개일 때도 화면 밖으로 잘리지 않게 함
 func _update_panel_height() -> void:
-	await get_tree().process_frame # 버튼 표시/숨김이 반영된 뒤의 실제 최소 크기를 읽기 위해 한 프레임 대기
-
 	var vbox_padding: float = _vbox.offset_top - _vbox.offset_bottom # VBox의 상하 여백(Panel 기준)
-	var content_height: float = _vbox.get_combined_minimum_size().y + vbox_padding
-	var target_height: float = clampf(content_height, MIN_PANEL_HEIGHT, MAX_PANEL_HEIGHT)
+	var content_height := 0.0
 
+	# 씬이 막 로드된 직후의 첫 대화처럼 이 컨트롤 트리가 아직 레이아웃을 한 번도 확정 짓지 못한 상태에서는,
+	# 자동 줄바꿈 라벨(NarrationLabel/TextLabel)의 최소 높이가 실제 너비를 반영하지 못해
+	# 훨씬 크게(때로는 최댓값까지) 잘못 계산될 수 있다. 측정값이 비정상적으로 크지(=MAX 이상) 않을 때까지
+	# 몇 프레임 더 재측정해서, 레이아웃이 정착되기 전의 값을 그대로 믿지 않도록 방어한다
+	for i in range(6):
+		await get_tree().process_frame
+		content_height = _vbox.get_combined_minimum_size().y + vbox_padding
+		if content_height < MAX_PANEL_HEIGHT:
+			break
+
+	var target_height: float = clampf(content_height, MIN_PANEL_HEIGHT, MAX_PANEL_HEIGHT)
 	offset_top = offset_bottom - target_height
 
 

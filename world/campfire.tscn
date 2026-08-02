@@ -1,0 +1,25 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://world/campfire.gd" id="1_campfire"]
+[ext_resource type="Texture2D" path="res://world/buildings/furnace.tres" id="2_furnace"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_range"]
+radius = 48.0
+
+[node name="Campfire" type="Area2D"]
+script = ExtResource("1_campfire")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+scale = Vector2(1.5, 1.5)
+texture = ExtResource("2_furnace")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_range")
+
+[node name="InteractPrompt" type="Label" parent="."]
+offset_left = -40.0
+offset_top = -60.0
+offset_right = 40.0
+offset_bottom = -40.0
+horizontal_alignment = 1
+text = "[E] 쉬어가기"
