@@ -64,7 +64,7 @@ theme_override_constants/separation = 4
 [node name="PlayerLabel" type="Label" parent="PlayerCard/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 12
 text = "플레이어 0/0"
 
 [node name="PlayerHPBar" type="ProgressBar" parent="PlayerCard/VBox"]
@@ -105,7 +105,7 @@ theme_override_constants/separation = 4
 [node name="MonsterLabel" type="Label" parent="MonsterCard/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 12
 text = "몬스터 0/0"
 
 [node name="MonsterHPBar" type="ProgressBar" parent="MonsterCard/VBox"]

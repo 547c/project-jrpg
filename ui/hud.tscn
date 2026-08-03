@@ -60,7 +60,7 @@ offset_top = 8.0
 offset_right = 138.0
 offset_bottom = 30.0
 theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
-theme_override_font_sizes/font_size = 15
+theme_override_font_sizes/font_size = 12
 text = "HP: 16 / 16"
 
 [node name="LvLabel" type="Label" parent="MainHud/Card" unique_id=2101952983]
@@ -70,7 +70,7 @@ offset_top = 8.0
 offset_right = 212.0
 offset_bottom = 30.0
 theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
-theme_override_font_sizes/font_size = 15
+theme_override_font_sizes/font_size = 12
 text = "Lv. 0"
 horizontal_alignment = 2
 
@@ -150,7 +150,7 @@ offset_bottom = -4.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
-theme_override_font_sizes/font_size = 15
+theme_override_font_sizes/font_size = 12
 text = "목표"
 horizontal_alignment = 2
 vertical_alignment = 1

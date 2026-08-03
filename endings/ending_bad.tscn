@@ -26,7 +26,7 @@ theme_override_constants/separation = 28
 [node name="TitleLabel" type="Label" parent="UI/VBox"]
 layout_mode = 2
 horizontal_alignment = 1
-theme_override_font_sizes/font_size = 32
+theme_override_font_sizes/font_size = 36
 text = "씁쓸한 승리"
 
 [node name="BodyLabel" type="Label" parent="UI/VBox"]
