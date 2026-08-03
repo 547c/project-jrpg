@@ -5,7 +5,6 @@
 [ext_resource type="PackedScene" path="res://ui/dialogue_box.tscn" id="3_dlgbox"]
 [ext_resource type="Script" path="res://world/guardian_encounter.gd" id="4_guardian"]
 [ext_resource type="Script" path="res://world/monster_encounter.gd" id="5_monster"]
-[ext_resource type="PackedScene" path="res://ui/battle_box.tscn" id="6_battlebox"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_door"]
 size = Vector2(40, 600)
@@ -74,5 +73,3 @@ shape = SubResource("CircleShape2D_encounter")
 [node name="UI" type="CanvasLayer" parent="."]
 
 [node name="DialogueBox" parent="UI" instance=ExtResource("3_dlgbox")]
-
-[node name="BattleBox" parent="UI" instance=ExtResource("6_battlebox")]

@@ -40,6 +40,7 @@ var _regenerating: bool = false # 처치 후 재등장 대기 중 (숨김 + 배�
 
 
 func _ready() -> void:
+	add_to_group("monster_encounters") # 전투 복귀 시 SceneManager가 처치된 몬스터를 찾아 리젠시키기 위함
 	_home_position = global_position
 	_wander_target = _home_position
 	_setup_sprite()
@@ -88,31 +89,30 @@ func _pick_new_wander_target() -> void:
 	_repick_timer = randf_range(WANDER_REPICK_MIN, WANDER_REPICK_MAX)
 
 
-# 플레이어가 닿으면(전투/리젠 중이 아닐 때만) BattleBox를 찾아 전투를 시작
+# 플레이어가 닿으면(전투/리젠/전환 중이 아닐 때만) 현재 좌표를 복귀 지점으로 삼아 전용 전투 씬으로 진입
 func _on_body_entered(body: Node2D) -> void:
 	if _triggered or _regenerating:
 		return
 	if not body.is_in_group("player"):
 		return
+	if SceneManager.is_transition_suppressed():
+		return
 
 	_triggered = true
 
-	var battle_box := get_tree().get_first_node_in_group("battle_box") as BattleBox
-	if battle_box == null:
+	var return_path := ""
+	var current := get_tree().current_scene
+	if current != null:
+		return_path = current.scene_file_path
+
+	SceneManager.enter_battle(monster_type, encounter_id, return_path, SceneManager.get_player_position())
+
+
+# 전투 승리 후 복귀 시 SceneManager가 호출. 이 몬스터를 리젠 상태(숨김 → 일정 시간 후 재등장)로 전환
+func enter_regen_state() -> void:
+	if _regenerating:
 		return
-
-	if not battle_box.battle_ended.is_connected(_on_battle_ended):
-		battle_box.battle_ended.connect(_on_battle_ended, CONNECT_ONE_SHOT)
-
-	battle_box.start_battle(monster_type, _sprite)
-
-
-# 승리했다면 잠시 사라졌다가 일정 시간 후 리젠, 패배(정신을 잃음)했다면 다시 조우할 수 있게 둠
-func _on_battle_ended(victory: bool) -> void:
-	if victory:
-		_begin_regen()
-	else:
-		_triggered = false
+	_begin_regen()
 
 
 # 처치 후: 스프라이트를 숨기고 감지를 끈 뒤, 일정 시간 후 스폰 지점에서 다시 등장

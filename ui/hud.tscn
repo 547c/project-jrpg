@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://h24uu154qys7" path="res://ui/hud.gd" id="1_hud"]
 [ext_resource type="Texture2D" uid="uid://fq726ml3dqoh" path="res://assets/GUI/MedievalUiMega/medieval.png" id="2_medieval"]
 [ext_resource type="PackedScene" path="res://ui/quest_log.tscn" id="3_qlog"]
+[ext_resource type="Texture2D" path="res://assets/Pixel Crawler - Free Pack/Entities/Characters/Body_A/Animations/Idle_Base/Idle_Down-Sheet.png" id="4_playersheet"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_panel_wood"]
 atlas = ExtResource("2_medieval")
@@ -15,9 +16,29 @@ texture_margin_top = 15.0
 texture_margin_right = 20.0
 texture_margin_bottom = 15.0
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_hp_fill"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_stat_card"]
 atlas = ExtResource("2_medieval")
-region = Rect2(240, 181, 46, 6)
+region = Rect2(1, 67, 77, 25)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_portrait"]
+atlas = ExtResource("4_playersheet")
+region = Rect2(23, 16, 18, 17)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bar_bg"]
+bg_color = Color(0, 0, 0, 0)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hp_fill"]
+bg_color = Color(0.82, 0.32, 0.28, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mana_fill"]
+bg_color = Color(0.35, 0.55, 0.75, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_gold_icon"]
+bg_color = Color(0.85, 0.7, 0.25, 1)
+corner_radius_top_left = 7
+corner_radius_top_right = 7
+corner_radius_bottom_left = 7
+corner_radius_bottom_right = 7
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_button_wood"]
 atlas = ExtResource("2_medieval")
@@ -43,69 +64,120 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="Card" type="Panel" parent="MainHud" unique_id=1145772357]
-texture_filter = 1
+[node name="StatCard" type="Control" parent="MainHud" unique_id=1145772357]
 layout_mode = 0
 offset_left = 12.0
 offset_top = 12.0
-offset_right = 242.0
-offset_bottom = 90.0
+offset_right = 243.0
+offset_bottom = 87.0
 mouse_filter = 2
-theme_override_styles/panel = SubResource("StyleBoxTexture_panel")
 
-[node name="HPLabel" type="Label" parent="MainHud/Card" unique_id=1061413849]
-layout_mode = 0
-offset_left = 18.0
-offset_top = 8.0
-offset_right = 138.0
-offset_bottom = 30.0
-theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
-theme_override_font_sizes/font_size = 12
-text = "HP: 16 / 16"
-
-[node name="LvLabel" type="Label" parent="MainHud/Card" unique_id=2101952983]
-layout_mode = 0
-offset_left = 138.0
-offset_top = 8.0
-offset_right = 212.0
-offset_bottom = 30.0
-theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
-theme_override_font_sizes/font_size = 12
-text = "Lv. 0"
-horizontal_alignment = 2
-
-[node name="HPFrame" type="NinePatchRect" parent="MainHud/Card" unique_id=2028378152]
-texture_filter = 1
-layout_mode = 0
-offset_left = 18.0
-offset_top = 34.0
-offset_right = 212.0
-offset_bottom = 58.0
-texture = ExtResource("2_medieval")
-region_rect = Rect2(240, 147, 61, 12)
-patch_margin_left = 12
-patch_margin_top = 5
-patch_margin_right = 12
-patch_margin_bottom = 5
-
-[node name="HPFill" type="TextureProgressBar" parent="MainHud/Card/HPFrame" unique_id=1581051257]
+[node name="Background" type="TextureRect" parent="MainHud/StatCard"]
 texture_filter = 1
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 9.0
-offset_top = 5.0
-offset_right = -9.0
-offset_bottom = -5.0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_stat_card")
+expand_mode = 1
+stretch_mode = 0
+
+[node name="Portrait" type="TextureRect" parent="MainHud/StatCard"]
+texture_filter = 1
+layout_mode = 0
+offset_left = 4.0
+offset_top = 4.0
+offset_right = 71.0
+offset_bottom = 71.0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_portrait")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="HPBar" type="ProgressBar" parent="MainHud/StatCard"]
+layout_mode = 0
+offset_left = 80.0
+offset_top = 6.0
+offset_right = 225.0
+offset_bottom = 24.0
+theme_override_styles/background = SubResource("StyleBoxFlat_bar_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_hp_fill")
 max_value = 16.0
 value = 16.0
-nine_patch_stretch = true
-stretch_margin_left = 6
-stretch_margin_top = 2
-stretch_margin_right = 6
-stretch_margin_bottom = 2
-texture_progress = SubResource("AtlasTexture_hp_fill")
+show_percentage = false
+
+[node name="HPBarLabel" type="Label" parent="MainHud/StatCard"]
+layout_mode = 0
+offset_left = 80.0
+offset_top = 6.0
+offset_right = 225.0
+offset_bottom = 24.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_constants/outline_size = 3
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.75)
+theme_override_font_sizes/font_size = 11
+horizontal_alignment = 1
+vertical_alignment = 1
+text = "HP: 16/16"
+
+[node name="ManaBar" type="ProgressBar" parent="MainHud/StatCard"]
+layout_mode = 0
+offset_left = 80.0
+offset_top = 28.0
+offset_right = 225.0
+offset_bottom = 42.0
+theme_override_styles/background = SubResource("StyleBoxFlat_bar_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_mana_fill")
+max_value = 18.0
+value = 18.0
+show_percentage = false
+
+[node name="ManaBarLabel" type="Label" parent="MainHud/StatCard"]
+layout_mode = 0
+offset_left = 80.0
+offset_top = 28.0
+offset_right = 225.0
+offset_bottom = 42.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_constants/outline_size = 3
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.75)
+theme_override_font_sizes/font_size = 11
+horizontal_alignment = 1
+vertical_alignment = 1
+text = "Mana: 18/18"
+
+[node name="GoldIcon" type="Panel" parent="MainHud/StatCard"]
+layout_mode = 0
+offset_left = 80.0
+offset_top = 50.0
+offset_right = 94.0
+offset_bottom = 64.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_gold_icon")
+
+[node name="GoldLabel" type="Label" parent="MainHud/StatCard"]
+layout_mode = 0
+offset_left = 98.0
+offset_top = 47.0
+offset_right = 196.0
+offset_bottom = 70.0
+theme_override_colors/font_color = Color(0.95, 0.9, 0.6, 1)
+theme_override_font_sizes/font_size = 14
+vertical_alignment = 1
+text = "0"
+
+[node name="LvLabel" type="Label" parent="MainHud" unique_id=2101952983]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 89.0
+offset_right = 100.0
+offset_bottom = 100.0
+theme_override_colors/font_color = Color(0.95, 0.92, 0.85, 1)
+theme_override_font_sizes/font_size = 12
+text = "Lv. 0"
 
 [node name="QuestButton" type="Button" parent="MainHud" unique_id=197298112]
 texture_filter = 1

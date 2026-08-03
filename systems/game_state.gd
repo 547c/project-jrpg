@@ -6,6 +6,15 @@ signal flag_changed(flag_name: String, value)
 # 퀘스트 상태(수락/진행/완료)가 바뀔 때 방출 (HUD/퀘스트로그가 구독해 갱신)
 signal quest_changed(quest_id: String)
 
+# 서브퀘스트 완료로 quest_level이 오를 때 방출 (LevelUpPopup이 구독해 안내창을 띄움)
+signal leveled_up(hp_gain: int, mana_gain: int)
+
+# 골드가 바뀔 때 방출 (HUD 카드가 구독해 실시간 갱신)
+signal gold_changed(new_gold: int)
+
+# 골드(flags 딕셔너리와 별개의 독립 필드 — set_flag 경로를 타지 않음)
+var gold: int = 0
+
 # 모든 플래그의 초기값 (reset_progress()가 이 값들로 되돌리는 기준이 되기도 함)
 const DEFAULT_FLAGS: Dictionary = {
 	"resolved_guardian_peacefully": false, # 결정적 플래그: 가디언을 평화적으로 정화했는가
@@ -22,6 +31,8 @@ const DEFAULT_FLAGS: Dictionary = {
 	"guardian_event_done": false,          # 동굴 수호자 조우 이벤트를 이미 겪었는가
 	"player_hp": 16,                       # 플레이어 현재 체력
 	"player_max_hp": 16,                   # 플레이어 최대 체력
+	"player_mana": 18,                     # 플레이어 현재 마나 (스킬 사용 자원)
+	"player_max_mana": 18,                 # 플레이어 최대 마나 (현재는 회복 수단 없음 — 추후 상점 예정)
 	"orcs_defeated": 0,                    # 숲 오크(Orc Crew) 처치 카운트
 	"forest_quest_complete": false,        # 오크 3마리 처치 시 true
 	"skeletons_defeated": 0,               # 동굴 스켈레톤(Skeleton Crew) 처치 카운트
@@ -94,6 +105,9 @@ func reset_progress() -> void:
 
 	reset_quests()
 
+	gold = 0
+	gold_changed.emit(gold)
+
 
 # 저장 데이터로부터 flags를 복원. 먼저 기본값으로 되돌려(임시 키 정리 포함) 저장 당시 없던 값이
 # 남지 않게 한 뒤, 저장된 값을 덮어쓴다. JSON 파싱은 숫자를 float로 주므로 DEFAULT_FLAGS 타입에 맞춰 보정
@@ -115,6 +129,16 @@ func damage_player(amount: int) -> void:
 	set_flag("player_hp", max(0, get_flag("player_hp") - amount))
 
 
+# 마나를 amount만큼 소모하되 0 밑으로 내려가지 않게 함. 마나는 (현재) 재충전 수단이 없는 순수 소모 자원
+func spend_mana(amount: int) -> void:
+	set_flag("player_mana", max(0, get_flag("player_mana") - amount))
+
+
+# 현재 마나로 amount만큼의 비용을 감당할 수 있는지 (스킬 사용 가능 여부 판정)
+func can_afford_mana(amount: int) -> bool:
+	return get_flag("player_mana") >= amount
+
+
 # player_hp를 player_max_hp까지 전부 회복 (전투 패배 후 복구용)
 func heal_player_full() -> void:
 	set_flag("player_hp", get_flag("player_max_hp"))
@@ -130,6 +154,27 @@ func heal_player_partial(fraction: float) -> void:
 	var max_hp: int = get_flag("player_max_hp")
 	var new_hp: int = min(max_hp, get_flag("player_hp") + int(round(max_hp * fraction)))
 	set_flag("player_hp", new_hp)
+
+
+# 골드를 amount만큼 늘림 (몬스터 처치 드롭 등)
+func add_gold(amount: int) -> void:
+	gold += amount
+	gold_changed.emit(gold)
+
+
+# 골드를 amount만큼 소모. 부족하면 아무것도 하지 않고 false 반환
+func spend_gold(amount: int) -> bool:
+	if gold < amount:
+		return false
+	gold -= amount
+	gold_changed.emit(gold)
+	return true
+
+
+# 저장 데이터로부터 골드를 그대로 복원 (add/spend와 달리 절대값을 덮어씀)
+func restore_gold(amount: int) -> void:
+	gold = amount
+	gold_changed.emit(gold)
 
 
 # 오크 처치: 숲 오크 퀘스트의 진행도를 올림 (수락 전이면 아무 일도 안 일어남)
@@ -168,8 +213,24 @@ func increment_quest_progress(quest_id: String) -> void:
 		if QUEST_COMPLETE_FLAGS.has(quest_id):
 			set_flag(QUEST_COMPLETE_FLAGS[quest_id], true)
 		set_flag("quest_level", get_flag("quest_level") + 1)
+		_apply_level_up()
 
 	quest_changed.emit(quest_id)
+
+
+# 레벨업(quest_level 상승) 시 늘어나는 최대 체력/마나 폭
+const LEVEL_UP_HP_GAIN := 8
+const LEVEL_UP_MANA_GAIN := 10
+
+
+# quest_level이 오를 때마다 호출됨. 최대 체력/마나를 늘리고 같은 폭만큼 현재치도 회복시킨 뒤(최대치 초과 방지)
+# leveled_up을 방출해 LevelUpPopup 등이 사용자에게 알리게 함
+func _apply_level_up() -> void:
+	set_flag("player_max_hp", get_flag("player_max_hp") + LEVEL_UP_HP_GAIN)
+	set_flag("player_hp", min(get_flag("player_max_hp"), get_flag("player_hp") + LEVEL_UP_HP_GAIN))
+	set_flag("player_max_mana", get_flag("player_max_mana") + LEVEL_UP_MANA_GAIN)
+	set_flag("player_mana", min(get_flag("player_max_mana"), get_flag("player_mana") + LEVEL_UP_MANA_GAIN))
+	leveled_up.emit(LEVEL_UP_HP_GAIN, LEVEL_UP_MANA_GAIN)
 
 
 # 해당 퀘스트가 수락되어 활성 상태인지 여부

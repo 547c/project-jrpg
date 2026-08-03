@@ -4,6 +4,7 @@ const PLAYER_SCENE: PackedScene = preload("res://player/player.tscn")
 const CUTSCENE_BOX_SCENE: PackedScene = preload("res://ui/cutscene_box.tscn")
 const VILLAGE_SCENE_PATH := "res://world/village.tscn"
 const TITLE_SCREEN_PATH := "res://ui/title_screen.tscn"
+const BATTLE_SCENE_PATH := "res://battle/battle_scene.tscn"
 
 # 씬 경로별로 GameState에 기록할 방문 플래그를 매핑
 const VISITED_FLAGS: Dictionary = {
@@ -15,6 +16,14 @@ const VISITED_FLAGS: Dictionary = {
 var _player: Node2D
 var _is_changing_scene: bool = false
 var _transitions_suppressed: bool = false
+
+# 전투 진입 시 저장해두는 복귀 컨텍스트 (승리 시 이 좌표/씬으로 정확히 되돌아간다)
+var _battle_return_path: String = ""
+var _battle_return_position: Vector2 = Vector2.ZERO
+var _battle_monster_type: String = ""
+var _battle_encounter_id: String = ""
+# 전투 승리 후 복귀할 때, 방금 쓰러뜨린 몬스터를 리젠 상태로 돌려놓기 위한 대기 ID
+var _pending_defeated_encounter_id: String = ""
 
 
 # 씬 전환 직후에는 트리거를 무시해야 하는지 여부 (area_transition이 조회).
@@ -121,6 +130,79 @@ func change_scene_to_position(scene_path: String, position: Vector2) -> void:
 	_apply_scene_change.call_deferred(scene_path, "", true, position)
 
 
+# 몬스터 조우 시 호출. 현재 씬/좌표를 복귀 컨텍스트로 저장하고, 전용 전투 씬으로 전환한다.
+# 물리 콜백 밖에서 안전하게 처리하도록 지연시킴 (change_scene과 동일한 방어)
+func enter_battle(monster_type: String, encounter_id: String, return_path: String, return_position: Vector2) -> void:
+	if _is_changing_scene:
+		return
+	_is_changing_scene = true
+	_battle_monster_type = monster_type
+	_battle_encounter_id = encounter_id
+	_battle_return_path = return_path
+	_battle_return_position = return_position
+	_apply_battle_enter.call_deferred()
+
+
+# 실제 전투 씬 진입: 페이드로 감싸고, 오버월드 플레이어 노드는 숨겨 전투 씬 위에 겹쳐 보이지 않게 한다.
+# 전투 씬은 자체 스프라이트로 플레이어/몬스터를 그린다
+func _apply_battle_enter() -> void:
+	await FadeOverlay.fade_out()
+
+	if _player != null:
+		_player.visible = false
+
+	var old_scene := get_tree().current_scene
+	if old_scene != null:
+		get_tree().root.remove_child(old_scene)
+		old_scene.queue_free()
+
+	var battle_ps := load(BATTLE_SCENE_PATH) as PackedScene
+	var battle := battle_ps.instantiate() as BattleScene
+	get_tree().root.add_child(battle)
+	get_tree().current_scene = battle
+	battle.start_with(_battle_monster_type)
+
+	await FadeOverlay.fade_in()
+
+	_is_changing_scene = false
+
+
+# 전투 승리 후 전투 씬이 호출. 방금 쓰러뜨린 몬스터를 리젠 대기로 표시하고, 숨겼던 플레이어를 다시 보이게 한 뒤
+# 저장해둔 정확한 좌표로 원래 씬에 복귀한다 (기존 좌표 복귀 로직 재사용)
+func return_from_battle() -> void:
+	_pending_defeated_encounter_id = _battle_encounter_id
+	_return_to_overworld()
+
+
+# 도망가기 성공 시 전투 씬이 호출. 처치 처리는 하지 않는다(퀘스트/카운트 변화 없음).
+# 씬이 통째로 다시 로드되므로 몬스터는 새 인스턴스의 기본(트리거 전) 상태로 자연히 그 자리에 남는다
+func flee_battle() -> void:
+	_return_to_overworld()
+
+
+# 숨겼던 플레이어를 다시 표시하고, 저장해둔 정확한 좌표로 원래 씬에 복귀 (승리/도망 공용)
+func _return_to_overworld() -> void:
+	reveal_player()
+	change_scene_to_position(_battle_return_path, _battle_return_position)
+
+
+# 전투 진입 시 숨겼던 오버월드 플레이어 노드를 다시 표시 (승리 복귀/패배 게임오버 양쪽에서 사용)
+func reveal_player() -> void:
+	if _player != null:
+		_player.visible = true
+
+
+# 복귀한 씬에서 encounter_id가 일치하는 몬스터 조우를 찾아 리젠 상태로 전환 (즉시 재조우 방지)
+func _mark_defeated_encounter(encounter_id: String) -> void:
+	if encounter_id == "":
+		return
+	for node in get_tree().get_nodes_in_group("monster_encounters"):
+		var enc := node as MonsterEncounter
+		if enc != null and enc.encounter_id == encounter_id:
+			enc.enter_regen_state()
+			return
+
+
 # 실제 배경 씬 교체와 플레이어 이동을 수행 (call_deferred로 호출되어 물리 콜백 밖에서 실행됨).
 # use_exact_position이 true면 exact_position 좌표로, 아니면 spawn_point_name 스폰 지점으로 이동.
 # 화면이 완전히 까매진 상태에서 실제 전환이 일어나도록 페이드 아웃/인으로 감싼다
@@ -142,6 +224,11 @@ func _apply_scene_change(scene_path: String, spawn_point_name: String, use_exact
 
 	# 전환한 구역의 방문 여부를 GameState에 기록
 	_record_visited(scene_path)
+
+	# 전투 승리 후 복귀라면, 방금 쓰러뜨린 몬스터를 리젠 상태로 두어 플레이어가 그 자리에 복귀해도 즉시 재조우되지 않게 함
+	if _pending_defeated_encounter_id != "":
+		_mark_defeated_encounter(_pending_defeated_encounter_id)
+		_pending_defeated_encounter_id = ""
 
 	# 새로 추가된 트리거가 물리 서버에 아직 반영되지 않은(오래된) 플레이어 위치로 겹침 판정을 하는 것을 막기 위해 잠시 꺼둠
 	var new_triggers := get_tree().get_nodes_in_group("area_transitions")

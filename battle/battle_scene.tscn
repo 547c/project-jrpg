@@ -1,0 +1,433 @@
+[gd_scene format=3 uid="uid://bgd1xh8hlp0ts"]
+
+[ext_resource type="Script" uid="uid://d3jlp6dbxcr5w" path="res://battle/battle_scene.gd" id="1_battle"]
+[ext_resource type="Texture2D" uid="uid://fq726ml3dqoh" path="res://assets/GUI/MedievalUiMega/medieval.png" id="2_medieval"]
+[ext_resource type="Texture2D" uid="uid://786qtn7r4ods" path="res://assets/Pixel Crawler - Free Pack/Entities/Characters/Body_A/Animations/Idle_Base/Idle_Down-Sheet.png" id="3_playersheet"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_player_card_frame"]
+atlas = ExtResource("2_medieval")
+region = Rect2(1, 67, 77, 25)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_player_portrait"]
+atlas = ExtResource("3_playersheet")
+region = Rect2(23, 16, 18, 17)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bar_bg"]
+bg_color = Color(0, 0, 0, 0)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hp_fill"]
+bg_color = Color(0.82, 0.32, 0.28, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mana_fill"]
+bg_color = Color(0.35, 0.55, 0.75, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_gold_icon"]
+bg_color = Color(0.85, 0.7, 0.25, 1)
+corner_radius_top_left = 7
+corner_radius_top_right = 7
+corner_radius_bottom_right = 7
+corner_radius_bottom_left = 7
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_monster_card_frame"]
+atlas = ExtResource("2_medieval")
+region = Rect2(1, 3, 77, 25)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_panel_wood"]
+atlas = ExtResource("2_medieval")
+region = Rect2(516, 207, 119, 50)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_panel"]
+texture = SubResource("AtlasTexture_panel_wood")
+texture_margin_left = 20.0
+texture_margin_top = 15.0
+texture_margin_right = 20.0
+texture_margin_bottom = 15.0
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_button_wood"]
+atlas = ExtResource("2_medieval")
+region = Rect2(656, 206, 63, 51)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_button_normal"]
+texture = SubResource("AtlasTexture_button_wood")
+texture_margin_left = 14.0
+texture_margin_top = 14.0
+texture_margin_right = 14.0
+texture_margin_bottom = 14.0
+
+[node name="BattleScene" type="Node2D" unique_id=876674391]
+script = ExtResource("1_battle")
+
+[node name="View" type="CanvasLayer" parent="." unique_id=1926456904]
+
+[node name="Background" type="Control" parent="View" unique_id=1947359115]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Sky" type="ColorRect" parent="View/Background" unique_id=1981319066]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 1.0
+anchor_bottom = 0.55
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.62, 0.81, 0.56, 1)
+
+[node name="Ground" type="ColorRect" parent="View/Background" unique_id=1034695266]
+layout_mode = 1
+anchors_preset = -1
+anchor_top = 0.55
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.33, 0.6, 0.29, 1)
+
+[node name="PlayerShadow" type="Polygon2D" parent="View" unique_id=1425417216]
+color = Color(0, 0, 0, 0.28)
+
+[node name="MonsterShadow" type="Polygon2D" parent="View" unique_id=509696458]
+color = Color(0, 0, 0, 0.28)
+
+[node name="Actors" type="Node2D" parent="View" unique_id=1535746480]
+
+[node name="PlayerSprite" type="AnimatedSprite2D" parent="View/Actors" unique_id=1242224288]
+
+[node name="MonsterSprite" type="AnimatedSprite2D" parent="View/Actors" unique_id=213535214]
+
+[node name="HUD" type="Control" parent="View" unique_id=1995357692]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="PlayerCard" type="Control" parent="View/HUD" unique_id=1042604869]
+layout_mode = 1
+anchors_preset = 0
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 247.0
+offset_bottom = 91.0
+mouse_filter = 2
+
+[node name="Background" type="TextureRect" parent="View/HUD/PlayerCard" unique_id=394399365]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = SubResource("AtlasTexture_player_card_frame")
+expand_mode = 1
+
+[node name="Portrait" type="TextureRect" parent="View/HUD/PlayerCard" unique_id=2107059311]
+texture_filter = 1
+layout_mode = 0
+offset_left = 4.0
+offset_top = 4.0
+offset_right = 71.0
+offset_bottom = 71.0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_player_portrait")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="HPBar" type="ProgressBar" parent="View/HUD/PlayerCard" unique_id=677966113]
+layout_mode = 0
+offset_left = 80.0
+offset_top = 6.0
+offset_right = 225.0
+offset_bottom = 24.0
+theme_override_styles/background = SubResource("StyleBoxFlat_bar_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_hp_fill")
+max_value = 1.0
+value = 1.0
+show_percentage = false
+
+[node name="HPBarLabel" type="Label" parent="View/HUD/PlayerCard" unique_id=524442279]
+layout_mode = 0
+offset_left = 80.0
+offset_top = 6.0
+offset_right = 225.0
+offset_bottom = 24.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.75)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 11
+text = "HP: 0/0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ManaBar" type="ProgressBar" parent="View/HUD/PlayerCard" unique_id=1443076965]
+layout_mode = 0
+offset_left = 80.0
+offset_top = 28.0
+offset_right = 225.0
+offset_bottom = 42.0
+theme_override_styles/background = SubResource("StyleBoxFlat_bar_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_mana_fill")
+max_value = 1.0
+value = 1.0
+show_percentage = false
+
+[node name="ManaBarLabel" type="Label" parent="View/HUD/PlayerCard" unique_id=76895655]
+layout_mode = 0
+offset_left = 80.0
+offset_top = 28.0
+offset_right = 225.0
+offset_bottom = 42.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.75)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 11
+text = "Mana: 0/0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="GoldIcon" type="Panel" parent="View/HUD/PlayerCard" unique_id=2077341763]
+layout_mode = 0
+offset_left = 80.0
+offset_top = 50.0
+offset_right = 94.0
+offset_bottom = 64.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_gold_icon")
+
+[node name="GoldLabel" type="Label" parent="View/HUD/PlayerCard" unique_id=1618226376]
+layout_mode = 0
+offset_left = 98.0
+offset_top = 47.0
+offset_right = 196.0
+offset_bottom = 70.0
+theme_override_colors/font_color = Color(0.95, 0.9, 0.6, 1)
+theme_override_font_sizes/font_size = 14
+text = "0"
+vertical_alignment = 1
+
+[node name="MonsterCard" type="Control" parent="View/HUD" unique_id=382173193]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -247.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = 91.0
+grow_horizontal = 0
+mouse_filter = 2
+
+[node name="Background" type="TextureRect" parent="View/HUD/MonsterCard" unique_id=2575171]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = SubResource("AtlasTexture_monster_card_frame")
+expand_mode = 1
+
+[node name="Portrait" type="TextureRect" parent="View/HUD/MonsterCard" unique_id=1171336521]
+texture_filter = 1
+layout_mode = 0
+offset_left = 4.0
+offset_top = 4.0
+offset_right = 71.0
+offset_bottom = 71.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="HPBar" type="ProgressBar" parent="View/HUD/MonsterCard" unique_id=1045443658]
+layout_mode = 0
+offset_left = 80.0
+offset_top = 6.0
+offset_right = 225.0
+offset_bottom = 24.0
+theme_override_styles/background = SubResource("StyleBoxFlat_bar_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_hp_fill")
+max_value = 1.0
+value = 1.0
+show_percentage = false
+
+[node name="HPBarLabel" type="Label" parent="View/HUD/MonsterCard" unique_id=1464587576]
+layout_mode = 0
+offset_left = 80.0
+offset_top = 6.0
+offset_right = 225.0
+offset_bottom = 24.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.75)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 11
+text = "HP: 0/0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="GoldIcon" type="Panel" parent="View/HUD/MonsterCard" unique_id=1509590798]
+layout_mode = 0
+offset_left = 80.0
+offset_top = 50.0
+offset_right = 94.0
+offset_bottom = 64.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_gold_icon")
+
+[node name="GoldLabel" type="Label" parent="View/HUD/MonsterCard" unique_id=1245545860]
+layout_mode = 0
+offset_left = 98.0
+offset_top = 47.0
+offset_right = 196.0
+offset_bottom = 70.0
+theme_override_colors/font_color = Color(0.95, 0.9, 0.6, 1)
+theme_override_font_sizes/font_size = 14
+text = "0~0"
+vertical_alignment = 1
+
+[node name="BottomBar" type="Panel" parent="View/HUD" unique_id=434415901]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -150.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxTexture_panel")
+
+[node name="HBox" type="HBoxContainer" parent="View/HUD/BottomBar" unique_id=320857666]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = 18.0
+offset_right = -24.0
+offset_bottom = -18.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 20
+
+[node name="MessageLabel" type="Label" parent="View/HUD/BottomBar/HBox" unique_id=610795213]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.25, 0.15, 0.07, 1)
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="Menus" type="Control" parent="View/HUD/BottomBar/HBox" unique_id=1828766404]
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ActionRow" type="HBoxContainer" parent="View/HUD/BottomBar/HBox/Menus" unique_id=2051156105]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="AttackButton" type="Button" parent="View/HUD/BottomBar/HBox/Menus/ActionRow" unique_id=1426217740]
+texture_filter = 1
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+text = "공격"
+
+[node name="SkillButton" type="Button" parent="View/HUD/BottomBar/HBox/Menus/ActionRow" unique_id=6777164]
+texture_filter = 1
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+text = "스킬"
+
+[node name="FleeButton" type="Button" parent="View/HUD/BottomBar/HBox/Menus/ActionRow" unique_id=2062791297]
+texture_filter = 1
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+text = "도망가기"
+
+[node name="SkillRow" type="GridContainer" parent="View/HUD/BottomBar/HBox/Menus" unique_id=896286680]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 6
+columns = 2
+
+[node name="StrikeButton" type="Button" parent="View/HUD/BottomBar/HBox/Menus/SkillRow" unique_id=1008553238]
+texture_filter = 1
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+text = "강타 (4)"
+
+[node name="HealButton" type="Button" parent="View/HUD/BottomBar/HBox/Menus/SkillRow" unique_id=1938675166]
+texture_filter = 1
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+text = "회복 (6)"
+
+[node name="DodgeButton" type="Button" parent="View/HUD/BottomBar/HBox/Menus/SkillRow" unique_id=1008723423]
+texture_filter = 1
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+text = "피하기 (2)"
+
+[node name="BackButton" type="Button" parent="View/HUD/BottomBar/HBox/Menus/SkillRow" unique_id=386369313]
+texture_filter = 1
+custom_minimum_size = Vector2(0, 26)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+text = "뒤로"
+
+[node name="CloseButton" type="Button" parent="View/HUD/BottomBar/HBox/Menus" unique_id=631655223]
+visible = false
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+text = "닫기"

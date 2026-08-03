@@ -1,7 +1,0 @@
-[gd_resource type="AtlasTexture" load_steps=2 format=3]
-
-[ext_resource type="Texture2D" uid="uid://dlby316p68meo" path="res://assets/Pixel Crawler - Free Pack/Environment/Structures/Stations/Anvil/Anvil.png" id="1_tex"]
-
-[resource]
-atlas = ExtResource("1_tex")
-region = Rect2(80, 36, 79, 56)

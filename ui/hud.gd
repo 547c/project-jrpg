@@ -6,7 +6,7 @@ extends CanvasLayer
 # 아니거나, 타이틀/엔딩 씬이면 둘 다 숨긴다. 퀘스트 버튼은 QuestLog를 토글한다.
 
 # HUD 전체를 가려야 하는 상황을 나타내는 UI 그룹들 (cutscene_box: 오프닝 컷신 재생 중)
-const BLOCKING_GROUPS := ["dialogue_box", "battle_box", "pause_menu", "game_over", "quest_log", "cutscene_box"]
+const BLOCKING_GROUPS := ["dialogue_box", "battle_box", "pause_menu", "game_over", "quest_log", "cutscene_box", "level_up"]
 
 # objective 패널 폭 자동 조절: 텍스트 실제 폭 + 라벨 좌우 inset(18+18)만큼 여유를 두고, 이 범위로 clamp
 const OBJECTIVE_PANEL_MIN_WIDTH := 180.0
@@ -15,9 +15,12 @@ const OBJECTIVE_LABEL_PADDING := 36.0
 const OBJECTIVE_PANEL_RIGHT_OFFSET := -12.0 # 화면 오른쪽 가장자리에서의 고정 여백 (이 값은 절대 안 바뀜)
 
 @onready var _main_hud: Control = $MainHud
-@onready var _hp_bar: TextureProgressBar = $MainHud/Card/HPFrame/HPFill
-@onready var _hp_label: Label = $MainHud/Card/HPLabel
-@onready var _lv_label: Label = $MainHud/Card/LvLabel
+@onready var _hp_bar: ProgressBar = $MainHud/StatCard/HPBar
+@onready var _hp_bar_label: Label = $MainHud/StatCard/HPBarLabel
+@onready var _mana_bar: ProgressBar = $MainHud/StatCard/ManaBar
+@onready var _mana_bar_label: Label = $MainHud/StatCard/ManaBarLabel
+@onready var _gold_label: Label = $MainHud/StatCard/GoldLabel
+@onready var _lv_label: Label = $MainHud/LvLabel
 @onready var _objective_hud: Control = $ObjectiveHud
 @onready var _objective_panel: Panel = $ObjectiveHud/ObjectivePanel
 @onready var _objective_label: Label = $ObjectiveHud/ObjectivePanel/ObjectiveLabel
@@ -33,13 +36,17 @@ func _ready() -> void:
 	GameState.quest_changed.connect(_on_progress_changed)
 	_refresh_objective()
 
+	# 골드는 flags를 거치지 않는 별도 필드라 전용 시그널로 실시간 갱신
+	GameState.gold_changed.connect(_on_gold_changed)
+	_update_gold_label()
+
 
 # 매 프레임 표시 조건을 갱신하고, 체력바를 현재 HP에 맞춘다 (신호 누락 걱정 없이 항상 정확)
 func _process(_delta: float) -> void:
 	var show_hud := _should_show_hud()
 	_main_hud.visible = show_hud
 	_objective_hud.visible = show_hud
-	_update_hp()
+	_update_stat_bars()
 
 
 # 게임 진행 중이고(플레이어 존재), 타이틀/엔딩이 아니며, 가리는 UI가 하나도 안 열려 있을 때만 표시
@@ -56,13 +63,28 @@ func _should_show_hud() -> bool:
 	return true
 
 
-# 체력바(최대치/현재치)와 숫자 라벨을 GameState 값으로 갱신
-func _update_hp() -> void:
+# 카드의 체력바/마나바(+겹쳐진 숫자 텍스트)를 GameState 값으로 갱신
+func _update_stat_bars() -> void:
 	var hp: int = GameState.get_flag("player_hp")
 	var max_hp: int = GameState.get_flag("player_max_hp")
 	_hp_bar.max_value = max_hp
 	_hp_bar.value = hp
-	_hp_label.text = "%d / %d" % [hp, max_hp]
+	_hp_bar_label.text = "HP: %d/%d" % [hp, max_hp]
+
+	var mana: int = GameState.get_flag("player_mana")
+	var max_mana: int = GameState.get_flag("player_max_mana")
+	_mana_bar.max_value = max_mana
+	_mana_bar.value = mana
+	_mana_bar_label.text = "Mana: %d/%d" % [mana, max_mana]
+
+
+# 골드 시그널 콜백 (인자 무시, 최신값은 GameState.gold에서 다시 읽음)
+func _on_gold_changed(_new_gold: int) -> void:
+	_update_gold_label()
+
+
+func _update_gold_label() -> void:
+	_gold_label.text = str(GameState.gold)
 
 
 # flag_changed(flag_name, value) / quest_changed(quest_id) 어느 쪽이든 인자 무시하고 목표 갱신
