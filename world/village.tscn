@@ -26,20 +26,18 @@
 [ext_resource type="Texture2D" uid="uid://cxh7naflc0al8" path="res://assets/Pixel Crawler - Free Pack/Environment/Props/Static/Trees/Model_01/Size_04.png" id="15_idli4"]
 [ext_resource type="Texture2D" uid="uid://tysaqn71orf0" path="res://assets/Pixel Crawler - Free Pack/Environment/Tilesets/Dungeon_Tiles.png" id="16_idli4"]
 [ext_resource type="Texture2D" uid="uid://cklmf6ikrpfu2" path="res://assets/Pixel Crawler - Free Pack/Environment/Props/Static/Trees/Model_01/Size_02.png" id="16_j1rqw"]
-[ext_resource type="Texture2D" path="res://world/buildings/wall_tan.tres" id="16_walltan"]
 [ext_resource type="Texture2D" uid="uid://dgm1whdavlrbn" path="res://assets/Pixel Crawler - Free Pack/Environment/Props/Static/Trees/Model_02/Size_02.png" id="17_v4bed"]
 [ext_resource type="Texture2D" uid="uid://dosbd164ejk43" path="res://assets/Pixel Crawler - Free Pack/Environment/Props/Static/Trees/Model_02/Size_04.png" id="18_7axtg"]
-[ext_resource type="Texture2D" path="res://world/buildings/wall_log.tres" id="18_walllog"]
 [ext_resource type="Texture2D" uid="uid://d3uubr8sie4gk" path="res://assets/Pixel Crawler - Free Pack/Environment/Structures/Buildings/Roofs.png" id="19_0q536"]
 [ext_resource type="Texture2D" uid="uid://dj1fs84crrm1a" path="res://assets/Pixel Crawler - Free Pack/Environment/Props/Static/Trees/Model_02/Size_05.png" id="19_3xjjw"]
-[ext_resource type="Texture2D" path="res://world/buildings/anvil.tres" id="20_anvil"]
 [ext_resource type="Texture2D" uid="uid://bth6xemm4tedv" path="res://assets/Pixel Crawler - Free Pack/Environment/Props/Static/Trees/Model_03/Size_02.png" id="20_g8dfl"]
 [ext_resource type="Texture2D" uid="uid://bisbfokrb0e2r" path="res://assets/Pixel Crawler - Free Pack/Environment/Props/Static/Trees/Model_03/Size_04-export.png" id="21_emsg8"]
-[ext_resource type="Texture2D" path="res://world/buildings/furnace.tres" id="21_furnace"]
 [ext_resource type="Texture2D" uid="uid://df0vth5va25ja" path="res://assets/Pixel Crawler - Free Pack/Environment/Props/Static/Trees/Model_03/Size_05.png" id="22_angcc"]
-[ext_resource type="Texture2D" path="res://world/buildings/workbench.tres" id="22_workbench"]
 [ext_resource type="Texture2D" uid="uid://b74evivivr8xs" path="res://assets/Pixel Crawler - Free Pack/Environment/Props/Static/Vegetation.png" id="24_mi1im"]
 [ext_resource type="PackedScene" path="res://world/campfire.tscn" id="25_campfire"]
+[ext_resource type="Texture2D" uid="uid://dlby316p68meo" path="res://assets/Pixel Crawler - Free Pack/Environment/Structures/Stations/Anvil/Anvil.png" id="36_edde0"]
+[ext_resource type="Texture2D" uid="uid://cqt42yv1ljryp" path="res://assets/Pixel Crawler - Free Pack/Environment/Structures/Stations/Furnace/Furnace.png" id="37_khy6x"]
+[ext_resource type="Texture2D" uid="uid://brfnr2uq5qcny" path="res://assets/Pixel Crawler - Free Pack/Environment/Structures/Stations/Workbench/Workbench.png" id="38_yrodc"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_j1rqw"]
 texture = ExtResource("1_1d4n2")
@@ -7028,6 +7026,26 @@ sources/29 = SubResource("TileSetAtlasSource_v6get")
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_door"]
 size = Vector2(40, 215)
 
+[sub_resource type="AtlasTexture" id="AtlasTexture_g4ndp"]
+atlas = ExtResource("13_vbqh1")
+region = Rect2(384, 13, 96, 163)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_idli4"]
+atlas = ExtResource("13_vbqh1")
+region = Rect2(0, 7, 96, 169)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_j1rqw"]
+atlas = ExtResource("36_edde0")
+region = Rect2(80, 36, 79, 56)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_v4bed"]
+atlas = ExtResource("37_khy6x")
+region = Rect2(53, 133, 38, 59)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_7axtg"]
+atlas = ExtResource("38_yrodc")
+region = Rect2(112, 115, 80, 61)
+
 [node name="Village" type="Node2D" unique_id=969706249]
 
 [node name="TileMap" type="TileMap" parent="." unique_id=592599225]
@@ -7096,7 +7114,7 @@ position = Vector2(-79, -49)
 script = ExtResource("5_elara")
 
 [node name="Rohan" parent="." unique_id=827381515 instance=ExtResource("4_npc")]
-position = Vector2(-107, -457)
+position = Vector2(-94, -417)
 script = ExtResource("6_rohan")
 
 [node name="Yusuf" parent="." unique_id=1210193695 instance=ExtResource("4_npc")]
@@ -7117,7 +7135,7 @@ position = Vector2(818, -102)
 [node name="House1" type="Sprite2D" parent="." unique_id=1402581195]
 position = Vector2(-1085.6, -815.15)
 scale = Vector2(1.3, 1.3)
-texture = ExtResource("16_walltan")
+texture = SubResource("AtlasTexture_g4ndp")
 
 [node name="Window" type="Polygon2D" parent="House1" unique_id=305742236]
 position = Vector2(-48.461517, -314.61542)
@@ -7143,7 +7161,7 @@ texture = ExtResource("13_vbqh1")
 [node name="House2" type="Sprite2D" parent="." unique_id=1630270701]
 position = Vector2(-571.59985, -999.15)
 scale = Vector2(1.3, 1.3)
-texture = ExtResource("18_walllog")
+texture = SubResource("AtlasTexture_idli4")
 
 [node name="Green Roof" type="Polygon2D" parent="House2" unique_id=1066860183]
 position = Vector2(-192.3078, -194.6154)
@@ -7160,22 +7178,22 @@ uv = PackedVector2Array(191.99998, 72, 136, 128, 136, 176.00002, 152, 176.00002,
 [node name="Anvil" type="Sprite2D" parent="." unique_id=1260935993]
 position = Vector2(-668, -795)
 scale = Vector2(1.5, 1.5)
-texture = ExtResource("20_anvil")
+texture = SubResource("AtlasTexture_j1rqw")
 
 [node name="Furnace" type="Sprite2D" parent="." unique_id=1773744542]
 position = Vector2(-960, -660)
 scale = Vector2(1.5, 1.5)
-texture = ExtResource("21_furnace")
+texture = SubResource("AtlasTexture_v4bed")
 
 [node name="Workbench" type="Sprite2D" parent="." unique_id=11330770]
 position = Vector2(-1135, -582.99994)
 scale = Vector2(1.5, 1.5)
-texture = ExtResource("22_workbench")
+texture = SubResource("AtlasTexture_7axtg")
 
 [node name="House3" type="Sprite2D" parent="." unique_id=246299225]
 position = Vector2(-829, -929)
 scale = Vector2(1.6899998, 1.6899998)
-texture = ExtResource("18_walllog")
+texture = SubResource("AtlasTexture_idli4")
 
 [node name="Polygon2D" type="Polygon2D" parent="House3" unique_id=1314268545]
 position = Vector2(-192.3078, -100)

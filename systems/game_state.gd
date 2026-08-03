@@ -156,6 +156,13 @@ func heal_player_partial(fraction: float) -> void:
 	set_flag("player_hp", new_hp)
 
 
+# player_mana를 player_max_mana의 fraction 비율만큼 회복 (최대치를 넘지 않게 clamp). 상점 포션 등에 사용
+func restore_mana_partial(fraction: float) -> void:
+	var max_mana: int = get_flag("player_max_mana")
+	var new_mana: int = min(max_mana, get_flag("player_mana") + int(round(max_mana * fraction)))
+	set_flag("player_mana", new_mana)
+
+
 # 골드를 amount만큼 늘림 (몬스터 처치 드롭 등)
 func add_gold(amount: int) -> void:
 	gold += amount
