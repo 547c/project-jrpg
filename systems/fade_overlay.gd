@@ -3,7 +3,7 @@ extends CanvasLayer
 # 씬 전환 시 화면을 검게 덮었다 걷어내는 공용 페이드 오버레이 (autoload, 항상 최상단 레이어).
 # fade_out()/fade_in()을 await해서 쓰면, 완전히 까매진/투명해진 뒤에야 다음 코드가 이어진다.
 
-const DEFAULT_DURATION := 0.35
+const DEFAULT_DURATION := 0.55
 
 @onready var _rect: ColorRect = $Rect
 

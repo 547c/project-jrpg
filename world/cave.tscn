@@ -23,18 +23,18 @@ offset_right = 800.0
 offset_bottom = 600.0
 color = Color(0.12, 0.12, 0.16, 1)
 
-[node name="CaveSpawn" type="Marker2D" parent="." unique_id=252872524]
+[node name="CaveSpawnFromVillage" type="Marker2D" parent="." unique_id=252872524]
 position = Vector2(160, 300)
 script = ExtResource("1_spawn")
-spawn_point_name = "CaveSpawn"
+spawn_point_name = "CaveSpawnFromVillage"
 
-[node name="ToForest" type="Area2D" parent="." unique_id=697838308]
+[node name="ToVillage" type="Area2D" parent="." unique_id=697838308]
 position = Vector2(20, 300)
 script = ExtResource("2_trans")
-destination_scene_path = "res://world/forest.tscn"
-destination_spawn_point = "ForestSpawnFromCave"
+destination_scene_path = "res://world/village.tscn"
+destination_spawn_point = "VillageSpawnFromCave"
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="ToForest" unique_id=1522130238]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ToVillage" unique_id=1522130238]
 shape = SubResource("RectangleShape2D_door")
 
 [node name="GuardianEncounter" type="Area2D" parent="."]

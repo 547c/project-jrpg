@@ -25,30 +25,23 @@ func show_game_over() -> void:
 	_root.visible = true
 
 
+# 외부(슬롯 메뉴 로드 성공 시)에서 게임오버 화면을 강제로 닫을 때 사용
+func dismiss() -> void:
+	_root.visible = false
+
+
 func _on_restart() -> void:
 	_root.visible = false
 	_restart_to_village()
 
 
+# 불러오기는 슬롯 선택 메뉴를 띄운다 (게임오버 화면은 뒤에 유지 → 닫기 시 복귀).
+# 슬롯에서 로드 성공 시 슬롯 메뉴가 이 화면을 dismiss()로 닫는다
 func _on_load() -> void:
-	if SaveManager.has_save():
-		_root.visible = false
-		SaveManager.load_game()
-	else:
-		_show_toast_then_restart()
+	SaveSlotMenu.open_load_mode()
 
 
 # 절반만 회복시키고 마을 스폰 지점으로 이동 (재시작 페널티)
 func _restart_to_village() -> void:
 	GameState.heal_player_half()
 	SceneManager.change_scene(VILLAGE_SCENE_PATH, VILLAGE_SPAWN_POINT)
-
-
-# 저장 파일이 없을 때: 안내를 잠깐 보여준 뒤 재시작 로직으로 대체 진행
-func _show_toast_then_restart() -> void:
-	_toast.text = "저장된 게임이 없습니다"
-	_toast.visible = true
-	await get_tree().create_timer(1.2).timeout
-	_toast.visible = false
-	_root.visible = false
-	_restart_to_village()

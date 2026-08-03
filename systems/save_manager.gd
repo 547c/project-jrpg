@@ -1,17 +1,30 @@
 extends Node
 
-# 단일 슬롯 세이브/로드. GameState.flags + 현재 씬 경로 + 플레이어의 정확한 좌표를
-# JSON으로 직렬화해 user://save_data.json에 저장한다.
-const SAVE_PATH := "user://save_data.json"
+# 5슬롯 세이브/로드. 각 슬롯은 user://save_slot_<N>.json 파일 하나.
+# 저장 데이터: 복원용(scene_path/player_position/flags/quests) + 슬롯 목록 미리보기용
+# (objective_text/quest_level/player_hp/player_max_hp).
+const SLOT_COUNT := 5
 
 
-# 저장 파일이 존재하는지 여부
-func has_save() -> bool:
-	return FileAccess.file_exists(SAVE_PATH)
+func _slot_path(slot: int) -> String:
+	return "user://save_slot_%d.json" % slot
 
 
-# 현재 게임 상태(flags/씬/플레이어 위치)를 JSON으로 저장. 성공 시 true
-func save_game() -> bool:
+# 지정 슬롯에 저장 파일이 있는지
+func has_save(slot: int) -> bool:
+	return FileAccess.file_exists(_slot_path(slot))
+
+
+# 슬롯 중 하나라도 저장 파일이 있는지 (타이틀 LOAD 버튼 활성화 판정용)
+func has_any_save() -> bool:
+	for slot in range(1, SLOT_COUNT + 1):
+		if has_save(slot):
+			return true
+	return false
+
+
+# 현재 게임 상태를 지정 슬롯에 저장. 성공 시 true
+func save_game(slot: int) -> bool:
 	var current_scene := get_tree().current_scene
 	if current_scene == null or not SceneManager.has_player():
 		return false
@@ -21,9 +34,14 @@ func save_game() -> bool:
 		"player_position": _vector2_to_dict(SceneManager.get_player_position()),
 		"flags": GameState.flags,
 		"quests": GameState.quests,
+		# --- 슬롯 목록 미리보기용 (복원엔 안 쓰임) ---
+		"objective_text": GameState.get_objective_text(),
+		"quest_level": GameState.get_flag("quest_level"),
+		"player_hp": GameState.get_flag("player_hp"),
+		"player_max_hp": GameState.get_flag("player_max_hp"),
 	}
 
-	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	var file := FileAccess.open(_slot_path(slot), FileAccess.WRITE)
 	if file == null:
 		return false
 	file.store_string(JSON.stringify(data, "\t"))
@@ -31,21 +49,11 @@ func save_game() -> bool:
 	return true
 
 
-# 저장 파일을 읽어 flags를 복원하고, 저장된 씬으로 이동해 플레이어를 정확한 좌표에 배치. 성공 시 true
-func load_game() -> bool:
-	if not has_save():
+# 지정 슬롯을 읽어 flags/quests를 복원하고, 저장된 씬으로 이동해 플레이어를 정확한 좌표에 배치. 성공 시 true
+func load_game(slot: int) -> bool:
+	var data := _read_slot(slot)
+	if data.is_empty():
 		return false
-
-	var file := FileAccess.open(SAVE_PATH, FileAccess.READ)
-	if file == null:
-		return false
-	var text := file.get_as_text()
-	file.close()
-
-	var parsed = JSON.parse_string(text)
-	if not (parsed is Dictionary):
-		return false
-	var data: Dictionary = parsed
 
 	var scene_path: String = data.get("scene_path", "")
 	if scene_path == "":
@@ -58,6 +66,42 @@ func load_game() -> bool:
 	SceneManager.ensure_player_exists()
 	SceneManager.change_scene_to_position(scene_path, position)
 	return true
+
+
+# 슬롯의 미리보기 요약을 반환. 비어있거나 손상됐으면 빈 Dictionary
+func get_save_summary(slot: int) -> Dictionary:
+	var data := _read_slot(slot)
+	if data.is_empty():
+		return {}
+	return {
+		"objective_text": data.get("objective_text", ""),
+		"quest_level": int(data.get("quest_level", 0)),
+		"player_hp": int(data.get("player_hp", 0)),
+		"player_max_hp": int(data.get("player_max_hp", 0)),
+	}
+
+
+# 5개 슬롯 전부의 요약을 배열로 (index 0 = 슬롯1 ... index 4 = 슬롯5). 빈 슬롯은 빈 Dictionary
+func get_all_save_summaries() -> Array:
+	var result: Array = []
+	for slot in range(1, SLOT_COUNT + 1):
+		result.append(get_save_summary(slot))
+	return result
+
+
+# 슬롯 파일을 열어 파싱한 Dictionary를 반환 (없거나 손상 시 빈 Dictionary)
+func _read_slot(slot: int) -> Dictionary:
+	if not has_save(slot):
+		return {}
+	var file := FileAccess.open(_slot_path(slot), FileAccess.READ)
+	if file == null:
+		return {}
+	var text := file.get_as_text()
+	file.close()
+	var parsed = JSON.parse_string(text)
+	if not (parsed is Dictionary):
+		return {}
+	return parsed
 
 
 # Vector2를 JSON 직렬화 가능한 {x, y} 딕셔너리로 변환

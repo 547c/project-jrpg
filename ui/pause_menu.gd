@@ -20,9 +20,12 @@ func _ready() -> void:
 	_title_button.pressed.connect(_on_title)
 
 
-# ESC 입력을 GUI보다 먼저 가로채(_input) 메뉴를 토글. 열려 있으면 항상 닫고, 닫혀 있으면 조건이 될 때만 연다
+# ESC 입력을 GUI보다 먼저 가로채(_input) 메뉴를 토글. 열려 있으면 항상 닫고, 닫혀 있으면 조건이 될 때만 연다.
+# 슬롯 메뉴가 위에 떠 있으면 그쪽이 ESC를 처리하도록 양보한다
 func _input(event: InputEvent) -> void:
 	if not event.is_action_pressed("ui_cancel"):
+		return
+	if SaveSlotMenu.is_open():
 		return
 	if _root.visible:
 		_close()
@@ -55,33 +58,24 @@ func _close() -> void:
 	_root.visible = false
 
 
+# 외부(슬롯 메뉴 로드 성공 시)에서 일시정지 메뉴를 강제로 닫을 때 사용
+func dismiss() -> void:
+	_root.visible = false
+
+
 func _on_continue() -> void:
 	_close()
 
 
+# 저장/불러오기는 슬롯 선택 메뉴를 띄운다 (일시정지 메뉴는 뒤에 그대로 유지 → 닫기 시 복귀)
 func _on_save() -> void:
-	if SaveManager.save_game():
-		_show_toast("저장 완료")
-	else:
-		_show_toast("저장에 실패했습니다")
+	SaveSlotMenu.open_save_mode()
 
 
 func _on_load() -> void:
-	if SaveManager.has_save():
-		_close()
-		SaveManager.load_game()
-	else:
-		_show_toast("저장된 게임이 없습니다")
+	SaveSlotMenu.open_load_mode()
 
 
 func _on_title() -> void:
 	_close()
 	SceneManager.return_to_title()
-
-
-# 짧은 안내 문구를 잠깐 보여줬다 숨김
-func _show_toast(text: String) -> void:
-	_toast.text = text
-	_toast.visible = true
-	await get_tree().create_timer(1.5).timeout
-	_toast.visible = false

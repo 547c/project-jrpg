@@ -7076,6 +7076,21 @@ destination_spawn_point = "ForestSpawnFromVillage"
 position = Vector2(-2, 7)
 shape = SubResource("RectangleShape2D_door")
 
+[node name="VillageSpawnFromCave" type="Marker2D" parent="." unique_id=1580400315]
+position = Vector2(-48, -431)
+script = ExtResource("1_spawn")
+spawn_point_name = "VillageSpawnFromCave"
+
+[node name="ToCave" type="Area2D" parent="." unique_id=502038309]
+position = Vector2(-45, -528)
+scale = Vector2(1.20518, 0.32223427)
+script = ExtResource("2_trans")
+destination_scene_path = "res://world/cave.tscn"
+destination_spawn_point = "CaveSpawnFromVillage"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ToCave" unique_id=1312654414]
+shape = SubResource("RectangleShape2D_door")
+
 [node name="Elara" parent="." unique_id=1730047591 instance=ExtResource("4_npc")]
 position = Vector2(-79, -49)
 script = ExtResource("5_elara")

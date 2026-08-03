@@ -1,8 +1,8 @@
 extends Area2D
 
 const DIALOGUE_START_ID := "guardian_intro_1"
-const RETURN_SCENE_PATH := "res://world/forest.tscn"
-const RETURN_SPAWN_POINT := "ForestSpawnFromCave"
+const RETURN_SCENE_PATH := "res://world/village.tscn"
+const RETURN_SPAWN_POINT := "VillageSpawnFromCave"
 const REQUIRED_QUEST_LEVEL := 2 # 이 이상이어야 실제 수호자 이벤트가 시작됨 (숲/동굴 서브퀘 완료 개수)
 
 # quest_level이 부족할 때 대신 보여주는 짧은 안내 (선택지 없이 닫기만)

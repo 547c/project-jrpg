@@ -1,0 +1,216 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://ui/save_slot_menu.gd" id="1_slot"]
+[ext_resource type="Texture2D" path="res://assets/GUI/MedievalUiMega/medieval.png" id="2_medieval"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_panel_wood"]
+atlas = ExtResource("2_medieval")
+region = Rect2(516, 207, 119, 50)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_panel"]
+texture = SubResource("AtlasTexture_panel_wood")
+texture_margin_left = 20.0
+texture_margin_top = 15.0
+texture_margin_right = 20.0
+texture_margin_bottom = 15.0
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_button_wood"]
+atlas = ExtResource("2_medieval")
+region = Rect2(656, 206, 63, 51)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_button_normal"]
+texture = SubResource("AtlasTexture_button_wood")
+texture_margin_left = 14.0
+texture_margin_top = 14.0
+texture_margin_right = 14.0
+texture_margin_bottom = 14.0
+
+[node name="SaveSlotMenu" type="CanvasLayer"]
+layer = 120
+script = ExtResource("1_slot")
+
+[node name="Root" type="Control" parent="."]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Dim" type="ColorRect" parent="Root"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.6)
+
+[node name="Panel" type="Panel" parent="Root"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -320.0
+offset_top = -280.0
+offset_right = 320.0
+offset_bottom = 280.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxTexture_panel")
+
+[node name="VBox" type="VBoxContainer" parent="Root/Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 28.0
+offset_top = 22.0
+offset_right = -28.0
+offset_bottom = -22.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 8
+
+[node name="TitleLabel" type="Label" parent="Root/Panel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_font_sizes/font_size = 24
+horizontal_alignment = 1
+text = "저장하기"
+
+[node name="Slot1" type="Button" parent="Root/Panel/VBox"]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+texture_filter = 1
+theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+text = "슬롯 1"
+
+[node name="Slot2" type="Button" parent="Root/Panel/VBox"]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+texture_filter = 1
+theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+text = "슬롯 2"
+
+[node name="Slot3" type="Button" parent="Root/Panel/VBox"]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+texture_filter = 1
+theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+text = "슬롯 3"
+
+[node name="Slot4" type="Button" parent="Root/Panel/VBox"]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+texture_filter = 1
+theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+text = "슬롯 4"
+
+[node name="Slot5" type="Button" parent="Root/Panel/VBox"]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+texture_filter = 1
+theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+text = "슬롯 5"
+
+[node name="CloseButton" type="Button" parent="Root/Panel/VBox"]
+custom_minimum_size = Vector2(0, 42)
+layout_mode = 2
+texture_filter = 1
+theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+text = "닫기"
+
+[node name="Toast" type="Label" parent="Root/Panel/VBox"]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.9, 0.55, 1)
+horizontal_alignment = 1
+text = ""
+
+[node name="ConfirmPopup" type="Control" parent="Root"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Dim" type="ColorRect" parent="Root/ConfirmPopup"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.6)
+
+[node name="Panel" type="Panel" parent="Root/ConfirmPopup"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -230.0
+offset_top = -110.0
+offset_right = 230.0
+offset_bottom = 110.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxTexture_panel")
+
+[node name="VBox" type="VBoxContainer" parent="Root/ConfirmPopup/Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 26.0
+offset_top = 22.0
+offset_right = -26.0
+offset_bottom = -22.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 18
+
+[node name="MessageLabel" type="Label" parent="Root/ConfirmPopup/Panel/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+text = "이 슬롯을 덮어쓰시겠습니까?"
+
+[node name="ButtonRow" type="HBoxContainer" parent="Root/ConfirmPopup/Panel/VBox"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 20
+
+[node name="YesButton" type="Button" parent="Root/ConfirmPopup/Panel/VBox/ButtonRow"]
+custom_minimum_size = Vector2(120, 44)
+layout_mode = 2
+texture_filter = 1
+theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+text = "예"
+
+[node name="NoButton" type="Button" parent="Root/ConfirmPopup/Panel/VBox/ButtonRow"]
+custom_minimum_size = Vector2(120, 44)
+layout_mode = 2
+texture_filter = 1
+theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+text = "아니요"

@@ -39,15 +39,6 @@ destination_spawn_point = "VillageSpawnFromForest"
 [node name="CollisionShape2D" type="CollisionShape2D" parent="ToVillage" unique_id=1071104634]
 shape = SubResource("RectangleShape2D_door")
 
-[node name="ToCave" type="Area2D" parent="." unique_id=1197590717]
-position = Vector2(780, 300)
-script = ExtResource("2_trans")
-destination_scene_path = "res://world/cave.tscn"
-destination_spawn_point = "CaveSpawn"
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="ToCave" unique_id=1603512116]
-shape = SubResource("RectangleShape2D_door")
-
 [node name="OrcEncounter1" type="Area2D" parent="."]
 position = Vector2(280, 180)
 script = ExtResource("3_monster")
