@@ -2,14 +2,23 @@ extends Control
 
 # 인벤토리 패널. HUD의 가방 버튼이 open()/close()로 토글한다.
 # _root(자기 자신)가 "inventory_menu" 그룹에 속하고 visible로 열림 여부를 나타내 이동 잠금과 연동된다.
-# 슬롯 16개는 씬에 미리 배치하지 않고 _ready()에서 코드로 만들어 Grid(GridContainer)에 채운다
+# 배경은 medieval.png의 "INVENTORY" 격자 패널 그림을 그대로 쓴다. 이 그림은 4열x3행(12칸)짜리라
+# (칸 사이 간격이 완전히 균등하지도 않음) GridContainer 자동 배치 대신, 실측한 픽셀 좌표를 3배
+# 확대해 슬롯 12개를 그림의 실제 칸 위치에 정확히 겹치도록 배치한다 — 위치는 _ready()에서 코드로 생성
 # (전투 씬의 데미지 팝업처럼, 반복되는 단순 UI 조각을 코드로 생성하는 기존 패턴을 재사용).
 
-const SLOT_COUNT := 16
-const SLOT_SIZE := Vector2(60, 60)
+const SLOT_COUNT := 12
+const SLOT_SIZE := Vector2(42, 42)
+# 배경 그림(98x85, 3배 확대해 294x255로 표시)에서 실측한 슬롯 좌상단 좌표 (좌->우, 위->아래 순서.
+# GameState.inventory.keys() 순서와 그대로 대응)
+const SLOT_POSITIONS: Array[Vector2] = [
+	Vector2(36, 51), Vector2(96, 51), Vector2(156, 51), Vector2(213, 51),
+	Vector2(36, 114), Vector2(96, 114), Vector2(156, 114), Vector2(213, 114),
+	Vector2(36, 177), Vector2(96, 177), Vector2(156, 177), Vector2(213, 177),
+]
 
-@onready var _grid: GridContainer = $Panel/VBox/Grid
-@onready var _close_button: Button = $Panel/VBox/CloseButton
+@onready var _slots_container: Control = $Panel/Slots
+@onready var _close_button: Button = $Panel/CloseButton
 @onready var _tooltip: PanelContainer = $Tooltip
 @onready var _tooltip_label: Label = $Tooltip/Margin/TooltipLabel
 
@@ -27,33 +36,30 @@ func _ready() -> void:
 	_build_slots()
 
 
-# 빈 슬롯을 나타낼 테두리만 있는 스타일(배경 채움은 살짝 어둡게)의 버튼 SLOT_COUNT개를 만들어
-# Grid에 채운다. 각 슬롯은 아이콘(TextureRect)+개수 라벨(Label) 자식을 갖고 시작은 둘 다 숨김(빈 칸)
+# 배경 그림에 이미 칸 테두리가 그려져 있으므로, 슬롯 버튼 자체는 완전히 투명한 클릭 영역으로 만들어
+# SLOT_POSITIONS의 실측 좌표에 정확히 겹쳐 배치한다. 각 슬롯은 아이콘(TextureRect)+개수 라벨(Label)
+# 자식을 갖고 시작은 둘 다 숨김(빈 칸)
 func _build_slots() -> void:
 	var slot_style := StyleBoxFlat.new()
-	slot_style.bg_color = Color(0, 0, 0, 0.25)
-	slot_style.border_width_left = 2
-	slot_style.border_width_top = 2
-	slot_style.border_width_right = 2
-	slot_style.border_width_bottom = 2
-	slot_style.border_color = Color(0.35, 0.22, 0.12, 1)
+	slot_style.bg_color = Color(0, 0, 0, 0)
 
 	for i in range(SLOT_COUNT):
 		var slot := Button.new()
-		slot.custom_minimum_size = SLOT_SIZE
+		slot.position = SLOT_POSITIONS[i]
+		slot.size = SLOT_SIZE
 		slot.flat = true
 		slot.add_theme_stylebox_override("normal", slot_style)
 		slot.add_theme_stylebox_override("hover", slot_style)
 		slot.add_theme_stylebox_override("pressed", slot_style)
 		slot.add_theme_stylebox_override("focus", slot_style)
-		_grid.add_child(slot)
+		_slots_container.add_child(slot)
 
 		var icon := TextureRect.new()
 		icon.set_anchors_preset(Control.PRESET_FULL_RECT)
-		icon.offset_left = 6
-		icon.offset_top = 6
-		icon.offset_right = -6
-		icon.offset_bottom = -6
+		icon.offset_left = 4
+		icon.offset_top = 4
+		icon.offset_right = -4
+		icon.offset_bottom = -4
 		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
@@ -63,11 +69,11 @@ func _build_slots() -> void:
 
 		var count_label := Label.new()
 		count_label.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-		count_label.offset_left = -32
-		count_label.offset_top = -18
-		count_label.offset_right = -3
-		count_label.offset_bottom = -2
-		count_label.add_theme_font_size_override("font_size", 12)
+		count_label.offset_left = -24
+		count_label.offset_top = -13
+		count_label.offset_right = -2
+		count_label.offset_bottom = -1
+		count_label.add_theme_font_size_override("font_size", 10)
 		count_label.add_theme_color_override("font_color", Color(1, 1, 1, 1))
 		count_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
 		count_label.add_theme_constant_override("outline_size", 2)
@@ -124,8 +130,8 @@ func _rebuild() -> void:
 			_slot_counts[i].visible = false
 
 
-# 슬롯 클릭 시 아이템을 사용: mana_potion이면 최대 마나의 mana_restore_fraction만큼 회복(clamp)한 뒤
-# 1개 소비. 빈 슬롯 클릭은 무시
+# 슬롯 클릭 시 아이템을 사용: mana_potion이면 최대 마나를, hp_potion이면 최대 체력을 해당 fraction만큼
+# 회복(clamp)한 뒤 1개 소비. 빈 슬롯 클릭은 무시
 func _on_slot_pressed(index: int) -> void:
 	var item_id := _slot_item_ids[index]
 	if item_id == "" or not ItemData.ITEMS.has(item_id):
@@ -134,6 +140,8 @@ func _on_slot_pressed(index: int) -> void:
 	var item: Dictionary = ItemData.ITEMS[item_id]
 	if item_id == "mana_potion":
 		GameState.restore_mana_partial(item["mana_restore_fraction"])
+	elif item_id == "hp_potion":
+		GameState.heal_player_partial(item["hp_restore_fraction"])
 
 	GameState.remove_item(item_id, 1)
 

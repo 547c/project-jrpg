@@ -11,6 +11,13 @@ const ITEMS: Dictionary = {
 		"icon_region": Rect2(389, 807, 22, 37),
 		"mana_restore_fraction": 0.5,
 	},
+	"hp_potion": {
+		"name": "체력포션",
+		"description": "체력 50% 회복",
+		"icon_path": "res://assets/GUI/MedievalUiMega/medieval.png",
+		"icon_region": Rect2(325, 807, 22, 37),
+		"hp_restore_fraction": 0.5,
+	},
 }
 
 

@@ -152,9 +152,12 @@ func heal_player_full() -> void:
 	set_flag("player_hp", get_flag("player_max_hp"))
 
 
-# player_hp를 player_max_hp의 절반만 회복 (전투 기절 페널티용 - 완전 회복보다 약함)
+# player_hp와 player_mana를 각각 최대치의 절반만 회복 (전투 기절 페널티용 - 완전 회복보다 약함).
+# 마나는 원래 회복 수단이 없는 소모 자원이지만, 기절 복구 시에도 0인 채로 두면 초반엔 골드도 없어
+# 포션을 살 수도, 스킬을 쓸 수도 없는 상태로 굳어버릴 수 있어(사실상 진행 불가) 이 경로에서만 예외로 회복시킨다
 func heal_player_half() -> void:
 	set_flag("player_hp", get_flag("player_max_hp") / 2)
+	set_flag("player_mana", get_flag("player_max_mana") / 2)
 
 
 # player_hp를 player_max_hp의 fraction 비율만큼 추가 회복 (최대치를 넘지 않게 clamp). 전투 승리 보너스 등에 사용

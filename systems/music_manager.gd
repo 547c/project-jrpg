@@ -5,7 +5,7 @@ extends Node
 # 넘기면 아무것도 하지 않아(재시작 없이) 끊김 없이 유지된다. Autoload라 씬이 바뀌어도
 # 노드 자체가 파괴되지 않으므로 재생이 끊기지 않는다 — 트랙이 바뀔 때만 크로스페이드로 전환한다.
 
-const DEFAULT_VOLUME_DB := -14.0 # 기본(0dB)보다 낮게
+const DEFAULT_VOLUME_DB := -20.0 # 기본(0dB)보다 낮게
 const MUTE_VOLUME_DB := -80.0 # 사실상 무음으로 취급하는 페이드 하한
 const FADE_DURATION := 1.0
 

@@ -35,6 +35,7 @@
 [ext_resource type="Texture2D" uid="uid://df0vth5va25ja" path="res://assets/Pixel Crawler - Free Pack/Environment/Props/Static/Trees/Model_03/Size_05.png" id="22_angcc"]
 [ext_resource type="Texture2D" uid="uid://b74evivivr8xs" path="res://assets/Pixel Crawler - Free Pack/Environment/Props/Static/Vegetation.png" id="24_mi1im"]
 [ext_resource type="PackedScene" path="res://world/campfire.tscn" id="25_campfire"]
+[ext_resource type="PackedScene" path="res://world/treasure_chest.tscn" id="26_chest"]
 [ext_resource type="Texture2D" uid="uid://dlby316p68meo" path="res://assets/Pixel Crawler - Free Pack/Environment/Structures/Stations/Anvil/Anvil.png" id="36_edde0"]
 [ext_resource type="Texture2D" uid="uid://cqt42yv1ljryp" path="res://assets/Pixel Crawler - Free Pack/Environment/Structures/Stations/Furnace/Furnace.png" id="37_khy6x"]
 [ext_resource type="Texture2D" uid="uid://brfnr2uq5qcny" path="res://assets/Pixel Crawler - Free Pack/Environment/Structures/Stations/Workbench/Workbench.png" id="38_yrodc"]
@@ -7127,6 +7128,14 @@ script = ExtResource("8_mia")
 
 [node name="Campfire" parent="." unique_id=1663011288 instance=ExtResource("25_campfire")]
 position = Vector2(818, -102)
+
+[node name="TreasureChest1" parent="." unique_id=986538050 instance=ExtResource("26_chest")]
+position = Vector2(219, -62)
+chest_id = "village_chest_1"
+
+[node name="TreasureChest2" parent="." unique_id=92492426 instance=ExtResource("26_chest")]
+position = Vector2(260, -35)
+chest_id = "village_chest_2"
 
 [node name="UI" type="CanvasLayer" parent="." unique_id=1438763078]
 

@@ -170,4 +170,4 @@ theme_override_styles/pressed = SubResource("StyleBoxTexture_button_pressed")
 text = "Option 5"
 
 [node name="BleepPlayer" type="AudioStreamPlayer" parent="."]
-volume_db = -8.0
+volume_db = 0.0

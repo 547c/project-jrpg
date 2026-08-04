@@ -8,11 +8,12 @@ const PLAYER_ATTACK_DAMAGE_MAX := 5
 # 마나로 사용하는 스킬 3종. 표시 순서(강타→회복→피하기)는 딕셔너리 삽입 순서를 따른다.
 # - STRIKE: 이번 공격 데미지 damage_mult배 (몬스터 반격 있음)
 # - HEAL:   자신 HP를 최대치의 heal_fraction만큼 회복 (공격은 안 함, 몬스터 반격 있음)
-# - DODGE:  이번 턴 몬스터 공격을 완전히 회피(데미지 0). 대신 플레이어도 공격하지 않음
+# - DODGE:  몬스터 공격은 완전히 회피(데미지 0)하면서 동시에 정상 공격의 damage_mult배(감쇄)로 반격.
+#   완전히 동일한 데미지면 항상 다른 스킬보다 우월해지므로 화력을 낮춰 트레이드오프를 유지한다
 const SKILLS: Dictionary = {
 	"STRIKE": {"name": "강타", "mana_cost": 4, "damage_mult": 2},
-	"HEAL": {"name": "회복", "mana_cost": 6, "heal_fraction": 0.3},
-	"DODGE": {"name": "피하기", "mana_cost": 2},
+	"HEAL": {"name": "회복", "mana_cost": 6, "heal_fraction": 0.48},
+	"DODGE": {"name": "피하기", "mana_cost": 2, "damage_mult": 0.7},
 }
 
 # 몬스터 종류별 전투 데이터. damage_min/damage_max: 몬스터 반격 한 번의 피해 범위 (매 반격마다 무작위).

@@ -291,8 +291,9 @@ func _run_turn(action: String) -> void:
 			message = "회복 마법으로 체력을 회복했다!"
 		"DODGE":
 			_dodging = true
-			await _wait(0.25)
-			message = "몸을 낮춰 공격에 대비한다!"
+			var dmg := int(round(randi_range(BattleData.PLAYER_ATTACK_DAMAGE_MIN, BattleData.PLAYER_ATTACK_DAMAGE_MAX) * float(BattleData.SKILLS["DODGE"]["damage_mult"])))
+			await _player_strike(dmg)
+			message = "회피하며 반격했다!"
 
 	_refresh_battle_hud()
 	_message.text = message
