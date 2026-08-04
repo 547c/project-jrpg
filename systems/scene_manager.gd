@@ -28,6 +28,7 @@ var _transitions_suppressed: bool = false
 var _battle_return_path: String = ""
 var _battle_return_position: Vector2 = Vector2.ZERO
 var _battle_monster_type: String = ""
+var _battle_variant: Dictionary = {} # 필드에서 뽑힌 시각 변종을 그대로 전투 씬까지 이어주기 위함
 var _battle_encounter_id: String = ""
 # 전투 승리 후 복귀할 때, 방금 쓰러뜨린 몬스터를 리젠 상태로 돌려놓기 위한 대기 ID
 var _pending_defeated_encounter_id: String = ""
@@ -147,12 +148,14 @@ func change_scene_to_position(scene_path: String, position: Vector2) -> void:
 
 
 # 몬스터 조우 시 호출. 현재 씬/좌표를 복귀 컨텍스트로 저장하고, 전용 전투 씬으로 전환한다.
+# variant는 필드 MonsterEncounter가 뽑은 시각 변종 — 전투 씬에도 그대로 이어서 같은 모습으로 보이게 함.
 # 물리 콜백 밖에서 안전하게 처리하도록 지연시킴 (change_scene과 동일한 방어)
-func enter_battle(monster_type: String, encounter_id: String, return_path: String, return_position: Vector2) -> void:
+func enter_battle(monster_type: String, variant: Dictionary, encounter_id: String, return_path: String, return_position: Vector2) -> void:
 	if _is_changing_scene:
 		return
 	_is_changing_scene = true
 	_battle_monster_type = monster_type
+	_battle_variant = variant
 	_battle_encounter_id = encounter_id
 	_battle_return_path = return_path
 	_battle_return_position = return_position
@@ -176,7 +179,7 @@ func _apply_battle_enter() -> void:
 	var battle := battle_ps.instantiate() as BattleScene
 	get_tree().root.add_child(battle)
 	get_tree().current_scene = battle
-	battle.start_with(_battle_monster_type)
+	battle.start_with(_battle_monster_type, _battle_variant)
 
 	await FadeOverlay.fade_in()
 

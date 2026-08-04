@@ -8,9 +8,11 @@ extends Node2D
 
 const PLAYER_SPRITE_PATH := "res://assets/Pixel Crawler - Free Pack/Entities/Characters/Body_A/Animations/Idle_Base/Idle_Up-Sheet.png"
 const PLAYER_FRAME_SIZE := 64
-const MONSTER_FRAME_SIZE := 32
 const FRAME_COUNT := 4
 const IDLE_FPS := 4.0
+
+const MONSTER_IDLE_FPS := 4.0
+const MONSTER_DEATH_FPS := 8.0
 
 # 카드 초상화용 얼굴 크롭 (Idle_Down-Sheet.png 기준 — 전투 중 실제로 보여주는 Idle_Up과는 다른 시트지만
 # HUD 카드와 동일한 얼굴 그래픽을 쓰기 위해 정면 얼굴이 나온 Idle_Down에서 잘라온다)
@@ -71,6 +73,7 @@ enum Mode { ACTION, SKILL, BUSY, OVER }
 
 var _monster_type: String = ""
 var _monster_data: Dictionary = {}
+var _variant: Dictionary = {} # 필드 MonsterEncounter가 뽑은 시각 변종 (SceneManager가 그대로 전달)
 var _monster_hp: int = 0
 var _mode: int = Mode.BUSY
 var _dodging: bool = false
@@ -89,11 +92,12 @@ func _ready() -> void:
 	_close_button.pressed.connect(_on_close_pressed)
 
 
-# SceneManager가 전투 씬을 트리에 넣은 직후 호출. 몬스터 종류를 받아 스프라이트/구도/HP·마나를 세팅하고
-# 행동 선택 상태로 진입한다
-func start_with(monster_type: String) -> void:
+# SceneManager가 전투 씬을 트리에 넣은 직후 호출. 몬스터 종류/시각 변종(필드에서 뽑힌 것과 동일)을
+# 받아 스프라이트/구도/HP·마나를 세팅하고 행동 선택 상태로 진입한다
+func start_with(monster_type: String, variant: Dictionary) -> void:
 	_monster_type = monster_type
 	_monster_data = BattleData.MONSTERS[monster_type]
+	_variant = variant
 	_monster_hp = _monster_data["max_hp"]
 
 	MusicManager.play("Battle 1")
@@ -120,7 +124,8 @@ func start_with(monster_type: String) -> void:
 	_mode = Mode.ACTION
 
 
-# 플레이어(뒷모습=Idle_Up)와 몬스터(Idle 시트)를 시트에서 프레임 단위로 잘라 AnimatedSprite2D에 채우고,
+# 플레이어(뒷모습=Idle_Up)는 정적 Idle 프레임을, 몬스터는 "idle"/"death" 두 애니메이션을 갖춘
+# SpriteFrames를 필드와 같은 변종(_variant)의 시트에서 구성해 AnimatedSprite2D에 채우고,
 # 카드에 쓸 초상화(얼굴만 크롭한 AtlasTexture)도 함께 준비한다
 func _setup_sprites() -> void:
 	_player_sprite.sprite_frames = _build_frames(load(PLAYER_SPRITE_PATH) as Texture2D, PLAYER_FRAME_SIZE)
@@ -129,16 +134,23 @@ func _setup_sprites() -> void:
 	_player_sprite.play("default")
 	_player_portrait.texture = _build_portrait(load(PLAYER_PORTRAIT_SHEET_PATH) as Texture2D, PLAYER_PORTRAIT_REGION)
 
-	var monster_sheet := load(_monster_data["sprite_path"]) as Texture2D
-	_monster_sprite.sprite_frames = _build_frames(monster_sheet, MONSTER_FRAME_SIZE)
+	var idle_sheet := load(_variant["idle_path"]) as Texture2D
+
+	var monster_frames := SpriteFrames.new()
+	if monster_frames.has_animation("default"):
+		monster_frames.remove_animation("default")
+	_add_monster_animation(monster_frames, "idle", idle_sheet, BattleData.MOB_IDLE_FRAME_SIZE, BattleData.MOB_IDLE_FRAME_SIZE, BattleData.MOB_IDLE_FRAME_COUNT, MONSTER_IDLE_FPS, true)
+	_add_monster_animation(monster_frames, "death", load(_variant["death_path"]) as Texture2D, _variant["death_frame_width"], _variant["death_frame_height"], _variant["death_frame_count"], MONSTER_DEATH_FPS, false)
+
+	_monster_sprite.sprite_frames = monster_frames
 	_monster_sprite.scale = Vector2.ONE * MONSTER_SCALE
 	_monster_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	_monster_sprite.flip_h = true # 왼쪽의 플레이어를 바라보도록
-	_monster_sprite.play("default")
-	_monster_portrait.texture = _build_portrait(monster_sheet, _monster_data["portrait_region"])
+	_monster_sprite.play("idle")
+	_monster_portrait.texture = _build_portrait(idle_sheet, _monster_data["portrait_region"])
 
 
-# 32/64px 프레임이 가로로 FRAME_COUNT개 나열된 Idle 시트를 SpriteFrames로 변환 (첫 애니메이션 이름 "default")
+# 64px 프레임이 가로로 FRAME_COUNT개 나열된 Idle 시트를 SpriteFrames로 변환 (플레이어 전용, 애니메이션 이름 "default")
 func _build_frames(sheet: Texture2D, frame_size: int) -> SpriteFrames:
 	var frames := SpriteFrames.new()
 	frames.set_animation_speed("default", IDLE_FPS)
@@ -148,6 +160,18 @@ func _build_frames(sheet: Texture2D, frame_size: int) -> SpriteFrames:
 		atlas.region = Rect2(i * frame_size, 0, frame_size, frame_size)
 		frames.add_frame("default", atlas)
 	return frames
+
+
+# sheet를 frame_w x frame_h 프레임 frame_count개로 잘라 frames에 anim_name 애니메이션으로 등록 (몬스터 전용)
+func _add_monster_animation(frames: SpriteFrames, anim_name: String, sheet: Texture2D, frame_w: int, frame_h: int, frame_count: int, fps: float, loop: bool) -> void:
+	frames.add_animation(anim_name)
+	frames.set_animation_speed(anim_name, fps)
+	frames.set_animation_loop(anim_name, loop)
+	for i in range(frame_count):
+		var atlas := AtlasTexture.new()
+		atlas.atlas = sheet
+		atlas.region = Rect2(i * frame_w, 0, frame_w, frame_h)
+		frames.add_frame(anim_name, atlas)
 
 
 # 시트에서 region 영역만 잘라 카드 초상화용 AtlasTexture로 만듦
@@ -165,7 +189,7 @@ func _layout_actors() -> void:
 	_monster_sprite.position = Vector2(vp.x * 0.74, vp.y * 0.40)
 
 	var player_foot := _player_sprite.position + Vector2(0, PLAYER_FRAME_SIZE * PLAYER_SCALE * 0.5 - 6.0)
-	var monster_foot := _monster_sprite.position + Vector2(0, MONSTER_FRAME_SIZE * MONSTER_SCALE * 0.5 - 4.0)
+	var monster_foot := _monster_sprite.position + Vector2(0, BattleData.MOB_IDLE_FRAME_SIZE * MONSTER_SCALE * 0.5 - 4.0)
 	_setup_shadow(_player_shadow, player_foot, 48.0, 14.0)
 	_setup_shadow(_monster_shadow, monster_foot, 40.0, 12.0)
 
@@ -334,10 +358,30 @@ func _monster_counterattack() -> void:
 	await _wait(0.35)
 
 
+# 몬스터가 쓰러졌을 때, 사라지기 전에 Death 애니메이션을 한 번(루프 없이) 재생하고 끝날 때까지 기다림.
+# Death 캔버스는 변종마다 크기가 달라도 캐릭터의 실제 픽셀 크기는 Idle과 비슷해서, scale은 그대로 두면
+# 된다 (프레임 크기에 반비례해서 보정하면 오히려 캔버스가 큰 변종의 캐릭터가 작게 나오는 버그가 생김 —
+# monster_encounter.gd의 Idle<->Run에서 한 번 겪었던 것과 같은 실수라 여기도 동일하게 고쳤다).
+# 대신 AnimatedSprite2D가 기본 centered라 캔버스 중앙이 노드 위치에 고정되는데, 발은 Idle/Death 둘 다
+# 캔버스 맨 아래 줄에 붙어있어서(실측 확인) 캔버스가 더 큰 변종일수록 발이 아래로 밀려 캐릭터가
+# 순간 가라앉아 보인다. offset으로 그 차이(캔버스 높이 차의 절반)만큼 위로 당겨 보정한다
+# (monster_encounter.gd의 Idle<->Run 발 위치 보정과 같은 원리)
+func _play_monster_death() -> void:
+	if _monster_sprite.sprite_frames == null or not _monster_sprite.sprite_frames.has_animation("death"):
+		return
+
+	var death_h: float = _variant.get("death_frame_height", BattleData.MOB_IDLE_FRAME_SIZE)
+	_monster_sprite.offset = Vector2(0, -(death_h - BattleData.MOB_IDLE_FRAME_SIZE) / 2.0)
+	_monster_sprite.play("death")
+	await _monster_sprite.animation_finished
+
+
 # 승리 처리: 처치 카운트 증가 + 골드 드롭 + 소량 회복(HP만), "닫기" 버튼으로 복귀 대기.
 # 승리 잔치곡을 짧게 틀어주고(결과 화면을 보는 동안), 복귀 시에는 별도 처리 없이 원래 씬에 진입할 때
 # SceneManager가 그 구역의 배경음을 다시 틀어주므로 자연스럽게 이전 곡으로 돌아간다
 func _finish_victory() -> void:
+	await _play_monster_death()
+
 	MusicManager.play("Victory!")
 
 	match _monster_type:
