@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://yi14rqtjcdh1"
+path="res://.godot/imported/15 - Peaceful Night .wav-53668c772b98194c45b5460fb3b3257a.sample"
+
+[deps]
+
+source_file="res://assets/bgm/xDeviruchi - 16 bit Fantasy & Adventure (2025)/Loopable + one shots/wav/15 - Peaceful Night .wav"
+dest_files=["res://.godot/imported/15 - Peaceful Night .wav-53668c772b98194c45b5460fb3b3257a.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

@@ -1,0 +1,19 @@
+[remap]
+
+importer="oggvorbisstr"
+type="AudioStreamOggVorbis"
+uid="uid://dfjgf2nytanij"
+path="res://.godot/imported/10 - Lost Shrine.ogg-79d2a315b5323bbd2f270932c0841596.oggvorbisstr"
+
+[deps]
+
+source_file="res://assets/bgm/xDeviruchi - 16 bit Fantasy & Adventure (2025)/Loopable + one shots/ogg/10 - Lost Shrine.ogg"
+dest_files=["res://.godot/imported/10 - Lost Shrine.ogg-79d2a315b5323bbd2f270932c0841596.oggvorbisstr"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

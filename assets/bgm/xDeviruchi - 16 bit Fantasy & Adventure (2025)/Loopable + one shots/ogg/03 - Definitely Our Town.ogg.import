@@ -1,0 +1,19 @@
+[remap]
+
+importer="oggvorbisstr"
+type="AudioStreamOggVorbis"
+uid="uid://diflp02u670fs"
+path="res://.godot/imported/03 - Definitely Our Town.ogg-c02ec9fadc61512c2598566f3ce35cee.oggvorbisstr"
+
+[deps]
+
+source_file="res://assets/bgm/xDeviruchi - 16 bit Fantasy & Adventure (2025)/Loopable + one shots/ogg/03 - Definitely Our Town.ogg"
+dest_files=["res://.godot/imported/03 - Definitely Our Town.ogg-c02ec9fadc61512c2598566f3ce35cee.oggvorbisstr"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

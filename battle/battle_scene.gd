@@ -96,6 +96,8 @@ func start_with(monster_type: String) -> void:
 	_monster_data = BattleData.MONSTERS[monster_type]
 	_monster_hp = _monster_data["max_hp"]
 
+	MusicManager.play("Battle 1")
+
 	_setup_sprites()
 	_layout_actors()
 
@@ -332,8 +334,12 @@ func _monster_counterattack() -> void:
 	await _wait(0.35)
 
 
-# 승리 처리: 처치 카운트 증가 + 골드 드롭 + 소량 회복(HP만), "닫기" 버튼으로 복귀 대기
+# 승리 처리: 처치 카운트 증가 + 골드 드롭 + 소량 회복(HP만), "닫기" 버튼으로 복귀 대기.
+# 승리 잔치곡을 짧게 틀어주고(결과 화면을 보는 동안), 복귀 시에는 별도 처리 없이 원래 씬에 진입할 때
+# SceneManager가 그 구역의 배경음을 다시 틀어주므로 자연스럽게 이전 곡으로 돌아간다
 func _finish_victory() -> void:
+	MusicManager.play("Victory!")
+
 	match _monster_type:
 		"ORC":
 			GameState.increment_orcs_defeated()

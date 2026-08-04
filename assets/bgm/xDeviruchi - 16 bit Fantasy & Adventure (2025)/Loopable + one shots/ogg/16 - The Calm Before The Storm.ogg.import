@@ -1,0 +1,19 @@
+[remap]
+
+importer="oggvorbisstr"
+type="AudioStreamOggVorbis"
+uid="uid://drt2tftgn542i"
+path="res://.godot/imported/16 - The Calm Before The Storm.ogg-3ca1ef415b4862bda4c4064368206bdc.oggvorbisstr"
+
+[deps]
+
+source_file="res://assets/bgm/xDeviruchi - 16 bit Fantasy & Adventure (2025)/Loopable + one shots/ogg/16 - The Calm Before The Storm.ogg"
+dest_files=["res://.godot/imported/16 - The Calm Before The Storm.ogg-3ca1ef415b4862bda4c4064368206bdc.oggvorbisstr"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

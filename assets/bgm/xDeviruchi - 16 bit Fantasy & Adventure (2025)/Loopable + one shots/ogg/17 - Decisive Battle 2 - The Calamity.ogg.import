@@ -1,0 +1,19 @@
+[remap]
+
+importer="oggvorbisstr"
+type="AudioStreamOggVorbis"
+uid="uid://dicecpj8lflra"
+path="res://.godot/imported/17 - Decisive Battle 2 - The Calamity.ogg-e65e455d7f813986f24e1a29bf88ff95.oggvorbisstr"
+
+[deps]
+
+source_file="res://assets/bgm/xDeviruchi - 16 bit Fantasy & Adventure (2025)/Loopable + one shots/ogg/17 - Decisive Battle 2 - The Calamity.ogg"
+dest_files=["res://.godot/imported/17 - Decisive Battle 2 - The Calamity.ogg-e65e455d7f813986f24e1a29bf88ff95.oggvorbisstr"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

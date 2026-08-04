@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://clj4d76yfykf2"
+path="res://.godot/imported/21 - Final Battle - For Love.wav-9c336218541c3c60e73ce7f69b9585df.sample"
+
+[deps]
+
+source_file="res://assets/bgm/xDeviruchi - 16 bit Fantasy & Adventure (2025)/Loopable + one shots/wav/21 - Final Battle - For Love.wav"
+dest_files=["res://.godot/imported/21 - Final Battle - For Love.wav-9c336218541c3c60e73ce7f69b9585df.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

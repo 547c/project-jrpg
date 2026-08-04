@@ -44,11 +44,13 @@ func _show_not_ready_message() -> void:
 	dialogue_box.start_dialogue(NOT_READY_DIALOGUE, "not_ready")
 
 
-# 기존 DialogueBox를 찾아 수호자 대화를 시작
+# 기존 DialogueBox를 찾아 수호자 대화를 시작 (전투는 없지만 대치의 긴장감을 위해 결전곡을 틀어줌)
 func _start_encounter() -> void:
 	var dialogue_box := get_tree().get_first_node_in_group("dialogue_box") as DialogueBox
 	if dialogue_box == null:
 		return
+
+	MusicManager.play("Decisive Battle 1 - Don't Be Afraid")
 
 	if not dialogue_box.dialogue_ended.is_connected(_on_dialogue_ended):
 		dialogue_box.dialogue_ended.connect(_on_dialogue_ended, CONNECT_ONE_SHOT)

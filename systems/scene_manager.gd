@@ -13,6 +13,13 @@ const VISITED_FLAGS: Dictionary = {
 	"res://world/cave.tscn": "visited_cave",
 }
 
+# 씬 경로별로 진입 시 재생할 배경음악을 매핑 (전투 씬은 battle_scene.gd가 직접 재생하므로 여기 없음)
+const BGM_TRACKS: Dictionary = {
+	"res://world/village.tscn": "Definitely Our Town",
+	"res://world/forest.tscn": "Silent Forest",
+	"res://world/cave.tscn": "Frozen Abyss",
+}
+
 var _player: Node2D
 var _is_changing_scene: bool = false
 var _transitions_suppressed: bool = false
@@ -34,7 +41,9 @@ func is_transition_suppressed() -> bool:
 
 
 # 타이틀 화면의 PLAY 버튼에서 호출. 플레이어를 생성하고 타이틀 화면을 마을 씬으로 교체한 뒤,
-# (처음이라면) 오프닝 컷신을 재생하고 최초 스폰 지점으로 플레이어를 배치한다
+# (처음이라면) 오프닝 컷신을 재생하고 최초 스폰 지점으로 플레이어를 배치한다.
+# 오프닝을 보여줄 차례라면 마을 음악 대신 프롤로그 곡을 먼저 틀고, 컷신이 끝난 뒤에야
+# 마을 음악으로 넘어간다 (컷신 중에 마을 음악이 깔리지 않도록 순서를 맞춤)
 func start_game() -> void:
 	_player = PLAYER_SCENE.instantiate() as Node2D
 	_player.z_index = 10 # SceneManager가 오토로드라 배경 씬보다 먼저 그려지므로, 배경 위에 보이도록 z_index를 높임
@@ -50,10 +59,17 @@ func start_game() -> void:
 	get_tree().root.add_child(new_scene)
 	get_tree().current_scene = new_scene
 
+	var show_opening: bool = not GameState.get_flag("seen_opening")
+	if show_opening:
+		MusicManager.play("Falling Apart (Prologue)")
+	else:
+		_play_scene_music(VILLAGE_SCENE_PATH)
+
 	await get_tree().process_frame
 
-	if not GameState.get_flag("seen_opening"):
+	if show_opening:
 		await _play_opening()
+		_play_scene_music(VILLAGE_SCENE_PATH)
 
 	_place_initial_player()
 
@@ -224,6 +240,7 @@ func _apply_scene_change(scene_path: String, spawn_point_name: String, use_exact
 
 	# 전환한 구역의 방문 여부를 GameState에 기록
 	_record_visited(scene_path)
+	_play_scene_music(scene_path)
 
 	# 전투 승리 후 복귀라면, 방금 쓰러뜨린 몬스터를 리젠 상태로 두어 플레이어가 그 자리에 복귀해도 즉시 재조우되지 않게 함
 	if _pending_defeated_encounter_id != "":
@@ -288,6 +305,12 @@ func _move_player_to(spawn_point_name: String) -> void:
 func _record_visited(scene_path: String) -> void:
 	if VISITED_FLAGS.has(scene_path):
 		GameState.set_flag(VISITED_FLAGS[scene_path], true)
+
+
+# 씬 경로에 대응하는 배경음악이 있으면 재생 (이미 같은 곡이면 MusicManager가 알아서 무시함)
+func _play_scene_music(scene_path: String) -> void:
+	if BGM_TRACKS.has(scene_path):
+		MusicManager.play(BGM_TRACKS[scene_path])
 
 
 # "spawn_points" 그룹에서 이름이 일치하는 SpawnPoint를 탐색

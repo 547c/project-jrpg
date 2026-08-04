@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://501husq6vlxe"
+path="res://.godot/imported/02 - Title Theme.wav-fae941b61043ecb4a4c6bfe0574e289e.sample"
+
+[deps]
+
+source_file="res://assets/bgm/xDeviruchi - 16 bit Fantasy & Adventure (2025)/Loopable + one shots/wav/02 - Title Theme.wav"
+dest_files=["res://.godot/imported/02 - Title Theme.wav-fae941b61043ecb4a4c6bfe0574e289e.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

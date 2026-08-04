@@ -1,0 +1,19 @@
+[remap]
+
+importer="oggvorbisstr"
+type="AudioStreamOggVorbis"
+uid="uid://bnvt1wtdldiuk"
+path="res://.godot/imported/02 - Title Theme.ogg-94185fd7694c11586e1224e98eaab161.oggvorbisstr"
+
+[deps]
+
+source_file="res://assets/bgm/xDeviruchi - 16 bit Fantasy & Adventure (2025)/Loopable + one shots/ogg/02 - Title Theme.ogg"
+dest_files=["res://.godot/imported/02 - Title Theme.ogg-94185fd7694c11586e1224e98eaab161.oggvorbisstr"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

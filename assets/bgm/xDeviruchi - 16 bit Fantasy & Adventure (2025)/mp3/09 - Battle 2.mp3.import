@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://cjhmlpouwrpiq"
+path="res://.godot/imported/09 - Battle 2.mp3-5293b3d555f44d6f51041d7f0b73d8e5.mp3str"
+
+[deps]
+
+source_file="res://assets/bgm/xDeviruchi - 16 bit Fantasy & Adventure (2025)/mp3/09 - Battle 2.mp3"
+dest_files=["res://.godot/imported/09 - Battle 2.mp3-5293b3d555f44d6f51041d7f0b73d8e5.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4
