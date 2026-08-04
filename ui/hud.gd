@@ -6,7 +6,7 @@ extends CanvasLayer
 # 아니거나, 타이틀/엔딩 씬이면 둘 다 숨긴다. 퀘스트 버튼은 QuestLog를 토글한다.
 
 # HUD 전체를 가려야 하는 상황을 나타내는 UI 그룹들 (cutscene_box: 오프닝 컷신 재생 중)
-const BLOCKING_GROUPS := ["dialogue_box", "battle_box", "pause_menu", "game_over", "quest_log", "cutscene_box", "level_up"]
+const BLOCKING_GROUPS := ["dialogue_box", "battle_box", "pause_menu", "game_over", "quest_log", "cutscene_box", "level_up", "inventory_menu"]
 
 # objective 패널 폭 자동 조절: 텍스트 실제 폭 + 라벨 좌우 inset(18+18)만큼 여유를 두고, 이 범위로 clamp
 const OBJECTIVE_PANEL_MIN_WIDTH := 180.0
@@ -26,10 +26,13 @@ const OBJECTIVE_PANEL_RIGHT_OFFSET := -12.0 # 화면 오른쪽 가장자리에�
 @onready var _objective_label: Label = $ObjectiveHud/ObjectivePanel/ObjectiveLabel
 @onready var _quest_button: Button = $MainHud/QuestButton
 @onready var _quest_log = $QuestLog
+@onready var _inventory_button: Button = $MainHud/InventoryButton
+@onready var _inventory_menu = $InventoryMenu
 
 
 func _ready() -> void:
 	_quest_button.pressed.connect(_on_quest_button_pressed)
+	_inventory_button.pressed.connect(_on_inventory_button_pressed)
 
 	# 진행 상황이 바뀔 때만 레벨/목표 텍스트를 다시 계산 (매 프레임 문자열을 만들 필요 없음)
 	GameState.flag_changed.connect(_on_progress_changed)
@@ -117,3 +120,11 @@ func _on_quest_button_pressed() -> void:
 		_quest_log.close()
 	else:
 		_quest_log.open()
+
+
+# 가방 버튼: 인벤토리가 열려 있으면 닫고, 닫혀 있으면 연다
+func _on_inventory_button_pressed() -> void:
+	if _inventory_menu.is_open():
+		_inventory_menu.close()
+	else:
+		_inventory_menu.open()

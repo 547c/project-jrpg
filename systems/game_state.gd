@@ -12,8 +12,14 @@ signal leveled_up(hp_gain: int, mana_gain: int)
 # 골드가 바뀔 때 방출 (HUD 카드가 구독해 실시간 갱신)
 signal gold_changed(new_gold: int)
 
+# 인벤토리 아이템이 추가/제거될 때 방출 (item_id 인자로 전달)
+signal inventory_changed(item_id: String)
+
 # 골드(flags 딕셔너리와 별개의 독립 필드 — set_flag 경로를 타지 않음)
 var gold: int = 0
+
+# 아이템 인벤토리 (아이템 ID -> 보유 개수). 상점 구매/전투 드롭 등으로 채워짐
+var inventory: Dictionary = {}
 
 # 모든 플래그의 초기값 (reset_progress()가 이 값들로 되돌리는 기준이 되기도 함)
 const DEFAULT_FLAGS: Dictionary = {
@@ -108,6 +114,8 @@ func reset_progress() -> void:
 	gold = 0
 	gold_changed.emit(gold)
 
+	inventory.clear()
+
 
 # 저장 데이터로부터 flags를 복원. 먼저 기본값으로 되돌려(임시 키 정리 포함) 저장 당시 없던 값이
 # 남지 않게 한 뒤, 저장된 값을 덮어쓴다. JSON 파싱은 숫자를 float로 주므로 DEFAULT_FLAGS 타입에 맞춰 보정
@@ -182,6 +190,47 @@ func spend_gold(amount: int) -> bool:
 func restore_gold(amount: int) -> void:
 	gold = amount
 	gold_changed.emit(gold)
+
+
+# 인벤토리에 아이템을 amount만큼 추가 (없으면 새로 생성, 있으면 개수를 더함)
+func add_item(item_id: String, amount: int = 1) -> void:
+	inventory[item_id] = inventory.get(item_id, 0) + amount
+	inventory_changed.emit(item_id)
+
+
+# 인벤토리에서 아이템을 amount만큼 제거. 보유 개수가 부족하면 아무것도 하지 않고 false 반환.
+# 제거 후 개수가 0 이하가 되면 키 자체를 지워 인벤토리를 깔끔하게 유지
+func remove_item(item_id: String, amount: int = 1) -> bool:
+	var current: int = inventory.get(item_id, 0)
+	if current < amount:
+		return false
+
+	var remaining := current - amount
+	if remaining <= 0:
+		inventory.erase(item_id)
+	else:
+		inventory[item_id] = remaining
+
+	inventory_changed.emit(item_id)
+	return true
+
+
+# 해당 아이템의 보유 개수 (없으면 0)
+func get_item_count(item_id: String) -> int:
+	return inventory.get(item_id, 0)
+
+
+# 저장 데이터로부터 인벤토리를 그대로 복원 (JSON 숫자는 float로 오므로 int로 보정). 복원된 각 항목에 대해
+# inventory_changed를 방출해 구독 중인 UI가 있다면 갱신되게 함
+func restore_inventory(data: Dictionary) -> void:
+	inventory.clear()
+	for item_id in data.keys():
+		var amount := int(data[item_id])
+		if amount > 0:
+			inventory[String(item_id)] = amount
+
+	for item_id in inventory.keys():
+		inventory_changed.emit(item_id)
 
 
 # 오크 처치: 숲 오크 퀘스트의 진행도를 올림 (수락 전이면 아무 일도 안 일어남)

@@ -42,7 +42,7 @@ func _can_open() -> bool:
 	var scene := get_tree().current_scene
 	if scene == null or scene.scene_file_path.begins_with("res://endings/"):
 		return false
-	for group in ["dialogue_box", "battle_box", "game_over", "quest_log", "level_up"]:
+	for group in ["dialogue_box", "battle_box", "game_over", "quest_log", "level_up", "inventory_menu"]:
 		var ui := get_tree().get_first_node_in_group(group) as CanvasItem
 		if ui != null and ui.visible:
 			return false

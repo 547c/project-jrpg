@@ -4,6 +4,11 @@
 [ext_resource type="Texture2D" uid="uid://fq726ml3dqoh" path="res://assets/GUI/MedievalUiMega/medieval.png" id="2_medieval"]
 [ext_resource type="PackedScene" path="res://ui/quest_log.tscn" id="3_qlog"]
 [ext_resource type="Texture2D" path="res://assets/Pixel Crawler - Free Pack/Entities/Characters/Body_A/Animations/Idle_Base/Idle_Down-Sheet.png" id="4_playersheet"]
+[ext_resource type="PackedScene" path="res://ui/inventory_menu.tscn" id="5_invmenu"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_backpack"]
+atlas = ExtResource("2_medieval")
+region = Rect2(209, 818, 62, 77)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_panel_wood"]
 atlas = ExtResource("2_medieval")
@@ -190,6 +195,31 @@ theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
 theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
 text = "퀘스트"
 
+[node name="InventoryButton" type="Button" parent="MainHud"]
+texture_filter = 1
+layout_mode = 0
+offset_left = 148.0
+offset_top = 100.0
+offset_right = 190.0
+offset_bottom = 142.0
+theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+text = ""
+
+[node name="Icon" type="TextureRect" parent="MainHud/InventoryButton"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 6.0
+offset_top = 6.0
+offset_right = -6.0
+offset_bottom = -6.0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_backpack")
+expand_mode = 1
+stretch_mode = 5
+
 [node name="ObjectiveHud" type="Control" parent="." unique_id=424238753]
 layout_mode = 3
 anchors_preset = 15
@@ -228,3 +258,5 @@ horizontal_alignment = 2
 vertical_alignment = 1
 
 [node name="QuestLog" parent="." unique_id=1347969478 instance=ExtResource("3_qlog")]
+
+[node name="InventoryMenu" parent="." instance=ExtResource("5_invmenu")]

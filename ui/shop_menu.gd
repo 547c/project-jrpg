@@ -2,13 +2,14 @@ extends CanvasLayer
 
 # 유서프 상점 (autoload). YUSUF_DIALOGUE의 "[물건을 산다]" 옵션이 open()으로 대화창 위에 띄운다
 # (대화창은 뒤에 그대로 남아있고, Dim이 클릭을 가로채 닫기 전까지는 손댈 수 없음).
-# 판매 아이템은 마나 포션 1종류뿐: 인벤토리 없이 구매 즉시 소비되어 마나를 회복시킨다.
+# 판매 아이템은 마나 포션 1종류뿐: 구매 즉시 소비되지 않고 인벤토리(GameState.inventory)에 추가된다.
 
 const MANA_POTION_PRICE := 3
-const MANA_POTION_MANA_FRACTION := 0.5
 
 @onready var _root: Control = $Root
 @onready var _gold_label: Label = $Root/Panel/VBox/GoldLabel
+@onready var _item_icon: TextureRect = $Root/Panel/VBox/ItemRow/ItemIcon
+@onready var _item_label: Label = $Root/Panel/VBox/ItemRow/ItemLabel
 @onready var _buy_button: Button = $Root/Panel/VBox/ItemRow/BuyButton
 @onready var _message_label: Label = $Root/Panel/VBox/MessageLabel
 @onready var _close_button: Button = $Root/Panel/VBox/CloseButton
@@ -17,6 +18,11 @@ const MANA_POTION_MANA_FRACTION := 0.5
 func _ready() -> void:
 	add_to_group("shop_menu")
 	_root.visible = false
+
+	var item: Dictionary = ItemData.ITEMS["mana_potion"]
+	_item_icon.texture = ItemData.build_icon("mana_potion")
+	_item_label.text = "%s - %s (%d 골드)" % [item["name"], item["description"], MANA_POTION_PRICE]
+
 	_buy_button.pressed.connect(_on_buy_pressed)
 	_close_button.pressed.connect(_on_close_pressed)
 	GameState.gold_changed.connect(_on_gold_changed)
@@ -49,14 +55,14 @@ func _refresh() -> void:
 	_buy_button.disabled = GameState.gold < MANA_POTION_PRICE
 
 
-# 마나 포션 구매: 골드 소모에 성공하면 즉시 마나를 회복(인벤토리 없이 바로 소비), 부족하면 안내만 표시
+# 마나 포션 구매: 골드 소모에 성공하면 인벤토리에 추가(즉시 소비 아님), 부족하면 안내만 표시
 func _on_buy_pressed() -> void:
 	if not GameState.spend_gold(MANA_POTION_PRICE):
 		_show_message("골드가 부족합니다")
 		return
 
-	GameState.restore_mana_partial(MANA_POTION_MANA_FRACTION)
-	_show_message("마나 포션을 마셨다! 마나가 회복되었다.")
+	GameState.add_item("mana_potion", 1)
+	_show_message("마나 포션을 구매했다!")
 	_refresh()
 
 

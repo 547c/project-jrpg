@@ -30,7 +30,7 @@ func _physics_process(_delta: float) -> void:
 # 각 UI는 해당 그룹에 스스로 등록하고 visible로 열림 여부를 나타내므로,
 # 별도 전역 플래그 없이 그 상태를 그대로 조회한다
 func _is_input_blocked() -> bool:
-	for group_name in ["dialogue_box", "battle_box", "pause_menu", "game_over", "quest_log", "level_up"]:
+	for group_name in ["dialogue_box", "battle_box", "pause_menu", "game_over", "quest_log", "level_up", "inventory_menu"]:
 		var ui := get_tree().get_first_node_in_group(group_name) as CanvasItem
 		if ui != null and ui.visible:
 			return true

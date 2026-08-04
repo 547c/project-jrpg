@@ -1,7 +1,7 @@
 extends Node
 
 # 5슬롯 세이브/로드. 각 슬롯은 user://save_slot_<N>.json 파일 하나.
-# 저장 데이터: 복원용(scene_path/player_position/flags/quests) + 슬롯 목록 미리보기용
+# 저장 데이터: 복원용(scene_path/player_position/flags/quests/gold/inventory) + 슬롯 목록 미리보기용
 # (objective_text/quest_level/player_hp/player_max_hp).
 const SLOT_COUNT := 5
 
@@ -35,6 +35,7 @@ func save_game(slot: int) -> bool:
 		"flags": GameState.flags,
 		"quests": GameState.quests,
 		"gold": GameState.gold,
+		"inventory": GameState.inventory,
 		# --- 슬롯 목록 미리보기용 (복원엔 안 쓰임) ---
 		"objective_text": GameState.get_objective_text(),
 		"quest_level": GameState.get_flag("quest_level"),
@@ -63,6 +64,7 @@ func load_game(slot: int) -> bool:
 	GameState.restore_flags(data.get("flags", {}))
 	GameState.restore_quests(data.get("quests", {}))
 	GameState.restore_gold(int(data.get("gold", 0)))
+	GameState.restore_inventory(data.get("inventory", {}))
 
 	var position := _dict_to_vector2(data.get("player_position", {}))
 	SceneManager.ensure_player_exists()
