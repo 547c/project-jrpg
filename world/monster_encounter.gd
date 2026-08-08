@@ -31,11 +31,28 @@ const WANDER_SPEED := 18.0 # px/s (느릿하게)
 const IDLE_DURATION_MIN := 1.5 # 목표 도착 후 다음 이동 전까지 가만히 서 있는 시간(초)
 const IDLE_DURATION_MAX := 3.0
 
+# 인식/추적: 배회 중 플레이어가 이 반경 안에 들어오면 짧은 "!" 경고(ALERT) 후 추적(CHASE)을 시작한다.
+# 추적은 배회보다 훨씬 빠르지만(2.3배), 거리가 벌어지거나 일정 시간이 지나면 포기하고 스폰 지점으로 복귀(RETURN)한다
+const ALERT_RADIUS := 130.0
+const ALERT_DURATION := 0.5 # "!" 표시 지속 시간(초)
+const CHASE_SPEED_MULTIPLIER := 2.3
+const CHASE_SPEED := WANDER_SPEED * CHASE_SPEED_MULTIPLIER
+const GIVE_UP_DISTANCE := 280.0 # 이 거리 이상 벌어지면 추적 포기
+const CHASE_TIMEOUT := 7.0 # 추적 시작 후 이 시간(초)이 지나면 추적 포기
+
+# 경고음 임시 재활용: Typewriter(ui/typewriter.gd)의 bleep 재생 방식과 동일한 자산/피치 가변 방식을 따름.
+# 전용 사운드가 생기면 이 상수/함수만 교체하면 된다
+const BLEEP_DIR := "res://assets/sfx/dmochas-dialogue_bleeps_pack/ogg/"
+const BLEEP_COUNT := 30
+const ALERT_SOUND_PITCH := 1.5
+const ALERT_SOUND_VOLUME_DB := 5.0 # Typewriter의 bleep 기본 볼륨(0dB)보다 확실히 크게 들리도록
+
 # 리젠: 처치 후 이 시간(초) 뒤 같은 자리에 다시 등장
 const REGEN_DELAY_MIN := 30.0
 const REGEN_DELAY_MAX := 60.0
 
 enum WanderState { IDLE, MOVING }
+enum EncounterState { WANDER, ALERT, CHASE, RETURN }
 
 @export var monster_type: String = "ORC" # BattleData.MONSTERS의 키 ("ORC" 또는 "SKELETON")
 @export var encounter_id: String = "" # 조우 식별용 고유 ID (씬 안에서 겹치지 않게 지정)
@@ -43,11 +60,17 @@ enum WanderState { IDLE, MOVING }
 @export var regen_delay_override: float = -1.0
 
 var _sprite: AnimatedSprite2D
+var _alert_label: Label
+var _alert_sound_player: AudioStreamPlayer2D
 var _variant: Dictionary = {} # BattleData.pick_variant()가 채운, 이 개체가 표시할 시각 변종
 var _home_position: Vector2 # 스폰(배회 중심) 위치
 var _wander_target: Vector2
 var _wander_state: int = WanderState.IDLE
 var _idle_timer: float = 0.0
+
+var _state: int = EncounterState.WANDER
+var _alert_timer: float = 0.0
+var _chase_timer: float = 0.0
 
 var _triggered: bool = false # 전투 시작됨 (배회 중지)
 var _regenerating: bool = false # 처치 후 재등장 대기 중 (숨김 + 배회 중지)
@@ -58,6 +81,8 @@ func _ready() -> void:
 	_home_position = global_position
 	_wander_target = _home_position
 	_pick_variant_and_setup_sprite()
+	_create_alert_indicator()
+	_create_alert_sound_player()
 	_enter_idle_state()
 	body_entered.connect(_on_body_entered)
 
@@ -96,6 +121,23 @@ func _add_animation(frames: SpriteFrames, anim_name: String, sheet_path: String,
 		frames.add_frame(anim_name, atlas)
 
 
+# 머리 위 "!" 표시. 전용 아이콘 에셋이 없어 우선 Label로 대체 (에셋이 생기면 텍스처로 교체 가능하도록 분리)
+func _create_alert_indicator() -> void:
+	_alert_label = Label.new()
+	_alert_label.text = "!"
+	_alert_label.position = Vector2(-8, -60)
+	_alert_label.z_index = 10
+	_alert_label.add_theme_font_size_override("font_size", 24)
+	_alert_label.add_theme_color_override("font_color", Color(0.95, 0.85, 0.2, 1))
+	_alert_label.hide()
+	add_child(_alert_label)
+
+
+func _create_alert_sound_player() -> void:
+	_alert_sound_player = AudioStreamPlayer2D.new()
+	add_child(_alert_sound_player)
+
+
 func _enter_idle_state() -> void:
 	_wander_state = WanderState.IDLE
 	_idle_timer = randf_range(IDLE_DURATION_MIN, IDLE_DURATION_MAX)
@@ -110,12 +152,26 @@ func _enter_moving_state() -> void:
 	_sprite.play("run")
 
 
-# 가만히 서 있다가(Idle) 잠시 후 목표 지점으로 이동(Run)하고, 도착하면 다시 Idle로 돌아가는 배회 상태 전환.
-# 이동 방향의 좌우 성분으로 flip_h를 갱신해 바라보는 방향에 맞게 뒤집는다
+# 상태 머신 진입점: WANDER(배회)/ALERT(발견)/CHASE(추적)/RETURN(포기 후 복귀)를 매 프레임 갱신
 func _process(delta: float) -> void:
 	if _triggered or _regenerating:
 		return
 
+	match _state:
+		EncounterState.WANDER:
+			_process_wander(delta)
+			_check_alert_trigger()
+		EncounterState.ALERT:
+			_process_alert(delta)
+		EncounterState.CHASE:
+			_process_chase(delta)
+		EncounterState.RETURN:
+			_process_return(delta)
+
+
+# 가만히 서 있다가(Idle) 잠시 후 목표 지점으로 이동(Run)하고, 도착하면 다시 Idle로 돌아가는 배회 상태 전환.
+# 이동 방향의 좌우 성분으로 flip_h를 갱신해 바라보는 방향에 맞게 뒤집는다
+func _process_wander(delta: float) -> void:
 	match _wander_state:
 		WanderState.IDLE:
 			_idle_timer -= delta
@@ -141,6 +197,107 @@ func _pick_new_wander_target() -> void:
 	_wander_target = _home_position + Vector2(cos(angle), sin(angle)) * dist
 
 
+# "player" 그룹에서 플레이어 노드를 찾아 반환 (없으면 null — 전투/타이틀 화면 등에서는 정상적으로 없을 수 있음)
+func _get_player_node() -> Node2D:
+	return get_tree().get_first_node_in_group("player") as Node2D
+
+
+# 배회 중 플레이어가 ALERT_RADIUS 안에 들어오면 발견(ALERT) 상태로 전환
+func _check_alert_trigger() -> void:
+	var player := _get_player_node()
+	if player == null:
+		return
+	if global_position.distance_to(player.global_position) <= ALERT_RADIUS:
+		_enter_alert_state()
+
+
+# 발견 직후: 제자리에 멈춰 "!"를 짧게 띄우고 경고음을 재생
+func _enter_alert_state() -> void:
+	_state = EncounterState.ALERT
+	_alert_timer = ALERT_DURATION
+	_sprite.offset = Vector2.ZERO
+	_sprite.play("idle")
+	_alert_label.show()
+	_play_alert_sound()
+
+
+func _process_alert(delta: float) -> void:
+	_alert_timer -= delta
+	if _alert_timer <= 0.0:
+		_enter_chase_state()
+
+
+# 기존 Typewriter(ui/typewriter.gd)의 bleep 재생 방식을 임시로 재활용: 무작위 bleep을 높은 피치로 재생.
+# 전용 경고음이 생기면 이 함수만 교체하면 됨
+func _play_alert_sound() -> void:
+	var index := randi() % BLEEP_COUNT + 1
+	_alert_sound_player.stream = load("%sbleep%03d.ogg" % [BLEEP_DIR, index])
+	_alert_sound_player.pitch_scale = ALERT_SOUND_PITCH
+	_alert_sound_player.volume_db = ALERT_SOUND_VOLUME_DB
+	_alert_sound_player.play()
+
+
+# ALERT가 끝나면 추적 시작: "!"를 감추고 배회보다 빠른 속도로 플레이어를 향해 달림
+func _enter_chase_state() -> void:
+	_state = EncounterState.CHASE
+	_chase_timer = 0.0
+	_alert_label.hide()
+	_sprite.offset = RUN_OFFSET
+	_sprite.play("run")
+
+
+# 매 프레임 플레이어 쪽으로 CHASE_SPEED로 이동. 거리가 GIVE_UP_DISTANCE 이상 벌어지거나
+# CHASE_TIMEOUT초가 지나면(둘 중 먼저 오는 조건) 추적을 포기하고 복귀(RETURN)한다.
+# 플레이어에게 닿으면(부딪히면) 기존과 동일하게 _on_body_entered가 전투를 시작시킨다
+func _process_chase(delta: float) -> void:
+	_chase_timer += delta
+
+	var player := _get_player_node()
+	if player == null:
+		_enter_return_state()
+		return
+
+	var to_player := player.global_position - global_position
+	var distance := to_player.length()
+
+	if distance >= GIVE_UP_DISTANCE or _chase_timer >= CHASE_TIMEOUT:
+		_enter_return_state()
+		return
+
+	if distance > 0.01:
+		var direction := to_player.normalized()
+		global_position += direction * CHASE_SPEED * delta
+		if absf(direction.x) > 0.01:
+			_sprite.flip_h = direction.x < 0.0
+
+
+# 추적 포기: "!"가 혹시 남아있다면 감추고(방어적) 스폰 지점을 향해 이동
+func _enter_return_state() -> void:
+	_state = EncounterState.RETURN
+	_alert_label.hide()
+	_sprite.offset = RUN_OFFSET
+	_sprite.play("run")
+
+
+# 스폰 지점(_home_position)에 도착하면 다시 배회(WANDER) 상태로 복귀
+func _process_return(delta: float) -> void:
+	var to_home := _home_position - global_position
+	var step_len: float = CHASE_SPEED * delta
+	if to_home.length() <= step_len:
+		global_position = _home_position
+		_enter_wander_state()
+	else:
+		var direction := to_home.normalized()
+		global_position += direction * step_len
+		if absf(direction.x) > 0.01:
+			_sprite.flip_h = direction.x < 0.0
+
+
+func _enter_wander_state() -> void:
+	_state = EncounterState.WANDER
+	_enter_idle_state()
+
+
 # 플레이어가 닿으면(전투/리젠/전환 중이 아닐 때만) 현재 좌표를 복귀 지점으로 삼아 전용 전투 씬으로 진입.
 # 필드에서 본 것과 같은 변종이 전투 씬에도 그대로 이어지도록 _variant를 함께 넘긴다
 func _on_body_entered(body: Node2D) -> void:
@@ -152,6 +309,7 @@ func _on_body_entered(body: Node2D) -> void:
 		return
 
 	_triggered = true
+	_alert_label.hide()
 
 	var return_path := ""
 	var current := get_tree().current_scene
@@ -174,6 +332,7 @@ func _begin_regen() -> void:
 	_triggered = false
 	if _sprite != null:
 		_sprite.visible = false
+	_alert_label.hide()
 	monitoring = false
 
 	var delay: float = regen_delay_override if regen_delay_override >= 0.0 else randf_range(REGEN_DELAY_MIN, REGEN_DELAY_MAX)
@@ -195,4 +354,4 @@ func _respawn() -> void:
 	_regenerating = false
 	_triggered = false
 	_pick_variant_and_setup_sprite()
-	_enter_idle_state()
+	_enter_wander_state()

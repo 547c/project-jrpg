@@ -351,7 +351,7 @@ func get_objective_text() -> String:
 		2:
 			return "마을 사람들과 대화하며 정보를 모으세요 (%d/2)" % _met_villager_count()
 		3:
-			return "미아를 만나 결정적 정보를 얻으세요"
+			return "술집에서 미아를 만나 결정적 정보를 얻으세요"
 		4:
 			return "숲과 동굴의 몬스터를 처치해 힘을 기르세요 (레벨 %d/%d)" % [get_flag("quest_level"), OBJECTIVE_QUEST_LEVEL_TARGET]
 		5:

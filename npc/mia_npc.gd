@@ -7,6 +7,8 @@ func _ready() -> void:
 	dialogue_tree = DialogueData.MIA_DIALOGUE
 	dialogue_start_id = "mia_greeting"
 	met_flag_name = "met_mia"
+	wander_radius_min = 15.0 # 실내(술집)라 다른 마을 NPC보다 좁게
+	wander_radius_max = 20.0
 	super._ready()
 
 	$AnimatedSprite2D.sprite_frames = SPRITE_FRAMES

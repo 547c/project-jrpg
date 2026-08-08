@@ -1,0 +1,39 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" uid="uid://c0qufkd1nkcst" path="res://world/spawn_point.gd" id="1_spawn"]
+[ext_resource type="Script" uid="uid://pt071dvpdb2d" path="res://world/area_transition.gd" id="2_trans"]
+[ext_resource type="PackedScene" path="res://ui/dialogue_box.tscn" id="3_dlgbox"]
+[ext_resource type="PackedScene" path="res://npc/npc.tscn" id="4_npc"]
+[ext_resource type="Script" uid="uid://ce30xc5a34hwh" path="res://npc/mia_npc.gd" id="5_mia"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_door"]
+size = Vector2(40, 100)
+
+[node name="Tavern" type="Node2D"]
+
+[node name="Background" type="ColorRect" parent="."]
+offset_right = 800.0
+offset_bottom = 600.0
+color = Color(0.32, 0.18, 0.1, 1)
+
+[node name="TavernSpawn" type="Marker2D" parent="."]
+position = Vector2(400, 450)
+script = ExtResource("1_spawn")
+spawn_point_name = "TavernSpawn"
+
+[node name="ToVillage" type="Area2D" parent="."]
+position = Vector2(400, 580)
+script = ExtResource("2_trans")
+destination_scene_path = "res://world/village.tscn"
+destination_spawn_point = "VillageSpawnFromTavern"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ToVillage"]
+shape = SubResource("RectangleShape2D_door")
+
+[node name="Mia" parent="." instance=ExtResource("4_npc")]
+position = Vector2(400, 280)
+script = ExtResource("5_mia")
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="DialogueBox" parent="UI" instance=ExtResource("3_dlgbox")]

@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://fckqkjr8j6i"
+path="res://.godot/imported/GRASS - Hard Walk 7.wav-669620b95c50ff7d53fadd3bb29cd78d.sample"
+
+[deps]
+
+source_file="res://assets/sfx/NA_Character Footsteps (Dirt & Grass) - Pack 1/Hard Walk/Grass/GRASS - Hard Walk 7.wav"
+dest_files=["res://.godot/imported/GRASS - Hard Walk 7.wav-669620b95c50ff7d53fadd3bb29cd78d.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

@@ -18,6 +18,7 @@ const BGM_TRACKS: Dictionary = {
 	"res://world/village.tscn": "Definitely Our Town",
 	"res://world/forest.tscn": "Silent Forest",
 	"res://world/cave.tscn": "Frozen Abyss",
+	"res://world/tavern.tscn": "Definitely Our Town",
 }
 
 var _player: Node2D
