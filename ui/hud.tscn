@@ -5,6 +5,7 @@
 [ext_resource type="PackedScene" path="res://ui/quest_log.tscn" id="3_qlog"]
 [ext_resource type="Texture2D" path="res://assets/Pixel Crawler - Free Pack/Entities/Characters/Body_A/Animations/Idle_Base/Idle_Down-Sheet.png" id="4_playersheet"]
 [ext_resource type="PackedScene" path="res://ui/inventory_menu.tscn" id="5_invmenu"]
+[ext_resource type="Script" path="res://ui/compass.gd" id="6_compass"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_backpack"]
 atlas = ExtResource("2_medieval")
@@ -256,6 +257,43 @@ theme_override_font_sizes/font_size = 12
 text = "목표"
 horizontal_alignment = 2
 vertical_alignment = 1
+
+[node name="CompassHint" type="Label" parent="ObjectiveHud"]
+layout_mode = 0
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -180.0
+offset_top = 58.0
+offset_right = -12.0
+offset_bottom = 76.0
+grow_horizontal = 0
+theme_override_colors/font_color = Color(0.9, 0.87, 0.78, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.7)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 11
+text = "[M] 나침반: 켜짐"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="Compass" type="Control" parent="." unique_id=771030022]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("6_compass")
+
+[node name="Arrow" type="Polygon2D" parent="Compass"]
+color = Color(0.96, 0.85, 0.35, 1)
+polygon = PackedVector2Array(17, 0, -7, -11, -1, 0, -7, 11)
+
+[node name="ArrowOutline" type="Line2D" parent="Compass/Arrow"]
+points = PackedVector2Array(17, 0, -7, -11, -1, 0, -7, 11, 17, 0)
+width = 2.0
+default_color = Color(0.25, 0.15, 0.05, 0.9)
+joint_mode = 2
 
 [node name="QuestLog" parent="." unique_id=1347969478 instance=ExtResource("3_qlog")]
 

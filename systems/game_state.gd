@@ -6,8 +6,10 @@ signal flag_changed(flag_name: String, value)
 # 퀘스트 상태(수락/진행/완료)가 바뀔 때 방출 (HUD/퀘스트로그가 구독해 갱신)
 signal quest_changed(quest_id: String)
 
-# 서브퀘스트 완료로 quest_level이 오를 때 방출 (LevelUpPopup이 구독해 안내창을 띄움)
-signal leveled_up(hp_gain: int, mana_gain: int)
+# 서브퀘스트 완료로 quest_level이 오를 때 방출 (LevelUpPopup이 구독해 "퀘스트 완료 + 레벨업"을
+# 하나의 안내창으로 함께 보여줌). 현재 구조상 퀘스트 완료는 항상 레벨업을 동반하므로 별도 시그널로
+# 나누지 않고 퀘스트 제목까지 한 번에 담아 방출한다
+signal quest_completed_with_level_up(quest_title: String, hp_gain: int, mana_gain: int)
 
 # 골드가 바뀔 때 방출 (HUD 카드가 구독해 실시간 갱신)
 signal gold_changed(new_gold: int)
@@ -272,7 +274,7 @@ func increment_quest_progress(quest_id: String) -> void:
 		if QUEST_COMPLETE_FLAGS.has(quest_id):
 			set_flag(QUEST_COMPLETE_FLAGS[quest_id], true)
 		set_flag("quest_level", get_flag("quest_level") + 1)
-		_apply_level_up()
+		_apply_level_up(quest["title"])
 
 	quest_changed.emit(quest_id)
 
@@ -283,13 +285,13 @@ const LEVEL_UP_MANA_GAIN := 10
 
 
 # quest_level이 오를 때마다 호출됨. 최대 체력/마나를 늘리고 같은 폭만큼 현재치도 회복시킨 뒤(최대치 초과 방지)
-# leveled_up을 방출해 LevelUpPopup 등이 사용자에게 알리게 함
-func _apply_level_up() -> void:
+# quest_completed_with_level_up을 방출해 LevelUpPopup이 "퀘스트 완료 + 레벨업"을 한 번에 안내하게 함
+func _apply_level_up(quest_title: String) -> void:
 	set_flag("player_max_hp", get_flag("player_max_hp") + LEVEL_UP_HP_GAIN)
 	set_flag("player_hp", min(get_flag("player_max_hp"), get_flag("player_hp") + LEVEL_UP_HP_GAIN))
 	set_flag("player_max_mana", get_flag("player_max_mana") + LEVEL_UP_MANA_GAIN)
 	set_flag("player_mana", min(get_flag("player_max_mana"), get_flag("player_mana") + LEVEL_UP_MANA_GAIN))
-	leveled_up.emit(LEVEL_UP_HP_GAIN, LEVEL_UP_MANA_GAIN)
+	quest_completed_with_level_up.emit(quest_title, LEVEL_UP_HP_GAIN, LEVEL_UP_MANA_GAIN)
 
 
 # 해당 퀘스트가 수락되어 활성 상태인지 여부

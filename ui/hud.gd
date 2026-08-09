@@ -28,11 +28,14 @@ const OBJECTIVE_PANEL_RIGHT_OFFSET := -12.0 # 화면 오른쪽 가장자리에�
 @onready var _quest_log = $QuestLog
 @onready var _inventory_button: Button = $MainHud/InventoryButton
 @onready var _inventory_menu = $InventoryMenu
+@onready var _compass: Compass = $Compass
+@onready var _compass_hint: Label = $ObjectiveHud/CompassHint
 
 
 func _ready() -> void:
 	_quest_button.pressed.connect(_on_quest_button_pressed)
 	_inventory_button.pressed.connect(_on_inventory_button_pressed)
+	_update_compass_hint()
 
 	# 진행 상황이 바뀔 때만 레벨/목표 텍스트를 다시 계산 (매 프레임 문자열을 만들 필요 없음)
 	GameState.flag_changed.connect(_on_progress_changed)
@@ -44,12 +47,24 @@ func _ready() -> void:
 	_update_gold_label()
 
 
-# 매 프레임 표시 조건을 갱신하고, 체력바를 현재 HP에 맞춘다 (신호 누락 걱정 없이 항상 정확)
+# 매 프레임 표시 조건을 갱신하고, 체력바를 현재 HP에 맞추며, 나침반 방향도 갱신한다
 func _process(_delta: float) -> void:
 	var show_hud := _should_show_hud()
 	_main_hud.visible = show_hud
 	_objective_hud.visible = show_hud
 	_update_stat_bars()
+	_compass.update_compass(show_hud)
+
+
+# M 키로 나침반 표시를 켜고 끈다 (HUD가 가려져 있어도 상태 자체는 토글되며, 힌트 라벨에 반영됨)
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("toggle_compass"):
+		_compass.toggle()
+		_update_compass_hint()
+
+
+func _update_compass_hint() -> void:
+	_compass_hint.text = "[M] 나침반: %s" % ("켜짐" if _compass.is_enabled() else "꺼짐")
 
 
 # 게임 진행 중이고(플레이어 존재), 타이틀/엔딩이 아니며, 가리는 UI가 하나도 안 열려 있을 때만 표시

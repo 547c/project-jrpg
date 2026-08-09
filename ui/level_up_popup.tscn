@@ -81,7 +81,7 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
 theme_override_font_sizes/font_size = 26
 horizontal_alignment = 1
-text = "레벨업!"
+text = "퀘스트 완료!"
 
 [node name="StatsLabel" type="Label" parent="Root/Panel/VBox"]
 layout_mode = 2

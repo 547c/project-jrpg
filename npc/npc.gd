@@ -28,6 +28,8 @@ var _wander_target: Vector2
 var _wander_state: int = WanderState.IDLE
 var _wander_idle_timer: float = 0.0
 
+var _pulse: InteractPulse
+
 
 # 감지 영역 시그널을 연결하고, 안내 문구/이름표를 초기 상태로 숨김. 이름표는 dialogue_tree에서
 # dialogue_start_id 노드의 speaker 값을 읽어와 채움 (게이팅된 placeholder도 같은 speaker를 쓰므로 안전)
@@ -37,6 +39,8 @@ func _ready() -> void:
 	_interact_prompt.hide()
 	_name_label.text = _resolve_display_name()
 	_name_label.hide()
+
+	_pulse = InteractPulse.new(self, _sprite)
 
 	_home_position = global_position
 	_wander_target = _home_position
@@ -51,20 +55,22 @@ func _resolve_display_name() -> String:
 	return ""
 
 
-# 플레이어가 범위에 들어오면 "말 걸기" 안내와 이름표를 표시
+# 플레이어가 범위에 들어오면 "말 걸기" 안내와 이름표를 표시하고, pulse를 더 뚜렷하게 바꿈
 func _on_body_entered(body: Node2D) -> void:
 	if body.is_in_group("player"):
 		_player_in_range = true
 		_interact_prompt.show()
 		_name_label.show()
+		_pulse.set_strong(true)
 
 
-# 플레이어가 범위를 벗어나면 안내와 이름표를 숨김
+# 플레이어가 범위를 벗어나면 안내와 이름표를 숨기고, pulse를 다시 은은하게 되돌림
 func _on_body_exited(body: Node2D) -> void:
 	if body.is_in_group("player"):
 		_player_in_range = false
 		_interact_prompt.hide()
 		_name_label.hide()
+		_pulse.set_strong(false)
 
 
 # 범위 안에서 상호작용 입력이 들어오면 대화를 시작

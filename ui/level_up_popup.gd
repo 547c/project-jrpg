@@ -1,8 +1,9 @@
 extends CanvasLayer
 
-# 퀘스트 완료로 quest_level이 올라 GameState.leveled_up이 방출될 때 화면 중앙에 스탯 상승을 알리는
-# 안내창 (autoload). "확인"을 눌러야 닫히며, 열려 있는 동안은 "level_up" 그룹으로 플레이어 이동/
-# 다른 메뉴 열기를 막는다 (다른 UI 오버레이들과 동일한 그룹-가시성 패턴)
+# 퀘스트 완료로 quest_level이 올라 GameState.quest_completed_with_level_up이 방출될 때 화면 중앙에
+# "퀘스트 완료 + 레벨업"을 함께 알리는 안내창 (autoload). 현재 구조상 퀘스트 완료는 항상 레벨업을
+# 동반하므로 별개의 두 팝업 대신 이 창 하나로 합쳐서 보여준다. "확인"을 눌러야 닫히며, 열려 있는
+# 동안은 "level_up" 그룹으로 플레이어 이동/다른 메뉴 열기를 막는다 (다른 UI 오버레이들과 동일한 패턴)
 
 @onready var _root: Control = $Root
 @onready var _stats_label: Label = $Root/Panel/VBox/StatsLabel
@@ -15,12 +16,12 @@ func _ready() -> void:
 	_root.add_to_group("level_up")
 	_root.visible = false
 	_confirm_button.pressed.connect(_on_confirm)
-	GameState.leveled_up.connect(_on_leveled_up)
+	GameState.quest_completed_with_level_up.connect(_on_quest_completed_with_level_up)
 
 
-# 레벨업 시 최대 체력/마나 상승폭을 안내 문구로 만들어 창을 띄움
-func _on_leveled_up(hp_gain: int, mana_gain: int) -> void:
-	_stats_label.text = "최대 체력 +%d\n최대 마나 +%d" % [hp_gain, mana_gain]
+# 퀘스트 완료 + 레벨업 정보를 두 줄로 안내 문구를 만들어 창을 띄움
+func _on_quest_completed_with_level_up(quest_title: String, hp_gain: int, mana_gain: int) -> void:
+	_stats_label.text = "퀘스트 완료: %s\n레벨업! 최대 체력 +%d / 최대 마나 +%d" % [quest_title, hp_gain, mana_gain]
 	_root.visible = true
 
 

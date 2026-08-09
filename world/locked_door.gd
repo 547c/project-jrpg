@@ -15,9 +15,13 @@ const LOCKED_DIALOGUE: Array = [
 	},
 ]
 
+const MARKER_COLOR := Color(0.85, 0.85, 0.9, 0.55) # 잠긴 문 느낌의 차분한 회백색
+
 @onready var _interact_prompt: Label = $InteractPrompt
 
 var _player_in_range: bool = false
+var _presence_marker: Label # 전용 스프라이트가 없어(문 외형은 맵의 배경/타일이 담당) pulse 전용으로 만든 작은 표식
+var _pulse: InteractPulse
 
 
 # 감지 영역 시그널을 연결하고 안내 문구를 초기 상태로 숨김
@@ -25,20 +29,35 @@ func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 	body_exited.connect(_on_body_exited)
 	_interact_prompt.hide()
+	_create_presence_marker()
 
 
-# 플레이어가 범위에 들어오면 "[E] 문" 안내를 표시
+# "여기 뭔가 있다"를 멀리서도 알 수 있도록 항상 보이는 작은 표식 (InteractPrompt와 달리 범위와 무관하게 항상 표시)
+func _create_presence_marker() -> void:
+	_presence_marker = Label.new()
+	_presence_marker.text = "✦"
+	_presence_marker.position = Vector2(-8, -26)
+	_presence_marker.add_theme_font_size_override("font_size", 16)
+	_presence_marker.add_theme_color_override("font_color", MARKER_COLOR)
+	_presence_marker.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_presence_marker)
+	_pulse = InteractPulse.new(self, _presence_marker)
+
+
+# 플레이어가 범위에 들어오면 "[E] 문" 안내를 표시하고, pulse를 더 뚜렷하게 바꿈
 func _on_body_entered(body: Node2D) -> void:
 	if body.is_in_group("player"):
 		_player_in_range = true
 		_interact_prompt.show()
+		_pulse.set_strong(true)
 
 
-# 플레이어가 범위를 벗어나면 안내를 숨김
+# 플레이어가 범위를 벗어나면 안내를 숨기고, pulse를 다시 은은하게 되돌림
 func _on_body_exited(body: Node2D) -> void:
 	if body.is_in_group("player"):
 		_player_in_range = false
 		_interact_prompt.hide()
+		_pulse.set_strong(false)
 
 
 # 범위 안에서 상호작용 입력이 들어오면 짧은 안내 대화를 시작
