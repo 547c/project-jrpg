@@ -16,9 +16,17 @@ extends RefCounted
 #             "flag_to_set": String, # 이 옵션을 선택하면 설정할 flag, 없으면 ""(생략 가능)
 #             "flag_value": bool,    # flag_to_set이 있을 때 설정할 값
 #             "show_if_flag": String, # 이 flag가 true일 때만 옵션을 보여줌, 없으면 ""(항상 표시, 생략 가능)
+#             "required_affinity": { "npc_id": String, "min": int },
+#                                    # 지정 시, 해당 NPC 호감도가 min 이상일 때만 선택 가능. 미만이면
+#                                    # 옵션은 보이되 빨간색으로 표시되고 클릭해도 안내만 뜨고 진행되지 않음 (생략 가능)
+#             "affinity_change": { "npc_id": String, "amount": int },
+#                                    # 지정 시, 이 옵션을 선택하면 해당 NPC 호감도를 amount만큼 증감 (생략 가능)
 #         },
 #     ],
 # }
+#
+# 옵션의 next_id가 이미 방문한 노드(GameState.seen_dialogue_nodes)면, DialogueBox가 그 옵션을
+# 회색으로 표시하고 목록 맨 아래로 정렬한다 (다시 들을 수 있지만 시각적으로 구분됨) — 데이터에 별도 표기 불필요.
 #
 # 결정적 선택은 "노드를 보여주는 순간"이 아니라 "옵션을 고르는 순간" flag가 설정된다.
 # 즉 결정적 노드는 보통 options에 2개(각각 다른 flag_value)를 넣어, 그중 하나를

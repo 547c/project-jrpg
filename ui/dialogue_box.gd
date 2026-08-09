@@ -6,15 +6,25 @@ extends Control
 signal dialogue_ended(last_node_id: String)
 
 const MAX_OPTIONS := 5
-const MIN_PANEL_HEIGHT := 180.0 # 화자 + 본문 한두 줄 + 옵션 1개 정도가 들어가는 최소 높이
-const MAX_PANEL_HEIGHT := 440.0 # 옵션 4개가 다 보여도 화면 안에 들어오는 최대 높이
+# 좌우 분할 레이아웃 기준 높이. 왼쪽(화자+대사)과 오른쪽(옵션들) 중 큰 쪽으로 패널 높이가 정해진다.
+# 세로로 쌓던 예전보다 낮아도 되므로 범위를 줄였다
+const MIN_PANEL_HEIGHT := 140.0
+const MAX_PANEL_HEIGHT := 340.0
+
+# 옵션 버튼 글자색: 일반(갈색) / 잠김(빨강, 호감도 부족) / 이미 봄(회색). 우선순위 잠김 > 봄 > 일반
+const COLOR_NORMAL := Color(0.22, 0.09, 0.03, 1)
+const COLOR_LOCKED := Color(0.68, 0.14, 0.11, 1)
+const COLOR_SEEN := Color(0.5, 0.43, 0.36, 1)
+
+# 잠긴(호감도 부족) 옵션을 눌렀을 때 대사 자리에 잠깐 보여주는 안내
+const LOCKED_HINT := "아직은... 좀 더 가까워져야 들을 수 있을 것 같다."
 
 @onready var _decisive_frame: Control = $DecisiveFrame
-@onready var _vbox: VBoxContainer = $Panel/VBox
-@onready var _speaker_label: Label = $Panel/VBox/SpeakerLabel
-@onready var _narration_label: Label = $Panel/VBox/NarrationLabel
-@onready var _text_label: Label = $Panel/VBox/TextLabel
-@onready var _options_container: VBoxContainer = $Panel/VBox/OptionsContainer
+@onready var _content: HBoxContainer = $Panel/HBox
+@onready var _speaker_label: Label = $Panel/HBox/LeftColumn/SpeakerLabel
+@onready var _narration_label: Label = $Panel/HBox/LeftColumn/NarrationLabel
+@onready var _text_label: Label = $Panel/HBox/LeftColumn/TextLabel
+@onready var _options_container: VBoxContainer = $Panel/HBox/OptionsContainer
 @onready var _bleep_player: AudioStreamPlayer = $BleepPlayer
 
 var _nodes_by_id: Dictionary = {}
@@ -45,6 +55,8 @@ func _show_node(node_id: String) -> void:
 		return
 
 	_last_shown_node_id = node_id
+	GameState.mark_node_seen(node_id) # 이 노드를 "본 적 있음"으로 기록 (옵션 회색/정렬 판단 기반)
+
 	var node: Dictionary = _nodes_by_id[node_id]
 	var is_decisive: bool = node.get("is_decisive", false)
 
@@ -66,11 +78,12 @@ func _show_node(node_id: String) -> void:
 	_update_panel_height()
 
 
-# 화자/지문/본문/옵션 개수에 맞춰 대화창 높이를 동적으로 조절.
+# 화자/지문/본문(왼쪽)과 옵션 개수(오른쪽) 중 더 높은 쪽에 맞춰 대화창 높이를 동적으로 조절.
 # 화면 하단(offset_bottom)은 고정한 채 위쪽으로만 자라나게(offset_top만 변경) 해서
-# 옵션이 적을 땐 화면을 덜 가리고, 옵션 4개일 때도 화면 밖으로 잘리지 않게 함
+# 옵션/대사가 적을 땐 화면을 덜 가리고, 많을 때도 화면 밖으로 잘리지 않게 함.
+# HBoxContainer의 최소 높이는 곧 좌우 컬럼 중 더 높은 쪽이므로 그 값을 그대로 쓴다
 func _update_panel_height() -> void:
-	var vbox_padding: float = _vbox.offset_top - _vbox.offset_bottom # VBox의 상하 여백(Panel 기준)
+	var content_padding: float = _content.offset_top - _content.offset_bottom # HBox의 상하 여백(Panel 기준)
 	var content_height := 0.0
 
 	# 씬이 막 로드된 직후의 첫 대화처럼 이 컨트롤 트리가 아직 레이아웃을 한 번도 확정 짓지 못한 상태에서는,
@@ -79,7 +92,7 @@ func _update_panel_height() -> void:
 	# 몇 프레임 더 재측정해서, 레이아웃이 정착되기 전의 값을 그대로 믿지 않도록 방어한다
 	for i in range(6):
 		await get_tree().process_frame
-		content_height = _vbox.get_combined_minimum_size().y + vbox_padding
+		content_height = _content.get_combined_minimum_size().y + content_padding
 		if content_height < MAX_PANEL_HEIGHT:
 			break
 
@@ -124,16 +137,33 @@ func _is_option_visible(option: Dictionary) -> bool:
 	return true
 
 
-# 표시 조건을 통과한 옵션만큼 버튼에 라벨/연결을 채우고, 남는 버튼은 숨김.
-# 표시할 옵션이 없을 때: 노드에 next_id가 있으면 "[계속]" 버튼으로 이어가고,
-# 없으면(순수 종료 대사) 기본 "닫기" 버튼을 하나 자동으로 보여줌
+# 옵션의 required_affinity 조건을 만족하는지 (없으면 항상 true). 미충족 옵션은 보이되 선택 불가(빨강)
+func _is_affinity_met(option: Dictionary) -> bool:
+	var req: Dictionary = option.get("required_affinity", {})
+	if req.is_empty():
+		return true
+	return GameState.get_affinity(req.get("npc_id", "")) >= int(req.get("min", 0))
+
+
+# 표시 조건을 통과한 옵션을 버튼에 채운다.
+# - 이미 본 노드로 가는 옵션(next_id가 seen)은 회색 + 목록 맨 아래로 안정 정렬 (다시 듣기용, 클릭 가능)
+# - 호감도 부족 옵션은 빨강 + 선택 시 안내만 (진행 안 됨)
+# - 표시할 옵션이 없으면 next_id 유무에 따라 "[계속]"/"닫기" 버튼을 자동 생성
 func _populate_options(options: Array, default_next_id: String = "") -> void:
 	var visible_options := _filter_visible_options(options)
+	var entries: Array = []
+
 	if visible_options.is_empty():
-		if default_next_id != "":
-			visible_options = [{"label": "[계속]", "next_id": default_next_id}]
-		else:
-			visible_options = [{"label": "닫기", "next_id": ""}]
+		var fallback: Dictionary = {"label": "[계속]", "next_id": default_next_id} if default_next_id != "" else {"label": "닫기", "next_id": ""}
+		entries.append({"option": fallback, "locked": false, "seen": false})
+	else:
+		for option in visible_options:
+			entries.append({
+				"option": option,
+				"locked": not _is_affinity_met(option),
+				"seen": GameState.has_seen_node(option.get("next_id", "")),
+			})
+		entries = _sort_seen_to_bottom(entries)
 
 	var buttons := _options_container.get_children()
 	for i in range(buttons.size()):
@@ -141,24 +171,53 @@ func _populate_options(options: Array, default_next_id: String = "") -> void:
 		if button.pressed.is_connected(_on_button_pressed):
 			button.pressed.disconnect(_on_button_pressed)
 
-		if i < visible_options.size():
-			var option: Dictionary = visible_options[i]
+		if i < entries.size():
+			var entry: Dictionary = entries[i]
+			var option: Dictionary = entry["option"]
 			button.text = option.get("label", "")
+			button.add_theme_color_override("font_color", _option_color(entry))
 			button.pressed.connect(_on_button_pressed.bind(option))
 			button.show()
 		else:
 			button.hide()
 
 
-# 버튼 클릭 처리: 타이핑 중이면 텍스트만 즉시 완성하고, 다 표시된 상태면 실제로 옵션을 선택해 다음으로 진행
+# 이미 본 옵션(seen)을 뒤로 보내되, 각 그룹 내 원래 순서는 유지하는 안정 정렬
+func _sort_seen_to_bottom(entries: Array) -> Array:
+	var unseen: Array = []
+	var seen: Array = []
+	for entry in entries:
+		if entry["seen"]:
+			seen.append(entry)
+		else:
+			unseen.append(entry)
+	return unseen + seen
+
+
+# 잠김(빨강) > 봄(회색) > 일반(갈색) 우선순위로 글자색을 고른다
+func _option_color(entry: Dictionary) -> Color:
+	if entry["locked"]:
+		return COLOR_LOCKED
+	if entry["seen"]:
+		return COLOR_SEEN
+	return COLOR_NORMAL
+
+
+# 버튼 클릭 처리: 타이핑 중이면 텍스트만 즉시 완성. 다 표시된 상태면, 호감도가 부족한 옵션은
+# 안내만 띄우고 진행하지 않고, 충족한 옵션은 실제로 선택해 다음으로 진행한다
 func _on_button_pressed(option: Dictionary) -> void:
 	if _typewriter.is_typing:
 		_typewriter.skip()
-	else:
-		_on_option_pressed(option)
+		return
+
+	if not _is_affinity_met(option):
+		_typewriter.start(LOCKED_HINT) # 대사 자리에 잠깐 안내를 타이핑 (노드는 그대로, 옵션 유지)
+		return
+
+	_on_option_pressed(option)
 
 
-# 옵션 버튼 클릭 시, flag_to_set / start_quest 같은 부수효과를 적용한 뒤 next_id 노드로 이동.
+# 옵션 버튼 클릭 시, flag_to_set / start_quest / affinity_change 같은 부수효과를 적용한 뒤 next_id 노드로 이동.
 # - open_shop: 다음 노드로 넘어가지 않고 ShopMenu를 그 위에 띄움 (대화는 현재 노드에 그대로 멈춰있음)
 # - min_quest_level: quest_level이 이 값 미만이면 start_quest 등 나머지 효과를 전부 건너뛰고
 #   next_id_if_blocked로 대신 이동 (옵션 자체는 항상 보이되, 선택 시 조건만 검사하는 게이팅용)
@@ -175,6 +234,10 @@ func _on_option_pressed(option: Dictionary) -> void:
 	var flag_to_set: String = option.get("flag_to_set", "")
 	if flag_to_set != "":
 		GameState.set_flag(flag_to_set, option.get("flag_value", false))
+
+	var affinity_change: Dictionary = option.get("affinity_change", {})
+	if not affinity_change.is_empty():
+		GameState.change_affinity(affinity_change.get("npc_id", ""), int(affinity_change.get("amount", 0)))
 
 	var start_quest: String = option.get("start_quest", "")
 	if start_quest != "":

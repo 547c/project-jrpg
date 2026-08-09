@@ -36,6 +36,8 @@ func save_game(slot: int) -> bool:
 		"quests": GameState.quests,
 		"gold": GameState.gold,
 		"inventory": GameState.inventory,
+		"affinity": GameState.affinity,
+		"seen_dialogue_nodes": GameState.seen_dialogue_nodes,
 		# --- 슬롯 목록 미리보기용 (복원엔 안 쓰임) ---
 		"objective_text": GameState.get_objective_text(),
 		"quest_level": GameState.get_flag("quest_level"),
@@ -65,6 +67,8 @@ func load_game(slot: int) -> bool:
 	GameState.restore_quests(data.get("quests", {}))
 	GameState.restore_gold(int(data.get("gold", 0)))
 	GameState.restore_inventory(data.get("inventory", {}))
+	GameState.restore_affinity(data.get("affinity", {}))
+	GameState.restore_seen_dialogue_nodes(data.get("seen_dialogue_nodes", []))
 
 	var position := _dict_to_vector2(data.get("player_position", {}))
 	SceneManager.ensure_player_exists()

@@ -17,11 +17,33 @@ signal gold_changed(new_gold: int)
 # 인벤토리 아이템이 추가/제거될 때 방출 (item_id 인자로 전달)
 signal inventory_changed(item_id: String)
 
+# NPC 호감도가 실제로 바뀔 때 방출 (npc_id, 새 값). 대화 톤/게이팅이 이 값을 참조한다
+signal affinity_changed(npc_id: String, new_value: int)
+
 # 골드(flags 딕셔너리와 별개의 독립 필드 — set_flag 경로를 타지 않음)
 var gold: int = 0
 
 # 아이템 인벤토리 (아이템 ID -> 보유 개수). 상점 구매/전투 드롭 등으로 채워짐
 var inventory: Dictionary = {}
+
+# NPC 호감도 (npc_id -> 0~100). 나중에 새 NPC가 추가돼도 키만 늘리면 되도록 확장 가능한 구조.
+# get/change로만 접근하며, 정의되지 않은 npc_id는 AFFINITY_DEFAULT로 간주한다
+const DEFAULT_AFFINITY: Dictionary = {
+	"elara": 30,
+	"rohan": 30,
+	"yusuf": 30,
+	"mia": 30,
+}
+const AFFINITY_DEFAULT := 30
+const AFFINITY_MIN := 0
+const AFFINITY_MAX := 100
+# 미아 전용: 그녀의 신뢰(earned_mia_trust)를 얻기 전까지는 호감도가 이 값을 넘지 못한다
+const MIA_AFFINITY_LOCKED_CAP := 40
+
+var affinity: Dictionary = DEFAULT_AFFINITY.duplicate()
+
+# 이미 표시된 적 있는 대화 노드 id 모음 (DialogueBox가 "다시 듣기" 옵션을 회색+하단정렬로 구분하는 데 사용)
+var seen_dialogue_nodes: Array = []
 
 # 모든 플래그의 초기값 (reset_progress()가 이 값들로 되돌리는 기준이 되기도 함)
 const DEFAULT_FLAGS: Dictionary = {
@@ -117,6 +139,9 @@ func reset_progress() -> void:
 	gold_changed.emit(gold)
 
 	inventory.clear()
+
+	reset_affinity()
+	seen_dialogue_nodes.clear()
 
 
 # 저장 데이터로부터 flags를 복원. 먼저 기본값으로 되돌려(임시 키 정리 포함) 저장 당시 없던 값이
@@ -236,6 +261,76 @@ func restore_inventory(data: Dictionary) -> void:
 
 	for item_id in inventory.keys():
 		inventory_changed.emit(item_id)
+
+
+# ── 호감도(Affinity) ────────────────────────────────────────────────────────
+
+# npc_id의 호감도를 amount만큼 증감하고 0~100으로 clamp. 미아는 신뢰를 얻기 전엔 40을 못 넘는다.
+# 값이 실제로 바뀔 때만 affinity_changed를 방출 (정의되지 않았던 npc_id도 이 호출로 등록됨)
+func change_affinity(npc_id: String, amount: int) -> void:
+	var current: int = get_affinity(npc_id)
+	var new_value: int = clampi(current + amount, AFFINITY_MIN, AFFINITY_MAX)
+	if npc_id == "mia" and not get_flag("earned_mia_trust"):
+		new_value = mini(new_value, MIA_AFFINITY_LOCKED_CAP)
+	if new_value == current and affinity.has(npc_id):
+		return
+	affinity[npc_id] = new_value
+	affinity_changed.emit(npc_id, new_value)
+
+
+# npc_id의 현재 호감도 (정의되지 않았으면 기본값 30)
+func get_affinity(npc_id: String) -> int:
+	return affinity.get(npc_id, AFFINITY_DEFAULT)
+
+
+# 호감도 구간 이름: cold(0-29) / neutral(30-59) / warm(60-79) / trusted(80-100).
+# 대화 톤 분기나 고티어 백스토리 해금 조건 등에 사용
+func get_affinity_tier(npc_id: String) -> String:
+	var value := get_affinity(npc_id)
+	if value <= 29:
+		return "cold"
+	if value <= 59:
+		return "neutral"
+	if value <= 79:
+		return "warm"
+	return "trusted"
+
+
+# 모든 호감도를 기본값으로 되돌리고 각 npc에 대해 affinity_changed를 방출 (새 게임/리셋용)
+func reset_affinity() -> void:
+	affinity = DEFAULT_AFFINITY.duplicate()
+	for npc_id in affinity.keys():
+		affinity_changed.emit(npc_id, affinity[npc_id])
+
+
+# 저장 데이터로부터 호감도를 복원 (기본값에서 시작해 저장된 값으로 덮어씀 — 저장 당시 없던 새 NPC 키도
+# 기본 4개는 항상 존재하게 유지. JSON 숫자는 float로 오므로 int로 보정)
+func restore_affinity(data: Dictionary) -> void:
+	affinity = DEFAULT_AFFINITY.duplicate()
+	for key in data.keys():
+		affinity[String(key)] = int(data[key])
+	for npc_id in affinity.keys():
+		affinity_changed.emit(npc_id, affinity[npc_id])
+
+
+# ── 방문한 대화 노드(seen) ──────────────────────────────────────────────────
+
+# 대화 노드를 "본 적 있음"으로 기록 (중복 없이 추가). DialogueBox가 노드를 표시할 때마다 호출한다
+func mark_node_seen(node_id: String) -> void:
+	if node_id != "" and not seen_dialogue_nodes.has(node_id):
+		seen_dialogue_nodes.append(node_id)
+
+
+# 해당 노드를 이미 본 적 있는지
+func has_seen_node(node_id: String) -> bool:
+	return seen_dialogue_nodes.has(node_id)
+
+
+# 저장 데이터(문자열 배열)로부터 방문 노드 목록을 복원
+func restore_seen_dialogue_nodes(data: Array) -> void:
+	seen_dialogue_nodes.clear()
+	for node_id in data:
+		seen_dialogue_nodes.append(String(node_id))
 
 
 # 오크 처치: 숲 오크 퀘스트의 진행도를 올림 (수락 전이면 아무 일도 안 일어남)

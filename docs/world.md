@@ -76,12 +76,57 @@ between existing story beats, not replacing them — starting
 with the smallest possible version (1 class, 1-2 enemy types,
 1-2 side quests) and expanding only after confirming it works.
 
-## v2 Roadmap (planned, not started) — "Traces of the Watcher"
+## Part 2 — "Traces in the Sand" (added, no longer deferred to v2)
 
-- New zone(s) beyond the current three.
-- Yusuf's true affiliation with the Watchers is revealed.
-- The player's ending state from v1.0 (which flags were set) carries over
-  and affects how Yusuf and the village react at the start of v2 — this is
-  the actual motivating use case for save/load, which was optional in v1.0.
-- New NPCs, a new decisive choice, and a larger-stakes event tied to
-  another region's decline.
+After the well is restored and reported to Elara, Yusuf reveals his true
+affiliation: he belongs to the **Watchers**, a scattered group tracking
+the failing Veins across the continent. This village's crisis was a small
+signal — a desert settlement across the sea is dying much faster.
+
+### New location: The Desert (reached by boat)
+
+A small dock is added near the village's coastline. Taking the boat
+leads to a desert region — a settlement being consumed by the same
+force that dried the well, but far more advanced.
+
+### New NPCs (2)
+
+- **A Watcher companion** (Yusuf's colleague) — guides the player to the
+  desert, reveals more about the Watchers' purpose and methods.
+- **A desert settlement leader/survivor** — desperate, represents the
+  human cost of the Veins failing; asks the player for help.
+
+### Part 2 decisive choice
+
+**Reveal the truth to the world, or keep it secret with the Watchers.**
+
+- The Watchers argue secrecy prevents panic.
+- The desert survivors argue the truth is needed so others can prepare.
+
+This choice shapes a second layer of ending beyond the original three,
+building on (not replacing) the Part 1 outcome.
+
+### Part 2 goal
+
+Investigate ancient ruins in the desert for clues to why the Veins are
+failing. The full answer is deliberately left unresolved — consistent
+with the original design note that this mystery spans future updates —
+but the player learns enough to make the Part 2 decisive choice.
+
+## Affinity system (added, replaces simple binary flags for ongoing NPC relationships)
+
+Each core NPC (Elara, Rohan, Yusuf, Mia, plus the two new Part 2 NPCs)
+has an `affinity` value (0-100, starts at 30). Regular dialogue choices
+shift it by small amounts (±2-3); decisive story choices shift it by
+larger amounts (±15-20). Thresholds (0-29 / 30-59 / 60-79 / 80-100)
+unlock different dialogue tone and, at higher tiers, backstory the NPC
+wouldn't otherwise share:
+
+- Elara: at high affinity, shares an old record inherited from the
+  previous elder about how past Vein failures were handled.
+- Rohan: at high affinity, admits he suspects the orcs are victims of
+  the same phenomenon, not simple aggressors.
+- Yusuf: affinity gates how much of his Watcher identity and mission he
+  reveals before the Part 2 reveal.
+- Mia: at high affinity, reveals she's had recurring dreams connected to
+  the Veins, predating the well incident.

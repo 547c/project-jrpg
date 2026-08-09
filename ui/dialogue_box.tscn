@@ -89,7 +89,7 @@ anchor_bottom = 1.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_decisive_frame")
 
-[node name="VBox" type="VBoxContainer" parent="Panel" unique_id=342809686]
+[node name="HBox" type="HBoxContainer" parent="Panel" unique_id=342809686]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -97,34 +97,43 @@ anchor_bottom = 1.0
 offset_left = 16.0
 offset_top = 12.0
 offset_right = -16.0
-offset_bottom = -20.0
+offset_bottom = -16.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_constants/separation = 24
+
+[node name="LeftColumn" type="VBoxContainer" parent="Panel/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 1.6
 theme_override_constants/separation = 8
 
-[node name="SpeakerLabel" type="Label" parent="Panel/VBox" unique_id=1763241064]
+[node name="SpeakerLabel" type="Label" parent="Panel/HBox/LeftColumn" unique_id=1763241064]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
 text = "Speaker"
 
-[node name="NarrationLabel" type="Label" parent="Panel/VBox"]
+[node name="NarrationLabel" type="Label" parent="Panel/HBox/LeftColumn"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.4, 0.32, 0.24, 1)
 autowrap_mode = 3
 text = "Narration"
 
-[node name="TextLabel" type="Label" parent="Panel/VBox" unique_id=2124029575]
+[node name="TextLabel" type="Label" parent="Panel/HBox/LeftColumn" unique_id=2124029575]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_colors/font_color = Color(0.25, 0.15, 0.07, 1)
 text = "Dialogue text"
 autowrap_mode = 3
 
-[node name="OptionsContainer" type="VBoxContainer" parent="Panel/VBox" unique_id=323829973]
+[node name="OptionsContainer" type="VBoxContainer" parent="Panel/HBox" unique_id=323829973]
 layout_mode = 2
-theme_override_constants/separation = 4
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 1.0
+theme_override_constants/separation = 6
 
-[node name="OptionButton1" type="Button" parent="Panel/VBox/OptionsContainer" unique_id=276540770]
+[node name="OptionButton1" type="Button" parent="Panel/HBox/OptionsContainer" unique_id=276540770]
+custom_minimum_size = Vector2(0, 38)
 layout_mode = 2
 texture_filter = 1
 theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
@@ -133,7 +142,8 @@ theme_override_styles/hover = SubResource("StyleBoxTexture_button_hover")
 theme_override_styles/pressed = SubResource("StyleBoxTexture_button_pressed")
 text = "Option 1"
 
-[node name="OptionButton2" type="Button" parent="Panel/VBox/OptionsContainer" unique_id=329394203]
+[node name="OptionButton2" type="Button" parent="Panel/HBox/OptionsContainer" unique_id=329394203]
+custom_minimum_size = Vector2(0, 38)
 layout_mode = 2
 texture_filter = 1
 theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
@@ -142,7 +152,8 @@ theme_override_styles/hover = SubResource("StyleBoxTexture_button_hover")
 theme_override_styles/pressed = SubResource("StyleBoxTexture_button_pressed")
 text = "Option 2"
 
-[node name="OptionButton3" type="Button" parent="Panel/VBox/OptionsContainer" unique_id=1763947372]
+[node name="OptionButton3" type="Button" parent="Panel/HBox/OptionsContainer" unique_id=1763947372]
+custom_minimum_size = Vector2(0, 38)
 layout_mode = 2
 texture_filter = 1
 theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
@@ -151,7 +162,8 @@ theme_override_styles/hover = SubResource("StyleBoxTexture_button_hover")
 theme_override_styles/pressed = SubResource("StyleBoxTexture_button_pressed")
 text = "Option 3"
 
-[node name="OptionButton4" type="Button" parent="Panel/VBox/OptionsContainer" unique_id=140446060]
+[node name="OptionButton4" type="Button" parent="Panel/HBox/OptionsContainer" unique_id=140446060]
+custom_minimum_size = Vector2(0, 38)
 layout_mode = 2
 texture_filter = 1
 theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
@@ -160,7 +172,8 @@ theme_override_styles/hover = SubResource("StyleBoxTexture_button_hover")
 theme_override_styles/pressed = SubResource("StyleBoxTexture_button_pressed")
 text = "Option 4"
 
-[node name="OptionButton5" type="Button" parent="Panel/VBox/OptionsContainer"]
+[node name="OptionButton5" type="Button" parent="Panel/HBox/OptionsContainer"]
+custom_minimum_size = Vector2(0, 38)
 layout_mode = 2
 texture_filter = 1
 theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)

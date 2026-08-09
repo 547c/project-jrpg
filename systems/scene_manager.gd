@@ -21,6 +21,15 @@ const BGM_TRACKS: Dictionary = {
 	"res://world/tavern.tscn": "Definitely Our Town",
 }
 
+# 씬 경로별 은은한 색조 오버레이 (SceneTint autoload가 그림). 매핑에 없는 씬(전투 씬 등)은
+# _apply_scene_tint()의 기본값(완전 투명)으로 자동 해제됨
+const SCENE_TINTS: Dictionary = {
+	"res://world/village.tscn": Color(1.0, 0.75, 0.35, 0.12), # 따뜻한 노을빛
+	"res://world/forest.tscn": Color(0.25, 0.55, 0.3, 0.12), # 차분한 초록빛
+	"res://world/cave.tscn": Color(0.2, 0.15, 0.45, 0.15), # 어둡고 음침한 청보라빛
+	"res://world/tavern.tscn": Color(0.75, 0.4, 0.15, 0.13), # 실내의 따뜻한 갈색/주황
+}
+
 var _player: Node2D
 var _is_changing_scene: bool = false
 var _transitions_suppressed: bool = false
@@ -66,12 +75,14 @@ func start_game() -> void:
 		MusicManager.play("Falling Apart (Prologue)")
 	else:
 		_play_scene_music(VILLAGE_SCENE_PATH)
+		_apply_scene_tint(VILLAGE_SCENE_PATH)
 
 	await get_tree().process_frame
 
 	if show_opening:
 		await _play_opening()
 		_play_scene_music(VILLAGE_SCENE_PATH)
+		_apply_scene_tint(VILLAGE_SCENE_PATH)
 
 	_place_initial_player()
 
@@ -181,6 +192,7 @@ func _apply_battle_enter() -> void:
 	get_tree().root.add_child(battle)
 	get_tree().current_scene = battle
 	battle.start_with(_battle_monster_type, _battle_variant)
+	_apply_scene_tint(BATTLE_SCENE_PATH) # 전투 화면엔 구역 색조를 남기지 않음(매핑에 없어 자동으로 꺼짐)
 
 	await FadeOverlay.fade_in()
 
@@ -245,6 +257,7 @@ func _apply_scene_change(scene_path: String, spawn_point_name: String, use_exact
 	# 전환한 구역의 방문 여부를 GameState에 기록
 	_record_visited(scene_path)
 	_play_scene_music(scene_path)
+	_apply_scene_tint(scene_path)
 
 	# 전투 승리 후 복귀라면, 방금 쓰러뜨린 몬스터를 리젠 상태로 두어 플레이어가 그 자리에 복귀해도 즉시 재조우되지 않게 함
 	if _pending_defeated_encounter_id != "":
@@ -315,6 +328,11 @@ func _record_visited(scene_path: String) -> void:
 func _play_scene_music(scene_path: String) -> void:
 	if BGM_TRACKS.has(scene_path):
 		MusicManager.play(BGM_TRACKS[scene_path])
+
+
+# 씬 경로에 대응하는 색조로 오버레이를 전환 (매핑에 없으면 완전 투명으로 꺼짐 — 전투 씬 등)
+func _apply_scene_tint(scene_path: String) -> void:
+	SceneTint.apply(SCENE_TINTS.get(scene_path, Color(0, 0, 0, 0)))
 
 
 # "spawn_points" 그룹에서 이름이 일치하는 SpawnPoint를 탐색
