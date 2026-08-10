@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://db62v3k7ruldb"
+path="res://.godot/imported/coin_jingle_small.wav-9b9e6d50443b7109f8b66f04aa9aefc4.sample"
+
+[deps]
+
+source_file="res://assets/sfx/400 Sounds pack/Items/coin_jingle_small.wav"
+dest_files=["res://.godot/imported/coin_jingle_small.wav-9b9e6d50443b7109f8b66f04aa9aefc4.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://oou08f8u7rjf"
+path="res://.godot/imported/sitar_negative.wav-e0c2ed1d177b81668eb69232eb55af78.sample"
+
+[deps]
+
+source_file="res://assets/sfx/400 Sounds pack/Musical Effects/sitar_negative.wav"
+dest_files=["res://.godot/imported/sitar_negative.wav-e0c2ed1d177b81668eb69232eb55af78.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

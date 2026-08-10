@@ -33,6 +33,7 @@ const DEFAULT_AFFINITY: Dictionary = {
 	"rohan": 30,
 	"yusuf": 30,
 	"mia": 30,
+	"kamil": 20, # 임무로 만난 거리감 있는 관계 — 다른 NPC보다 낮게 시작
 }
 const AFFINITY_DEFAULT := 30
 const AFFINITY_MIN := 0
@@ -54,6 +55,8 @@ const DEFAULT_FLAGS: Dictionary = {
 	"met_yusuf": false,                    # 유수프(상인)를 만났는가
 	"met_mia": false,                      # 미아(아이)를 만났는가
 	"met_mia_decisive": false,             # 미아의 결정적 노드(mia_approach_press)를 통과했는가
+	"met_kamil": false,                    # 카밀(감시자 동료)을 만났는가
+	"boat_available": false,               # 부두의 배를 이용할 수 있는가 (카밀의 출항 확인 후 true)
 	"visited_village": false,              # 마을을 방문했는가
 	"visited_forest": false,               # 숲을 방문했는가
 	"visited_cave": false,                 # 동굴을 방문했는가

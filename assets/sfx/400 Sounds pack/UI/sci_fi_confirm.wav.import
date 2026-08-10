@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://dgosdaw5x2e82"
+path="res://.godot/imported/sci_fi_confirm.wav-1ff62aea5a0f40bbcf3a36d9d349e6a2.sample"
+
+[deps]
+
+source_file="res://assets/sfx/400 Sounds pack/UI/sci_fi_confirm.wav"
+dest_files=["res://.godot/imported/sci_fi_confirm.wav-1ff62aea5a0f40bbcf3a36d9d349e6a2.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://df501tnxpo0kw"
+path="res://.godot/imported/xylophone_negative.wav-7b8731d7f68b1c44ac4bef019a887ca1.sample"
+
+[deps]
+
+source_file="res://assets/sfx/400 Sounds pack/Musical Effects/xylophone_negative.wav"
+dest_files=["res://.godot/imported/xylophone_negative.wav-7b8731d7f68b1c44ac4bef019a887ca1.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

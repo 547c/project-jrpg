@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://34be2p4rrqex"
+path="res://.godot/imported/weapon_equip.wav-f3653d8d5867461f4c1a03e9d3bbe916.sample"
+
+[deps]
+
+source_file="res://assets/sfx/400 Sounds pack/Weapons/weapon_equip.wav"
+dest_files=["res://.godot/imported/weapon_equip.wav-f3653d8d5867461f4c1a03e9d3bbe916.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

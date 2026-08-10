@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://b2m4o75bynm74"
+path="res://.godot/imported/menu_blip.wav-1c006f5da04963613d1baa5ac4144796.sample"
+
+[deps]
+
+source_file="res://assets/sfx/400 Sounds pack/Retro/menu_blip.wav"
+dest_files=["res://.godot/imported/menu_blip.wav-1c006f5da04963613d1baa5ac4144796.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

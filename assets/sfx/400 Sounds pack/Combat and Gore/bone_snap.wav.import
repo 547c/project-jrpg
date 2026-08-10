@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://bs3m5onpvxvnv"
+path="res://.godot/imported/bone_snap.wav-5615c5d3eae34e327afd958e3f571114.sample"
+
+[deps]
+
+source_file="res://assets/sfx/400 Sounds pack/Combat and Gore/bone_snap.wav"
+dest_files=["res://.godot/imported/bone_snap.wav-5615c5d3eae34e327afd958e3f571114.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

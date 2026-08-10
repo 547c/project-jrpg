@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://chbwjslnvj3ol"
+path="res://.godot/imported/toggle_off.wav-6eaa6fce0c0aee142ecb14540d43e545.sample"
+
+[deps]
+
+source_file="res://assets/sfx/400 Sounds pack/UI/toggle_off.wav"
+dest_files=["res://.godot/imported/toggle_off.wav-6eaa6fce0c0aee142ecb14540d43e545.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

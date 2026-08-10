@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://bon51kenlwpuf"
+path="res://.godot/imported/foley_footstep_concrete_1.wav-39bd6ed81afdb132b21b866f889d055f.sample"
+
+[deps]
+
+source_file="res://assets/sfx/400 Sounds pack/Footsteps/foley_footstep_concrete_1.wav"
+dest_files=["res://.godot/imported/foley_footstep_concrete_1.wav-39bd6ed81afdb132b21b866f889d055f.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

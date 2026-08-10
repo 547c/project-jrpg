@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://dy3x53rcqmnet"
+path="res://.godot/imported/8_bit_level_complete.wav-6b16a8867476b6d3a05f136c98240341.sample"
+
+[deps]
+
+source_file="res://assets/sfx/400 Sounds pack/Musical Effects/8_bit_level_complete.wav"
+dest_files=["res://.godot/imported/8_bit_level_complete.wav-6b16a8867476b6d3a05f136c98240341.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

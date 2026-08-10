@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://bl5y57dfqfy6r"
+path="res://.godot/imported/cough_double.wav-9785fdf19fc87932e7f1d38e64d8b3f0.sample"
+
+[deps]
+
+source_file="res://assets/sfx/400 Sounds pack/Human/cough_double.wav"
+dest_files=["res://.godot/imported/cough_double.wav-9785fdf19fc87932e7f1d38e64d8b3f0.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

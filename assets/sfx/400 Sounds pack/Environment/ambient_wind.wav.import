@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://drel47eh68w4h"
+path="res://.godot/imported/ambient_wind.wav-77fb149ec24cbf556bc43ddd5a93023d.sample"
+
+[deps]
+
+source_file="res://assets/sfx/400 Sounds pack/Environment/ambient_wind.wav"
+dest_files=["res://.godot/imported/ambient_wind.wav-77fb149ec24cbf556bc43ddd5a93023d.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

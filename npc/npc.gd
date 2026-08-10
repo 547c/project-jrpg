@@ -13,6 +13,7 @@ enum WanderState { IDLE, MOVING }
 @export var dialogue_tree: Array = DialogueData.TEST_DIALOGUE.duplicate(true) # 이 NPC가 재생할 대화 트리 (지금은 테스트용 기본값)
 @export var dialogue_start_id: String = "start" # 대화를 시작할 노드 id
 @export var met_flag_name: String = "" # 대화가 시작되면 true로 설정할 GameState 플래그 이름 (예: "met_elara"), 없으면 ""
+@export var npc_id: String = "" # 호감도/초상화용 NPC 식별자(예: "elara"). 비워두면 met_flag_name에서 자동 도출("met_elara"->"elara")
 @export var wander_radius_min: float = 30.0 # 스폰 위치 기준 배회 반경(최소)
 @export var wander_radius_max: float = 40.0 # 스폰 위치 기준 배회 반경(최대)
 
@@ -174,7 +175,17 @@ func _start_dialogue() -> void:
 	_in_dialogue = true
 	_interact_prompt.hide()
 	_name_label.hide()
-	dialogue_box.start_dialogue(dialogue_tree, _resolve_start_id())
+	dialogue_box.start_dialogue(dialogue_tree, _resolve_start_id(), _resolve_npc_id())
+
+
+# 호감도/초상화용 npc_id를 반환. 명시적으로 지정돼 있으면 그것을, 아니면 met_flag_name에서
+# "met_" 접두어를 떼어 도출한다("met_elara" -> "elara" — 호감도 딕셔너리 키와 정확히 일치)
+func _resolve_npc_id() -> String:
+	if npc_id != "":
+		return npc_id
+	if met_flag_name.begins_with("met_"):
+		return met_flag_name.trim_prefix("met_")
+	return ""
 
 
 # 실제로 시작할 대화 노드 id를 반환. 기본은 dialogue_start_id.

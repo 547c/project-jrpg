@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://33r80t3wbajt"
+path="res://.godot/imported/synth_process_complete.wav-0684e863195d216adae9ba02837ff0cd.sample"
+
+[deps]
+
+source_file="res://assets/sfx/400 Sounds pack/UI/synth_process_complete.wav"
+dest_files=["res://.godot/imported/synth_process_complete.wav-0684e863195d216adae9ba02837ff0cd.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

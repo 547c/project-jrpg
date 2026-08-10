@@ -16,17 +16,35 @@ extends RefCounted
 #             "flag_to_set": String, # 이 옵션을 선택하면 설정할 flag, 없으면 ""(생략 가능)
 #             "flag_value": bool,    # flag_to_set이 있을 때 설정할 값
 #             "show_if_flag": String, # 이 flag가 true일 때만 옵션을 보여줌, 없으면 ""(항상 표시, 생략 가능)
+#             "show_if_seen": String, # 이 node_id를 이미 본 적 있을 때만 옵션을 보여줌 (생략 가능)
+#             "show_if_not_seen": String, # 이 node_id를 아직 안 봤을 때만 옵션을 보여줌 — show_if_seen과
+#                                    # 짝지으면 "본 적 있으면 A 대신 B" 식으로 옵션을 서로 대체할 수 있음 (생략 가능)
 #             "required_affinity": { "npc_id": String, "min": int },
 #                                    # 지정 시, 해당 NPC 호감도가 min 이상일 때만 선택 가능. 미만이면
 #                                    # 옵션은 보이되 빨간색으로 표시되고 클릭해도 안내만 뜨고 진행되지 않음 (생략 가능)
 #             "affinity_change": { "npc_id": String, "amount": int },
 #                                    # 지정 시, 이 옵션을 선택하면 해당 NPC 호감도를 amount만큼 증감 (생략 가능)
+#             "next_id_by_affinity": { "npc_id": String, "thresholds": [int, ...], "next_ids": [String, ...] },
+#                                    # 지정 시, next_id 대신 현재 호감도로 다음 노드를 고른다
+#                                    # (next_ids.size() == thresholds.size() + 1). 낮은 threshold부터 비교해
+#                                    # 처음 "호감도 < threshold"인 구간의 next_id를 쓰고, 전부보다 크면 마지막
+#                                    # next_id(최상위 구간)를 쓴다. 예: thresholds=[40,70], next_ids=[A,B,C]
+#                                    # -> <40: A, 40~69: B, 70+: C. 고정 4단계(cold/neutral/warm/trusted)
+#                                    # 명칭에 안 맞는 커스텀 구간이 필요할 때 씀 (생략 가능, 있으면 next_id보다 우선)
 #         },
 #     ],
 # }
 #
 # 옵션의 next_id가 이미 방문한 노드(GameState.seen_dialogue_nodes)면, DialogueBox가 그 옵션을
 # 회색으로 표시하고 목록 맨 아래로 정렬한다 (다시 들을 수 있지만 시각적으로 구분됨) — 데이터에 별도 표기 불필요.
+#
+# 노드에 "affinity_change_on_show": { "npc_id": String, "amount": int }를 넣으면, 옵션 선택과 무관하게
+# 그 노드가 화면에 표시되는 순간 호감도가 바뀐다 (선택지 없이 이어지는 서술형 노드에 쓰는 용도 —
+# 옵션 선택 시 효과를 주고 싶으면 옵션의 "affinity_change"를 대신 사용).
+#
+# 노드에 "text_by_affinity_tier": { "npc_id": String, "cold": String, "neutral": String, "warm": String,
+# "trusted": String }를 넣으면, 해당 NPC의 현재 호감도 구간(GameState.get_affinity_tier)에 맞는 문구를
+# 보여준다 (구간별 문구가 없으면 "text"로 폴백). 이진 분기인 text_if_flag와 달리 4단계 분기용.
 #
 # 결정적 선택은 "노드를 보여주는 순간"이 아니라 "옵션을 고르는 순간" flag가 설정된다.
 # 즉 결정적 노드는 보통 options에 2개(각각 다른 flag_value)를 넣어, 그중 하나를
@@ -88,6 +106,13 @@ const ELARA_DIALOGUE: Array = [
 		"id": "elara_greeting",
 		"speaker": "엘라라",
 		"text": "오, 자네로군. 우물 일 때문에 왔겠지.",
+		"text_by_affinity_tier": {
+			"npc_id": "elara",
+			"cold": "...무슨 일이지.",
+			"neutral": "오, 자네로군. 우물 일 때문에 왔겠지.",
+			"warm": "왔는가. 자네를 보면 마음이 놓이는군.",
+			"trusted": "자네가 와줘서 다행이야. 요즘 자네 얼굴을 보면 든든해.",
+		},
 		"is_decisive": false,
 		"options": [
 			{"label": "[우물에 대해 묻는다]", "next_id": "elara_well"},
@@ -95,6 +120,17 @@ const ELARA_DIALOGUE: Array = [
 			{"label": "[그냥 안부를 묻는다]", "next_id": "elara_smalltalk"},
 			{"label": "[다른 사람들에 대해 묻는다]", "next_id": "elara_gossip", "show_if_flag": "met_rohan"},
 			{"label": "[다녀왔다고 말한다]", "next_id": "elara_ending_check", "show_if_flag": "guardian_event_done"},
+			{
+				"label": "[궁금한 게 있어요, 장로님]",
+				"next_id": "elara_secret_intro",
+				"required_affinity": {"npc_id": "elara", "min": 60},
+				"show_if_not_seen": "elara_secret_end",
+			},
+			{
+				"label": "[그 기록에 대해서 더 생각해봤나]",
+				"next_id": "elara_secret_followup",
+				"show_if_seen": "elara_secret_end",
+			},
 		],
 	},
 	{
@@ -262,6 +298,73 @@ const ELARA_DIALOGUE: Array = [
 		"is_decisive": false,
 		"options": [],
 	},
+	{
+		"id": "elara_secret_intro",
+		"speaker": "엘라라",
+		"text": "궁금한 거라... 흠, 자네라면 얘기해도 괜찮을 것 같군.",
+		"is_decisive": false,
+		"options": [
+			{"label": "[무슨 이야기예요?]", "next_id": "elara_secret_1"},
+			{"label": "[아니에요, 다음에 물어볼게요]", "next_id": ""},
+		],
+	},
+	{
+		"id": "elara_secret_1",
+		"speaker": "엘라라",
+		"text": "실은... 전대 장로님께 물려받은 게 하나 있어. 아주 오래된 기록이지.",
+		"is_decisive": false,
+		"next_id": "elara_secret_2",
+	},
+	{
+		"id": "elara_secret_2",
+		"speaker": "엘라라",
+		"text": "이런 일이... 처음이 아니라는 기록이야. 아주 먼 옛날, 물줄기가 말랐던 적이 또 있었다더군.",
+		"is_decisive": false,
+		"options": [
+			{"label": "[그때는 어떻게 됐나요?]", "next_id": "elara_secret_3"},
+			{"label": "[왜 지금까지 숨기셨어요?]", "next_id": "elara_secret_alt"},
+		],
+	},
+	{
+		"id": "elara_secret_3",
+		"speaker": "엘라라",
+		"text": "기록엔... 그냥 '지나갔다'고만 적혀 있어. 어떻게 해결했는지는 안 적혀 있더군. 아니면... 적을 수 없었던 걸지도.",
+		"is_decisive": false,
+		"affinity_change_on_show": {"npc_id": "elara", "amount": 3},
+		"next_id": "elara_secret_end",
+	},
+	{
+		"id": "elara_secret_alt",
+		"speaker": "엘라라",
+		"text": "자네도 알잖나, 사람들은 겁부터 먹어. 확실하지도 않은 걸로 마을을 불안하게 만들고 싶지 않았어.",
+		"is_decisive": false,
+		"affinity_change_on_show": {"npc_id": "elara", "amount": 3},
+		"next_id": "elara_secret_end",
+	},
+	{
+		"id": "elara_secret_end",
+		"speaker": "엘라라",
+		"text": "...아무튼, 이런 얘긴 자네니까 하는 걸세. 다른 이들껜 아직은 비밀로 해주게.",
+		"is_decisive": false,
+		"options": [],
+	},
+	{
+		"id": "elara_secret_followup",
+		"speaker": "엘라라",
+		"text": "그 기록에 대해서 더 생각해봤나?",
+		"is_decisive": false,
+		"options": [
+			{"label": "[아니요, 아직요]", "next_id": ""},
+			{"label": "[혹시 다른 단서는 없었나요?]", "next_id": "elara_secret_followup2"},
+		],
+	},
+	{
+		"id": "elara_secret_followup2",
+		"speaker": "엘라라",
+		"text": "글쎄... 기록 마지막 장에 이상한 문양이 하나 그려져 있긴 했어. 무슨 뜻인지는 나도 몰라.",
+		"is_decisive": false,
+		"options": [],
+	},
 ]
 
 # 로한(사냥꾼) 대화 트리
@@ -277,6 +380,13 @@ const ROHAN_DIALOGUE: Array = [
 		"id": "rohan_greeting",
 		"speaker": "로한",
 		"text": "거기 서. ...아, 마을에서 온 사람이군.",
+		"text_by_affinity_tier": {
+			"npc_id": "rohan",
+			"cold": "...뭐야. 볼일 있으면 빨리 말해.",
+			"neutral": "거기 서. ...아, 마을에서 온 사람이군.",
+			"warm": "왔군. 요즘 자네 발소리는 구별이 되더라고.",
+			"trusted": "왔나. 자네랑 얘기하는 게 요즘 낙이야, 이거.",
+		},
 		"is_decisive": false,
 		"options": [
 			{"label": "[동굴에 대해 묻는다]", "next_id": "rohan_cave"},
@@ -285,6 +395,17 @@ const ROHAN_DIALOGUE: Array = [
 			{"label": "[오크 처치를 돕겠다고 한다]", "next_id": "rohan_quest_accept", "start_quest": "forest_orcs", "show_if_quest_inactive": "forest_orcs"},
 			{"label": "[오크는 어떻게 되어가요?]", "next_id": "rohan_quest_status", "show_if_quest_active": "forest_orcs"},
 			{"label": "[다른 사람들에 대해 묻는다]", "next_id": "rohan_gossip", "show_if_flag": "met_elara"},
+			{
+				"label": "[뭔가 고민이 있어 보여요]",
+				"next_id": "rohan_secret_intro",
+				"required_affinity": {"npc_id": "rohan", "min": 60},
+				"show_if_not_seen": "rohan_secret_end",
+			},
+			{
+				"label": "[오크 얘기, 또 생각났나 보군]",
+				"next_id": "rohan_secret_followup",
+				"show_if_seen": "rohan_secret_end",
+			},
 		],
 	},
 	{
@@ -439,6 +560,73 @@ const ROHAN_DIALOGUE: Array = [
 		"is_decisive": false,
 		"options": [],
 	},
+	{
+		"id": "rohan_secret_intro",
+		"speaker": "로한",
+		"text": "...티가 나나. 하긴, 요즘 계속 그 생각뿐이라.",
+		"is_decisive": false,
+		"options": [
+			{"label": "[무슨 생각이요?]", "next_id": "rohan_secret_1"},
+			{"label": "[말하기 싫으면 안 해도 돼요]", "next_id": ""},
+		],
+	},
+	{
+		"id": "rohan_secret_1",
+		"speaker": "로한",
+		"text": "오크들 말이야. 처음엔 그냥 사나워진 줄 알았는데... 요즘 보면 뭔가 이상해.",
+		"is_decisive": false,
+		"next_id": "rohan_secret_2",
+	},
+	{
+		"id": "rohan_secret_2",
+		"speaker": "로한",
+		"text": "눈빛이... 짐승의 눈빛이 아니야. 뭔가에 쫓기는 것 같은, 그런 눈이더군.",
+		"is_decisive": false,
+		"options": [
+			{"label": "[오크들도 피해자라는 건가요?]", "next_id": "rohan_secret_3"},
+			{"label": "[그래도 위험한 건 위험한 거잖아요]", "next_id": "rohan_secret_alt"},
+		],
+	},
+	{
+		"id": "rohan_secret_3",
+		"speaker": "로한",
+		"text": "...그럴지도 모르지. 근데 이런 말 마을에서 함부로 못 해. '괴물 편드는 놈'이라는 소리 듣기 딱 좋으니까.",
+		"is_decisive": false,
+		"affinity_change_on_show": {"npc_id": "rohan", "amount": 3},
+		"next_id": "rohan_secret_end",
+	},
+	{
+		"id": "rohan_secret_alt",
+		"speaker": "로한",
+		"text": "맞아. 그건 그거고. 그래도... 가끔은 마음이 편치 않아.",
+		"is_decisive": false,
+		"affinity_change_on_show": {"npc_id": "rohan", "amount": 2},
+		"next_id": "rohan_secret_end",
+	},
+	{
+		"id": "rohan_secret_end",
+		"speaker": "로한",
+		"text": "아무튼. 자네한테만 하는 말이야. 알겠지?",
+		"is_decisive": false,
+		"options": [],
+	},
+	{
+		"id": "rohan_secret_followup",
+		"speaker": "로한",
+		"text": "오크 얘기, 또 생각났나 보군.",
+		"is_decisive": false,
+		"options": [
+			{"label": "[오크들이 왜 그렇게 됐을까요?]", "next_id": "rohan_secret_followup2"},
+			{"label": "[아니, 그냥 안부 물으러 왔어요]", "next_id": ""},
+		],
+	},
+	{
+		"id": "rohan_secret_followup2",
+		"speaker": "로한",
+		"text": "낸들 알겠나. 근데... 숲 저 안쪽, 자네가 아직 안 가본 데서 뭔가 이상한 냄새가 나더군. 타는 냄새 같기도 하고.",
+		"is_decisive": false,
+		"options": [],
+	},
 ]
 
 # 유서프(떠돌이 상인) 대화 트리
@@ -454,6 +642,13 @@ const YUSUF_DIALOGUE: Array = [
 		"id": "yusuf_greeting",
 		"speaker": "유서프",
 		"text": "오, 손님이시군! 뭐 필요한 거라도?",
+		"text_by_affinity_tier": {
+			"npc_id": "yusuf",
+			"cold": "...뭐, 필요한 거라도?",
+			"neutral": "오, 손님이시군! 뭐 필요한 거라도?",
+			"warm": "오, 왔는가! 요즘 자네 얼굴 보는 게 하루의 낙이야.",
+			"trusted": "왔군. ...솔직히, 자네한테는 좀 더 솔직해도 될 것 같은데.",
+		},
 		"is_decisive": false,
 		"options": [
 			{"label": "[동굴 이야기를 묻는다]", "next_id": "yusuf_cave_hint"},
@@ -462,6 +657,20 @@ const YUSUF_DIALOGUE: Array = [
 			{"label": "[스켈레톤 처치를 돕겠다고 한다]", "next_id": "yusuf_quest_accept", "next_id_if_blocked": "yusuf_quest_not_ready", "min_quest_level": 1, "start_quest": "cave_skeletons", "show_if_quest_inactive": "cave_skeletons"},
 			{"label": "[스켈레톤은 어떻게 되어가요?]", "next_id": "yusuf_quest_status", "show_if_quest_active": "cave_skeletons"},
 			{"label": "[다른 사람들에 대해 묻는다]", "next_id": "yusuf_gossip", "show_if_flag": "met_elara"},
+			{
+				"label": "[정말 그냥 상인이 맞아요?]",
+				"next_id": "yusuf_secret_stage1",
+				"required_affinity": {"npc_id": "yusuf", "min": 50},
+				"show_if_not_seen": "yusuf_secret_stage1c",
+			},
+			{
+				"label": "[이제 진짜 말해줘요]",
+				"next_id": "yusuf_secret_stage2",
+				"required_affinity": {"npc_id": "yusuf", "min": 80},
+				"show_if_seen": "yusuf_secret_stage1c",
+				"show_if_not_seen": "yusuf_secret_stage2d",
+				"show_if_flag": "guardian_event_done",
+			},
 		],
 	},
 	{
@@ -573,6 +782,73 @@ const YUSUF_DIALOGUE: Array = [
 		"is_decisive": false,
 		"options": [],
 	},
+	{
+		"id": "yusuf_secret_stage1",
+		"speaker": "유서프",
+		"text": "...날카롭구먼. 뭐, 완전히 틀린 말은 아니야.",
+		"is_decisive": false,
+		"options": [
+			{"label": "[역시 뭔가 있었네요]", "next_id": "yusuf_secret_stage1b"},
+			{"label": "[그럼 뭔데요?]", "next_id": "yusuf_secret_stage1b"},
+		],
+	},
+	{
+		"id": "yusuf_secret_stage1b",
+		"speaker": "유서프",
+		"text": "난... 그냥 물건을 파는 사람이 아니야. 정확히는, 세상 곳곳을 돌아다니며 뭔가를 '지켜보는' 사람에 가깝지.",
+		"is_decisive": false,
+		"affinity_change_on_show": {"npc_id": "yusuf", "amount": 2},
+		"next_id": "yusuf_secret_stage1c",
+	},
+	{
+		"id": "yusuf_secret_stage1c",
+		"speaker": "유서프",
+		"text": "이 정도만 말해두지. 더 궁금하면... 나를 좀 더 믿게 되면 그때 얘기하세.",
+		"is_decisive": false,
+		"options": [],
+	},
+	{
+		"id": "yusuf_secret_stage2",
+		"speaker": "유서프",
+		"text": "...좋아. 이제는 말해도 될 것 같군.",
+		"is_decisive": false,
+		"next_id": "yusuf_secret_stage2b",
+	},
+	{
+		"id": "yusuf_secret_stage2b",
+		"speaker": "유서프",
+		"text": "나는 '감시자'라고 불리는 이들 중 하나야. 세상 곳곳에서 수맥이 끊기는 걸 지켜보고, 기록하고... 가끔은, 막아보려 애쓰는 사람들이지.",
+		"is_decisive": false,
+		"options": [
+			{"label": "[감시자요? 처음 들어봐요]", "next_id": "yusuf_secret_stage2c"},
+			{"label": "[그럼 이 마을에 온 것도...]", "next_id": "yusuf_secret_stage2c"},
+		],
+	},
+	{
+		"id": "yusuf_secret_stage2c",
+		"speaker": "유서프",
+		"text": "맞아. 우연이 아니었어. 이 마을의 우물이 마른 게, 우리가 추적하던 큰 흐름의 일부였거든.",
+		"is_decisive": false,
+		"affinity_change_on_show": {"npc_id": "yusuf", "amount": 5},
+		"next_id": "yusuf_secret_stage2d",
+	},
+	{
+		"id": "yusuf_secret_stage2d",
+		"speaker": "유서프",
+		"text": "자네가 우물을 되살린 건... 생각보다 훨씬 중요한 일이었을 수도 있어. 나도 아직 다는 몰라.",
+		"is_decisive": false,
+		"options": [
+			{"label": "[더 알려줄 건 없어요?]", "next_id": "yusuf_secret_stage2e"},
+			{"label": "[일단 알겠어요]", "next_id": ""},
+		],
+	},
+	{
+		"id": "yusuf_secret_stage2e",
+		"speaker": "유서프",
+		"text": "...바다 건너, 훨씬 심각한 곳이 있다는 것 정도는 알고 있네. 언젠가 자네가 준비되면, 그때 자세히 얘기하지.",
+		"is_decisive": false,
+		"options": [],
+	},
 ]
 
 # 미아(아이) 대화 트리
@@ -659,16 +935,130 @@ const MIA_DIALOGUE: Array = [
 		"narration": "(미아가 예전보다 편하게 쳐다본다)",
 		"is_decisive": false,
 		"options": [
-			{"label": "[요즘 어때?]", "next_id": "mia_smalltalk_ok"},
+			{
+				"label": "[요즘 어때?]",
+				"next_id": "mia_smalltalk_ok",
+				"next_id_by_affinity": {
+					"npc_id": "mia",
+					"thresholds": [40, 70],
+					"next_ids": ["mia_smalltalk_shy", "mia_smalltalk_ok", "mia_smalltalk_close"],
+				},
+			},
+			{
+				"label": "[그 꿈 이야기, 좀 더 해줄래?]",
+				"next_id": "mia_dream_intro",
+				"required_affinity": {"npc_id": "mia", "min": 60},
+				"show_if_flag": "earned_mia_trust",
+				"show_if_not_seen": "mia_dream_end",
+			},
+			{
+				"label": "[요즘도 그 꿈을 꿔?]",
+				"next_id": "mia_dream_followup",
+				"show_if_seen": "mia_dream_end",
+			},
 		],
+	},
+	{
+		"id": "mia_smalltalk_shy",
+		"speaker": "미아",
+		"text": "...그냥 그래요.",
+		"is_decisive": false,
+		"affinity_change_on_show": {"npc_id": "mia", "amount": 1},
+		"options": [],
 	},
 	{
 		"id": "mia_smalltalk_ok",
 		"speaker": "미아",
 		"text": "이제 무섭지 않아요. 당신 덕분에요.",
-		"text_if_flag": "earned_mia_trust",
-		"text_false": "...그냥 그래요.",
 		"is_decisive": false,
+		"affinity_change_on_show": {"npc_id": "mia", "amount": 2},
+		"options": [],
+	},
+	{
+		"id": "mia_smalltalk_close",
+		"speaker": "미아",
+		"text": "당신이 오면 좋아요. 얘기할 사람이 생긴 것 같아서.",
+		"is_decisive": false,
+		"affinity_change_on_show": {"npc_id": "mia", "amount": 3},
+		"options": [],
+	},
+	{
+		"id": "mia_dream_intro",
+		"speaker": "미아",
+		"text": "...그거요? 사실 그날 밤 말고도, 예전부터 이상한 꿈을 꿨어요.",
+		"is_decisive": false,
+		"options": [
+			{"label": "[어떤 꿈인데?]", "next_id": "mia_dream_1"},
+			{"label": "[괜찮으면 말 안 해도 돼]", "next_id": ""},
+		],
+	},
+	{
+		"id": "mia_dream_1",
+		"speaker": "미아",
+		"text": "물이... 빛나는 꿈이에요. 근데 슬픈 빛이었어요. 꼭 뭔가를 찾고 있는 것처럼.",
+		"is_decisive": false,
+		"next_id": "mia_dream_2",
+	},
+	{
+		"id": "mia_dream_2",
+		"speaker": "미아",
+		"text": "엄마는 그냥 애가 꾸는 꿈이라고 했는데... 그날 밤 진짜로 그 빛을 봤을 때, 무서웠던 것보다 익숙하다는 느낌이 더 컸어요.",
+		"is_decisive": false,
+		"affinity_change_on_show": {"npc_id": "mia", "amount": 4},
+		"next_id": "mia_dream_end",
+	},
+	{
+		"id": "mia_dream_end",
+		"speaker": "미아",
+		"text": "...이상하죠? 아무튼, 당신한테는 말할 수 있어서 다행이에요.",
+		"is_decisive": false,
+		"options": [],
+	},
+	{
+		"id": "mia_dream_followup",
+		"speaker": "미아",
+		"text": "요즘도 가끔 그 꿈을 꿔요. 근데... 요즘은 배경이 달라요. 물 대신 온통 모래인 곳이에요.",
+		"is_decisive": false,
+		"options": [],
+	},
+]
+
+# 카밀(감시자 동료) 대화 트리 — 유서프가 정체를 밝힌 뒤(yusuf_secret_stage2를 본 뒤) 마을에 등장.
+# "지금 갈게요"를 고르면 kamil_confirm_departure에 도달하며, 그 노드의 set_flag_on_show로 boat_available이 켜진다
+const KAMIL_DIALOGUE: Array = [
+	{
+		"id": "kamil_greeting",
+		"speaker": "카밀",
+		"text": "...당신이군요. 유서프가 말한 그 사람.",
+		"is_decisive": false,
+		"options": [
+			{"label": "[당신은 누구세요?]", "next_id": "kamil_intro_1"},
+			{"label": "[왜 저를 기다렸나요?]", "next_id": "kamil_intro_1"},
+		],
+	},
+	{
+		"id": "kamil_intro_1",
+		"speaker": "카밀",
+		"text": "저는 카밀입니다. 유서프와 같은 일을 하고 있죠 — '감시자' 말입니다.",
+		"is_decisive": false,
+		"next_id": "kamil_intro_2",
+	},
+	{
+		"id": "kamil_intro_2",
+		"speaker": "카밀",
+		"text": "바다 건너에 도움이 필요한 곳이 있습니다. 준비되면 말씀하세요. 배를 준비해두겠습니다.",
+		"is_decisive": false,
+		"options": [
+			{"label": "[지금 갈게요]", "next_id": "kamil_confirm_departure"},
+			{"label": "[아직 준비가 안 됐어요]", "next_id": ""},
+		],
+	},
+	{
+		"id": "kamil_confirm_departure",
+		"speaker": "카밀",
+		"text": "알겠습니다. 부두에서 기다리고 있겠습니다.",
+		"is_decisive": false,
+		"set_flag_on_show": "boat_available", # 이 노드에 도달하는 순간 부두의 배가 이용 가능해짐
 		"options": [],
 	},
 ]

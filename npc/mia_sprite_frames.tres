@@ -1,7 +1,7 @@
 [gd_resource type="SpriteFrames" format=3 uid="uid://c78y8aq3teana"]
 
 [ext_resource type="Texture2D" uid="uid://ba57u35m1j8ke" path="res://assets/Pixel Crawler - Free Pack/Entities/Npc's/Citizen_F/Peasant_A/Idle/Idle-Sheet.png" id="1_tex"]
-[ext_resource type="Texture2D" path="res://assets/Pixel Crawler - Free Pack/Entities/Npc's/Citizen_F/Peasant_A/Walk/Walk-Sheet.png" id="2_walk"]
+[ext_resource type="Texture2D" uid="uid://dd8m0ectlvthu" path="res://assets/Pixel Crawler - Free Pack/Entities/Npc's/Citizen_F/Peasant_A/Walk/Walk-Sheet.png" id="2_walk"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_0"]
 atlas = ExtResource("1_tex")

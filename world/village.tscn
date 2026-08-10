@@ -37,6 +37,8 @@
 [ext_resource type="PackedScene" path="res://world/treasure_chest.tscn" id="26_chest"]
 [ext_resource type="Texture2D" uid="uid://dq5qfss4f4x12" path="res://assets/Pixel Crawler - Free Pack/MockUps/Tavern.png" id="26_yrodc"]
 [ext_resource type="PackedScene" path="res://world/locked_door.tscn" id="27_lockeddoor"]
+[ext_resource type="Script" path="res://npc/kamil_npc.gd" id="28_kamil"]
+[ext_resource type="PackedScene" path="res://world/dock.tscn" id="29_dock"]
 [ext_resource type="Texture2D" uid="uid://dlby316p68meo" path="res://assets/Pixel Crawler - Free Pack/Environment/Structures/Stations/Anvil/Anvil.png" id="36_edde0"]
 [ext_resource type="Texture2D" uid="uid://cqt42yv1ljryp" path="res://assets/Pixel Crawler - Free Pack/Environment/Structures/Stations/Furnace/Furnace.png" id="37_khy6x"]
 [ext_resource type="Texture2D" uid="uid://brfnr2uq5qcny" path="res://assets/Pixel Crawler - Free Pack/Environment/Structures/Stations/Workbench/Workbench.png" id="38_yrodc"]
@@ -13561,6 +13563,13 @@ script = ExtResource("6_rohan")
 [node name="Yusuf" parent="." unique_id=1210193695 instance=ExtResource("4_npc")]
 position = Vector2(-429, -25)
 script = ExtResource("7_yusuf")
+
+[node name="Kamil" parent="." instance=ExtResource("4_npc")]
+position = Vector2(620, 220)
+script = ExtResource("28_kamil")
+
+[node name="Dock" parent="." instance=ExtResource("29_dock")]
+position = Vector2(760, 320)
 
 [node name="Campfire" parent="." unique_id=1663011288 instance=ExtResource("25_campfire")]
 position = Vector2(818, -102)

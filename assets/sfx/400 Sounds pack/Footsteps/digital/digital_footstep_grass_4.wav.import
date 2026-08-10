@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://cog2anlqrv0wu"
+path="res://.godot/imported/digital_footstep_grass_4.wav-87f58a9f33699075cd817b8cde05e152.sample"
+
+[deps]
+
+source_file="res://assets/sfx/400 Sounds pack/Footsteps/digital/digital_footstep_grass_4.wav"
+dest_files=["res://.godot/imported/digital_footstep_grass_4.wav-87f58a9f33699075cd817b8cde05e152.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

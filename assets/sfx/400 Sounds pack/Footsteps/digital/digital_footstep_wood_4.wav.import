@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://cbt5cqabvfybl"
+path="res://.godot/imported/digital_footstep_wood_4.wav-548fbf46bae7884e1f1c8911e9985ebb.sample"
+
+[deps]
+
+source_file="res://assets/sfx/400 Sounds pack/Footsteps/digital/digital_footstep_wood_4.wav"
+dest_files=["res://.godot/imported/digital_footstep_wood_4.wav-548fbf46bae7884e1f1c8911e9985ebb.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2
