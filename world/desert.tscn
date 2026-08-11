@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" uid="uid://c0qufkd1nkcst" path="res://world/spawn_point.gd" id="1_spawn"]
 [ext_resource type="Script" uid="uid://pt071dvpdb2d" path="res://world/area_transition.gd" id="2_trans"]
@@ -6,9 +6,14 @@
 [ext_resource type="PackedScene" path="res://npc/npc.tscn" id="4_npc"]
 [ext_resource type="Script" path="res://npc/nadim_npc.gd" id="5_nadim"]
 [ext_resource type="PackedScene" path="res://world/ruins_entrance.tscn" id="6_ruins"]
+[ext_resource type="Script" path="res://world/monster_encounter.gd" id="7_mummy"]
+[ext_resource type="PackedScene" path="res://world/treasure_chest.tscn" id="8_chest"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_door"]
 size = Vector2(40, 600)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_encounter"]
+radius = 36.0
 
 [node name="Desert" type="Node2D"]
 
@@ -42,6 +47,40 @@ script = ExtResource("5_nadim")
 
 [node name="RuinsEntrance" parent="." instance=ExtResource("6_ruins")]
 position = Vector2(660, 260)
+
+[node name="MummyEncounter1" type="Area2D" parent="."]
+position = Vector2(400, 160)
+script = ExtResource("7_mummy")
+monster_type = "MUMMY"
+encounter_id = "mummy_1"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="MummyEncounter1"]
+shape = SubResource("CircleShape2D_encounter")
+
+[node name="MummyEncounter2" type="Area2D" parent="."]
+position = Vector2(520, 460)
+script = ExtResource("7_mummy")
+monster_type = "MUMMY"
+encounter_id = "mummy_2"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="MummyEncounter2"]
+shape = SubResource("CircleShape2D_encounter")
+
+[node name="MummyEncounter3" type="Area2D" parent="."]
+position = Vector2(640, 180)
+script = ExtResource("7_mummy")
+monster_type = "MUMMY"
+encounter_id = "mummy_3"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="MummyEncounter3"]
+shape = SubResource("CircleShape2D_encounter")
+
+[node name="KeyChest" parent="." instance=ExtResource("8_chest")]
+position = Vector2(240, 460)
+chest_id = "desert_key_chest"
+quest_id = "ruins_key"
+reward_item = "ruins_key"
+popup_text = "열쇠를 발견했다!"
 
 [node name="UI" type="CanvasLayer" parent="."]
 

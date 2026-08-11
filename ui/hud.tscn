@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://h24uu154qys7" path="res://ui/hud.gd" id="1_hud"]
 [ext_resource type="Texture2D" uid="uid://fq726ml3dqoh" path="res://assets/GUI/MedievalUiMega/medieval.png" id="2_medieval"]
 [ext_resource type="PackedScene" path="res://ui/quest_log.tscn" id="3_qlog"]
-[ext_resource type="Texture2D" path="res://assets/Pixel Crawler - Free Pack/Entities/Characters/Body_A/Animations/Idle_Base/Idle_Down-Sheet.png" id="4_playersheet"]
+[ext_resource type="Texture2D" path="res://assets/graphics/Pixel Crawler - Free Pack/Entities/Characters/Body_A/Animations/Idle_Base/Idle_Down-Sheet.png" id="4_playersheet"]
 [ext_resource type="PackedScene" path="res://ui/inventory_menu.tscn" id="5_invmenu"]
 [ext_resource type="Script" path="res://ui/compass.gd" id="6_compass"]
 

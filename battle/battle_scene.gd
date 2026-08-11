@@ -6,7 +6,7 @@ extends Node2D
 # 턴 로직(공격/스킬/마나)을 처리한다. 승리 시 SceneManager.return_from_battle()로 원래 좌표에 복귀,
 # 패배 시 GameOverScreen으로 넘긴다. HUD/일시정지 억제를 위해 "battle_box" 그룹에 등록한다.
 
-const PLAYER_SPRITE_PATH := "res://assets/Pixel Crawler - Free Pack/Entities/Characters/Body_A/Animations/Idle_Base/Idle_Up-Sheet.png"
+const PLAYER_SPRITE_PATH := "res://assets/graphics/Pixel Crawler - Free Pack/Entities/Characters/Body_A/Animations/Idle_Base/Idle_Up-Sheet.png"
 const PLAYER_FRAME_SIZE := 64
 const FRAME_COUNT := 4
 const IDLE_FPS := 4.0
@@ -16,7 +16,7 @@ const MONSTER_DEATH_FPS := 8.0
 
 # 카드 초상화용 얼굴 크롭 (Idle_Down-Sheet.png 기준 — 전투 중 실제로 보여주는 Idle_Up과는 다른 시트지만
 # HUD 카드와 동일한 얼굴 그래픽을 쓰기 위해 정면 얼굴이 나온 Idle_Down에서 잘라온다)
-const PLAYER_PORTRAIT_SHEET_PATH := "res://assets/Pixel Crawler - Free Pack/Entities/Characters/Body_A/Animations/Idle_Base/Idle_Down-Sheet.png"
+const PLAYER_PORTRAIT_SHEET_PATH := "res://assets/graphics/Pixel Crawler - Free Pack/Entities/Characters/Body_A/Animations/Idle_Base/Idle_Down-Sheet.png"
 const PLAYER_PORTRAIT_REGION := Rect2(23, 16, 18, 17)
 
 const PLAYER_SCALE := 2.4
@@ -139,7 +139,8 @@ func _setup_sprites() -> void:
 	var monster_frames := SpriteFrames.new()
 	if monster_frames.has_animation("default"):
 		monster_frames.remove_animation("default")
-	_add_monster_animation(monster_frames, "idle", idle_sheet, BattleData.MOB_IDLE_FRAME_SIZE, BattleData.MOB_IDLE_FRAME_SIZE, BattleData.MOB_IDLE_FRAME_COUNT, MONSTER_IDLE_FPS, true)
+	var idle_frame_size: int = _variant.get("idle_frame_size", BattleData.MOB_IDLE_FRAME_SIZE)
+	_add_monster_animation(monster_frames, "idle", idle_sheet, idle_frame_size, idle_frame_size, _variant.get("idle_frame_count", BattleData.MOB_IDLE_FRAME_COUNT), MONSTER_IDLE_FPS, true)
 	_add_monster_animation(monster_frames, "death", load(_variant["death_path"]) as Texture2D, _variant["death_frame_width"], _variant["death_frame_height"], _variant["death_frame_count"], MONSTER_DEATH_FPS, false)
 
 	_monster_sprite.sprite_frames = monster_frames
@@ -189,7 +190,8 @@ func _layout_actors() -> void:
 	_monster_sprite.position = Vector2(vp.x * 0.74, vp.y * 0.40)
 
 	var player_foot := _player_sprite.position + Vector2(0, PLAYER_FRAME_SIZE * PLAYER_SCALE * 0.5 - 6.0)
-	var monster_foot := _monster_sprite.position + Vector2(0, BattleData.MOB_IDLE_FRAME_SIZE * MONSTER_SCALE * 0.5 - 4.0)
+	var idle_frame_size: int = _variant.get("idle_frame_size", BattleData.MOB_IDLE_FRAME_SIZE)
+	var monster_foot := _monster_sprite.position + Vector2(0, idle_frame_size * MONSTER_SCALE * 0.5 - 4.0)
 	_setup_shadow(_player_shadow, player_foot, 48.0, 14.0)
 	_setup_shadow(_monster_shadow, monster_foot, 40.0, 12.0)
 
@@ -371,8 +373,9 @@ func _play_monster_death() -> void:
 	if _monster_sprite.sprite_frames == null or not _monster_sprite.sprite_frames.has_animation("death"):
 		return
 
-	var death_h: float = _variant.get("death_frame_height", BattleData.MOB_IDLE_FRAME_SIZE)
-	_monster_sprite.offset = Vector2(0, -(death_h - BattleData.MOB_IDLE_FRAME_SIZE) / 2.0)
+	var idle_h: float = _variant.get("idle_frame_size", BattleData.MOB_IDLE_FRAME_SIZE)
+	var death_h: float = _variant.get("death_frame_height", idle_h)
+	_monster_sprite.offset = Vector2(0, -(death_h - idle_h) / 2.0)
 	_monster_sprite.play("death")
 	await _monster_sprite.animation_finished
 
@@ -390,6 +393,8 @@ func _finish_victory() -> void:
 			GameState.increment_orcs_defeated()
 		"SKELETON":
 			GameState.increment_skeletons_defeated()
+		"MUMMY":
+			GameState.increment_mummies_defeated()
 
 	var gold_gained := randi_range(_monster_data["gold_min"], _monster_data["gold_max"])
 	GameState.add_gold(gold_gained)

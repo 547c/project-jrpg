@@ -1,7 +1,7 @@
 [gd_resource type="SpriteFrames" format=3 uid="uid://dxmglyut18snk"]
 
-[ext_resource type="Texture2D" uid="uid://cneblhulpy05l" path="res://assets/Pixel Crawler - Free Pack/Entities/Npc's/Wizzard/Idle/Idle-Sheet.png" id="1_tex"]
-[ext_resource type="Texture2D" uid="uid://cucj3koern1e7" path="res://assets/Pixel Crawler - Free Pack/Entities/Npc's/Wizzard/Run/Run-Sheet.png" id="2_run"]
+[ext_resource type="Texture2D" uid="uid://cneblhulpy05l" path="res://assets/graphics/Pixel Crawler - Free Pack/Entities/Npc's/Wizzard/Idle/Idle-Sheet.png" id="1_tex"]
+[ext_resource type="Texture2D" uid="uid://cucj3koern1e7" path="res://assets/graphics/Pixel Crawler - Free Pack/Entities/Npc's/Wizzard/Run/Run-Sheet.png" id="2_run"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_0"]
 atlas = ExtResource("1_tex")

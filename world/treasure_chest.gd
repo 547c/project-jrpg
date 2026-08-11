@@ -13,6 +13,13 @@ const POPUP_COLOR := Color(0.95, 0.85, 0.3, 1)
 @export var chest_id: String = "" # 저장용 고유 ID (씬 안에서 겹치지 않게 지정)
 @export var gold_min: int = 2
 @export var gold_max: int = 4
+# 아래 3개가 지정되면 "골드 상자"가 아니라 "퀘스트/보상 상자"로 동작한다 (일반화):
+# - quest_id: 열었을 때 골드 대신 이 퀘스트를 즉시 완료 처리 (GameState.complete_quest)
+# - reward_item: 열었을 때 인벤토리에 지급할 아이템 id (열쇠 등). quest_id 없이 단독으로도 사용 가능
+# - popup_text: 머리 위에 띄울 안내 문구 (미지정 시 골드/보상에 맞춰 기본 문구 사용)
+@export var quest_id: String = ""
+@export var reward_item: String = ""
+@export var popup_text: String = ""
 
 const MARKER_COLOR := Color(0.95, 0.85, 0.3, 0.65) # 보물 느낌의 은은한 금색 (골드 팝업과 톤 맞춤)
 
@@ -78,22 +85,36 @@ func _is_opened() -> bool:
 	return GameState.get_flag(_flag_name())
 
 
-# 골드를 무작위(gold_min~gold_max)로 획득시키고, 다시 열 수 없도록 플래그를 남긴 뒤
-# 획득량을 머리 위 팝업으로 잠깐 보여줌
+# 상자를 열어 보상을 지급하고(퀘스트/아이템 상자면 그쪽, 아니면 골드), 다시 열 수 없도록 플래그를 남긴 뒤
+# 결과를 머리 위 팝업으로 잠깐 보여줌
 func _open() -> void:
 	if _is_opened():
 		return
 
-	var amount := randi_range(gold_min, gold_max)
-	GameState.add_gold(amount)
 	GameState.set_flag(_flag_name(), true)
+	var default_popup := _grant_reward()
 
 	_player_in_range = false
 	_interact_prompt.hide()
 	monitoring = false
 	_pulse.stop()
 	_presence_marker.hide()
-	_show_popup("골드 %d 발견!" % amount) # "N을/를 발견했다"는 숫자에 따라 조사가 갈려(10,13,16,17,18,20은 을 / 12,14,15,19는 를) 조사 없는 문구로 통일
+	_show_popup(popup_text if popup_text != "" else default_popup)
+
+
+# quest_id/reward_item이 지정되면 퀘스트 완료·아이템 지급을, 아니면 기존처럼 골드를 지급한다.
+# 반환값은 popup_text가 비었을 때 쓸 기본 팝업 문구
+func _grant_reward() -> String:
+	if quest_id != "" or reward_item != "":
+		if quest_id != "":
+			GameState.complete_quest(quest_id)
+		if reward_item != "":
+			GameState.add_item(reward_item, 1)
+		return "무언가를 발견했다!"
+
+	var amount := randi_range(gold_min, gold_max)
+	GameState.add_gold(amount)
+	return "골드 %d 발견!" % amount # "N을/를 발견했다"는 숫자에 따라 조사가 갈려(10,13,16,17,18,20은 을 / 12,14,15,19는 를) 조사 없는 문구로 통일
 
 
 func _show_popup(text: String) -> void:

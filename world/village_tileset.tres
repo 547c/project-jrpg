@@ -1,10 +1,10 @@
 [gd_resource type="TileSet" format=3 uid="uid://htdepmupqbjt"]
 
-[ext_resource type="Texture2D" uid="uid://cfd6683ax3rha" path="res://assets/Pixel Crawler - Free Pack/Environment/Tilesets/Floors_Tiles.png" id="1_floors"]
-[ext_resource type="Texture2D" uid="uid://tysaqn71orf0" path="res://assets/Pixel Crawler - Free Pack/Environment/Tilesets/Dungeon_Tiles.png" id="2_5ynv6"]
-[ext_resource type="Texture2D" uid="uid://cj3ku0rh4igg3" path="res://assets/Pixel Crawler - Free Pack/Environment/Tilesets/Wall_Tiles.png" id="3_b2n36"]
-[ext_resource type="Texture2D" uid="uid://fitw34ussfwn" path="res://assets/Pixel Crawler - Free Pack/Environment/Tilesets/Wall_Variations.png" id="4_2fwds"]
-[ext_resource type="Texture2D" uid="uid://ds3ahcef0ktnb" path="res://assets/Pixel Crawler - Free Pack/Environment/Tilesets/Water_tiles.png" id="5_05bin"]
+[ext_resource type="Texture2D" uid="uid://cfd6683ax3rha" path="res://assets/graphics/Pixel Crawler - Free Pack/Environment/Tilesets/Floors_Tiles.png" id="1_floors"]
+[ext_resource type="Texture2D" uid="uid://tysaqn71orf0" path="res://assets/graphics/Pixel Crawler - Free Pack/Environment/Tilesets/Dungeon_Tiles.png" id="2_5ynv6"]
+[ext_resource type="Texture2D" uid="uid://cj3ku0rh4igg3" path="res://assets/graphics/Pixel Crawler - Free Pack/Environment/Tilesets/Wall_Tiles.png" id="3_b2n36"]
+[ext_resource type="Texture2D" uid="uid://fitw34ussfwn" path="res://assets/graphics/Pixel Crawler - Free Pack/Environment/Tilesets/Wall_Variations.png" id="4_2fwds"]
+[ext_resource type="Texture2D" uid="uid://ds3ahcef0ktnb" path="res://assets/graphics/Pixel Crawler - Free Pack/Environment/Tilesets/Water_tiles.png" id="5_05bin"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_floors"]
 texture = ExtResource("1_floors")

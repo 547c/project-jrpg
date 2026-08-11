@@ -40,13 +40,27 @@ const MONSTERS: Dictionary = {
 		"gold_max": 12,
 		"portrait_region": Rect2(5, 1, 17, 14),
 	},
+	# 미라(2부 사막): 오크/스켈레톤보다 강함. 스프라이트는 유료 Desert 팩(Idle/Run/Death 모두 64x64)이라
+	# 프레임 크기가 무료 팩 몹(Idle 32)과 달라 아래 MONSTER_VARIANTS에서 변형별로 크기를 지정한다
+	"MUMMY": {
+		"name": "미라",
+		"max_hp": 45,
+		"damage_min": 7,
+		"damage_max": 8,
+		"gold_min": 12,
+		"gold_max": 16,
+		"portrait_region": Rect2(24, 33, 16, 16), # 64x64 Idle 프레임에서 미라 머리(하단 정렬 캐릭터의 상부)만 크롭
+	},
 }
 
-# 몬스터 애니메이션 시트가 있는 폴더 (Pixel Crawler - Free Pack)
-const MOB_SHEET_BASE := "res://assets/Pixel Crawler - Free Pack/Entities/Mobs/"
+# 몬스터 애니메이션 시트가 있는 폴더. 대부분 무료 팩(Mobs) 아래지만, 미라는 유료 Desert 팩 아래라
+# 변형마다 "base"로 다른 루트를 지정할 수 있게 한다 (미지정 시 MOB_SHEET_BASE 사용)
+const MOB_SHEET_BASE := "res://assets/graphics/Pixel Crawler - Free Pack/Entities/Mobs/"
+const MUMMY_SHEET_BASE := "res://assets/graphics/Pixel Crawler - Desert/Enemy/"
 
-# Idle/Run은 모든 변종에서 프레임 크기가 동일 (Idle 32x32x4, Run 64x64x6).
-# Death는 변종마다 캔버스 크기/프레임 개수가 달라 MONSTER_VARIANTS에 변종별로 따로 기록해둔다
+# 무료 팩 몹의 기본 프레임 크기 (Idle 32x32x4, Run 64x64x6). 변종이 값을 지정하지 않으면 이 기본값을 씀.
+# 미라(Desert)처럼 프레임 크기가 다른 변종은 MONSTER_VARIANTS에서 idle/run_frame_size·count를 직접 지정한다.
+# Death는 원래부터 변종마다 캔버스/개수가 달라 MONSTER_VARIANTS에 변종별로 따로 기록해왔다
 const MOB_IDLE_FRAME_SIZE := 32
 const MOB_IDLE_FRAME_COUNT := 4
 const MOB_RUN_FRAME_SIZE := 64
@@ -69,6 +83,13 @@ const MONSTER_VARIANTS: Dictionary = {
 		{"folder": "Skeleton Crew/Skeleton - Rogue", "death_frame_width": 64, "death_frame_height": 64, "death_frame_count": 6},
 		{"folder": "Skeleton Crew/Skeleton - Warrior", "death_frame_width": 64, "death_frame_height": 48, "death_frame_count": 6},
 	],
+	# 미라 3종(유료 Desert 팩). 모든 애니메이션이 64x64 프레임 (Idle x4, Run x6, Death x6)이라
+	# 무료 팩 기본값(Idle 32) 대신 변종에서 직접 지정하고, base로 Desert 루트를 가리킨다
+	"MUMMY": [
+		{"folder": "Mummy - Base", "base": MUMMY_SHEET_BASE, "idle_frame_size": 64, "idle_frame_count": 4, "run_frame_size": 64, "run_frame_count": 6, "death_frame_width": 64, "death_frame_height": 64, "death_frame_count": 6},
+		{"folder": "Mummy - Rogue", "base": MUMMY_SHEET_BASE, "idle_frame_size": 64, "idle_frame_count": 4, "run_frame_size": 64, "run_frame_count": 6, "death_frame_width": 64, "death_frame_height": 64, "death_frame_count": 6},
+		{"folder": "Mummy - Warrior", "base": MUMMY_SHEET_BASE, "idle_frame_size": 64, "idle_frame_count": 4, "run_frame_size": 64, "run_frame_count": 6, "death_frame_width": 64, "death_frame_height": 64, "death_frame_count": 6},
+	],
 }
 
 
@@ -78,8 +99,14 @@ const MONSTER_VARIANTS: Dictionary = {
 static func pick_variant(monster_type: String) -> Dictionary:
 	var variants: Array = MONSTER_VARIANTS[monster_type]
 	var variant: Dictionary = variants[randi() % variants.size()].duplicate()
-	var base_path: String = MOB_SHEET_BASE + variant["folder"] + "/"
+	var base_path: String = variant.get("base", MOB_SHEET_BASE) + variant["folder"] + "/"
 	variant["idle_path"] = base_path + "Idle/Idle-Sheet.png"
 	variant["run_path"] = base_path + "Run/Run-Sheet.png"
 	variant["death_path"] = base_path + "Death/Death-Sheet.png"
+	# 프레임 크기·개수는 변종이 지정했으면 그 값을, 아니면 무료 팩 기본값을 채워 넣는다
+	# (monster_encounter/battle_scene이 전역 상수 대신 이 값을 읽어 미라처럼 크기가 다른 몹도 올바로 자른다)
+	variant["idle_frame_size"] = variant.get("idle_frame_size", MOB_IDLE_FRAME_SIZE)
+	variant["idle_frame_count"] = variant.get("idle_frame_count", MOB_IDLE_FRAME_COUNT)
+	variant["run_frame_size"] = variant.get("run_frame_size", MOB_RUN_FRAME_SIZE)
+	variant["run_frame_count"] = variant.get("run_frame_count", MOB_RUN_FRAME_COUNT)
 	return variant

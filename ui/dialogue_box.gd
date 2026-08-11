@@ -29,32 +29,32 @@ const LOCKED_HINT := "아직은... 좀 더 가까워져야 들을 수 있을 것
 # 여기에 없는 npc_id(빈 문자열 포함)는 "NPC가 아닌 대화"로 간주해 얼굴/호감도 UI를 숨긴다
 const PORTRAITS: Dictionary = {
 	"elara": {
-		"sheet": "res://assets/Pixel Crawler - Free Pack/Entities/Npc's/Knight/Idle/Idle-Sheet.png",
+		"sheet": "res://assets/graphics/Pixel Crawler - Free Pack/Entities/Npc's/Knight/Idle/Idle-Sheet.png",
 		"region": Rect2(6, 2, 18, 18),
 		"name": "엘라라",
 	},
 	"rohan": {
-		"sheet": "res://assets/Pixel Crawler - Free Pack/Entities/Npc's/Rogue/Idle/Idle-Sheet.png",
+		"sheet": "res://assets/graphics/Pixel Crawler - Free Pack/Entities/Npc's/Rogue/Idle/Idle-Sheet.png",
 		"region": Rect2(6, 1, 19, 19),
 		"name": "로한",
 	},
 	"yusuf": {
-		"sheet": "res://assets/Pixel Crawler - Free Pack/Entities/Npc's/Wizzard/Idle/Idle-Sheet.png",
+		"sheet": "res://assets/graphics/Pixel Crawler - Free Pack/Entities/Npc's/Wizzard/Idle/Idle-Sheet.png",
 		"region": Rect2(4, 0, 25, 25),
 		"name": "유서프",
 	},
 	"mia": {
-		"sheet": "res://assets/Pixel Crawler - Free Pack/Entities/Npc's/Citizen_F/Peasant_A/Idle/Idle-Sheet.png",
+		"sheet": "res://assets/graphics/Pixel Crawler - Free Pack/Entities/Npc's/Citizen_F/Peasant_A/Idle/Idle-Sheet.png",
 		"region": Rect2(21, 16, 22, 22),
 		"name": "미아",
 	},
 	"kamil": {
-		"sheet": "res://assets/Pixel Crawler - Free Pack/Entities/Npc's/Citizen_F/Tavern_A/Idle/Idle_Side-Sheet.png",
+		"sheet": "res://assets/graphics/Pixel Crawler - Free Pack/Entities/Npc's/Citizen_F/Tavern_A/Idle/Idle_Side-Sheet.png",
 		"region": Rect2(21, 16, 22, 22),
 		"name": "카밀",
 	},
 	"nadim": {
-		"sheet": "res://assets/Pixel Crawler - Free Pack/Entities/Npc's/Citizen_F/Tavern_B/Idle/Idle_Side-Sheet.png",
+		"sheet": "res://assets/graphics/Pixel Crawler - Free Pack/Entities/Npc's/Citizen_F/Tavern_B/Idle/Idle_Side-Sheet.png",
 		"region": Rect2(21, 16, 22, 22),
 		"name": "나딤",
 	},

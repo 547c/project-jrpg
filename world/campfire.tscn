@@ -1,7 +1,7 @@
 [gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://world/campfire.gd" id="1_campfire"]
-[ext_resource type="Texture2D" path="res://assets/Pixel Crawler - Free Pack/Environment/Structures/Stations/Bonfire/Bonfire.png" id="2_furnace"]
+[ext_resource type="Texture2D" path="res://assets/graphics/Pixel Crawler - Free Pack/Environment/Structures/Stations/Bonfire/Bonfire.png" id="2_furnace"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_bonfire"]
 atlas = ExtResource("2_furnace")

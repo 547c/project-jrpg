@@ -11,17 +11,17 @@ extends Area2D
 const DISPLAY_SCALE := {
 	"ORC": 1.6111,
 	"SKELETON": 1.5104,
+	"MUMMY": 1.5608, # 미라 Idle 캐릭터 실측 높이(~31px)로 오크/스켈레톤과 같은 방식(높이/16 * 1.45/1.8)으로 산출
 }
 
 const IDLE_FPS := 4.0
 const RUN_FPS := 8.0
 
 # AnimatedSprite2D는 기본적으로 centered라 캔버스 "중앙"이 노드 위치에 고정된다. 그런데 캐릭터의 발은
-# Idle(32px 캔버스)이든 Run(64px 캔버스)이든 항상 캔버스 맨 아래 줄에 붙어있어서(실측 확인),
-# 캔버스가 큰 Run으로 전환되면 중앙이 그대로 고정된 채 발만 더 아래로 밀려나 캐릭터가 가라앉아 보이고,
-# 다시 Idle로 돌아오면 반대로 튀어 오르는 것처럼 보인다. offset으로 그 차이(캔버스 높이 차의 절반)만큼
-# 위로 당겨서 두 애니메이션의 발 위치가 항상 같은 자리에 오도록 보정한다
-const RUN_OFFSET := Vector2(0, -(BattleData.MOB_RUN_FRAME_SIZE - BattleData.MOB_IDLE_FRAME_SIZE) / 2.0)
+# Idle 캔버스든 Run 캔버스든 항상 캔버스 맨 아래 줄에 붙어있어서(실측 확인), 캔버스가 큰 쪽으로 전환되면
+# 중앙이 그대로 고정된 채 발만 더 아래로 밀려나 캐릭터가 가라앉아 보이고, 반대로 돌아오면 튀어 오르는 것처럼
+# 보인다. offset으로 그 차이(캔버스 높이 차의 절반)만큼 위로 당겨서 두 애니메이션의 발 위치를 맞춘다.
+# Idle/Run 프레임 크기는 변종마다 다를 수 있어(미라는 둘 다 64) 스프라이트 구성 시 변종값으로 계산한다
 
 # 배회: 스폰 지점 기준 이 반경 내에서 목표 지점을 향해 이동(Run)했다가, 도착하면 잠시 멈춰 섬(Idle).
 # 예전에는 항상 다음 목표를 향해 움직여서 미끄러지듯 보였는데, 이제 Idle 휴식 구간을 둬서 자연스럽게 함
@@ -63,6 +63,7 @@ var _sprite: AnimatedSprite2D
 var _alert_label: Label
 var _alert_sound_player: AudioStreamPlayer2D
 var _variant: Dictionary = {} # BattleData.pick_variant()가 채운, 이 개체가 표시할 시각 변종
+var _run_offset: Vector2 = Vector2.ZERO # 현재 변종의 Idle/Run 캔버스 높이 차 보정값 (스프라이트 구성 시 계산)
 var _home_position: Vector2 # 스폰(배회 중심) 위치
 var _wander_target: Vector2
 var _wander_state: int = WanderState.IDLE
@@ -95,8 +96,11 @@ func _pick_variant_and_setup_sprite() -> void:
 	var frames := SpriteFrames.new()
 	if frames.has_animation("default"):
 		frames.remove_animation("default")
-	_add_animation(frames, "idle", _variant["idle_path"], BattleData.MOB_IDLE_FRAME_SIZE, BattleData.MOB_IDLE_FRAME_SIZE, BattleData.MOB_IDLE_FRAME_COUNT, IDLE_FPS)
-	_add_animation(frames, "run", _variant["run_path"], BattleData.MOB_RUN_FRAME_SIZE, BattleData.MOB_RUN_FRAME_SIZE, BattleData.MOB_RUN_FRAME_COUNT, RUN_FPS)
+	var idle_size: int = _variant["idle_frame_size"]
+	var run_size: int = _variant["run_frame_size"]
+	_add_animation(frames, "idle", _variant["idle_path"], idle_size, idle_size, _variant["idle_frame_count"], IDLE_FPS)
+	_add_animation(frames, "run", _variant["run_path"], run_size, run_size, _variant["run_frame_count"], RUN_FPS)
+	_run_offset = Vector2(0, -(run_size - idle_size) / 2.0) # 이 변종의 Idle/Run 캔버스 높이 차 보정 (미라는 둘 다 64라 0)
 
 	if _sprite == null:
 		_sprite = AnimatedSprite2D.new()
@@ -148,7 +152,7 @@ func _enter_idle_state() -> void:
 func _enter_moving_state() -> void:
 	_pick_new_wander_target()
 	_wander_state = WanderState.MOVING
-	_sprite.offset = RUN_OFFSET
+	_sprite.offset = _run_offset
 	_sprite.play("run")
 
 
@@ -242,7 +246,7 @@ func _enter_chase_state() -> void:
 	_state = EncounterState.CHASE
 	_chase_timer = 0.0
 	_alert_label.hide()
-	_sprite.offset = RUN_OFFSET
+	_sprite.offset = _run_offset
 	_sprite.play("run")
 
 
@@ -275,7 +279,7 @@ func _process_chase(delta: float) -> void:
 func _enter_return_state() -> void:
 	_state = EncounterState.RETURN
 	_alert_label.hide()
-	_sprite.offset = RUN_OFFSET
+	_sprite.offset = _run_offset
 	_sprite.play("run")
 
 

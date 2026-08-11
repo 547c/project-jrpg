@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://d3jlp6dbxcr5w" path="res://battle/battle_scene.gd" id="1_battle"]
 [ext_resource type="Texture2D" uid="uid://fq726ml3dqoh" path="res://assets/GUI/MedievalUiMega/medieval.png" id="2_medieval"]
-[ext_resource type="Texture2D" uid="uid://786qtn7r4ods" path="res://assets/Pixel Crawler - Free Pack/Entities/Characters/Body_A/Animations/Idle_Base/Idle_Down-Sheet.png" id="3_playersheet"]
+[ext_resource type="Texture2D" uid="uid://786qtn7r4ods" path="res://assets/graphics/Pixel Crawler - Free Pack/Entities/Characters/Body_A/Animations/Idle_Base/Idle_Down-Sheet.png" id="3_playersheet"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_player_card_frame"]
 atlas = ExtResource("2_medieval")

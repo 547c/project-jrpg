@@ -74,6 +74,9 @@ const DEFAULT_FLAGS: Dictionary = {
 	"forest_quest_complete": false,        # 오크 3마리 처치 시 true
 	"skeletons_defeated": 0,               # 동굴 스켈레톤(Skeleton Crew) 처치 카운트
 	"cave_quest_complete": false,          # 스켈레톤 3마리 처치 시 true
+	"mummies_defeated": 0,                 # 사막 미라 처치 카운트
+	"desert_mummies_complete": false,      # 미라 3마리 처치 시 true (나딤 상태 대사 분기용)
+	"ruins_key_complete": false,           # 유적 열쇠 획득 시 true (나딤 상태 대사 분기용)
 	"quest_level": 0,                      # 완료한 서브퀘스트 개수
 }
 
@@ -98,12 +101,30 @@ const DEFAULT_QUESTS: Dictionary = {
 		"target": 3,
 		"complete": false,
 	},
+	"desert_mummies": {
+		"title": "사막의 미라 처치",
+		"giver": "나딤",
+		"active": false,
+		"current": 0,
+		"target": 3,
+		"complete": false,
+	},
+	"ruins_key": {
+		"title": "유적의 열쇠 찾기",
+		"giver": "나딤",
+		"active": false,
+		"current": 0,
+		"target": 1,
+		"complete": false,
+	},
 }
 
 # 퀘스트 완료 시 함께 세워줄 기존 호환 플래그 매핑 (guardian 게이팅 등 옛 코드가 계속 동작하도록)
 const QUEST_COMPLETE_FLAGS: Dictionary = {
 	"forest_orcs": "forest_quest_complete",
 	"cave_skeletons": "cave_quest_complete",
+	"desert_mummies": "desert_mummies_complete",
+	"ruins_key": "ruins_key_complete",
 }
 
 # 현재 퀘스트 상태 (DEFAULT_QUESTS의 깊은 복사로 시작)
@@ -257,6 +278,11 @@ func get_item_count(item_id: String) -> int:
 	return inventory.get(item_id, 0)
 
 
+# 해당 아이템을 하나라도 보유 중인지 여부 (유적 열쇠 등 보유 판정용)
+func has_item(item_id: String) -> bool:
+	return get_item_count(item_id) > 0
+
+
 # 저장 데이터로부터 인벤토리를 그대로 복원 (JSON 숫자는 float로 오므로 int로 보정). 복원된 각 항목에 대해
 # inventory_changed를 방출해 구독 중인 UI가 있다면 갱신되게 함
 func restore_inventory(data: Dictionary) -> void:
@@ -350,6 +376,12 @@ func increment_skeletons_defeated() -> void:
 	increment_quest_progress("cave_skeletons")
 
 
+# 미라 처치: 사막 미라 퀘스트의 진행도를 올림 (수락 전이면 아무 일도 안 일어남).
+# 오크/스켈레톤과 동일하게 실제 카운트는 퀘스트의 current가 담당한다
+func increment_mummies_defeated() -> void:
+	increment_quest_progress("desert_mummies")
+
+
 # 퀘스트를 수락(active=true)하고 quest_changed를 방출. 이미 활성/없는 퀘스트면 무시
 func start_quest(quest_id: String) -> void:
 	if not quests.has(quest_id):
@@ -382,10 +414,37 @@ func increment_quest_progress(quest_id: String) -> void:
 	quest_changed.emit(quest_id)
 
 
-# 퀘스트 완료 시 그 퀘스트를 의뢰한 NPC의 호감도를 올린다 (숲 오크→로한, 동굴 스켈레톤→유서프)
+# 진행도와 무관하게 퀘스트를 즉시 완료 처리한다 (보물상자로 얻는 '열쇠 찾기'처럼 카운트가 아니라
+# 단일 이벤트로 끝나는 퀘스트용). 수락 여부와 상관없이 active로 만든 뒤 target까지 채워, 완료 시의
+# 부수효과(호환 플래그·레벨업·호감도)를 increment 경로와 동일하게 적용한다. 이미 완료면 아무 일도 안 함
+func complete_quest(quest_id: String) -> void:
+	if not quests.has(quest_id):
+		return
+	var quest: Dictionary = quests[quest_id]
+	if quest["complete"]:
+		return
+	quest["active"] = true
+	quest["current"] = quest["target"]
+	quest["complete"] = true
+	if QUEST_COMPLETE_FLAGS.has(quest_id):
+		set_flag(QUEST_COMPLETE_FLAGS[quest_id], true)
+	set_flag("quest_level", get_flag("quest_level") + 1)
+	_apply_level_up(quest["title"])
+	_apply_quest_completion_affinity(quest_id)
+	quest_changed.emit(quest_id)
+
+
+# 해당 퀘스트가 완료 상태인지 여부
+func is_quest_complete(quest_id: String) -> bool:
+	return quests.has(quest_id) and quests[quest_id]["complete"]
+
+
+# 퀘스트 완료 시 그 퀘스트를 의뢰한 NPC의 호감도를 올린다 (숲 오크→로한, 동굴 스켈레톤→유서프, 사막 미라/유적 열쇠→나딤)
 const QUEST_COMPLETION_AFFINITY: Dictionary = {
 	"forest_orcs": {"npc_id": "rohan", "amount": 5},
 	"cave_skeletons": {"npc_id": "yusuf", "amount": 5},
+	"desert_mummies": {"npc_id": "nadim", "amount": 5},
+	"ruins_key": {"npc_id": "nadim", "amount": 5},
 }
 
 

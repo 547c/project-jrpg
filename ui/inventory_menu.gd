@@ -138,6 +138,11 @@ func _on_slot_pressed(index: int) -> void:
 		return
 
 	var item: Dictionary = ItemData.ITEMS[item_id]
+
+	# 유지형 아이템(열쇠 등)은 클릭해도 효과·소비 없음 — 사용은 해당 상황(유적 입구)에서만 처리된다
+	if not item.get("consumable", true):
+		return
+
 	if item_id == "mana_potion":
 		GameState.restore_mana_partial(item["mana_restore_fraction"])
 	elif item_id == "hp_potion":
