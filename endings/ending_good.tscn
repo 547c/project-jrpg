@@ -35,9 +35,11 @@ horizontal_alignment = 1
 autowrap_mode = 3
 text = "우물에서 다시 맑은 물이 솟아오른다. 엘라라는 오랜만에 편안한 얼굴로 당신을 바라본다.
 마을 사람들의 눈빛에서 경계심 대신 온기가 느껴진다.
-맥은 다시 흐르기 시작했다 — 그리고 당신은, 이 마을의 일부가 되었다."
+맥은 다시 흐르기 시작했다 — 그리고 당신은, 이 마을의 일부가 되었다.
+하지만 바다 건너의 이야기는, 이제 막 시작되려 하고 있었다."
 
-[node name="FooterLabel" type="Label" parent="UI/VBox"]
+[node name="ContinueButton" type="Button" parent="UI/VBox"]
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
-horizontal_alignment = 1
-text = "게임을 종료하려면 아무 키나 누르세요"
+theme_override_font_sizes/font_size = 20
+text = "계속하기"

@@ -35,9 +35,11 @@ horizontal_alignment = 1
 autowrap_mode = 3
 text = "우물은 여전히 말라있다. 수호자는 사라졌지만, 그 대가로 무언가 되돌릴 수 없는 것을 잃은 듯하다.
 엘라라의 눈빛에는 실망이 스쳐 지나간다. 미아는 끝내 당신에게 마음을 열지 않았다.
-마을 사람들은 예전과 같은 눈으로 당신을 보지 않는다."
+마을 사람들은 예전과 같은 눈으로 당신을 보지 않는다.
+그럼에도, 당신이 마주해야 할 더 큰 흐름은 여전히 그 자리에 있었다."
 
-[node name="FooterLabel" type="Label" parent="UI/VBox"]
+[node name="ContinueButton" type="Button" parent="UI/VBox"]
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
-horizontal_alignment = 1
-text = "게임을 종료하려면 아무 키나 누르세요"
+theme_override_font_sizes/font_size = 20
+text = "계속하기"

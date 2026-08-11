@@ -34,6 +34,7 @@ const DEFAULT_AFFINITY: Dictionary = {
 	"yusuf": 30,
 	"mia": 30,
 	"kamil": 20, # 임무로 만난 거리감 있는 관계 — 다른 NPC보다 낮게 시작
+	"nadim": 30, # 사막 정착지의 지도자/생존자 (2부 초반)
 }
 const AFFINITY_DEFAULT := 30
 const AFFINITY_MIN := 0
@@ -56,7 +57,10 @@ const DEFAULT_FLAGS: Dictionary = {
 	"met_mia": false,                      # 미아(아이)를 만났는가
 	"met_mia_decisive": false,             # 미아의 결정적 노드(mia_approach_press)를 통과했는가
 	"met_kamil": false,                    # 카밀(감시자 동료)을 만났는가
+	"met_nadim": false,                    # 나딤(사막 정착지 지도자)을 만났는가
+	"part1_reported": false,               # 1부 결과를 엘라라에게 보고 완료했는가 (elara_ending_trigger 도달 시 true)
 	"boat_available": false,               # 부두의 배를 이용할 수 있는가 (카밀의 출항 확인 후 true)
+	"ruins_available": false,              # 사막 유적 입구를 이용할 수 있는가 (나딤이 위치를 알려준 뒤 true)
 	"visited_village": false,              # 마을을 방문했는가
 	"visited_forest": false,               # 숲을 방문했는가
 	"visited_cave": false,                 # 동굴을 방문했는가
@@ -373,8 +377,22 @@ func increment_quest_progress(quest_id: String) -> void:
 			set_flag(QUEST_COMPLETE_FLAGS[quest_id], true)
 		set_flag("quest_level", get_flag("quest_level") + 1)
 		_apply_level_up(quest["title"])
+		_apply_quest_completion_affinity(quest_id) # 퀘스트를 준 NPC와의 호감도 보너스
 
 	quest_changed.emit(quest_id)
+
+
+# 퀘스트 완료 시 그 퀘스트를 의뢰한 NPC의 호감도를 올린다 (숲 오크→로한, 동굴 스켈레톤→유서프)
+const QUEST_COMPLETION_AFFINITY: Dictionary = {
+	"forest_orcs": {"npc_id": "rohan", "amount": 5},
+	"cave_skeletons": {"npc_id": "yusuf", "amount": 5},
+}
+
+
+func _apply_quest_completion_affinity(quest_id: String) -> void:
+	if QUEST_COMPLETION_AFFINITY.has(quest_id):
+		var bonus: Dictionary = QUEST_COMPLETION_AFFINITY[quest_id]
+		change_affinity(bonus["npc_id"], bonus["amount"])
 
 
 # 레벨업(quest_level 상승) 시 늘어나는 최대 체력/마나 폭
@@ -421,8 +439,9 @@ func restore_quests(data: Dictionary) -> void:
 # Stage 4→5 전환에 쓰는 quest_level 임계값 (현재 퀘스트 2개 기준, guardian 게이트와 동일)
 const OBJECTIVE_QUEST_LEVEL_TARGET := 2
 
-# 별도 flag로 저장하지 않고, 기존 진행 flag들로 현재 메인 목표 단계(1~6)를 매번 계산해서 반환.
-# objective 상태가 실제 진행 상황과 항상 일치하게 유지된다
+# 별도 flag로 저장하지 않고, 기존 진행 flag들로 현재 메인 목표 단계(1~8)를 매번 계산해서 반환.
+# objective 상태가 실제 진행 상황과 항상 일치하게 유지된다.
+# 6~8은 2부 진행: 엘라라 보고(6) → 유서프에게 더 알아보기(7) → 부두에서 출항(8)
 func get_current_objective_stage() -> int:
 	if not get_flag("met_elara"):
 		return 1
@@ -440,7 +459,13 @@ func get_current_objective_stage() -> int:
 	if not get_flag("guardian_event_done"):
 		return 5
 
-	return 6
+	if not get_flag("part1_reported"):
+		return 6
+
+	if not get_flag("boat_available"):
+		return 7
+
+	return 8
 
 
 # 현재 단계에 대응하는 안내 문구를 반환 (진행도 N은 실시간 계산해서 보간)
@@ -456,8 +481,12 @@ func get_objective_text() -> String:
 			return "숲과 동굴의 몬스터를 처치해 힘을 기르세요 (레벨 %d/%d)" % [get_flag("quest_level"), OBJECTIVE_QUEST_LEVEL_TARGET]
 		5:
 			return "동굴 깊은 곳의 수호자를 찾아가세요"
-		_:
+		6:
 			return "우물의 결과를 엘라라에게 알리세요"
+		7:
+			return "유서프에게 가서 더 알아보세요"
+		_:
+			return "부두에서 배를 타고 떠나세요"
 
 
 # met_rohan + met_yusuf 중 true인 개수 (0~2)

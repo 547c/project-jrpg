@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3]
+[gd_scene load_steps=16 format=3]
 
 [ext_resource type="Script" uid="uid://cstp3jgoomqma" path="res://ui/dialogue_box.gd" id="1_box"]
 [ext_resource type="Texture2D" path="res://assets/GUI/MedievalUiMega/medieval.png" id="2_medieval"]
@@ -13,6 +13,10 @@ texture_margin_left = 20.0
 texture_margin_top = 15.0
 texture_margin_right = 20.0
 texture_margin_bottom = 15.0
+content_margin_left = 20.0
+content_margin_top = 16.0
+content_margin_right = 20.0
+content_margin_bottom = 16.0
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_button_wood"]
 atlas = ExtResource("2_medieval")
@@ -75,6 +79,14 @@ corner_radius_top_right = 4
 corner_radius_bottom_left = 4
 corner_radius_bottom_right = 4
 
+[sub_resource type="AtlasTexture" id="AtlasTexture_arrow_left"]
+atlas = ExtResource("2_medieval")
+region = Rect2(816, 228, 48, 34)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_arrow_right"]
+atlas = ExtResource("2_medieval")
+region = Rect2(880, 228, 48, 34)
+
 [node name="DialogueBox" type="Control" unique_id=2000661388]
 visible = false
 layout_mode = 3
@@ -83,7 +95,7 @@ anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 40.0
-offset_top = -420.0
+offset_top = -260.0
 offset_right = -40.0
 offset_bottom = -20.0
 grow_horizontal = 2
@@ -91,13 +103,173 @@ grow_vertical = 0
 mouse_filter = 2
 script = ExtResource("1_box")
 
-[node name="Panel" type="Panel" parent="." unique_id=548070171]
+[node name="RootHBox" type="HBoxContainer" parent="." unique_id=548070171]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 12
+
+[node name="NpcPanel" type="PanelContainer" parent="RootHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 7.0
 texture_filter = 1
 theme_override_styles/panel = SubResource("StyleBoxTexture_panel")
+
+[node name="NpcContent" type="VBoxContainer" parent="RootHBox/NpcPanel"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="HeaderRow" type="HBoxContainer" parent="RootHBox/NpcPanel/NpcContent"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="FaceCard" type="Panel" parent="RootHBox/NpcPanel/NpcContent/HeaderRow"]
+custom_minimum_size = Vector2(56, 56)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_styles/panel = SubResource("StyleBoxFlat_facecard")
+
+[node name="Portrait" type="TextureRect" parent="RootHBox/NpcPanel/NpcContent/HeaderRow/FaceCard"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 4.0
+offset_top = 4.0
+offset_right = -4.0
+offset_bottom = -4.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="InfoColumn" type="VBoxContainer" parent="RootHBox/NpcPanel/NpcContent/HeaderRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 6
+
+[node name="SpeakerLabel" type="Label" parent="RootHBox/NpcPanel/NpcContent/HeaderRow/InfoColumn" unique_id=1763241064]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_font_sizes/font_size = 18
+text = "Speaker"
+
+[node name="AffinityRow" type="HBoxContainer" parent="RootHBox/NpcPanel/NpcContent/HeaderRow/InfoColumn"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="AffinityBar" type="ProgressBar" parent="RootHBox/NpcPanel/NpcContent/HeaderRow/InfoColumn/AffinityRow"]
+custom_minimum_size = Vector2(150, 14)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_styles/background = SubResource("StyleBoxFlat_affinity_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_affinity_fill")
+max_value = 100.0
+value = 30.0
+show_percentage = false
+
+[node name="AffinityValueLabel" type="Label" parent="RootHBox/NpcPanel/NpcContent/HeaderRow/InfoColumn/AffinityRow"]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_colors/font_color = Color(0.6, 0.4, 0.55, 1)
+theme_override_font_sizes/font_size = 12
+text = "30/100"
+
+[node name="NarrationLabel" type="Label" parent="RootHBox/NpcPanel/NpcContent"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.32, 0.24, 1)
+autowrap_mode = 3
+text = "Narration"
+
+[node name="TextLabel" type="Label" parent="RootHBox/NpcPanel/NpcContent" unique_id=2124029575]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.25, 0.15, 0.07, 1)
+text = "Dialogue text"
+autowrap_mode = 3
+
+[node name="OptionsPanel" type="PanelContainer" parent="RootHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 3.0
+texture_filter = 1
+theme_override_styles/panel = SubResource("StyleBoxTexture_panel")
+
+[node name="OptionsContent" type="VBoxContainer" parent="RootHBox/OptionsPanel"]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_constants/separation = 5
+
+[node name="OptionButtons" type="VBoxContainer" parent="RootHBox/OptionsPanel/OptionsContent"]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="OptionButton1" type="Button" parent="RootHBox/OptionsPanel/OptionsContent/OptionButtons" unique_id=276540770]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+texture_filter = 1
+theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+theme_override_styles/hover = SubResource("StyleBoxTexture_button_hover")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_button_pressed")
+text = "Option 1"
+
+[node name="OptionButton2" type="Button" parent="RootHBox/OptionsPanel/OptionsContent/OptionButtons" unique_id=329394203]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+texture_filter = 1
+theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+theme_override_styles/hover = SubResource("StyleBoxTexture_button_hover")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_button_pressed")
+text = "Option 2"
+
+[node name="OptionButton3" type="Button" parent="RootHBox/OptionsPanel/OptionsContent/OptionButtons" unique_id=1763947372]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+texture_filter = 1
+theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+theme_override_styles/hover = SubResource("StyleBoxTexture_button_hover")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_button_pressed")
+text = "Option 3"
+
+[node name="PageRow" type="HBoxContainer" parent="RootHBox/OptionsPanel/OptionsContent"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 10
+
+[node name="PrevButton" type="TextureButton" parent="RootHBox/OptionsPanel/OptionsContent/PageRow"]
+custom_minimum_size = Vector2(30, 22)
+layout_mode = 2
+size_flags_vertical = 4
+texture_filter = 1
+texture_normal = SubResource("AtlasTexture_arrow_left")
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="PageLabel" type="Label" parent="RootHBox/OptionsPanel/OptionsContent/PageRow"]
+custom_minimum_size = Vector2(40, 0)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_colors/font_color = Color(0.5, 0.4, 0.28, 1)
+theme_override_font_sizes/font_size = 13
+horizontal_alignment = 1
+text = "1/1"
+
+[node name="NextButton" type="TextureButton" parent="RootHBox/OptionsPanel/OptionsContent/PageRow"]
+custom_minimum_size = Vector2(30, 22)
+layout_mode = 2
+size_flags_vertical = 4
+texture_filter = 1
+texture_normal = SubResource("AtlasTexture_arrow_right")
+ignore_texture_size = true
+stretch_mode = 5
 
 [node name="DecisiveFrame" type="Control" parent="."]
 visible = false
@@ -114,161 +286,6 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_decisive_frame")
-
-[node name="Content" type="VBoxContainer" parent="Panel" unique_id=342809686]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 20.0
-offset_top = 14.0
-offset_right = -20.0
-offset_bottom = -16.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_constants/separation = 10
-
-[node name="TopRow" type="HBoxContainer" parent="Panel/Content"]
-layout_mode = 2
-theme_override_constants/separation = 14
-
-[node name="FaceCard" type="Panel" parent="Panel/Content/TopRow"]
-custom_minimum_size = Vector2(72, 72)
-layout_mode = 2
-size_flags_vertical = 4
-theme_override_styles/panel = SubResource("StyleBoxFlat_facecard")
-
-[node name="Portrait" type="TextureRect" parent="Panel/Content/TopRow/FaceCard"]
-texture_filter = 1
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 4.0
-offset_top = 4.0
-offset_right = -4.0
-offset_bottom = -4.0
-mouse_filter = 2
-expand_mode = 1
-stretch_mode = 5
-
-[node name="InfoColumn" type="VBoxContainer" parent="Panel/Content/TopRow"]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 4
-theme_override_constants/separation = 8
-
-[node name="SpeakerLabel" type="Label" parent="Panel/Content/TopRow/InfoColumn" unique_id=1763241064]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
-theme_override_font_sizes/font_size = 18
-text = "Speaker"
-
-[node name="AffinityRow" type="HBoxContainer" parent="Panel/Content/TopRow/InfoColumn"]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="AffinityBar" type="ProgressBar" parent="Panel/Content/TopRow/InfoColumn/AffinityRow"]
-custom_minimum_size = Vector2(160, 16)
-layout_mode = 2
-size_flags_vertical = 4
-theme_override_styles/background = SubResource("StyleBoxFlat_affinity_bg")
-theme_override_styles/fill = SubResource("StyleBoxFlat_affinity_fill")
-max_value = 100.0
-value = 30.0
-show_percentage = false
-
-[node name="AffinityValueLabel" type="Label" parent="Panel/Content/TopRow/InfoColumn/AffinityRow"]
-layout_mode = 2
-size_flags_vertical = 4
-theme_override_colors/font_color = Color(0.6, 0.4, 0.55, 1)
-theme_override_font_sizes/font_size = 13
-text = "30/100"
-
-[node name="NarrationLabel" type="Label" parent="Panel/Content"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.4, 0.32, 0.24, 1)
-autowrap_mode = 3
-text = "Narration"
-
-[node name="TextLabel" type="Label" parent="Panel/Content" unique_id=2124029575]
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_colors/font_color = Color(0.25, 0.15, 0.07, 1)
-text = "Dialogue text"
-autowrap_mode = 3
-
-[node name="OptionsContainer" type="GridContainer" parent="Panel/Content" unique_id=323829973]
-layout_mode = 2
-theme_override_constants/h_separation = 10
-theme_override_constants/v_separation = 6
-columns = 2
-
-[node name="OptionButton1" type="Button" parent="Panel/Content/OptionsContainer" unique_id=276540770]
-custom_minimum_size = Vector2(0, 38)
-layout_mode = 2
-size_flags_horizontal = 3
-texture_filter = 1
-theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
-theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
-theme_override_styles/hover = SubResource("StyleBoxTexture_button_hover")
-theme_override_styles/pressed = SubResource("StyleBoxTexture_button_pressed")
-text = "Option 1"
-
-[node name="OptionButton2" type="Button" parent="Panel/Content/OptionsContainer" unique_id=329394203]
-custom_minimum_size = Vector2(0, 38)
-layout_mode = 2
-size_flags_horizontal = 3
-texture_filter = 1
-theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
-theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
-theme_override_styles/hover = SubResource("StyleBoxTexture_button_hover")
-theme_override_styles/pressed = SubResource("StyleBoxTexture_button_pressed")
-text = "Option 2"
-
-[node name="OptionButton3" type="Button" parent="Panel/Content/OptionsContainer" unique_id=1763947372]
-custom_minimum_size = Vector2(0, 38)
-layout_mode = 2
-size_flags_horizontal = 3
-texture_filter = 1
-theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
-theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
-theme_override_styles/hover = SubResource("StyleBoxTexture_button_hover")
-theme_override_styles/pressed = SubResource("StyleBoxTexture_button_pressed")
-text = "Option 3"
-
-[node name="OptionButton4" type="Button" parent="Panel/Content/OptionsContainer" unique_id=140446060]
-custom_minimum_size = Vector2(0, 38)
-layout_mode = 2
-size_flags_horizontal = 3
-texture_filter = 1
-theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
-theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
-theme_override_styles/hover = SubResource("StyleBoxTexture_button_hover")
-theme_override_styles/pressed = SubResource("StyleBoxTexture_button_pressed")
-text = "Option 4"
-
-[node name="OptionButton5" type="Button" parent="Panel/Content/OptionsContainer"]
-custom_minimum_size = Vector2(0, 38)
-layout_mode = 2
-size_flags_horizontal = 3
-texture_filter = 1
-theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
-theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
-theme_override_styles/hover = SubResource("StyleBoxTexture_button_hover")
-theme_override_styles/pressed = SubResource("StyleBoxTexture_button_pressed")
-text = "Option 5"
-
-[node name="OptionButton6" type="Button" parent="Panel/Content/OptionsContainer"]
-custom_minimum_size = Vector2(0, 38)
-layout_mode = 2
-size_flags_horizontal = 3
-texture_filter = 1
-theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
-theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
-theme_override_styles/hover = SubResource("StyleBoxTexture_button_hover")
-theme_override_styles/pressed = SubResource("StyleBoxTexture_button_pressed")
-text = "Option 6"
 
 [node name="BleepPlayer" type="AudioStreamPlayer" parent="."]
 volume_db = 0.0

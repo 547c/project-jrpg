@@ -37,7 +37,7 @@
 [ext_resource type="PackedScene" path="res://world/treasure_chest.tscn" id="26_chest"]
 [ext_resource type="Texture2D" uid="uid://dq5qfss4f4x12" path="res://assets/Pixel Crawler - Free Pack/MockUps/Tavern.png" id="26_yrodc"]
 [ext_resource type="PackedScene" path="res://world/locked_door.tscn" id="27_lockeddoor"]
-[ext_resource type="Script" path="res://npc/kamil_npc.gd" id="28_kamil"]
+[ext_resource type="Script" uid="uid://cyh28ehqlcgjt" path="res://npc/kamil_npc.gd" id="28_kamil"]
 [ext_resource type="PackedScene" path="res://world/dock.tscn" id="29_dock"]
 [ext_resource type="Texture2D" uid="uid://dlby316p68meo" path="res://assets/Pixel Crawler - Free Pack/Environment/Structures/Stations/Anvil/Anvil.png" id="36_edde0"]
 [ext_resource type="Texture2D" uid="uid://cqt42yv1ljryp" path="res://assets/Pixel Crawler - Free Pack/Environment/Structures/Stations/Furnace/Furnace.png" id="37_khy6x"]
@@ -13564,12 +13564,17 @@ script = ExtResource("6_rohan")
 position = Vector2(-429, -25)
 script = ExtResource("7_yusuf")
 
-[node name="Kamil" parent="." instance=ExtResource("4_npc")]
-position = Vector2(620, 220)
+[node name="Kamil" parent="." unique_id=2109587574 instance=ExtResource("4_npc")]
+position = Vector2(737, 176)
 script = ExtResource("28_kamil")
 
-[node name="Dock" parent="." instance=ExtResource("29_dock")]
-position = Vector2(760, 320)
+[node name="Dock" parent="." unique_id=441350026 instance=ExtResource("29_dock")]
+position = Vector2(815, 242)
+
+[node name="VillageSpawnFromDesert" type="Marker2D" parent="."]
+position = Vector2(815, 400)
+script = ExtResource("1_spawn")
+spawn_point_name = "VillageSpawnFromDesert"
 
 [node name="Campfire" parent="." unique_id=1663011288 instance=ExtResource("25_campfire")]
 position = Vector2(818, -102)
@@ -13588,8 +13593,8 @@ script = ExtResource("1_spawn")
 spawn_point_name = "VillageSpawnFromTavern"
 
 [node name="ToTavern" type="Area2D" parent="." unique_id=1989703105]
-position = Vector2(490.99997, -168.00003)
-scale = Vector2(-1.0809103, 0.30921)
+position = Vector2(491, -147)
+scale = Vector2(-0.5209152, 0.10920876)
 script = ExtResource("2_trans")
 destination_scene_path = "res://world/tavern.tscn"
 destination_spawn_point = "TavernSpawn"

@@ -35,9 +35,11 @@ horizontal_alignment = 1
 autowrap_mode = 3
 text = "우물의 물은 돌아왔지만, 마을 어딘가엔 여전히 채워지지 않은 공백이 남아있다.
 엘라라는 고개를 끄덕이면서도, 어딘지 모르게 씁쓸한 표정을 감추지 못한다.
-무언가는 해결됐지만, 모든 것이 제자리를 찾은 건 아니었다."
+무언가는 해결됐지만, 모든 것이 제자리를 찾은 건 아니었다.
+그리고 그 공백의 답은, 아직 먼 곳에 남아 있는 듯했다."
 
-[node name="FooterLabel" type="Label" parent="UI/VBox"]
+[node name="ContinueButton" type="Button" parent="UI/VBox"]
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
-horizontal_alignment = 1
-text = "게임을 종료하려면 아무 키나 누르세요"
+theme_override_font_sizes/font_size = 20
+text = "계속하기"

@@ -23,6 +23,7 @@ const TRACKS: Dictionary = {
 	"Victory!": TRACK_DIR + "06 - Victory!.ogg",
 	"Frozen Abyss": TRACK_DIR + "12 - Frozen Abyss.ogg",
 	"Decisive Battle 1 - Don't Be Afraid": TRACK_DIR + "13 - Decisive Battle 1 - Don't Be Afraid.ogg",
+	"Where The Winds Roam": TRACK_DIR + "19 - Where The Winds Roam.ogg",
 }
 
 # "Victory!"는 짧은 원샷 축하곡이라 반복하지 않음. 나머지는 전부 루프

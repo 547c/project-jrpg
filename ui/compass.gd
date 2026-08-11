@@ -86,6 +86,12 @@ func resolve_target(scene: Node, player_pos: Vector2) -> Dictionary:
 		5:
 			target_scene = CAVE
 			node_name = "GuardianEncounter"
+		7:
+			target_scene = VILLAGE # 2부: 유서프에게 더 알아보기 — 마을 안이면 유서프, 아니면 마을 포탈
+			node_name = "Yusuf"
+		8:
+			target_scene = VILLAGE # 2부: 부두에서 출항 — 마을 안이면 부두, 아니면 마을 포탈
+			node_name = "Dock"
 		_:
 			return _hidden()
 

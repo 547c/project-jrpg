@@ -131,12 +131,32 @@ const ELARA_DIALOGUE: Array = [
 				"next_id": "elara_secret_followup",
 				"show_if_seen": "elara_secret_end",
 			},
+			{
+				"label": "[선물을 준다]",
+				"give_gift": {"npc_id": "elara", "amount": 9, "next_id_success": "elara_gift_thanks", "next_id_fail": "elara_gift_none"},
+			},
 		],
+	},
+	{
+		"id": "elara_gift_thanks",
+		"speaker": "엘라라",
+		"text": "이런 걸... 나한테? 허허, 고맙구나. 늙은이 마음이 다 따뜻해지는군.",
+		"is_decisive": false,
+		"options": [],
+	},
+	{
+		"id": "elara_gift_none",
+		"speaker": "엘라라",
+		"narration": "(막상 건넬 것이 없다)",
+		"text": "줄 게 없네요.",
+		"is_decisive": false,
+		"options": [],
 	},
 	{
 		"id": "elara_well",
 		"speaker": "엘라라",
 		"text": "사흘 전부터 한 방울도 안 나와. 이런 적은... 내 평생 처음이야.",
+		"affinity_change_on_show": {"npc_id": "elara", "amount": 2, "once": true},
 		"is_decisive": false,
 		"options": [
 			{"label": "[심각한 건가요?]", "next_id": "elara_well_serious"},
@@ -145,6 +165,7 @@ const ELARA_DIALOGUE: Array = [
 	},
 	{
 		"id": "elara_well_serious",
+		"affinity_change_on_show": {"npc_id": "elara", "amount": 1, "once": true},
 		"speaker": "엘라라",
 		"text": "심각하냐고? 물이 없으면 마을이 죽어. 그 정도로 심각해.",
 		"is_decisive": false,
@@ -155,6 +176,7 @@ const ELARA_DIALOGUE: Array = [
 	},
 	{
 		"id": "elara_well_why",
+		"affinity_change_on_show": {"npc_id": "elara", "amount": 1, "once": true},
 		"speaker": "엘라라",
 		"text": "낸들 알겠나. 다만... 이런 일은 늘 조용히 찾아오지, 경고도 없이.",
 		"is_decisive": false,
@@ -162,6 +184,7 @@ const ELARA_DIALOGUE: Array = [
 	},
 	{
 		"id": "elara_well_help",
+		"affinity_change_on_show": {"npc_id": "elara", "amount": 1, "once": true},
 		"speaker": "엘라라",
 		"text": "고맙구나. 숲의 로한을 먼저 만나보게. 동굴 근처에서 뭔가 봤다더군.",
 		"is_decisive": false,
@@ -169,6 +192,7 @@ const ELARA_DIALOGUE: Array = [
 	},
 	{
 		"id": "elara_well_lore",
+		"affinity_change_on_show": {"npc_id": "elara", "amount": 1, "once": true},
 		"speaker": "엘라라",
 		"text": "...자네도 들어봤을지 모르겠군. 이 물줄기가, 실은 이 마을만의 것이 아니라는 걸.",
 		"is_decisive": false,
@@ -179,6 +203,7 @@ const ELARA_DIALOGUE: Array = [
 	},
 	{
 		"id": "elara_well_lore2",
+		"affinity_change_on_show": {"npc_id": "elara", "amount": 1, "once": true},
 		"speaker": "엘라라",
 		"text": "오래전부터... 세상 곳곳의 물줄기가 하나둘 말라간다고 하더군. 다행히 우리 마을은 여태 무사했는데... 결국 이렇게 됐어.",
 		"is_decisive": false,
@@ -189,6 +214,7 @@ const ELARA_DIALOGUE: Array = [
 	},
 	{
 		"id": "elara_well_lore3",
+		"affinity_change_on_show": {"npc_id": "elara", "amount": 1, "once": true},
 		"speaker": "엘라라",
 		"text": "너무 겁먹진 말게. 자네라면... 뭔가 다를 것 같은 예감이 드는군.",
 		"is_decisive": false,
@@ -215,6 +241,7 @@ const ELARA_DIALOGUE: Array = [
 		"id": "elara_ending_trigger",
 		"speaker": "엘라라",
 		"text": "...그래. 이제 좀 지켜봐야겠군.",
+		"set_flag_on_show": "part1_reported", # 엘라라 보고 완료 — 이후 objective가 2부(유서프→부두)로 넘어감
 		"is_decisive": false,
 		"options": [],
 	},
@@ -222,6 +249,7 @@ const ELARA_DIALOGUE: Array = [
 		"id": "elara_village",
 		"speaker": "엘라라",
 		"text": "작은 곳이지. 하지만 백 년 넘게 이 자리를 지켜왔어.",
+		"affinity_change_on_show": {"npc_id": "elara", "amount": 2, "once": true},
 		"is_decisive": false,
 		"options": [
 			{"label": "[오래됐네요]", "next_id": "elara_village_old"},
@@ -230,6 +258,7 @@ const ELARA_DIALOGUE: Array = [
 	},
 	{
 		"id": "elara_village_old",
+		"affinity_change_on_show": {"npc_id": "elara", "amount": 1, "once": true},
 		"speaker": "엘라라",
 		"text": "그만큼 많은 걸 봐왔지. 좋은 일도, 나쁜 일도.",
 		"is_decisive": false,
@@ -237,6 +266,7 @@ const ELARA_DIALOGUE: Array = [
 	},
 	{
 		"id": "elara_village_peace",
+		"affinity_change_on_show": {"npc_id": "elara", "amount": 1, "once": true},
 		"speaker": "엘라라",
 		"text": "평화... 그래, 지금까진 그랬지.",
 		"is_decisive": false,
@@ -246,6 +276,7 @@ const ELARA_DIALOGUE: Array = [
 		"id": "elara_smalltalk",
 		"speaker": "엘라라",
 		"text": "안부라... 다정하기도 하지. 몸은 성한가?",
+		"affinity_change_on_show": {"npc_id": "elara", "amount": 2, "once": true},
 		"is_decisive": false,
 		"options": [
 			{"label": "[괜찮아요, 걱정 마세요]", "next_id": "elara_smalltalk_fine"},
@@ -254,6 +285,7 @@ const ELARA_DIALOGUE: Array = [
 	},
 	{
 		"id": "elara_smalltalk_fine",
+		"affinity_change_on_show": {"npc_id": "elara", "amount": 1, "once": true},
 		"speaker": "엘라라",
 		"text": "다행이군. 젊은이가 튼튼해야 마을도 든든하지.",
 		"is_decisive": false,
@@ -261,6 +293,7 @@ const ELARA_DIALOGUE: Array = [
 	},
 	{
 		"id": "elara_smalltalk_tired",
+		"affinity_change_on_show": {"npc_id": "elara", "amount": 1, "once": true},
 		"speaker": "엘라라",
 		"text": "쉬엄쉬엄하게. 우물이 급하다고 자네까지 쓰러지면 안 되지.",
 		"is_decisive": false,
@@ -406,7 +439,26 @@ const ROHAN_DIALOGUE: Array = [
 				"next_id": "rohan_secret_followup",
 				"show_if_seen": "rohan_secret_end",
 			},
+			{
+				"label": "[선물을 준다]",
+				"give_gift": {"npc_id": "rohan", "amount": 9, "next_id_success": "rohan_gift_thanks", "next_id_fail": "rohan_gift_none"},
+			},
 		],
+	},
+	{
+		"id": "rohan_gift_thanks",
+		"speaker": "로한",
+		"text": "...나한테 선물을? 흠. ...고맙군. 이런 거, 오랜만이라 좀 어색하네.",
+		"is_decisive": false,
+		"options": [],
+	},
+	{
+		"id": "rohan_gift_none",
+		"speaker": "로한",
+		"narration": "(막상 건넬 것이 없다)",
+		"text": "줄 게 없네요.",
+		"is_decisive": false,
+		"options": [],
 	},
 	{
 		"id": "rohan_quest_accept",
@@ -428,6 +480,7 @@ const ROHAN_DIALOGUE: Array = [
 		"id": "rohan_cave",
 		"speaker": "로한",
 		"text": "저 안에 뭔가 있어. 며칠 전부터 이상한 기운이 느껴져.",
+		"affinity_change_on_show": {"npc_id": "rohan", "amount": 2, "once": true},
 		"is_decisive": false,
 		"options": [
 			{"label": "[위험한가요?]", "next_id": "rohan_cave_danger"},
@@ -436,6 +489,7 @@ const ROHAN_DIALOGUE: Array = [
 	},
 	{
 		"id": "rohan_cave_danger",
+		"affinity_change_on_show": {"npc_id": "rohan", "amount": 1, "once": true},
 		"speaker": "로한",
 		"text": "몰라. 하지만 내 직감은 조심하라고 말하고 있어.",
 		"is_decisive": false,
@@ -446,6 +500,7 @@ const ROHAN_DIALOGUE: Array = [
 	},
 	{
 		"id": "rohan_cave_instinct",
+		"affinity_change_on_show": {"npc_id": "rohan", "amount": 1, "once": true},
 		"speaker": "로한",
 		"text": "숲에서 오래 살다 보면... 직감 말곤 믿을 게 없어질 때가 있지.",
 		"is_decisive": false,
@@ -453,6 +508,7 @@ const ROHAN_DIALOGUE: Array = [
 	},
 	{
 		"id": "rohan_cave_saw",
+		"affinity_change_on_show": {"npc_id": "rohan", "amount": 1, "once": true},
 		"speaker": "로한",
 		"text": "똑똑히는 못 봤어. 그림자 같은 게 물길을 막고 있는 것 같더군.",
 		"is_decisive": false,
@@ -463,6 +519,7 @@ const ROHAN_DIALOGUE: Array = [
 	},
 	{
 		"id": "rohan_opinion_fight",
+		"affinity_change_on_show": {"npc_id": "rohan", "amount": 1, "once": true},
 		"speaker": "로한",
 		"text": "그래, 내 생각도 그래. 위험한 건 없애는 게 맞지.",
 		"is_decisive": false,
@@ -473,6 +530,7 @@ const ROHAN_DIALOGUE: Array = [
 	},
 	{
 		"id": "rohan_opinion_fight_join",
+		"affinity_change_on_show": {"npc_id": "rohan", "amount": 1, "once": true},
 		"speaker": "로한",
 		"text": "...아니. 이건 자네 몫이야. 난 마을을 지켜야지.",
 		"is_decisive": false,
@@ -480,6 +538,7 @@ const ROHAN_DIALOGUE: Array = [
 	},
 	{
 		"id": "rohan_opinion_talk",
+		"affinity_change_on_show": {"npc_id": "rohan", "amount": 1, "once": true},
 		"speaker": "로한",
 		"text": "...흠. 그것도 나쁘지 않은 생각이군. 나라면 안 그러겠지만.",
 		"is_decisive": false,
@@ -490,6 +549,7 @@ const ROHAN_DIALOGUE: Array = [
 	},
 	{
 		"id": "rohan_opinion_why",
+		"affinity_change_on_show": {"npc_id": "rohan", "amount": 1, "once": true},
 		"speaker": "로한",
 		"text": "위험한 건 위험한 거야. 대화로 풀릴 거였으면 애초에 이런 일이 안 생겼겠지.",
 		"is_decisive": false,
@@ -499,6 +559,7 @@ const ROHAN_DIALOGUE: Array = [
 		"id": "rohan_forest",
 		"speaker": "로한",
 		"text": "조심해서 다녀. 요즘 숲이 심상치 않아.",
+		"affinity_change_on_show": {"npc_id": "rohan", "amount": 2, "once": true},
 		"is_decisive": false,
 		"options": [
 			{"label": "[구체적으로 뭐가 이상한가요?]", "next_id": "rohan_forest_detail"},
@@ -507,6 +568,7 @@ const ROHAN_DIALOGUE: Array = [
 	},
 	{
 		"id": "rohan_forest_detail",
+		"affinity_change_on_show": {"npc_id": "rohan", "amount": 1, "once": true},
 		"speaker": "로한",
 		"text": "나무들이... 말라가고 있어. 원래 이 계절엔 이러지 않는데.",
 		"is_decisive": false,
@@ -516,6 +578,7 @@ const ROHAN_DIALOGUE: Array = [
 		"id": "rohan_smalltalk",
 		"speaker": "로한",
 		"text": "사냥? ...요즘은 예전만 못해. 짐승들도 뭔가 눈치챈 건지 다들 숨어버렸어.",
+		"affinity_change_on_show": {"npc_id": "rohan", "amount": 2, "once": true},
 		"is_decisive": false,
 		"options": [
 			{"label": "[짐승들이 왜 숨었을까요?]", "next_id": "rohan_smalltalk_animals"},
@@ -524,6 +587,7 @@ const ROHAN_DIALOGUE: Array = [
 	},
 	{
 		"id": "rohan_smalltalk_animals",
+		"affinity_change_on_show": {"npc_id": "rohan", "amount": 1, "once": true},
 		"speaker": "로한",
 		"text": "글쎄. 짐승은 사람보다 먼저 위험을 아는 법이지.",
 		"is_decisive": false,
@@ -531,6 +595,7 @@ const ROHAN_DIALOGUE: Array = [
 	},
 	{
 		"id": "rohan_smalltalk_food",
+		"affinity_change_on_show": {"npc_id": "rohan", "amount": 1, "once": true},
 		"speaker": "로한",
 		"text": "걱정 마. 굶어 죽을 정도는 아니니까.",
 		"is_decisive": false,
@@ -671,7 +736,26 @@ const YUSUF_DIALOGUE: Array = [
 				"show_if_not_seen": "yusuf_secret_stage2d",
 				"show_if_flag": "guardian_event_done",
 			},
+			{
+				"label": "[선물을 준다]",
+				"give_gift": {"npc_id": "yusuf", "amount": 9, "next_id_success": "yusuf_gift_thanks", "next_id_fail": "yusuf_gift_none"},
+			},
 		],
+	},
+	{
+		"id": "yusuf_gift_thanks",
+		"speaker": "유서프",
+		"text": "오, 이런! 장사꾼한테 선물을 다 주시고. 허허, 이 은혜는 잊지 않겠습니다.",
+		"is_decisive": false,
+		"options": [],
+	},
+	{
+		"id": "yusuf_gift_none",
+		"speaker": "유서프",
+		"narration": "(막상 건넬 것이 없다)",
+		"text": "줄 게 없네요.",
+		"is_decisive": false,
+		"options": [],
 	},
 	{
 		"id": "yusuf_quest_accept",
@@ -700,6 +784,7 @@ const YUSUF_DIALOGUE: Array = [
 		"id": "yusuf_cave_hint",
 		"speaker": "유서프",
 		"text": "그 안의 존재? 흠... 그건 원래 나쁜 게 아니었어. 지키는 존재였지.",
+		"affinity_change_on_show": {"npc_id": "yusuf", "amount": 2, "once": true},
 		"is_decisive": false,
 		"options": [
 			{"label": "[무슨 뜻이죠?]", "next_id": "yusuf_cave_hint2"},
@@ -708,6 +793,7 @@ const YUSUF_DIALOGUE: Array = [
 	},
 	{
 		"id": "yusuf_cave_hint2",
+		"affinity_change_on_show": {"npc_id": "yusuf", "amount": 1, "once": true},
 		"speaker": "유서프",
 		"text": "싸워서 없애는 것만이 답은 아닐 수도 있다는 뜻이야. 잘 생각해보게.",
 		"is_decisive": false,
@@ -718,6 +804,7 @@ const YUSUF_DIALOGUE: Array = [
 	},
 	{
 		"id": "yusuf_cave_hint3",
+		"affinity_change_on_show": {"npc_id": "yusuf", "amount": 1, "once": true},
 		"speaker": "유서프",
 		"text": "이곳저곳 떠돌다 보면... 비슷한 이야기를 몇 번 들었지.",
 		"is_decisive": false,
@@ -727,6 +814,7 @@ const YUSUF_DIALOGUE: Array = [
 		"id": "yusuf_who",
 		"speaker": "유서프",
 		"text": "그냥... 이곳저곳 떠도는 상인이지. 그 이상은... 훗날 알게 될 걸세.",
+		"affinity_change_on_show": {"npc_id": "yusuf", "amount": 2, "once": true},
 		"is_decisive": false,
 		"options": [
 			{"label": "[수상한데요?]", "next_id": "yusuf_who_suspicious"},
@@ -735,6 +823,7 @@ const YUSUF_DIALOGUE: Array = [
 	},
 	{
 		"id": "yusuf_who_suspicious",
+		"affinity_change_on_show": {"npc_id": "yusuf", "amount": 1, "once": true},
 		"speaker": "유서프",
 		"text": "수상하다니, 섭섭한걸. ...뭐, 완전히 틀린 말은 아니지만.",
 		"is_decisive": false,
@@ -744,6 +833,7 @@ const YUSUF_DIALOGUE: Array = [
 		"id": "yusuf_wares",
 		"speaker": "유서프",
 		"text": "이것저것 있지. 다른 마을에서 가져온 물건들이야.",
+		"affinity_change_on_show": {"npc_id": "yusuf", "amount": 2, "once": true},
 		"is_decisive": false,
 		"options": [
 			{"label": "[물건을 산다]", "open_shop": true},
@@ -753,6 +843,7 @@ const YUSUF_DIALOGUE: Array = [
 	},
 	{
 		"id": "yusuf_other_villages",
+		"affinity_change_on_show": {"npc_id": "yusuf", "amount": 1, "once": true},
 		"speaker": "유서프",
 		"text": "여기보단... 힘든 곳도 있더군. 자네 마을은 아직 운이 좋은 편이야.",
 		"is_decisive": false,
@@ -871,7 +962,26 @@ const MIA_DIALOGUE: Array = [
 			{"label": "[괜찮아? 무서워하지 않아도 돼]", "next_id": "mia_approach_gentle"},
 			{"label": "[그날 밤 무슨 일이 있었는지 말해줘]", "next_id": "mia_approach_press"},
 			{"label": "[그냥 인사만 한다]", "next_id": "mia_smalltalk", "show_if_flag": "met_mia"},
+			{
+				"label": "[선물을 준다]",
+				"give_gift": {"npc_id": "mia", "amount": 9, "next_id_success": "mia_gift_thanks", "next_id_fail": "mia_gift_none"},
+			},
 		],
+	},
+	{
+		"id": "mia_gift_thanks",
+		"speaker": "미아",
+		"text": "우와... 나 주는 거예요? 헤헤, 고마워요! 소중히 간직할게요.",
+		"is_decisive": false,
+		"options": [],
+	},
+	{
+		"id": "mia_gift_none",
+		"speaker": "미아",
+		"narration": "(막상 건넬 것이 없다)",
+		"text": "줄 게 없네요.",
+		"is_decisive": false,
+		"options": [],
 	},
 	{
 		"id": "mia_approach_press",
@@ -1034,7 +1144,26 @@ const KAMIL_DIALOGUE: Array = [
 		"options": [
 			{"label": "[당신은 누구세요?]", "next_id": "kamil_intro_1"},
 			{"label": "[왜 저를 기다렸나요?]", "next_id": "kamil_intro_1"},
+			{
+				"label": "[선물을 준다]",
+				"give_gift": {"npc_id": "kamil", "amount": 9, "next_id_success": "kamil_gift_thanks", "next_id_fail": "kamil_gift_none"},
+			},
 		],
+	},
+	{
+		"id": "kamil_gift_thanks",
+		"speaker": "카밀",
+		"text": "...저에게요? 뜻밖이군요. 이런 걸 받아본 게 얼마 만인지... 감사합니다.",
+		"is_decisive": false,
+		"options": [],
+	},
+	{
+		"id": "kamil_gift_none",
+		"speaker": "카밀",
+		"narration": "(막상 건넬 것이 없다)",
+		"text": "줄 게 없네요.",
+		"is_decisive": false,
+		"options": [],
 	},
 	{
 		"id": "kamil_intro_1",
@@ -1059,6 +1188,62 @@ const KAMIL_DIALOGUE: Array = [
 		"text": "알겠습니다. 부두에서 기다리고 있겠습니다.",
 		"is_decisive": false,
 		"set_flag_on_show": "boat_available", # 이 노드에 도달하는 순간 부두의 배가 이용 가능해짐
+		"options": [],
+	},
+]
+
+# 나딤(사막 정착지 지도자/생존자) 대화 트리 — 2부 초반. 끝에서 ruins_available를 켜 유적 입구를 연다
+const NADIM_DIALOGUE: Array = [
+	{
+		"id": "nadim_greeting",
+		"speaker": "나딤",
+		"text": "...또 다른 이방인인가. 카밀이 데려온 건가?",
+		"is_decisive": false,
+		"options": [
+			{"label": "[네, 도움이 필요하다고 들었어요]", "next_id": "nadim_intro_1"},
+		],
+	},
+	{
+		"id": "nadim_intro_1",
+		"speaker": "나딤",
+		"text": "도움이라... 이미 늦었을지도 모르지만, 그래도 와줘서 고맙네.",
+		"is_decisive": false,
+		"next_id": "nadim_intro_2",
+	},
+	{
+		"id": "nadim_intro_2",
+		"speaker": "나딤",
+		"text": "이 땅은 원래 이렇지 않았어. 몇 년 전부터 서서히 말라갔지. 당신네 마을의 우물처럼 말이야.",
+		"is_decisive": false,
+		"options": [
+			{"label": "[여기서 무슨 일이 있었던 건가요?]", "next_id": "nadim_backstory_1"},
+			{"label": "[제가 뭘 도우면 될까요?]", "next_id": "nadim_backstory_1"},
+		],
+	},
+	{
+		"id": "nadim_backstory_1",
+		"speaker": "나딤",
+		"text": "이 근처에... 오래된 유적이 있어. 옛 사람들이 물줄기를 다스리던 곳이라고 전해지지.",
+		"affinity_change_on_show": {"npc_id": "nadim", "amount": 2, "once": true},
+		"is_decisive": false,
+		"next_id": "nadim_backstory_2",
+	},
+	{
+		"id": "nadim_backstory_2",
+		"speaker": "나딤",
+		"text": "그 유적 안쪽에 들어간 사람이 아무도 안 돌아왔어. 그래도... 답을 찾으려면 그곳뿐이라고 생각해.",
+		"is_decisive": false,
+		"options": [
+			{"label": "[제가 가볼게요]", "next_id": "nadim_quest_offer"},
+			{"label": "[너무 위험한 거 아닌가요?]", "next_id": "nadim_quest_offer"},
+		],
+	},
+	{
+		"id": "nadim_quest_offer",
+		"speaker": "나딤",
+		"text": "고맙네. 조심하게. 유적 입구는 마을 동쪽에 있어.",
+		"set_flag_on_show": "ruins_available", # 이 노드에 도달하는 순간 사막 유적 입구가 이용 가능해짐
+		"is_decisive": false,
 		"options": [],
 	},
 ]

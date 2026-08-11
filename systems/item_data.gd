@@ -18,6 +18,12 @@ const ITEMS: Dictionary = {
 		"icon_region": Rect2(325, 807, 22, 37),
 		"hp_restore_fraction": 0.5,
 	},
+	"gift": {
+		"name": "작은 선물",
+		"description": "누군가에게 선물하면 기뻐할 것이다",
+		"icon_path": "res://assets/GUI/MedievalUiMega/medieval.png",
+		"icon_region": Rect2(455, 803, 66, 88), # 두루마리(리본 묶인 꾸러미 느낌) — 위치는 조정 가능
+	},
 }
 
 

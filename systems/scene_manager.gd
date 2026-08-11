@@ -19,6 +19,7 @@ const BGM_TRACKS: Dictionary = {
 	"res://world/forest.tscn": "Silent Forest",
 	"res://world/cave.tscn": "Frozen Abyss",
 	"res://world/tavern.tscn": "Definitely Our Town",
+	"res://world/desert.tscn": "Where The Winds Roam",
 }
 
 # 씬 경로별 은은한 색조 오버레이 (SceneTint autoload가 그림). 매핑에 없는 씬(전투 씬 등)은
