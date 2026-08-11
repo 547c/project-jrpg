@@ -80,7 +80,7 @@ position = Vector2(240, 460)
 chest_id = "desert_key_chest"
 quest_id = "ruins_key"
 reward_item = "ruins_key"
-popup_text = "열쇠를 발견했다!"
+popup_text = "낡은 부적이 들어있다. 표면에 알아보기 힘든 문양이 새겨져 있다 — 어딘가 익숙한 느낌이다."
 
 [node name="UI" type="CanvasLayer" parent="."]
 

@@ -50,6 +50,19 @@ const MONSTERS: Dictionary = {
 		"gold_min": 12,
 		"gold_max": 16,
 		"portrait_region": Rect2(24, 33, 16, 16), # 64x64 Idle 프레임에서 미라 머리(하단 정렬 캐릭터의 상부)만 크롭
+		"appear_text": "미라가 흐릿한 신음을 흘리며 다가온다 — 마치 무언가에 저항하고 있는 것처럼.",
+	},
+	# 유적 보스(임시): 전용 에셋이 아직 없어 미라 Warrior 스프라이트를 재사용(필드에선 확대+색조로 구분).
+	# 지금까지 중 가장 강함. 처치 시 battle_scene이 ruins_boss_defeated 플래그를 세운다
+	"RUINS_BOSS": {
+		"name": "폭주한 근원체",
+		"max_hp": 80,
+		"damage_min": 10,
+		"damage_max": 14,
+		"gold_min": 30,
+		"gold_max": 40,
+		"portrait_region": Rect2(24, 33, 16, 16),
+		"appear_text": "이 모든 폭주의 근원처럼 보이는, 뒤틀린 존재가 앞을 막는다.",
 	},
 }
 
@@ -88,6 +101,10 @@ const MONSTER_VARIANTS: Dictionary = {
 	"MUMMY": [
 		{"folder": "Mummy - Base", "base": MUMMY_SHEET_BASE, "idle_frame_size": 64, "idle_frame_count": 4, "run_frame_size": 64, "run_frame_count": 6, "death_frame_width": 64, "death_frame_height": 64, "death_frame_count": 6},
 		{"folder": "Mummy - Rogue", "base": MUMMY_SHEET_BASE, "idle_frame_size": 64, "idle_frame_count": 4, "run_frame_size": 64, "run_frame_count": 6, "death_frame_width": 64, "death_frame_height": 64, "death_frame_count": 6},
+		{"folder": "Mummy - Warrior", "base": MUMMY_SHEET_BASE, "idle_frame_size": 64, "idle_frame_count": 4, "run_frame_size": 64, "run_frame_count": 6, "death_frame_width": 64, "death_frame_height": 64, "death_frame_count": 6},
+	],
+	# 유적 보스(임시): 미라 Warrior 스프라이트를 그대로 재사용 (단일 변종 — 보스라 매번 같은 모습)
+	"RUINS_BOSS": [
 		{"folder": "Mummy - Warrior", "base": MUMMY_SHEET_BASE, "idle_frame_size": 64, "idle_frame_count": 4, "run_frame_size": 64, "run_frame_count": 6, "death_frame_width": 64, "death_frame_height": 64, "death_frame_count": 6},
 	],
 }

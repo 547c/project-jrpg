@@ -1145,10 +1145,38 @@ const KAMIL_DIALOGUE: Array = [
 			{"label": "[당신은 누구세요?]", "next_id": "kamil_intro_1"},
 			{"label": "[왜 저를 기다렸나요?]", "next_id": "kamil_intro_1"},
 			{
+				"label": "[나딤을 아세요?]",
+				"next_id": "kamil_sister_intro",
+				"required_affinity": {"npc_id": "kamil", "min": 55},
+			},
+			{
 				"label": "[선물을 준다]",
 				"give_gift": {"npc_id": "kamil", "amount": 9, "next_id_success": "kamil_gift_thanks", "next_id_fail": "kamil_gift_none"},
 			},
 		],
+	},
+	# --- 카밀 자매 갈래 (호감도 55+) : 카밀과 나딤은 자매 ---
+	{
+		"id": "kamil_sister_intro",
+		"speaker": "카밀",
+		"text": "...그 이름을 어떻게. 아, 사막에서 만났겠군.",
+		"is_decisive": false,
+		"next_id": "kamil_sister_1",
+	},
+	{
+		"id": "kamil_sister_1",
+		"speaker": "카밀",
+		"text": "그 애는... 제 동생입니다. 오래전에 서로 다른 길을 택했죠.",
+		"is_decisive": false,
+		"next_id": "kamil_sister_2",
+	},
+	{
+		"id": "kamil_sister_2",
+		"speaker": "카밀",
+		"text": "저는 떠났고, 그 애는 남았어요. 그 애는 아직도 저를 원망할지도 모르겠네요.",
+		"affinity_change_on_show": {"npc_id": "kamil", "amount": 3, "once": true},
+		"is_decisive": false,
+		"options": [],
 	},
 	{
 		"id": "kamil_gift_thanks",
@@ -1197,7 +1225,14 @@ const NADIM_DIALOGUE: Array = [
 	{
 		"id": "nadim_greeting",
 		"speaker": "나딤",
-		"text": "...또 다른 이방인인가. 카밀이 데려온 건가?",
+		"text_by_affinity_tier": {
+			"npc_id": "nadim",
+			"cold": "...뭐 필요한 거라도 있나.",
+			"neutral": "...또 다른 이방인인가. 카밀이 데려온 건가?",
+			"warm": "왔군. 자네가 오면 마음이 조금 놓여.",
+			"trusted": "왔나. 요즘은... 자네 덕분에 버티고 있는 것 같아.",
+		},
+		"text": "...또 다른 이방인인가. 카밀이 데려온 건가?", # tier 조회 실패 시 fallback (기본 = neutral)
 		"is_decisive": false,
 		"options": [
 			{"label": "[네, 도움이 필요하다고 들었어요]", "next_id": "nadim_intro_1"},
@@ -1205,6 +1240,17 @@ const NADIM_DIALOGUE: Array = [
 			{"label": "[미라는 어떻게 되어가요?]", "next_id": "nadim_mummy_status", "show_if_quest_active": "desert_mummies"},
 			{"label": "[유적의 열쇠를 찾아보겠다고 한다]", "next_id": "nadim_key_accept", "start_quest": "ruins_key", "show_if_flag": "ruins_available", "show_if_quest_inactive": "ruins_key"},
 			{"label": "[열쇠는 찾았나요?]", "next_id": "nadim_key_status", "show_if_quest_active": "ruins_key"},
+			{
+				"label": "[미라들에 대해 어떻게 생각하세요?]",
+				"next_id": "nadim_secret_intro",
+				"required_affinity": {"npc_id": "nadim", "min": 55},
+				"show_if_quest_active": "desert_mummies",
+			},
+			{
+				"label": "[카밀을 아세요?]",
+				"next_id": "nadim_sister_intro",
+				"required_affinity": {"npc_id": "nadim", "min": 55},
+			},
 		],
 	},
 	{
@@ -1279,6 +1325,87 @@ const NADIM_DIALOGUE: Array = [
 		"speaker": "나딤",
 		"text": "고맙네. 조심하게. 유적 입구는 마을 동쪽에 있어.",
 		"set_flag_on_show": "ruins_available", # 이 노드에 도달하는 순간 사막 유적 입구가 이용 가능해짐
+		"is_decisive": false,
+		"options": [],
+	},
+	# --- 나딤 비밀 갈래 (호감도 55+, 미라 퀘스트 진행 중일 때) ---
+	{
+		"id": "nadim_secret_intro",
+		"speaker": "나딤",
+		"text": "...그 얘기, 언젠가는 물어볼 줄 알았지.",
+		"is_decisive": false,
+		"options": [
+			{"label": "[뭔가 알고 계신 거죠?]", "next_id": "nadim_secret_1"},
+		],
+	},
+	{
+		"id": "nadim_secret_1",
+		"speaker": "나딤",
+		"text": "저 미라들, 원래는... 유적을 지키던 존재였다고 들었어. 아주 오래전엔.",
+		"is_decisive": false,
+		"next_id": "nadim_secret_2",
+	},
+	{
+		"id": "nadim_secret_2",
+		"speaker": "나딤",
+		"text": "근데 언젠가부터 저렇게 변해버렸지. 폭주하듯이, 닥치는 대로 공격하고.",
+		"affinity_change_on_show": {"npc_id": "nadim", "amount": 3, "once": true},
+		"is_decisive": false,
+		"next_id": "nadim_secret_3",
+	},
+	{
+		"id": "nadim_secret_3",
+		"speaker": "나딤",
+		"text": "카밀 같은 이들이 오기 시작한 것도... 그 무렵부터였다는 소문이 있어.",
+		"is_decisive": false,
+		"options": [
+			{"label": "[감시자들이 뭔가 저지른 건가요?]", "next_id": "nadim_secret_4"},
+			{"label": "[그냥 소문 아닐까요?]", "next_id": "nadim_secret_alt"},
+		],
+	},
+	{
+		"id": "nadim_secret_4",
+		"speaker": "나딤",
+		"text": "모르지. 확실한 건 아무것도 없어. 그래도... 자네가 유적에 들어가면, 뭔가 알 수 있을지도 모르겠군.",
+		"affinity_change_on_show": {"npc_id": "nadim", "amount": 2, "once": true},
+		"is_decisive": false,
+		"next_id": "nadim_secret_end",
+	},
+	{
+		"id": "nadim_secret_alt",
+		"speaker": "나딤",
+		"text": "그럴지도. 근데... 이상하게 마음에 걸려서 말이야.",
+		"affinity_change_on_show": {"npc_id": "nadim", "amount": 2, "once": true},
+		"is_decisive": false,
+		"next_id": "nadim_secret_end",
+	},
+	{
+		"id": "nadim_secret_end",
+		"speaker": "나딤",
+		"text": "이건 카밀한테는 아직 말하지 말게. 확실해지기 전까지는.",
+		"is_decisive": false,
+		"options": [],
+	},
+	# --- 나딤 자매 갈래 (호감도 55+) : 카밀과 나딤은 자매 ---
+	{
+		"id": "nadim_sister_intro",
+		"speaker": "나딤",
+		"text": "...언니 얘기를 하는군.",
+		"is_decisive": false,
+		"next_id": "nadim_sister_1",
+	},
+	{
+		"id": "nadim_sister_1",
+		"speaker": "나딤",
+		"text": "우리는 자매였어. 언니는 떠나는 쪽을 택했고, 난 남는 쪽을 택했지.",
+		"is_decisive": false,
+		"next_id": "nadim_sister_2",
+	},
+	{
+		"id": "nadim_sister_2",
+		"speaker": "나딤",
+		"text": "가끔은... 언니가 옳았을지도 모른다는 생각이 들어. 하지만 난 후회 안 해.",
+		"affinity_change_on_show": {"npc_id": "nadim", "amount": 3, "once": true},
 		"is_decisive": false,
 		"options": [],
 	},

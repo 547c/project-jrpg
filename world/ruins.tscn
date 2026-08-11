@@ -1,11 +1,16 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" uid="uid://c0qufkd1nkcst" path="res://world/spawn_point.gd" id="1_spawn"]
 [ext_resource type="Script" uid="uid://pt071dvpdb2d" path="res://world/area_transition.gd" id="2_trans"]
 [ext_resource type="PackedScene" path="res://ui/dialogue_box.tscn" id="3_dlgbox"]
+[ext_resource type="PackedScene" path="res://world/ruins_lore.tscn" id="4_lore"]
+[ext_resource type="Script" path="res://world/monster_encounter.gd" id="5_boss"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_door"]
 size = Vector2(40, 600)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_boss"]
+radius = 48.0
 
 [node name="Ruins" type="Node2D"]
 
@@ -27,6 +32,19 @@ destination_spawn_point = "DesertSpawnFromRuins"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="ToDesert"]
 shape = SubResource("RectangleShape2D_door")
+
+[node name="RuinsLore" parent="." instance=ExtResource("4_lore")]
+position = Vector2(360, 300)
+
+[node name="RuinsBoss" type="Area2D" parent="."]
+position = Vector2(620, 300)
+script = ExtResource("5_boss")
+monster_type = "RUINS_BOSS"
+encounter_id = "ruins_boss"
+sprite_modulate = Color(0.55, 0.4, 0.7, 1)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="RuinsBoss"]
+shape = SubResource("CircleShape2D_boss")
 
 [node name="UI" type="CanvasLayer" parent="."]
 

@@ -77,6 +77,8 @@ const DEFAULT_FLAGS: Dictionary = {
 	"mummies_defeated": 0,                 # 사막 미라 처치 카운트
 	"desert_mummies_complete": false,      # 미라 3마리 처치 시 true (나딤 상태 대사 분기용)
 	"ruins_key_complete": false,           # 유적 열쇠 획득 시 true (나딤 상태 대사 분기용)
+	"truth_discovered": false,             # 유적 내부 기록(벽화)에서 진실을 발견했는가 (ruins_lore_2 도달 시 true)
+	"ruins_boss_defeated": false,          # 유적 보스(폭주한 근원체)를 처치했는가 (이후 결정적 선택 조건)
 	"quest_level": 0,                      # 완료한 서브퀘스트 개수
 }
 

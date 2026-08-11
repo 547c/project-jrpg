@@ -12,6 +12,7 @@ const DISPLAY_SCALE := {
 	"ORC": 1.6111,
 	"SKELETON": 1.5104,
 	"MUMMY": 1.5608, # 미라 Idle 캐릭터 실측 높이(~31px)로 오크/스켈레톤과 같은 방식(높이/16 * 1.45/1.8)으로 산출
+	"RUINS_BOSS": 2.81, # 미라(1.5608)의 약 1.8배 — 보스답게 크게 (임시, 전용 에셋 나오면 교체 예정)
 }
 
 const IDLE_FPS := 4.0
@@ -54,10 +55,12 @@ const REGEN_DELAY_MAX := 60.0
 enum WanderState { IDLE, MOVING }
 enum EncounterState { WANDER, ALERT, CHASE, RETURN }
 
-@export var monster_type: String = "ORC" # BattleData.MONSTERS의 키 ("ORC" 또는 "SKELETON")
+@export var monster_type: String = "ORC" # BattleData.MONSTERS의 키 ("ORC" / "SKELETON" / "MUMMY" / "RUINS_BOSS")
 @export var encounter_id: String = "" # 조우 식별용 고유 ID (씬 안에서 겹치지 않게 지정)
 # 테스트용 리젠 시간 강제 지정 (음수면 REGEN_DELAY_MIN~MAX 사이 랜덤 사용)
 @export var regen_delay_override: float = -1.0
+# 스프라이트에 입힐 색조 (기본 흰색=원본 그대로). 유적 보스처럼 기존 스프라이트를 어둡게/신비롭게 물들일 때 사용
+@export var sprite_modulate: Color = Color(1, 1, 1, 1)
 
 var _sprite: AnimatedSprite2D
 var _alert_label: Label
@@ -107,6 +110,7 @@ func _pick_variant_and_setup_sprite() -> void:
 		_sprite.name = "AnimatedSprite2D" # 명시적으로 이름을 지정 (안 하면 @AnimatedSprite2D@... 형태로 자동 생성됨)
 		_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		_sprite.scale = Vector2.ONE * DISPLAY_SCALE.get(monster_type, 1.45)
+		_sprite.modulate = sprite_modulate # 보스 등 색조가 지정된 경우 적용 (기본 흰색이면 원본 그대로)
 		add_child(_sprite)
 
 	_sprite.sprite_frames = frames

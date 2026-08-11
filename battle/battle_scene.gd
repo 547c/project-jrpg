@@ -116,7 +116,8 @@ func start_with(monster_type: String, variant: Dictionary) -> void:
 	_monster_gold_label.text = "%d~%d" % [_monster_data["gold_min"], _monster_data["gold_max"]]
 
 	_refresh_battle_hud()
-	_message.text = "%s 출현!" % _monster_data["name"]
+	# 몬스터별 전용 등장 문구가 있으면 그걸, 없으면 기본 "N 출현!"을 쓴다
+	_message.text = _monster_data.get("appear_text", "%s 출현!" % _monster_data["name"])
 
 	_close_button.visible = false
 	_skill_row.visible = false
@@ -395,6 +396,8 @@ func _finish_victory() -> void:
 			GameState.increment_skeletons_defeated()
 		"MUMMY":
 			GameState.increment_mummies_defeated()
+		"RUINS_BOSS":
+			GameState.set_flag("ruins_boss_defeated", true) # 이후 결정적 선택으로 이어질 조건 (다음 단계에서 사용)
 
 	var gold_gained := randi_range(_monster_data["gold_min"], _monster_data["gold_max"])
 	GameState.add_gold(gold_gained)
