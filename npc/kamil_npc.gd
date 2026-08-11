@@ -7,6 +7,10 @@ extends NPC
 const SPRITE_FRAMES := preload("res://npc/kamil_sprite_frames.tres")
 const APPEAR_AFTER_SEEN := "yusuf_secret_stage2" # 이 노드를 본 뒤부터 등장
 
+# 2부 결정적 선택의 두 결과 노드. 이 중 하나에서 대화가 끝나면 최종 엔딩으로 전환한다
+# (엘라라가 elara_ending_trigger로 1부 엔딩을 띄우는 것과 같은 패턴)
+const FINAL_CHOICE_NODE_IDS := ["kamil_choice_reveal", "kamil_choice_secret"]
+
 var _active: bool = false # 현재 마을에 나타나 상호작용 가능한 상태인지
 
 
@@ -46,3 +50,16 @@ func _refresh_presence() -> void:
 	else:
 		visible = false
 		monitoring = false # 감지 꺼서 안내/상호작용 자체가 안 열리게 함
+
+
+# 기본 동작(안내 문구 복원)을 그대로 수행한 뒤, 2부 결정적 선택으로 대화가 끝났다면 최종 엔딩으로 전환
+func _on_dialogue_ended(last_node_id: String = "") -> void:
+	super._on_dialogue_ended()
+	if last_node_id in FINAL_CHOICE_NODE_IDS:
+		_trigger_final_ending()
+
+
+# truth_revealed 값에 대응하는 최종 엔딩 씬으로 전환
+func _trigger_final_ending() -> void:
+	var ending := GameState.check_final_ending()
+	SceneManager.change_scene("res://endings/ending_final_%s.tscn" % ending, "")

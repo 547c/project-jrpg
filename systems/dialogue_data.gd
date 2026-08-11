@@ -1150,6 +1150,13 @@ const KAMIL_DIALOGUE: Array = [
 				"required_affinity": {"npc_id": "kamil", "min": 55},
 			},
 			{
+				# 2부 결정적 선택: 유적 보스를 처치하고 진실까지 알아낸 뒤에만, 그리고 아직 이 갈래를 안 봤을 때만 열린다
+				"label": "[유적에서 알게 된 걸 말한다]",
+				"next_id": "kamil_truth_1",
+				"show_if_flags": ["ruins_boss_defeated", "truth_discovered"],
+				"show_if_not_seen": "kamil_truth_1",
+			},
+			{
 				"label": "[선물을 준다]",
 				"give_gift": {"npc_id": "kamil", "amount": 9, "next_id_success": "kamil_gift_thanks", "next_id_fail": "kamil_gift_none"},
 			},
@@ -1175,6 +1182,47 @@ const KAMIL_DIALOGUE: Array = [
 		"speaker": "카밀",
 		"text": "저는 떠났고, 그 애는 남았어요. 그 애는 아직도 저를 원망할지도 모르겠네요.",
 		"affinity_change_on_show": {"npc_id": "kamil", "amount": 3, "once": true},
+		"is_decisive": false,
+		"options": [],
+	},
+	# --- 2부 결정적 선택 갈래 (유적의 진실을 카밀에게 알린 뒤) ---
+	{
+		"id": "kamil_truth_1",
+		"speaker": "카밀",
+		"text": "...표정을 보니, 뭔가 찾은 모양이군요.",
+		"is_decisive": false,
+		"next_id": "kamil_truth_2",
+	},
+	{
+		"id": "kamil_truth_2",
+		"speaker": "카밀",
+		"text": "'감시자의 실수'라... 예상은 했지만, 직접 들으니...",
+		"is_decisive": false,
+		"next_id": "kamil_truth_3",
+	},
+	{
+		"id": "kamil_truth_3",
+		"speaker": "카밀",
+		"text": "이걸 세상에 알려야 할까요, 아니면... 조용히 묻어야 할까요. 결정은 당신에게 맡기겠습니다.",
+		"is_decisive": true,
+		"options": [
+			{"label": "[진실을 세상에 알린다]", "next_id": "kamil_choice_reveal", "flag_to_set": "truth_revealed", "flag_value": true},
+			{"label": "[비밀로 유지한다]", "next_id": "kamil_choice_secret", "flag_to_set": "truth_revealed", "flag_value": false},
+		],
+	},
+	{
+		"id": "kamil_choice_reveal",
+		"speaker": "카밀",
+		"text": "...당신의 선택을 존중합니다. 저도 더 이상 숨기지 않겠습니다.",
+		"set_flag_on_show": "part2_complete", # 이 노드에 도달하면 2부 완료 — 대화 종료 시 kamil_npc가 최종 엔딩으로 전환
+		"is_decisive": false,
+		"options": [],
+	},
+	{
+		"id": "kamil_choice_secret",
+		"speaker": "카밀",
+		"text": "...현명한 선택일 수도 있겠군요. 저는 계속 지켜보겠습니다.",
+		"set_flag_on_show": "part2_complete", # 이 노드에 도달하면 2부 완료 — 대화 종료 시 kamil_npc가 최종 엔딩으로 전환
 		"is_decisive": false,
 		"options": [],
 	},

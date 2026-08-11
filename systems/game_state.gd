@@ -88,7 +88,9 @@ const DEFAULT_FLAGS: Dictionary = {
 	"desert_mummies_complete": false,      # 미라 3마리 처치 시 true (나딤 상태 대사 분기용)
 	"ruins_key_complete": false,           # 유적 열쇠 획득 시 true (나딤 상태 대사 분기용)
 	"truth_discovered": false,             # 유적 내부 기록(벽화)에서 진실을 발견했는가 (ruins_lore_2 도달 시 true)
-	"ruins_boss_defeated": false,          # 유적 보스(폭주한 근원체)를 처치했는가 (이후 결정적 선택 조건)
+	"ruins_boss_defeated": false,          # 유적 보스(폭주한 근원체)를 처치했는가 (2부 결정적 선택의 조건)
+	"truth_revealed": false,               # 2부 결정적 플래그: 진실을 세상에 알렸는가 (false면 비밀로 묻음)
+	"part2_complete": false,               # 2부를 완료했는가 (카밀과의 결정적 선택을 마쳤을 때 true)
 	"quest_level": 0,                      # 완료한 서브퀘스트 개수
 }
 
@@ -626,6 +628,13 @@ func _met_villager_count() -> int:
 	if get_flag("met_yusuf"):
 		count += 1
 	return count
+
+
+# 2부 결정적 선택(truth_revealed)에 따라 최종 엔딩 종류를 반환 ("reveal" / "secret").
+# 카밀과의 결정적 대화가 끝났을 때 npc/kamil_npc.gd가 이 값으로 엔딩 씬을 고른다
+# (1부의 check_ending()과 같은 역할·같은 형태)
+func check_final_ending() -> String:
+	return "reveal" if get_flag("truth_revealed") else "secret"
 
 
 # 두 결정적 플래그의 조합으로 엔딩 종류를 판단해 반환 ("good" / "neutral" / "bad")

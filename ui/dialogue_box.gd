@@ -229,6 +229,7 @@ func _filter_visible_options(options: Array) -> Array:
 
 # 옵션의 표시 조건들을 모두 만족하는지 판단.
 # - show_if_flag: 해당 flag가 true여야 함
+# - show_if_flags: 나열된 flag가 "전부" true여야 함 (여러 조건이 동시에 필요한 갈래용)
 # - show_if_quest_inactive: 해당 퀘스트가 아직 수락되지 않았을 때만 (수락 옵션용)
 # - show_if_quest_active: 해당 퀘스트가 수락되어 진행 중일 때만 (진행 확인 옵션용)
 # - show_if_seen: 해당 node_id를 이미 봤을 때만 (예: 이전 대화를 이어가는 후속 옵션)
@@ -237,6 +238,10 @@ func _is_option_visible(option: Dictionary) -> bool:
 	var show_if_flag: String = option.get("show_if_flag", "")
 	if show_if_flag != "" and not GameState.get_flag(show_if_flag):
 		return false
+
+	for flag_name in option.get("show_if_flags", []):
+		if not GameState.get_flag(flag_name):
+			return false
 
 	var quest_inactive: String = option.get("show_if_quest_inactive", "")
 	if quest_inactive != "" and GameState.is_quest_active(quest_inactive):
