@@ -28,6 +28,7 @@ GameOverScreen="*res://ui/game_over_screen.tscn"
 LevelUpPopup="*res://ui/level_up_popup.tscn"
 ShopMenu="*res://ui/shop_menu.tscn"
 SaveSlotMenu="*res://ui/save_slot_menu.tscn"
+EndingRecordMenu="*res://ui/ending_record_menu.tscn"
 HUD="*res://ui/hud.tscn"
 
 [display]

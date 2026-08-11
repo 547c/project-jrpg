@@ -105,14 +105,27 @@ theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
 theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
 text = "불러오기"
 
+[node name="RecordButton" type="Button" parent="."]
+texture_filter = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -110.0
+offset_top = 592.0
+offset_right = 110.0
+offset_bottom = 636.0
+theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+text = "기록"
+
 [node name="LoadHint" type="Label" parent="."]
 anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
 offset_left = -120.0
-offset_top = 588.0
+offset_top = 640.0
 offset_right = 120.0
-offset_bottom = 610.0
+offset_bottom = 662.0
 theme_override_colors/font_color = Color(0.6, 0.55, 0.5, 1)
 theme_override_font_sizes/font_size = 12
 horizontal_alignment = 1

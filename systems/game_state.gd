@@ -47,6 +47,16 @@ var affinity: Dictionary = DEFAULT_AFFINITY.duplicate()
 # 이미 표시된 적 있는 대화 노드 id 모음 (DialogueBox가 "다시 듣기" 옵션을 회색+하단정렬로 구분하는 데 사용)
 var seen_dialogue_nodes: Array = []
 
+# --- 엔딩 도감(영구 기록) ---
+# 지금까지 도달한 엔딩 id 모음. 슬롯 세이브와 성격이 다른 "계정 단위 영구 기록"이라
+# SaveManager의 슬롯 파일이 아니라 전용 파일(ENDING_RECORDS_PATH)에 따로 저장하고,
+# reset_progress()(새 게임/엔딩 후 리셋)에서도 절대 지우지 않는다
+const ENDING_RECORDS_PATH := "user://ending_records.json"
+
+signal endings_changed # 새 엔딩이 기록될 때 방출 (도감 UI가 열려 있다면 갱신용)
+
+var seen_endings: Array = []
+
 # 모든 플래그의 초기값 (reset_progress()가 이 값들로 되돌리는 기준이 되기도 함)
 const DEFAULT_FLAGS: Dictionary = {
 	"resolved_guardian_peacefully": false, # 결정적 플래그: 가디언을 평화적으로 정화했는가
@@ -172,6 +182,7 @@ func reset_progress() -> void:
 
 	reset_affinity()
 	seen_dialogue_nodes.clear()
+	# seen_endings(엔딩 도감)는 의도적으로 건드리지 않는다 — 새 게임을 시작해도 유지되는 영구 기록
 
 
 # 저장 데이터로부터 flags를 복원. 먼저 기본값으로 되돌려(임시 키 정리 포함) 저장 당시 없던 값이
@@ -366,6 +377,63 @@ func restore_seen_dialogue_nodes(data: Array) -> void:
 	seen_dialogue_nodes.clear()
 	for node_id in data:
 		seen_dialogue_nodes.append(String(node_id))
+
+
+# ── 엔딩 도감(영구 기록) ────────────────────────────────────────────────────
+# 슬롯 세이브(SaveManager)와 완전히 독립적으로 동작한다: 전용 파일에 즉시 쓰고,
+# 게임 시작 시 한 번 읽어오며, reset_progress()의 영향도 받지 않는다
+
+# autoload로 올라올 때 저장돼 있던 엔딩 기록을 불러온다
+func _ready() -> void:
+	_load_ending_records()
+
+
+# 엔딩에 도달했음을 영구 기록에 남기고 곧바로 파일에 저장 (이미 기록된 엔딩이면 아무 일도 안 함).
+# 엔딩 화면(endings/ending_screen.gd)이 표시될 때 자동으로 호출된다
+func mark_ending_seen(ending_id: String) -> void:
+	if ending_id == "" or seen_endings.has(ending_id):
+		return
+	seen_endings.append(ending_id)
+	_save_ending_records()
+	endings_changed.emit()
+
+
+# 해당 엔딩을 이미 본 적 있는지 (도감이 잠금/해금 표시를 정하는 데 사용)
+func has_seen_ending(ending_id: String) -> bool:
+	return seen_endings.has(ending_id)
+
+
+# 기록된 엔딩 개수 (도감 진행도 표시용)
+func seen_ending_count() -> int:
+	return seen_endings.size()
+
+
+# 엔딩 기록 전용 파일에 현재 목록을 저장
+func _save_ending_records() -> void:
+	var file := FileAccess.open(ENDING_RECORDS_PATH, FileAccess.WRITE)
+	if file == null:
+		return
+	file.store_string(JSON.stringify({"seen_endings": seen_endings}, "\t"))
+	file.close()
+
+
+# 엔딩 기록 전용 파일을 읽어 목록을 복원 (파일이 없거나 손상됐으면 빈 목록 유지)
+func _load_ending_records() -> void:
+	seen_endings.clear()
+	if not FileAccess.file_exists(ENDING_RECORDS_PATH):
+		return
+	var file := FileAccess.open(ENDING_RECORDS_PATH, FileAccess.READ)
+	if file == null:
+		return
+	var text := file.get_as_text()
+	file.close()
+	var parsed = JSON.parse_string(text)
+	if not (parsed is Dictionary):
+		return
+	for ending_id in parsed.get("seen_endings", []):
+		var id := String(ending_id)
+		if not seen_endings.has(id):
+			seen_endings.append(id)
 
 
 # 오크 처치: 숲 오크 퀘스트의 진행도를 올림 (수락 전이면 아무 일도 안 일어남)

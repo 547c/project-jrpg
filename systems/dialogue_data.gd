@@ -1251,7 +1251,26 @@ const NADIM_DIALOGUE: Array = [
 				"next_id": "nadim_sister_intro",
 				"required_affinity": {"npc_id": "nadim", "min": 55},
 			},
+			{
+				"label": "[선물을 준다]",
+				"give_gift": {"npc_id": "nadim", "amount": 9, "next_id_success": "nadim_gift_thanks", "next_id_fail": "nadim_gift_none"},
+			},
 		],
+	},
+	{
+		"id": "nadim_gift_thanks",
+		"speaker": "나딤",
+		"text": "...나한테? 이 삭막한 땅에서 이런 걸 받을 줄은 몰랐군. 고맙네.",
+		"is_decisive": false,
+		"options": [],
+	},
+	{
+		"id": "nadim_gift_none",
+		"speaker": "나딤",
+		"narration": "(막상 건넬 것이 없다)",
+		"text": "줄 게 없네요.",
+		"is_decisive": false,
+		"options": [],
 	},
 	{
 		"id": "nadim_mummy_accept",
