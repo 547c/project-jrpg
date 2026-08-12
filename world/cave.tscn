@@ -3,8 +3,8 @@
 [ext_resource type="Script" uid="uid://c0qufkd1nkcst" path="res://world/spawn_point.gd" id="1_spawn"]
 [ext_resource type="Script" uid="uid://pt071dvpdb2d" path="res://world/area_transition.gd" id="2_trans"]
 [ext_resource type="PackedScene" path="res://ui/dialogue_box.tscn" id="3_dlgbox"]
-[ext_resource type="Script" path="res://world/guardian_encounter.gd" id="4_guardian"]
-[ext_resource type="Script" path="res://world/monster_encounter.gd" id="5_monster"]
+[ext_resource type="Script" uid="uid://xwiywbd1r223" path="res://world/guardian_encounter.gd" id="4_guardian"]
+[ext_resource type="Script" uid="uid://cklielpxitqh1" path="res://world/monster_encounter.gd" id="5_monster"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_door"]
 size = Vector2(40, 600)
@@ -14,6 +14,8 @@ radius = 60.0
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_encounter"]
 radius = 36.0
+
+[sub_resource type="TileSet" id="TileSet_l61t0"]
 
 [node name="Cave" type="Node2D" unique_id=1527639492]
 
@@ -36,40 +38,43 @@ destination_spawn_point = "VillageSpawnFromCave"
 [node name="CollisionShape2D" type="CollisionShape2D" parent="ToVillage" unique_id=1522130238]
 shape = SubResource("RectangleShape2D_door")
 
-[node name="GuardianEncounter" type="Area2D" parent="."]
+[node name="GuardianEncounter" type="Area2D" parent="." unique_id=1063534579]
 position = Vector2(600, 300)
 script = ExtResource("4_guardian")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="GuardianEncounter"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="GuardianEncounter" unique_id=2095142640]
 shape = SubResource("CircleShape2D_guardian")
 
-[node name="SkeletonEncounter1" type="Area2D" parent="."]
+[node name="SkeletonEncounter1" type="Area2D" parent="." unique_id=912219675]
 position = Vector2(280, 180)
 script = ExtResource("5_monster")
 monster_type = "SKELETON"
 encounter_id = "skeleton_1"
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="SkeletonEncounter1"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SkeletonEncounter1" unique_id=1435923826]
 shape = SubResource("CircleShape2D_encounter")
 
-[node name="SkeletonEncounter2" type="Area2D" parent="."]
+[node name="SkeletonEncounter2" type="Area2D" parent="." unique_id=2039581493]
 position = Vector2(380, 460)
 script = ExtResource("5_monster")
 monster_type = "SKELETON"
 encounter_id = "skeleton_2"
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="SkeletonEncounter2"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SkeletonEncounter2" unique_id=2078295944]
 shape = SubResource("CircleShape2D_encounter")
 
-[node name="SkeletonEncounter3" type="Area2D" parent="."]
+[node name="SkeletonEncounter3" type="Area2D" parent="." unique_id=461746641]
 position = Vector2(480, 200)
 script = ExtResource("5_monster")
 monster_type = "SKELETON"
 encounter_id = "skeleton_3"
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="SkeletonEncounter3"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SkeletonEncounter3" unique_id=1451677505]
 shape = SubResource("CircleShape2D_encounter")
 
-[node name="UI" type="CanvasLayer" parent="."]
+[node name="UI" type="CanvasLayer" parent="." unique_id=434105359]
 
-[node name="DialogueBox" parent="UI" instance=ExtResource("3_dlgbox")]
+[node name="DialogueBox" parent="UI" unique_id=432599675 instance=ExtResource("3_dlgbox")]
+
+[node name="TileMapLayer" type="TileMapLayer" parent="." unique_id=1881700788]
+tile_set = SubResource("TileSet_l61t0")
