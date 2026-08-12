@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="Card" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://battle/card.gd" id="1_card"]
+
+[resource]
+script = ExtResource("1_card")
+card_name = "마력탄"
+color = 1
+effect = 0
+value = 6
+mana_cost = 4

@@ -303,7 +303,7 @@ anchors_preset = 12
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = -150.0
+offset_top = -210.0
 grow_horizontal = 2
 grow_vertical = 0
 theme_override_styles/panel = SubResource("StyleBoxTexture_panel")
@@ -330,94 +330,131 @@ vertical_alignment = 1
 autowrap_mode = 3
 
 [node name="Menus" type="Control" parent="View/HUD/BottomBar/HBox" unique_id=1828766404]
-custom_minimum_size = Vector2(300, 0)
+custom_minimum_size = Vector2(620, 0)
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="ActionRow" type="HBoxContainer" parent="View/HUD/BottomBar/HBox/Menus" unique_id=2051156105]
+[node name="MainColumn" type="VBoxContainer" parent="View/HUD/BottomBar/HBox/Menus"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 10
-alignment = 1
+theme_override_constants/separation = 6
 
-[node name="AttackButton" type="Button" parent="View/HUD/BottomBar/HBox/Menus/ActionRow" unique_id=1426217740]
+[node name="StatusRow" type="HBoxContainer" parent="View/HUD/BottomBar/HBox/Menus/MainColumn"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="GaugeLabel" type="Label" parent="View/HUD/BottomBar/HBox/Menus/MainColumn/StatusRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.25, 0.15, 0.07, 1)
+theme_override_font_sizes/font_size = 13
+text = "검 0% / 지팡이 0%"
+
+[node name="ResistLabel" type="Label" parent="View/HUD/BottomBar/HBox/Menus/MainColumn/StatusRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.25, 0.15, 0.07, 1)
+theme_override_font_sizes/font_size = 13
+horizontal_alignment = 2
+text = "적 저항: 없음"
+
+[node name="HandRow" type="HBoxContainer" parent="View/HUD/BottomBar/HBox/Menus/MainColumn"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 6
+
+[node name="Card1" type="Button" parent="View/HUD/BottomBar/HBox/Menus/MainColumn/HandRow"]
 texture_filter = 1
-custom_minimum_size = Vector2(0, 44)
+custom_minimum_size = Vector2(0, 52)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_font_sizes/font_size = 12
+autowrap_mode = 3
 theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
-text = "공격"
+text = "-"
 
-[node name="SkillButton" type="Button" parent="View/HUD/BottomBar/HBox/Menus/ActionRow" unique_id=6777164]
+[node name="Card2" type="Button" parent="View/HUD/BottomBar/HBox/Menus/MainColumn/HandRow"]
 texture_filter = 1
-custom_minimum_size = Vector2(0, 44)
+custom_minimum_size = Vector2(0, 52)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_font_sizes/font_size = 12
+autowrap_mode = 3
 theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
-text = "스킬"
+text = "-"
 
-[node name="FleeButton" type="Button" parent="View/HUD/BottomBar/HBox/Menus/ActionRow" unique_id=2062791297]
+[node name="Card3" type="Button" parent="View/HUD/BottomBar/HBox/Menus/MainColumn/HandRow"]
 texture_filter = 1
-custom_minimum_size = Vector2(0, 44)
+custom_minimum_size = Vector2(0, 52)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_font_sizes/font_size = 12
+autowrap_mode = 3
+theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+text = "-"
+
+[node name="Card4" type="Button" parent="View/HUD/BottomBar/HBox/Menus/MainColumn/HandRow"]
+texture_filter = 1
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_font_sizes/font_size = 12
+autowrap_mode = 3
+theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+text = "-"
+
+[node name="Card5" type="Button" parent="View/HUD/BottomBar/HBox/Menus/MainColumn/HandRow"]
+texture_filter = 1
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_font_sizes/font_size = 12
+autowrap_mode = 3
+theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+text = "-"
+
+[node name="ControlRow" type="HBoxContainer" parent="View/HUD/BottomBar/HBox/Menus/MainColumn"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="WeaponButton" type="Button" parent="View/HUD/BottomBar/HBox/Menus/MainColumn/ControlRow"]
+texture_filter = 1
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_font_sizes/font_size = 13
+theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+text = "무기: 검"
+
+[node name="EndTurnButton" type="Button" parent="View/HUD/BottomBar/HBox/Menus/MainColumn/ControlRow"]
+texture_filter = 1
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_font_sizes/font_size = 13
+theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+text = "턴 종료"
+
+[node name="FleeButton" type="Button" parent="View/HUD/BottomBar/HBox/Menus/MainColumn/ControlRow"]
+texture_filter = 1
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_font_sizes/font_size = 13
 theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
 text = "도망가기"
-
-[node name="SkillRow" type="GridContainer" parent="View/HUD/BottomBar/HBox/Menus" unique_id=896286680]
-visible = false
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_constants/h_separation = 10
-theme_override_constants/v_separation = 6
-columns = 2
-
-[node name="StrikeButton" type="Button" parent="View/HUD/BottomBar/HBox/Menus/SkillRow" unique_id=1008553238]
-texture_filter = 1
-custom_minimum_size = Vector2(0, 30)
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
-theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
-text = "강타 (4)"
-
-[node name="HealButton" type="Button" parent="View/HUD/BottomBar/HBox/Menus/SkillRow" unique_id=1938675166]
-texture_filter = 1
-custom_minimum_size = Vector2(0, 30)
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
-theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
-text = "회복 (6)"
-
-[node name="DodgeButton" type="Button" parent="View/HUD/BottomBar/HBox/Menus/SkillRow" unique_id=1008723423]
-texture_filter = 1
-custom_minimum_size = Vector2(0, 30)
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
-theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
-text = "피하기 (2)"
-
-[node name="BackButton" type="Button" parent="View/HUD/BottomBar/HBox/Menus/SkillRow" unique_id=386369313]
-texture_filter = 1
-custom_minimum_size = Vector2(0, 26)
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
-theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
-text = "뒤로"
 
 [node name="CloseButton" type="Button" parent="View/HUD/BottomBar/HBox/Menus" unique_id=631655223]
 visible = false
