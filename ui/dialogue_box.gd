@@ -7,6 +7,11 @@ signal dialogue_ended(last_node_id: String)
 
 # 페이지네이션: 옵션 박스에 한 번에 이만큼씩만 세로로 보여주고, 나머지는 ◄/► 페이지로 넘긴다.
 # 물리 버튼은 OPTIONS_PER_PAGE개뿐이고, 옵션이 더 많으면 페이지로 나눠 담는다
+# 대화 옵션 클릭 = 게임 전체에서 가장 잦은 UI 버튼 클릭 지점이라 여기 한 곳만 걸어도 넓게 커버된다.
+# (다른 메뉴들의 버튼도 같은 SFXPlayer.play() 한 줄만 추가하면 되지만, Godot Button엔 "클릭 시 공통
+# 재생" 같은 전역 후킹이 없어 메뉴별로 한 줄씩 붙여야 한다 — 필요해지면 그때 추가하면 됨)
+const UI_CLICK_SOUND := "res://assets/sfx/400 Sounds pack/UI/select_2.wav"
+
 const OPTIONS_PER_PAGE := 3
 # 페이지 방식 덕분에 한 화면 제약이 사라져 상한을 완화 (12개 = 4페이지). 초과분은 방어적으로 잘라낸다
 const MAX_OPTIONS := 12
@@ -398,6 +403,8 @@ func _on_button_pressed(option: Dictionary) -> void:
 # - min_quest_level: quest_level이 이 값 미만이면 start_quest 등 나머지 효과를 전부 건너뛰고
 #   next_id_if_blocked로 대신 이동 (옵션 자체는 항상 보이되, 선택 시 조건만 검사하는 게이팅용)
 func _on_option_pressed(option: Dictionary) -> void:
+	SFXPlayer.play(UI_CLICK_SOUND)
+
 	if option.get("open_shop", false):
 		ShopMenu.open()
 		return

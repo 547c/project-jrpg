@@ -265,10 +265,19 @@ func restore_mana_partial(fraction: float) -> void:
 	set_flag("player_mana", new_mana)
 
 
-# 골드를 amount만큼 늘림 (몬스터 처치 드롭 등)
+const GOLD_SOUND := "res://assets/sfx/400 Sounds pack/Items/coin_collect.wav"
+const ITEM_SOUND := "res://assets/sfx/400 Sounds pack/Items/gem_collect.wav"
+
+
+# 골드를 amount만큼 늘림 (몬스터 처치 드롭 등). add_gold/add_item은 프로젝트 전체에서 "획득"에만
+# 쓰이는 단일 통로라(소모는 spend_gold/remove_item로 이름부터 분리돼 있음), 여기 한 곳에서만
+# 효과음을 틀면 상자·전투 승리·상점 구매 등 모든 획득 경로에 자동으로 적용된다.
+# 반대로 restore_gold/restore_inventory(세이브 로드)는 이 함수를 거치지 않으므로 로드 시엔 안 울린다
 func add_gold(amount: int) -> void:
 	gold += amount
 	gold_changed.emit(gold)
+	if amount > 0:
+		SFXPlayer.play(GOLD_SOUND)
 
 
 # 골드를 amount만큼 소모. 부족하면 아무것도 하지 않고 false 반환
@@ -286,10 +295,13 @@ func restore_gold(amount: int) -> void:
 	gold_changed.emit(gold)
 
 
-# 인벤토리에 아이템을 amount만큼 추가 (없으면 새로 생성, 있으면 개수를 더함)
+# 인벤토리에 아이템을 amount만큼 추가 (없으면 새로 생성, 있으면 개수를 더함).
+# add_gold와 같은 이유로 여기 한 곳에서만 효과음을 틀면 모든 획득 경로에 자동 적용된다
 func add_item(item_id: String, amount: int = 1) -> void:
 	inventory[item_id] = inventory.get(item_id, 0) + amount
 	inventory_changed.emit(item_id)
+	if amount > 0:
+		SFXPlayer.play(ITEM_SOUND)
 
 
 # 인벤토리에서 아이템을 amount만큼 제거. 보유 개수가 부족하면 아무것도 하지 않고 false 반환.

@@ -173,6 +173,7 @@ func _start_dialogue() -> void:
 		dialogue_box.dialogue_ended.connect(_on_dialogue_ended, CONNECT_ONE_SHOT)
 
 	_in_dialogue = true
+	_update_wander_animation(false) # _process가 멈추는 동안(아래 참고) 재생 중이던 run/walk 루프도 함께 idle로 고정
 	_interact_prompt.hide()
 	_name_label.hide()
 	dialogue_box.start_dialogue(dialogue_tree, _resolve_start_id(), _resolve_npc_id())
@@ -195,9 +196,14 @@ func _resolve_start_id() -> String:
 	return dialogue_start_id
 
 
-# 대화가 끝났을 때 배회를 재개하고, 플레이어가 아직 범위 안이면 안내 문구와 이름표를 다시 표시
+# 대화가 끝났을 때 배회를 재개하고, 플레이어가 아직 범위 안이면 안내 문구와 이름표를 다시 표시.
+# _wander_state 자체는 대화 중에도 안 바뀌었으므로(MOVING이면 그대로 MOVING), 애니메이션을
+# 그 상태에 맞춰 다시 맞춰줘야 한다 — 안 그러면 idle로 멈춰 있던 스프라이트가 다음 프레임부터
+# 위치만 다시 슬금슬금 움직이는(애니메이션과 실제 이동이 어긋나는) 정반대 문제가 생긴다
 func _on_dialogue_ended() -> void:
 	_in_dialogue = false
+	_update_wander_animation(_wander_state == WanderState.MOVING)
 	if _player_in_range:
 		_interact_prompt.show()
+		_name_label.show()
 		_name_label.show()

@@ -9,6 +9,7 @@ extends Area2D
 const POPUP_RISE := 26.0
 const POPUP_DURATION := 1.0
 const POPUP_COLOR := Color(0.95, 0.85, 0.3, 1)
+const OPEN_SOUND := "res://assets/sfx/400 Sounds pack/Materials/ceramic_jar_open.wav"
 
 @export var chest_id: String = "" # 저장용 고유 ID (씬 안에서 겹치지 않게 지정)
 @export var gold_min: int = 2
@@ -103,6 +104,7 @@ func _open() -> void:
 	if _is_opened():
 		return
 
+	SFXPlayer.play(OPEN_SOUND)
 	GameState.set_flag(_flag_name(), true)
 	var default_popup := _grant_reward()
 
