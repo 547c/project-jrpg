@@ -29,6 +29,7 @@ const MONSTERS: Dictionary = {
 		"damage_max": 5,
 		"gold_min": 5,
 		"gold_max": 8,
+		"equipment_tier": ItemData.TIER_WOOD, # 숲 오크 — 나무 등급 장비를 확률로 드롭
 		"portrait_region": Rect2(6, 0, 19, 15),
 	},
 	"SKELETON": {
@@ -38,6 +39,7 @@ const MONSTERS: Dictionary = {
 		"damage_max": 7,
 		"gold_min": 8,
 		"gold_max": 12,
+		"equipment_tier": ItemData.TIER_BONE, # 동굴 스켈레톤 — 뼈 등급
 		"portrait_region": Rect2(5, 1, 17, 14),
 	},
 	# 미라(2부 사막): 오크/스켈레톤보다 강함. 스프라이트는 유료 Desert 팩(Idle/Run/Death 모두 64x64)이라
@@ -49,6 +51,7 @@ const MONSTERS: Dictionary = {
 		"damage_max": 8,
 		"gold_min": 12,
 		"gold_max": 16,
+		"equipment_tier": ItemData.TIER_GOLD, # 사막 미라 — 금 등급
 		"portrait_region": Rect2(24, 33, 16, 16), # 64x64 Idle 프레임에서 미라 머리(하단 정렬 캐릭터의 상부)만 크롭
 		"appear_text": "미라가 흐릿한 신음을 흘리며 다가온다 — 마치 무언가에 저항하고 있는 것처럼.",
 	},
@@ -61,6 +64,7 @@ const MONSTERS: Dictionary = {
 		"damage_max": 14,
 		"gold_min": 30,
 		"gold_max": 40,
+		"equipment_tier": ItemData.TIER_GOLD, # 유적 보스 — 미라와 같은 금 등급
 		"portrait_region": Rect2(24, 33, 16, 16),
 		"appear_text": "이 모든 폭주의 근원처럼 보이는, 뒤틀린 존재가 앞을 막는다.",
 	},

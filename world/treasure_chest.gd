@@ -21,6 +21,18 @@ const POPUP_COLOR := Color(0.95, 0.85, 0.3, 1)
 @export var reward_item: String = ""
 @export var popup_text: String = ""
 
+# drop_equipment를 켜면 "장비 확률 드롭" 모드가 된다 (quest_id/reward_item이 지정된 상자에는 적용되지 않음).
+# EQUIPMENT_DROP_CHANCE 확률로 max_equipment_tier 이하의 장비 하나를 주고, 빗나가면(꽝) 기존처럼 골드를 준다.
+# max_equipment_tier는 그 상자가 놓인 지역의 등급 상한이다 — 마을 상자에서 금장비가 나오지 않도록,
+# 그 지역에 사는 몬스터의 등급과 같은 기준으로 맞춘다 (마을·숲=나무, 동굴=뼈, 사막·유적=금)
+@export var drop_equipment: bool = false
+@export_enum("wood", "bone", "gold") var max_equipment_tier: String = "wood"
+
+# 상자는 한 번만 열 수 있어(opened_chest_<id> 플래그) 몬스터처럼 반복해서 캘 수 없다.
+# 그래서 몬스터 드롭(15%)보다 훨씬 후하게 잡아, 상자를 여는 순간이 확실한 보상 기회가 되게 한다.
+# 대신 절반은 꽝이라 매번 장비가 나오진 않고, 꽝이어도 원래의 골드 보상은 그대로 받는다
+const EQUIPMENT_DROP_CHANCE := 0.5
+
 const MARKER_COLOR := Color(0.95, 0.85, 0.3, 0.65) # 보물 느낌의 은은한 금색 (골드 팝업과 톤 맞춤)
 
 @onready var _interact_prompt: Label = $InteractPrompt
@@ -112,9 +124,24 @@ func _grant_reward() -> String:
 			GameState.add_item(reward_item, 1)
 		return "무언가를 발견했다!"
 
+	# 장비 상자: 확률에 당첨되면 지역 상한 이하의 장비 하나를 준다.
+	# 빗나가면 아래 골드 지급으로 그대로 흘러가므로 "꽝이어도 빈손은 아닌" 구조가 된다
+	if drop_equipment:
+		var dropped := _roll_equipment()
+		if dropped != "":
+			GameState.add_item(dropped, 1)
+			return "%s 발견!" % ItemData.ITEMS[dropped]["name"]
+
 	var amount := randi_range(gold_min, gold_max)
 	GameState.add_gold(amount)
 	return "골드 %d 발견!" % amount # "N을/를 발견했다"는 숫자에 따라 조사가 갈려(10,13,16,17,18,20은 을 / 12,14,15,19는 를) 조사 없는 문구로 통일
+
+
+# 장비 드롭을 굴린다. 꽝이거나 뽑을 후보가 없으면 빈 문자열
+func _roll_equipment() -> String:
+	if randf() >= EQUIPMENT_DROP_CHANCE:
+		return ""
+	return ItemData.pick_random_equipment_up_to(max_equipment_tier)
 
 
 func _show_popup(text: String) -> void:

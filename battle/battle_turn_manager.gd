@@ -155,19 +155,25 @@ func _damage_monster(card: Card) -> int:
 	return final_damage
 
 
-# 카드 색깔에 대응하는 장비의 피해 보너스 (물리 카드 -> 검, 마법 카드 -> 지팡이, 공용 카드 -> 없음).
-# 지금 들고 있는 무기(WeaponState.equipped)가 아니라 "카드 색깔"을 기준으로 삼는다 —
-# 물리 카드는 검의 힘으로, 마법 카드는 지팡이의 힘으로 나가는 게 직관적이고, 손에 든 무기와
-# 카드 색이 다를 때 보너스가 조용히 사라지는 혼란을 피할 수 있기 때문이다.
-# (보너스를 더한 뒤에 저항 배율이 걸리므로, 저항이 걸린 턴에는 보너스분도 함께 반감된다)
+# 장비의 피해 보너스. "카드 색깔이 지금 장착한 무기와 일치할 때"만 그 무기의 등급 보너스가 붙는다
+# (검을 든 채 마법 카드를 쓰면 지팡이 보너스는 붙지 않음). 공용 카드는 무기와 무관해 항상 0.
+#
+# 판정 조건을 WeaponState.weapon_type_for_card()로 두는 이유: 과열 게이지가 차오르는 조건
+# (WeaponState.register_card_use)이 바로 이 "카드 색 == 장착 무기"인데, 보너스도 같은 함수로
+# 같은 조건을 쓰면 두 규칙이 서로 어긋날 수 없다. 결과적으로 장착 무기와 다른 색 카드를 쓰면
+# 게이지도 안 오르고 보너스도 못 받아, 무기를 제대로 바꿔 쓰라는 압박이 한 방향으로 일관되게 걸린다.
+#
+# 연산 순서는 그대로다 — 여기서 나온 보너스를 card.value에 더한 뒤 저항 배율이 걸리므로,
+# 저항이 걸린 턴에는 보너스분도 함께 반감된다
 func _equipment_damage_bonus(card: Card) -> int:
-	match card.color:
-		Card.CardColor.PHYSICAL:
-			return GameState.get_sword_damage_bonus()
-		Card.CardColor.MAGIC:
-			return GameState.get_staff_damage_bonus()
-		_:
-			return 0
+	if not card.uses_weapon():
+		return 0
+	if WeaponState.weapon_type_for_card(card) != weapon.equipped:
+		return 0
+
+	if weapon.equipped == WeaponState.WeaponType.SWORD:
+		return GameState.get_sword_damage_bonus()
+	return GameState.get_staff_damage_bonus()
 
 
 # ── 턴 종료 / 적 턴 ────────────────────────────────────────────────────────

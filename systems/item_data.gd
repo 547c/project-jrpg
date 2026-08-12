@@ -33,6 +33,19 @@ const TIER_STATS: Dictionary = {
 	TIER_GOLD: {"sword_damage": 4, "staff_damage": 4, "max_hp": 20},
 }
 
+# 낮은 등급부터 나열한 순서 (지역/몬스터별 "최대 등급" 비교에 사용)
+const TIER_ORDER: Array[String] = [TIER_WOOD, TIER_BONE, TIER_GOLD]
+
+# "최대 등급 이하에서 하나 뽑기"를 할 때 쓰는 등급별 가중치.
+# 한 단계 올라갈 때마다 확률이 대략 절반으로 줄어, 상한이 높은 지역일수록 상위 등급이
+# 나오긴 하지만 여전히 하위 등급이 더 흔하게 나온다
+# (예: 상한이 금이면 나무 60% / 뼈 30% / 금 10%)
+const TIER_DROP_WEIGHT: Dictionary = {
+	TIER_WOOD: 6,
+	TIER_BONE: 3,
+	TIER_GOLD: 1,
+}
+
 const ITEMS: Dictionary = {
 	"mana_potion": {
 		"name": "마나포션",
@@ -179,6 +192,72 @@ static func get_tier_stats(tier: String) -> Dictionary:
 # item_id 하나로 곧장 스탯을 조회하는 단축 함수 (get_tier + get_tier_stats)
 static func get_stats_for(item_id: String) -> Dictionary:
 	return get_tier_stats(get_tier(item_id))
+
+
+# ── 장비 드롭 추첨 ─────────────────────────────────────────────────────────
+# 무작위 선택을 데이터 모듈에 두는 것은 BattleData.pick_variant()와 같은 방식이다.
+# "꽝(장비 없음)" 판정은 호출부(상자/전투)가 각자의 확률로 먼저 하고, 여기서는
+# "뽑기로 결정됐을 때 무엇이 나오는가"만 담당한다
+
+# 등급의 서열(0=나무, 1=뼈, 2=금). 등급이 아니면 -1
+static func get_tier_rank(tier: String) -> int:
+	return TIER_ORDER.find(tier)
+
+
+# 정확히 그 등급인 장비 id 목록 (검/지팡이/방패 3종)
+static func get_equipment_ids(tier: String) -> Array[String]:
+	var result: Array[String] = []
+	for item_id in ITEMS:
+		var item: Dictionary = ITEMS[item_id]
+		if item.has("slot") and item.get("tier", TIER_NONE) == tier:
+			result.append(item_id)
+	return result
+
+
+# 해당 등급 이하의 모든 장비 id 목록 (지역 상한 안에서 후보를 모을 때 사용)
+static func get_equipment_ids_up_to(max_tier: String) -> Array[String]:
+	var max_rank := get_tier_rank(max_tier)
+	var result: Array[String] = []
+	if max_rank < 0:
+		return result
+	for tier in TIER_ORDER:
+		if get_tier_rank(tier) <= max_rank:
+			result.append_array(get_equipment_ids(tier))
+	return result
+
+
+# 정확히 그 등급의 장비 중 하나를 균등 확률로 뽑는다 (검/지팡이/방패가 같은 확률).
+# 해당 등급 장비가 없으면 빈 문자열
+static func pick_random_equipment(tier: String) -> String:
+	var ids := get_equipment_ids(tier)
+	if ids.is_empty():
+		return ""
+	return ids[randi() % ids.size()]
+
+
+# max_tier 이하의 장비 중 하나를 뽑는다. 먼저 TIER_DROP_WEIGHT로 등급을 고르고,
+# 그 등급 안에서 종류(검/지팡이/방패)를 균등하게 고른다. 상한이 잘못됐으면 빈 문자열
+static func pick_random_equipment_up_to(max_tier: String) -> String:
+	var max_rank := get_tier_rank(max_tier)
+	if max_rank < 0:
+		return ""
+
+	var total_weight := 0
+	for tier in TIER_ORDER:
+		if get_tier_rank(tier) <= max_rank:
+			total_weight += int(TIER_DROP_WEIGHT.get(tier, 0))
+	if total_weight <= 0:
+		return ""
+
+	var roll := randi() % total_weight
+	var accumulated := 0
+	for tier in TIER_ORDER:
+		if get_tier_rank(tier) > max_rank:
+			continue
+		accumulated += int(TIER_DROP_WEIGHT.get(tier, 0))
+		if roll < accumulated:
+			return pick_random_equipment(tier)
+	return ""
 
 
 # ITEMS에서 item_id의 icon_region으로 오려낸 AtlasTexture를 만들어 반환 (정의가 없으면 null)

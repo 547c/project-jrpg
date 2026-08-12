@@ -51,6 +51,12 @@ const FLEE_HP_THRESHOLD := 0.5 # 최대 HP의 이 비율 이상일 때만 도망
 const FLEE_GOLD_PENALTY_MIN := 1 # 도망 성공 시 소모할 골드 범위 (무한 도망-재시작 리롤 방지)
 const FLEE_GOLD_PENALTY_MAX := 10
 
+# 몬스터 처치 시 장비가 떨어질 확률 (나머지 85%는 꽝 — 골드만 받는다).
+# 몬스터는 일정 시간 뒤 리젠되어 반복해서 잡을 수 있으므로, 상자(50%)보다 훨씬 낮게 잡았다.
+# 한 등급에 장비가 3종뿐이고 장비는 소모되지 않아 한 번씩만 모으면 되므로, 15%면 대략 일곱 번에
+# 한 번 떨어져 한 등급을 다 모으는 데 스무 번 남짓 — 파밍이 의미는 있되 끝없이 늘어지지 않는 수준
+const EQUIPMENT_DROP_CHANCE := 0.15
+
 const HAND_BUTTON_COUNT := 5
 
 # 턴 진행 상태: ACTION=플레이어 입력 대기, BUSY=연출 재생 중(입력 무시), OVER=전투 종료
@@ -478,11 +484,33 @@ func _finish_victory() -> void:
 	GameState.add_gold(gold_gained)
 	_player_gold_label.text = str(GameState.gold)
 
+	var dropped_equipment := _roll_equipment_drop()
+
 	GameState.heal_player_partial(VICTORY_HEAL_FRACTION)
 	_animate_hp_bar(_player_hp_bar, GameState.get_flag("player_hp"))
 	_update_player_hp_text()
 	_update_mana_bar()
+
 	_message.text = "%s 처치!\n골드 %d 획득!\n체력을 약간 회복했다." % [_monster_data["name"], gold_gained]
+	if dropped_equipment != "":
+		_message.text += "\n%s을(를) 얻었다!" % ItemData.ITEMS[dropped_equipment]["name"]
+
+
+# 이 몬스터의 등급(BattleData.MONSTERS의 equipment_tier)에 해당하는 장비를 확률로 하나 떨군다.
+# 등급이 없는 몬스터거나 꽝이면 빈 문자열을 반환하고 아무것도 주지 않는다 (골드만 받는다)
+func _roll_equipment_drop() -> String:
+	var tier: String = _monster_data.get("equipment_tier", "")
+	if tier == "":
+		return ""
+	if randf() >= EQUIPMENT_DROP_CHANCE:
+		return ""
+
+	var item_id := ItemData.pick_random_equipment(tier)
+	if item_id == "":
+		return ""
+
+	GameState.add_item(item_id, 1)
+	return item_id
 
 	_main_column.visible = false
 	_close_button.visible = true

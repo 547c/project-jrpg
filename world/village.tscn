@@ -15749,10 +15749,14 @@ position = Vector2(818, -102)
 [node name="TreasureChest1" parent="." unique_id=986538050 instance=ExtResource("26_chest")]
 position = Vector2(411, -129)
 chest_id = "village_chest_1"
+drop_equipment = true
+max_equipment_tier = "wood"
 
 [node name="TreasureChest2" parent="." unique_id=92492426 instance=ExtResource("26_chest")]
 position = Vector2(229, -64)
 chest_id = "village_chest_2"
+drop_equipment = true
+max_equipment_tier = "wood"
 
 [node name="VillageSpawnFromTavern" type="Marker2D" parent="." unique_id=319313483]
 position = Vector2(-300, -550)
