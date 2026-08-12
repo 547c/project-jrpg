@@ -495,6 +495,9 @@ func _finish_victory() -> void:
 	if dropped_equipment != "":
 		_message.text += "\n%s을(를) 얻었다!" % ItemData.ITEMS[dropped_equipment]["name"]
 
+	_main_column.visible = false
+	_close_button.visible = true
+
 
 # 이 몬스터의 등급(BattleData.MONSTERS의 equipment_tier)에 해당하는 장비를 확률로 하나 떨군다.
 # 등급이 없는 몬스터거나 꽝이면 빈 문자열을 반환하고 아무것도 주지 않는다 (골드만 받는다)
@@ -511,9 +514,6 @@ func _roll_equipment_drop() -> String:
 
 	GameState.add_item(item_id, 1)
 	return item_id
-
-	_main_column.visible = false
-	_close_button.visible = true
 
 
 # 패배 처리: 플레이어 노드를 다시 보이게 하고 게임오버 화면으로 넘긴다 (회복/복귀는 게임오버 화면이 담당)

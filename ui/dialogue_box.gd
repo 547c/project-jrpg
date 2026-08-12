@@ -58,6 +58,12 @@ const PORTRAITS: Dictionary = {
 		"region": Rect2(21, 16, 22, 22),
 		"name": "나딤",
 	},
+	"kasim": {
+		# 전용 NPC 시트가 없어 몬스터 팩의 Skeleton - Rogue(후드) 시트를 얼굴 카드로도 그대로 재사용
+		"sheet": "res://assets/graphics/Pixel Crawler - Free Pack/Entities/Mobs/Skeleton Crew/Skeleton - Rogue/Idle/Idle-Sheet.png",
+		"region": Rect2(7, 2, 17, 16),
+		"name": "카심",
+	},
 }
 
 @onready var _decisive_frame: Control = $DecisiveFrame
@@ -387,12 +393,17 @@ func _on_button_pressed(option: Dictionary) -> void:
 
 
 # 옵션 버튼 클릭 시, flag_to_set / start_quest / affinity_change 같은 부수효과를 적용한 뒤 next_id 노드로 이동.
-# - open_shop: 다음 노드로 넘어가지 않고 ShopMenu를 그 위에 띄움 (대화는 현재 노드에 그대로 멈춰있음)
+# - open_shop: 다음 노드로 넘어가지 않고 ShopMenu(포션/선물)를 그 위에 띄움 (대화는 현재 노드에 그대로 멈춰있음)
+# - open_weapon_shop: 위와 동일하되 WeaponShopMenu(장비 9종, 페이지네이션)를 띄움
 # - min_quest_level: quest_level이 이 값 미만이면 start_quest 등 나머지 효과를 전부 건너뛰고
 #   next_id_if_blocked로 대신 이동 (옵션 자체는 항상 보이되, 선택 시 조건만 검사하는 게이팅용)
 func _on_option_pressed(option: Dictionary) -> void:
 	if option.get("open_shop", false):
 		ShopMenu.open()
+		return
+
+	if option.get("open_weapon_shop", false):
+		WeaponShopMenu.open()
 		return
 
 	var give_gift: Dictionary = option.get("give_gift", {})

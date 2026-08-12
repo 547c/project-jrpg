@@ -5,6 +5,7 @@
 [ext_resource type="PackedScene" path="res://ui/dialogue_box.tscn" id="3_dlgbox"]
 [ext_resource type="PackedScene" path="res://npc/npc.tscn" id="4_npc"]
 [ext_resource type="Script" uid="uid://ce30xc5a34hwh" path="res://npc/mia_npc.gd" id="5_mia"]
+[ext_resource type="Script" path="res://npc/kasim_npc.gd" id="6_kasim"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_door"]
 size = Vector2(40, 100)
@@ -33,6 +34,10 @@ shape = SubResource("RectangleShape2D_door")
 [node name="Mia" parent="." instance=ExtResource("4_npc")]
 position = Vector2(400, 280)
 script = ExtResource("5_mia")
+
+[node name="Kasim" parent="." instance=ExtResource("4_npc")]
+position = Vector2(180, 220)
+script = ExtResource("6_kasim")
 
 [node name="UI" type="CanvasLayer" parent="."]
 

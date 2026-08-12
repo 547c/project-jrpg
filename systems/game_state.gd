@@ -35,6 +35,7 @@ const DEFAULT_AFFINITY: Dictionary = {
 	"mia": 30,
 	"kamil": 20, # 임무로 만난 거리감 있는 관계 — 다른 NPC보다 낮게 시작
 	"nadim": 30, # 사막 정착지의 지도자/생존자 (2부 초반)
+	"kasim": 30, # 정체를 숨긴 무기 상인 (술집 상주)
 }
 const AFFINITY_DEFAULT := 30
 const AFFINITY_MIN := 0
@@ -68,6 +69,7 @@ const DEFAULT_FLAGS: Dictionary = {
 	"met_mia_decisive": false,             # 미아의 결정적 노드(mia_approach_press)를 통과했는가
 	"met_kamil": false,                    # 카밀(감시자 동료)을 만났는가
 	"met_nadim": false,                    # 나딤(사막 정착지 지도자)을 만났는가
+	"met_kasim": false,                    # 카심(무기 상인)을 만났는가
 	"part1_reported": false,               # 1부 결과를 엘라라에게 보고 완료했는가 (elara_ending_trigger 도달 시 true)
 	"boat_available": false,               # 부두의 배를 이용할 수 있는가 (카밀의 출항 확인 후 true)
 	"ruins_available": false,              # 사막 유적 입구를 이용할 수 있는가 (나딤이 위치를 알려준 뒤 true)

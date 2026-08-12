@@ -1478,6 +1478,99 @@ const NADIM_DIALOGUE: Array = [
 	},
 ]
 
+# 카심(정체를 숨긴 무기 상인, 술집 상주) 대화 트리
+const KASIM_DIALOGUE: Array = [
+	{
+		"id": "kasim_greeting",
+		"speaker": "카심",
+		"text": "...손님인가. 후드 밑으로 눈을 마주치긴 좀 그렇지만, 뭐, 장사는 장사니까.",
+		"is_decisive": false,
+		"options": [
+			{"label": "[뭘 파세요?]", "next_id": "kasim_wares"},
+			{"label": "[누구세요?]", "next_id": "kasim_intro_1"},
+			{
+				"label": "[장사는 잘 되세요?]",
+				"next_id": "kasim_smalltalk_1",
+				"required_affinity": {"npc_id": "kasim", "min": 50},
+			},
+			{
+				"label": "[선물을 준다]",
+				"give_gift": {"npc_id": "kasim", "amount": 9, "next_id_success": "kasim_gift_thanks", "next_id_fail": "kasim_gift_none"},
+			},
+		],
+	},
+	{
+		"id": "kasim_gift_thanks",
+		"speaker": "카심",
+		"text": "...나한테요? 후드 속에서도 표정이 티 나나 보군. 고맙게 받지.",
+		"is_decisive": false,
+		"options": [],
+	},
+	{
+		"id": "kasim_gift_none",
+		"speaker": "카심",
+		"narration": "(막상 건넬 것이 없다)",
+		"text": "줄 게 없네요.",
+		"is_decisive": false,
+		"options": [],
+	},
+	{
+		"id": "kasim_wares",
+		"speaker": "카심",
+		"text": "이래 봬도 꽤 쓸만한 물건들을 갖췄지. 나무, 뼈, 금 등급까지 있네.",
+		"affinity_change_on_show": {"npc_id": "kasim", "amount": 2, "once": true},
+		"is_decisive": false,
+		"options": [
+			{"label": "[물건을 산다]", "open_weapon_shop": true},
+			{"label": "[됐어요]", "next_id": ""},
+		],
+	},
+	{
+		"id": "kasim_intro_1",
+		"speaker": "카심",
+		"text": "카심이라고 하네. 이곳저곳 떠돌면서 장사를 하고 있지, 뭐 대단한 사연은 아니야.",
+		"is_decisive": false,
+		"options": [
+			{"label": "[당신은 몬스터가 아닌가요?]", "next_id": "kasim_intro_2"},
+			{"label": "[알겠어요]", "next_id": ""},
+		],
+	},
+	{
+		"id": "kasim_intro_2",
+		"speaker": "카심",
+		"text": "...하하. 눈썰미가 좋군. 뭐, 후드를 쓰고 다니는 데는 다 이유가 있는 법이지.",
+		"affinity_change_on_show": {"npc_id": "kasim", "amount": 2, "once": true},
+		"is_decisive": false,
+		"next_id": "kasim_intro_3",
+	},
+	{
+		"id": "kasim_intro_3",
+		"speaker": "카심",
+		"text": "그 이상은... 묻지 말아주게. 언젠가 때가 되면, 말할지도 모르지.",
+		"is_decisive": false,
+		"options": [],
+	},
+	{
+		"id": "kasim_smalltalk_1",
+		"speaker": "카심",
+		"text": "그럭저럭. 이런 외진 마을까지 찾아오는 손님이 있을 줄은 몰랐지만.",
+		"affinity_change_on_show": {"npc_id": "kasim", "amount": 1, "once": true},
+		"is_decisive": false,
+		"options": [
+			{"label": "[작은 마을이라 심심하지 않아요?]", "next_id": "kasim_smalltalk_2"},
+			{"label": "[그렇군요]", "next_id": ""},
+		],
+	},
+	{
+		"id": "kasim_smalltalk_2",
+		"speaker": "카심",
+		"text": "심심함이야... 오래 살다 보면 익숙해지지. 아, 이건 그냥 해본 말이야.",
+		"affinity_change_on_show": {"npc_id": "kasim", "amount": 1, "once": true},
+		"is_decisive": false,
+		"options": [],
+	},
+]
+
 # 동굴 수호자 조우 대화 트리
 const GUARDIAN_DIALOGUE: Array = [
 	{
