@@ -53,8 +53,12 @@ func _init(monster_type_: String, cards: Array[Card]) -> void:
 	resistance = EnemyResistance.new()
 
 
-# 전투를 시작하고 첫 턴을 연다 (_init과 분리해 둬서, 바깥이 시그널을 먼저 연결한 뒤 시작할 수 있다)
+# 전투를 시작하고 첫 턴을 연다 (_init과 분리해 둬서, 바깥이 시그널을 먼저 연결한 뒤 시작할 수 있다).
+# 시작 직전에 장비 보너스를 한 번 재계산해, 전투에 들어갈 때의 방패 최대 체력 보너스가
+# 확실히 player_max_hp에 반영된 상태로 싸우게 한다 (장착 시점에도 이미 반영되지만, 전투 진입을
+# 기준점으로 한 번 더 맞춰두면 어떤 경로로 들어와도 어긋나지 않는다)
 func start() -> void:
+	GameState.refresh_equipment_bonuses()
 	_start_turn()
 
 
@@ -141,15 +145,29 @@ func _apply_card_effect(card: Card) -> int:
 	return 0
 
 
-# 데미지 카드 처리: 카드의 기본 위력(value)을 적 저항 판정에 통과시킨 최종값을 몬스터 HP에서 깎는다.
-# 몬스터 HP는 battle_scene.gd와 동일하게 0 밑으로 내려가지 않게 max(0, ...)로 막는다.
-# (장비 등급에 따른 무기 데미지 보너스는 장비 시스템이 아직 없어 여기 넣지 않았다 —
-#  생기면 raw_damage를 만드는 이 지점에 곱해주면 되고, calculate_damage는 그대로 재사용된다)
+# 데미지 카드 처리: 카드의 기본 위력(value)에 장비 보너스를 더한 뒤, 그 값을 적 저항 판정에
+# 통과시킨 최종값을 몬스터 HP에서 깎는다. 몬스터 HP는 battle_scene.gd와 동일하게
+# 0 밑으로 내려가지 않게 max(0, ...)로 막는다
 func _damage_monster(card: Card) -> int:
-	var raw_damage: int = card.value
+	var raw_damage: int = card.value + _equipment_damage_bonus(card)
 	var final_damage: int = resistance.calculate_damage(card, raw_damage)
 	monster_hp = max(0, monster_hp - final_damage)
 	return final_damage
+
+
+# 카드 색깔에 대응하는 장비의 피해 보너스 (물리 카드 -> 검, 마법 카드 -> 지팡이, 공용 카드 -> 없음).
+# 지금 들고 있는 무기(WeaponState.equipped)가 아니라 "카드 색깔"을 기준으로 삼는다 —
+# 물리 카드는 검의 힘으로, 마법 카드는 지팡이의 힘으로 나가는 게 직관적이고, 손에 든 무기와
+# 카드 색이 다를 때 보너스가 조용히 사라지는 혼란을 피할 수 있기 때문이다.
+# (보너스를 더한 뒤에 저항 배율이 걸리므로, 저항이 걸린 턴에는 보너스분도 함께 반감된다)
+func _equipment_damage_bonus(card: Card) -> int:
+	match card.color:
+		Card.CardColor.PHYSICAL:
+			return GameState.get_sword_damage_bonus()
+		Card.CardColor.MAGIC:
+			return GameState.get_staff_damage_bonus()
+		_:
+			return 0
 
 
 # ── 턴 종료 / 적 턴 ────────────────────────────────────────────────────────

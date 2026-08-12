@@ -77,7 +77,13 @@ const DEFAULT_FLAGS: Dictionary = {
 	"seen_opening": false,                 # 오프닝 인트로를 이미 봤는가 (재부팅 시 반복 방지)
 	"guardian_event_done": false,          # 동굴 수호자 조우 이벤트를 이미 겪었는가
 	"player_hp": 16,                       # 플레이어 현재 체력
-	"player_max_hp": 16,                   # 플레이어 최대 체력
+	# 최대 체력은 두 값으로 나뉜다:
+	# - player_base_max_hp: 레벨업으로만 오르는 "기본" 최대 체력 (_apply_level_up이 올림)
+	# - player_max_hp: 실제로 쓰이는 최대 체력 = 기본 + 방패 보너스 (파생값이라 직접 쓰지 말 것)
+	# 방패 보너스를 player_max_hp에 직접 더하면 장착/해제와 레벨업이 얽혀 값이 어긋나므로,
+	# 항상 refresh_equipment_bonuses()가 기본값으로부터 다시 계산해 넣는다
+	"player_base_max_hp": 16,              # 레벨업 누적분만 담은 기본 최대 체력
+	"player_max_hp": 16,                   # 플레이어 최대 체력 (기본 + 방패 보너스, 자동 계산됨)
 	"player_mana": 18,                     # 플레이어 현재 마나 (스킬 사용 자원)
 	"player_max_mana": 18,                 # 플레이어 최대 마나 (현재는 회복 수단 없음 — 추후 상점 예정)
 	"orcs_defeated": 0,                    # 숲 오크(Orc Crew) 처치 카운트
@@ -87,6 +93,11 @@ const DEFAULT_FLAGS: Dictionary = {
 	"mummies_defeated": 0,                 # 사막 미라 처치 카운트
 	"desert_mummies_complete": false,      # 미라 3마리 처치 시 true (나딤 상태 대사 분기용)
 	"ruins_key_complete": false,           # 유적 열쇠 획득 시 true (나딤 상태 대사 분기용)
+	# 슬롯별로 현재 장착 중인 장비의 item_id ("" = 미장착). 인벤토리 보유 개수와는 별개로,
+	# "무엇을 들고 있는가"만 기록한다 (장착해도 인벤토리에서 사라지지 않음)
+	"equipped_sword": "",                  # 장착 중인 검
+	"equipped_staff": "",                  # 장착 중인 지팡이
+	"equipped_shield": "",                 # 장착 중인 방패
 	"truth_discovered": false,             # 유적 내부 기록(벽화)에서 진실을 발견했는가 (ruins_lore_2 도달 시 true)
 	"ruins_boss_defeated": false,          # 유적 보스(폭주한 근원체)를 처치했는가 (2부 결정적 선택의 조건)
 	"truth_revealed": false,               # 2부 결정적 플래그: 진실을 세상에 알렸는가 (false면 비밀로 묻음)
@@ -201,6 +212,14 @@ func restore_flags(data: Dictionary) -> void:
 				value = bool(value)
 		set_flag(String(key), value)
 
+	# 구버전 세이브 호환: 장비 시스템 이전에 저장된 파일에는 player_base_max_hp가 없다.
+	# 그때의 player_max_hp는 순수 레벨업 누적치(= 기본값)였으므로 그대로 기본값으로 삼는다
+	if not data.has("player_base_max_hp"):
+		set_flag("player_base_max_hp", get_flag("player_max_hp"))
+
+	# 불러온 장비 상태에 맞춰 최대 체력을 다시 계산 (저장된 값과 어긋나 있어도 여기서 바로잡힌다)
+	refresh_equipment_bonuses()
+
 
 # player_hp를 amount만큼 깎되 0 밑으로 내려가지 않게 함
 func damage_player(amount: int) -> void:
@@ -296,6 +315,76 @@ func get_item_count(item_id: String) -> int:
 # 해당 아이템을 하나라도 보유 중인지 여부 (유적 열쇠 등 보유 판정용)
 func has_item(item_id: String) -> bool:
 	return get_item_count(item_id) > 0
+
+
+# ── 장비 ────────────────────────────────────────────────────────────────────
+# 장착은 "무엇을 들고 있는가"만 기록하고 인벤토리 개수는 건드리지 않는다 (소유와 장착은 별개).
+# 슬롯별 장착 상태는 flags에 들어있어 세이브/로드가 자동으로 따라온다
+
+# 슬롯 이름에 대응하는 flag 이름 ("sword" -> "equipped_sword"). 모르는 슬롯이면 빈 문자열
+func _equipped_flag(slot: String) -> String:
+	if not ItemData.EQUIPMENT_SLOTS.has(slot):
+		return ""
+	return "equipped_%s" % slot
+
+
+# 해당 슬롯에 장착 중인 item_id ("" = 미장착)
+func get_equipped(slot: String) -> String:
+	var flag := _equipped_flag(slot)
+	if flag == "":
+		return ""
+	return get_flag(flag)
+
+
+# 장비를 장착한다. 같은 슬롯에 이미 다른 장비가 있으면 자동으로 교체된다.
+# 장비가 아닌 아이템이면 아무 일도 하지 않고 false를 반환
+func equip_item(item_id: String) -> bool:
+	var slot := ItemData.get_slot(item_id)
+	if slot == "":
+		return false
+
+	set_flag(_equipped_flag(slot), item_id)
+	if slot == ItemData.SLOT_SHIELD:
+		refresh_equipment_bonuses() # 방패는 최대 체력을 바꾸므로 즉시 재계산
+	return true
+
+
+# 해당 슬롯의 장비를 해제한다. 모르는 슬롯이면 false
+func unequip_slot(slot: String) -> bool:
+	var flag := _equipped_flag(slot)
+	if flag == "":
+		return false
+
+	set_flag(flag, "")
+	if slot == ItemData.SLOT_SHIELD:
+		refresh_equipment_bonuses()
+	return true
+
+
+# 장착 중인 검의 물리 피해 보너스 (미장착이면 0)
+func get_sword_damage_bonus() -> int:
+	return ItemData.get_stats_for(get_equipped(ItemData.SLOT_SWORD))["sword_damage"]
+
+
+# 장착 중인 지팡이의 마법 피해 보너스 (미장착이면 0)
+func get_staff_damage_bonus() -> int:
+	return ItemData.get_stats_for(get_equipped(ItemData.SLOT_STAFF))["staff_damage"]
+
+
+# 장착 중인 방패의 최대 체력 보너스 (미장착이면 0)
+func get_shield_max_hp_bonus() -> int:
+	return ItemData.get_stats_for(get_equipped(ItemData.SLOT_SHIELD))["max_hp"]
+
+
+# player_max_hp를 "기본 최대 체력 + 방패 보너스"로 다시 계산한다.
+# 장비를 바꿀 때마다, 레벨업할 때마다, 세이브를 불러온 뒤, 전투를 시작할 때 호출된다 —
+# 언제 불러도 같은 결과가 나오는 순수 재계산이라 값이 어긋날 여지가 없다.
+# 방패를 벗어 최대치가 줄면 현재 체력도 함께 깎아 최대치를 넘지 않게 맞춘다
+func refresh_equipment_bonuses() -> void:
+	var new_max: int = get_flag("player_base_max_hp") + get_shield_max_hp_bonus()
+	set_flag("player_max_hp", new_max)
+	if get_flag("player_hp") > new_max:
+		set_flag("player_hp", new_max)
 
 
 # 저장 데이터로부터 인벤토리를 그대로 복원 (JSON 숫자는 float로 오므로 int로 보정). 복원된 각 항목에 대해
@@ -534,7 +623,10 @@ const LEVEL_UP_MANA_GAIN := 10
 # quest_level이 오를 때마다 호출됨. 최대 체력/마나를 늘리고 같은 폭만큼 현재치도 회복시킨 뒤(최대치 초과 방지)
 # quest_completed_with_level_up을 방출해 LevelUpPopup이 "퀘스트 완료 + 레벨업"을 한 번에 안내하게 함
 func _apply_level_up(quest_title: String) -> void:
-	set_flag("player_max_hp", get_flag("player_max_hp") + LEVEL_UP_HP_GAIN)
+	# 레벨업은 "기본" 최대 체력만 올리고, 실제 player_max_hp는 방패 보너스를 얹어 다시 계산한다.
+	# (player_max_hp를 직접 올리면 방패를 낀 채 레벨업할 때 보너스가 기본값에 눌러붙어 중복 적용된다)
+	set_flag("player_base_max_hp", get_flag("player_base_max_hp") + LEVEL_UP_HP_GAIN)
+	refresh_equipment_bonuses()
 	set_flag("player_hp", min(get_flag("player_max_hp"), get_flag("player_hp") + LEVEL_UP_HP_GAIN))
 	set_flag("player_max_mana", get_flag("player_max_mana") + LEVEL_UP_MANA_GAIN)
 	set_flag("player_mana", min(get_flag("player_max_mana"), get_flag("player_mana") + LEVEL_UP_MANA_GAIN))
