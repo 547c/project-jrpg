@@ -19,6 +19,7 @@ const SLOT_POSITIONS: Array[Vector2] = [
 
 @onready var _slots_container: Control = $Panel/Slots
 @onready var _close_button: Button = $Panel/CloseButton
+@onready var _equip_button: Button = $Panel/EquipButton
 @onready var _tooltip: PanelContainer = $Tooltip
 @onready var _tooltip_label: Label = $Tooltip/Margin/TooltipLabel
 
@@ -26,12 +27,19 @@ var _slot_icons: Array[TextureRect] = []
 var _slot_counts: Array[Label] = []
 var _slot_item_ids: Array[String] = []
 
+# 장비 슬롯을 클릭해 선택된 아이템 (장착 버튼이 조작할 대상). 소비 아이템 클릭이나 빈 칸 클릭,
+# 메뉴를 닫을 때는 "" 로 비워 버튼을 숨긴다. 인덱스가 아니라 item_id로 들고 있는 이유는,
+# 인벤토리가 다시 그려져 슬롯 순서가 바뀌어도(포션 소비 등) 같은 아이템을 계속 가리키게 하기 위함
+var _selected_item_id: String = ""
+
 
 func _ready() -> void:
 	add_to_group("inventory_menu")
 	visible = false
 	_tooltip.visible = false
+	_equip_button.visible = false
 	_close_button.pressed.connect(close)
+	_equip_button.pressed.connect(_on_equip_button_pressed)
 	GameState.inventory_changed.connect(_on_inventory_changed)
 	_build_slots()
 
@@ -94,12 +102,14 @@ func _build_slots() -> void:
 func open() -> void:
 	_rebuild()
 	_tooltip.visible = false
+	_clear_equip_selection()
 	visible = true
 
 
 func close() -> void:
 	visible = false
 	_tooltip.visible = false
+	_clear_equip_selection()
 
 
 func is_open() -> bool:
@@ -130,12 +140,22 @@ func _rebuild() -> void:
 			_slot_counts[i].visible = false
 
 
-# 슬롯 클릭 시 아이템을 사용: mana_potion이면 최대 마나를, hp_potion이면 최대 체력을 해당 fraction만큼
-# 회복(clamp)한 뒤 1개 소비. 빈 슬롯 클릭은 무시
+# 슬롯 클릭 시: 장비(consumable: false + slot 있음)면 장착 버튼을 띄우고, 아니면 기존대로
+# 즉시 사용한다(mana_potion이면 최대 마나를, hp_potion이면 최대 체력을 해당 fraction만큼
+# 회복(clamp)한 뒤 1개 소비). 빈 슬롯 클릭은 무시. 장비가 아닌 슬롯을 클릭하면 열려있던
+# 장착 버튼은 닫는다(선택 대상이 바뀌었으므로)
 func _on_slot_pressed(index: int) -> void:
 	var item_id := _slot_item_ids[index]
 	if item_id == "" or not ItemData.ITEMS.has(item_id):
+		_clear_equip_selection()
 		return
+
+	if ItemData.is_equipment(item_id):
+		_selected_item_id = item_id
+		_refresh_equip_button()
+		return
+
+	_clear_equip_selection()
 
 	var item: Dictionary = ItemData.ITEMS[item_id]
 
@@ -149,6 +169,39 @@ func _on_slot_pressed(index: int) -> void:
 		GameState.heal_player_partial(item["hp_restore_fraction"])
 
 	GameState.remove_item(item_id, 1)
+
+
+# 선택된 장비가 이미 그 슬롯에 장착 중인지에 따라 버튼 텍스트를 맞춘다.
+# 텍스트는 상태 설명이 아니라 "눌렀을 때 일어날 동작"을 담아(닫기/구매하기 등 기존 버튼들과
+# 같은 관례) — 이미 장착 중이면 눌렀을 때 해제되므로 "해제", 아니면 "장착"
+func _refresh_equip_button() -> void:
+	if _selected_item_id == "" or not ItemData.is_equipment(_selected_item_id):
+		_equip_button.visible = false
+		return
+
+	var slot := ItemData.get_slot(_selected_item_id)
+	_equip_button.text = "해제" if GameState.get_equipped(slot) == _selected_item_id else "장착"
+	_equip_button.visible = true
+
+
+# [장착/해제] 버튼: 선택된 아이템이 그 슬롯에 이미 장착 중이면 해제, 아니면 장착한다.
+# 다른 아이템이 같은 슬롯에 장착돼 있었다면 equip_item()이 알아서 교체한다
+func _on_equip_button_pressed() -> void:
+	if _selected_item_id == "" or not ItemData.is_equipment(_selected_item_id):
+		return
+
+	var slot := ItemData.get_slot(_selected_item_id)
+	if GameState.get_equipped(slot) == _selected_item_id:
+		GameState.unequip_slot(slot)
+	else:
+		GameState.equip_item(_selected_item_id)
+
+	_refresh_equip_button()
+
+
+func _clear_equip_selection() -> void:
+	_selected_item_id = ""
+	_equip_button.visible = false
 
 
 # 슬롯 위에 마우스가 들어오면 이름+설명 툴팁을 슬롯 바로 위에 띄움 (빈 슬롯은 표시 안 함)
