@@ -48,6 +48,8 @@ const LUNGE_OUT_DURATION := 0.08
 const LUNGE_BACK_DURATION := 0.12
 const VICTORY_HEAL_FRACTION := 0.25
 const FLEE_HP_THRESHOLD := 0.5 # 최대 HP의 이 비율 이상일 때만 도망 가능
+const FLEE_GOLD_PENALTY_MIN := 1 # 도망 성공 시 소모할 골드 범위 (무한 도망-재시작 리롤 방지)
+const FLEE_GOLD_PENALTY_MAX := 10
 
 const HAND_BUTTON_COUNT := 5
 
@@ -317,13 +319,26 @@ func _animate_enemy_turn() -> void:
 
 # [도망가기]: HP가 최대치의 FLEE_HP_THRESHOLD 이상일 때만 가능. 승패 없이 즉시 전투를 끝내고
 # (처치 카운트/퀘스트 진행 없음, HP·마나는 그대로 유지) 원래 있던 위치로 복귀한다.
-# 몬스터는 씬이 통째로 다시 로드되며 자연히 트리거 전 상태로 그 자리에 남으므로 리젠 처리를 하지 않는다
+# 몬스터는 씬이 통째로 다시 로드되며 자연히 트리거 전 상태로 그 자리에 남으므로 리젠 처리를 하지 않는다.
+#
+# 도망 성공 시 1~10 사이 무작위 골드를 소모한다(무한 도망-재시작 리롤 방지). GameState.spend_gold()는
+# 상점(ui/shop_menu.gd)처럼 "잔액이 부족하면 거래 자체를 막는" all-or-nothing 방식인데, 그건 상점
+# 구매가 안 해도 그만인 재량 거래이기 때문이다. 도망가기는 그렇지 않다 — HP 게이팅이 이미 "도망
+# 가능 여부"를 담당하고 있고, 골드 소모는 그저 페널티일 뿐이라 돈이 없다고 탈출 자체가 막히면
+# 안 된다(무일푼인 플레이어가 오히려 못 이기는 전투에 갇히는 건 이 기능의 취지에 반한다). 그래서
+# 여기서는 min(무작위값, 보유 골드)로 미리 clamp해 spend_gold()가 항상 성공하도록 만든다 —
+# 결과적으로 마나(spend_mana)의 "0 밑으로 안 내려가고 있는 만큼만 깎는" 방식과 같은 철학이다.
 func _on_flee_pressed() -> void:
 	if _mode != Mode.ACTION or _flee_button.disabled:
 		return
 	_mode = Mode.BUSY
 	_set_inputs_enabled(false)
-	_message.text = "전투에서 도망쳤다!"
+
+	var penalty: int = min(randi_range(FLEE_GOLD_PENALTY_MIN, FLEE_GOLD_PENALTY_MAX), GameState.gold)
+	GameState.spend_gold(penalty)
+	_player_gold_label.text = str(GameState.gold)
+
+	_message.text = "전투에서 도망쳤다! (골드 %d 소모)" % penalty
 	await _wait(0.4)
 	SceneManager.flee_battle()
 
