@@ -8,6 +8,25 @@ extends RefCounted
 # 바닥나면 다시 채워야 하는" 소모형 패턴과는 다르다. 그래서 로그라이크 덱빌더(예: Slay the Spire)의
 # 표준 관행을 새로 도입한다: 뽑을 더미가 모자라면 버린 더미를 뽑을 더미로 합쳐 셔플한 뒤 계속 뽑는다.
 # 이렇게 하면 "카드가 아예 사라지는" 일 없이 전체 카드 수가 항상 보존된다.
+#
+# [티어 가중치] 카드를 뽑을 때는 단순히 맨 위 한 장을 집는 게 아니라, 뽑을 더미 안의 카드들을
+# 티어별 가중치(TIER_DRAW_WEIGHT)로 저울질해 한 장을 고른다. 낮은 티어일수록 가중치가 커서 더 자주,
+# 높은 티어일수록 드물게 나온다. 뽑은 카드는 더미에서 빠지므로 "가중치가 붙은 비복원 추출"이고,
+# 전체 카드 수 보존이라는 위 성질은 그대로 유지된다.
+# 지금은 모든 카드가 TIER_1이라 가중치가 전부 같아 결과적으로 균등 추출 = 기존 동작과 동일하다.
+
+# 티어별 뽑기 가중치. 상대적인 비(比)만 의미가 있다 — 아래 값이면 티어2는 티어1의 약 0.45배,
+# 티어3은 약 0.15배 빈도로 뽑힌다. 티어2/3 카드가 실제로 추가되면 이 표의 숫자만 조정하면 되고,
+# 뽑기 코드(_pick_weighted_index)는 손댈 필요가 없다
+const TIER_DRAW_WEIGHT := {
+	Card.CardTier.TIER_1: 100,
+	Card.CardTier.TIER_2: 45,
+	Card.CardTier.TIER_3: 15,
+}
+
+# 표에 없는 티어(나중에 enum만 늘리고 표를 깜빡한 경우)가 들어와도 뽑히지 않고 사라지는 일이
+# 없도록, 가장 흔한 TIER_1과 같은 값으로 취급한다
+const DEFAULT_TIER_DRAW_WEIGHT := 100
 
 var draw_pile: Array[Card] = []
 var discard_pile: Array[Card] = []
@@ -30,14 +49,46 @@ func total_remaining() -> int:
 	return draw_pile.size() + discard_pile.size()
 
 
+# tier의 뽑기 가중치를 반환. 표에 없는 티어는 DEFAULT_TIER_DRAW_WEIGHT로 취급한다.
+# static이라 Deck 인스턴스 없이도 조회할 수 있다 (UI에서 "이 카드가 얼마나 귀한가"를 보여줄 때 등)
+static func get_tier_draw_weight(tier: int) -> int:
+	return TIER_DRAW_WEIGHT.get(tier, DEFAULT_TIER_DRAW_WEIGHT)
+
+
 # 카드 한 장을 뽑아 반환. 뽑을 더미가 비어 있으면 버린 더미를 합쳐 셔플한 뒤 뽑고,
-# 그래도 카드가 하나도 없으면(전체 소진) null을 반환한다
+# 그래도 카드가 하나도 없으면(전체 소진) null을 반환한다.
+# 어느 장을 집을지는 티어 가중치로 정한다 (_pick_weighted_index 참고)
 func draw_one() -> Card:
 	if draw_pile.is_empty():
 		_reshuffle_discard_into_draw_pile()
 	if draw_pile.is_empty():
 		return null
-	return draw_pile.pop_back()
+	return draw_pile.pop_at(_pick_weighted_index())
+
+
+# 뽑을 더미에서 티어 가중치에 비례한 확률로 카드 한 장의 인덱스를 고른다 (룰렛 휠 방식:
+# 가중치를 누적해 총합 안에서 무작위 지점을 찍고, 그 지점이 걸린 카드를 고른다).
+# 호출 전에 draw_pile이 비어 있지 않음이 보장된다(draw_one이 확인).
+#
+# 가중치 총합이 0 이하인 경우(모든 카드의 티어 가중치를 0으로 설정한 극단적 상황)에는 룰렛을
+# 돌릴 수 없으므로 맨 뒤 카드를 집는다 — 뽑을 카드가 분명히 있는데 아무것도 못 뽑고 덱이
+# 멈춰버리는 것보다, 가중치를 무시하고서라도 한 장을 내주는 쪽이 안전하다
+func _pick_weighted_index() -> int:
+	var last_index := draw_pile.size() - 1
+
+	var total_weight := 0
+	for card in draw_pile:
+		total_weight += get_tier_draw_weight(card.tier)
+	if total_weight <= 0:
+		return last_index
+
+	var roll := randi_range(1, total_weight)
+	var running := 0
+	for i in range(draw_pile.size()):
+		running += get_tier_draw_weight(draw_pile[i].tier)
+		if roll <= running:
+			return i
+	return last_index # 위 루프에서 반드시 반환되지만, 정수 연산 방어용으로 남겨둔다
 
 
 # count장을 연속으로 뽑아 배열로 반환. 도중에 카드가 완전히 바닥나면(뽑을 더미+버린 더미 모두 빔)

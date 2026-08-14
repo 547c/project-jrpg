@@ -16,6 +16,12 @@ extends Resource
 # (Godot 내장 Color 타입과 이름이 겹치지 않도록 CardColor로 둔다)
 enum CardColor { PHYSICAL, MAGIC, NEUTRAL }
 
+# 카드 등급. 높을수록 강한 대신 덱에서 덜 자주 뽑히게 할 용도다.
+# 실제 뽑기 확률 가중치는 카드가 아니라 Deck이 갖고 있다(Deck.TIER_DRAW_WEIGHT) — 이 파일은
+# "카드가 무엇인지"만 기술하고 뽑기 규칙은 뽑는 쪽이 소유한다는 기존 역할 분담을 그대로 따른다.
+# 지금은 모든 카드가 TIER_1이고, 티어2/3 카드 콘텐츠와 티어별 시각 연출은 아직 없다
+enum CardTier { TIER_1, TIER_2, TIER_3 }
+
 # 카드가 실제로 일으키는 효과의 종류. value의 의미가 이 값에 따라 달라진다
 enum EffectType {
 	DAMAGE,        # 적에게 피해
@@ -33,6 +39,9 @@ enum EffectType {
 	set(value_):
 		color = value_
 		notify_property_list_changed()
+
+# 카드 등급. 기존 카드 .tres들은 이 값을 저장하고 있지 않아 전부 기본값(TIER_1)으로 읽힌다
+@export var tier: CardTier = CardTier.TIER_1
 
 # 효과 종류 (value의 의미를 결정)
 @export var effect: EffectType = EffectType.DAMAGE

@@ -60,9 +60,6 @@ bg_color = Color(0, 0, 0, 0)
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_card_btn_hover"]
 bg_color = Color(1, 1, 1, 0.14)
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_card_frame_placeholder"]
-bg_color = Color(0, 0, 0, 0)
-
 [node name="BattleScene" type="Node2D" unique_id=876674391]
 script = ExtResource("1_battle")
 
@@ -312,7 +309,7 @@ anchors_preset = 12
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = -210.0
+offset_top = -236.0
 grow_horizontal = 2
 grow_vertical = 0
 theme_override_styles/panel = SubResource("StyleBoxTexture_panel")
@@ -392,27 +389,18 @@ expand_mode = 1
 stretch_mode = 5
 
 [node name="HandRow" type="HBoxContainer" parent="View/HUD/BottomBar/HBox/Menus/MainColumn"]
+custom_minimum_size = Vector2(0, 116)
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_constants/separation = 6
+alignment = 1
+theme_override_constants/separation = 8
 
 [node name="Card1" type="Control" parent="View/HUD/BottomBar/HBox/Menus/MainColumn/HandRow"]
-custom_minimum_size = Vector2(0, 52)
+custom_minimum_size = Vector2(72, 116)
 layout_mode = 2
-size_flags_horizontal = 3
 mouse_filter = 2
 
-[node name="Tint" type="ColorRect" parent="View/HUD/BottomBar/HBox/Menus/MainColumn/HandRow/Card1"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-color = Color(0, 0, 0, 0)
-
-[node name="Frame" type="Panel" parent="View/HUD/BottomBar/HBox/Menus/MainColumn/HandRow/Card1"]
+[node name="Frame" type="TextureRect" parent="View/HUD/BottomBar/HBox/Menus/MainColumn/HandRow/Card1"]
 visible = false
 texture_filter = 1
 layout_mode = 1
@@ -422,19 +410,49 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_card_frame_placeholder")
+expand_mode = 1
+stretch_mode = 2
 
 [node name="Icon" type="TextureRect" parent="View/HUD/BottomBar/HBox/Menus/MainColumn/HandRow/Card1"]
 visible = false
 texture_filter = 1
 layout_mode = 0
-offset_left = 4.0
-offset_top = 3.0
-offset_right = 20.0
-offset_bottom = 19.0
+offset_left = 25.0
+offset_top = 6.0
+offset_right = 47.0
+offset_bottom = 28.0
 mouse_filter = 2
 expand_mode = 1
 stretch_mode = 5
+
+[node name="NameLabel" type="Label" parent="View/HUD/BottomBar/HBox/Menus/MainColumn/HandRow/Card1"]
+visible = false
+layout_mode = 0
+offset_left = 2.0
+offset_top = 30.0
+offset_right = 70.0
+offset_bottom = 46.0
+theme_override_colors/font_color = Color(0.96, 0.94, 0.88, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.65)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 10
+horizontal_alignment = 1
+autowrap_mode = 2
+clip_text = true
+
+[node name="DescLabel" type="Label" parent="View/HUD/BottomBar/HBox/Menus/MainColumn/HandRow/Card1"]
+visible = false
+layout_mode = 0
+offset_left = 3.0
+offset_top = 48.0
+offset_right = 69.0
+offset_bottom = 112.0
+theme_override_colors/font_color = Color(0.94, 0.92, 0.86, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.6)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 8
+horizontal_alignment = 1
+autowrap_mode = 3
 
 [node name="Button" type="Button" parent="View/HUD/BottomBar/HBox/Menus/MainColumn/HandRow/Card1"]
 layout_mode = 1
@@ -443,32 +461,17 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
-theme_override_font_sizes/font_size = 12
-autowrap_mode = 3
 theme_override_styles/normal = SubResource("StyleBoxFlat_card_btn_normal")
 theme_override_styles/hover = SubResource("StyleBoxFlat_card_btn_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_card_btn_normal")
 theme_override_styles/disabled = SubResource("StyleBoxFlat_card_btn_normal")
-text = "-"
 
 [node name="Card2" type="Control" parent="View/HUD/BottomBar/HBox/Menus/MainColumn/HandRow"]
-custom_minimum_size = Vector2(0, 52)
+custom_minimum_size = Vector2(72, 116)
 layout_mode = 2
-size_flags_horizontal = 3
 mouse_filter = 2
 
-[node name="Tint" type="ColorRect" parent="View/HUD/BottomBar/HBox/Menus/MainColumn/HandRow/Card2"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-color = Color(0, 0, 0, 0)
-
-[node name="Frame" type="Panel" parent="View/HUD/BottomBar/HBox/Menus/MainColumn/HandRow/Card2"]
+[node name="Frame" type="TextureRect" parent="View/HUD/BottomBar/HBox/Menus/MainColumn/HandRow/Card2"]
 visible = false
 texture_filter = 1
 layout_mode = 1
@@ -478,19 +481,49 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_card_frame_placeholder")
+expand_mode = 1
+stretch_mode = 2
 
 [node name="Icon" type="TextureRect" parent="View/HUD/BottomBar/HBox/Menus/MainColumn/HandRow/Card2"]
 visible = false
 texture_filter = 1
 layout_mode = 0
-offset_left = 4.0
-offset_top = 3.0
-offset_right = 20.0
-offset_bottom = 19.0
+offset_left = 25.0
+offset_top = 6.0
+offset_right = 47.0
+offset_bottom = 28.0
 mouse_filter = 2
 expand_mode = 1
 stretch_mode = 5
+
+[node name="NameLabel" type="Label" parent="View/HUD/BottomBar/HBox/Menus/MainColumn/HandRow/Card2"]
+visible = false
+layout_mode = 0
+offset_left = 2.0
+offset_top = 30.0
+offset_right = 70.0
+offset_bottom = 46.0
+theme_override_colors/font_color = Color(0.96, 0.94, 0.88, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.65)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 10
+horizontal_alignment = 1
+autowrap_mode = 2
+clip_text = true
+
+[node name="DescLabel" type="Label" parent="View/HUD/BottomBar/HBox/Menus/MainColumn/HandRow/Card2"]
+visible = false
+layout_mode = 0
+offset_left = 3.0
+offset_top = 48.0
+offset_right = 69.0
+offset_bottom = 112.0
+theme_override_colors/font_color = Color(0.94, 0.92, 0.86, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.6)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 8
+horizontal_alignment = 1
+autowrap_mode = 3
 
 [node name="Button" type="Button" parent="View/HUD/BottomBar/HBox/Menus/MainColumn/HandRow/Card2"]
 layout_mode = 1
@@ -499,32 +532,17 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
-theme_override_font_sizes/font_size = 12
-autowrap_mode = 3
 theme_override_styles/normal = SubResource("StyleBoxFlat_card_btn_normal")
 theme_override_styles/hover = SubResource("StyleBoxFlat_card_btn_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_card_btn_normal")
 theme_override_styles/disabled = SubResource("StyleBoxFlat_card_btn_normal")
-text = "-"
 
 [node name="Card3" type="Control" parent="View/HUD/BottomBar/HBox/Menus/MainColumn/HandRow"]
-custom_minimum_size = Vector2(0, 52)
+custom_minimum_size = Vector2(72, 116)
 layout_mode = 2
-size_flags_horizontal = 3
 mouse_filter = 2
 
-[node name="Tint" type="ColorRect" parent="View/HUD/BottomBar/HBox/Menus/MainColumn/HandRow/Card3"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-color = Color(0, 0, 0, 0)
-
-[node name="Frame" type="Panel" parent="View/HUD/BottomBar/HBox/Menus/MainColumn/HandRow/Card3"]
+[node name="Frame" type="TextureRect" parent="View/HUD/BottomBar/HBox/Menus/MainColumn/HandRow/Card3"]
 visible = false
 texture_filter = 1
 layout_mode = 1
@@ -534,19 +552,49 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_card_frame_placeholder")
+expand_mode = 1
+stretch_mode = 2
 
 [node name="Icon" type="TextureRect" parent="View/HUD/BottomBar/HBox/Menus/MainColumn/HandRow/Card3"]
 visible = false
 texture_filter = 1
 layout_mode = 0
-offset_left = 4.0
-offset_top = 3.0
-offset_right = 20.0
-offset_bottom = 19.0
+offset_left = 25.0
+offset_top = 6.0
+offset_right = 47.0
+offset_bottom = 28.0
 mouse_filter = 2
 expand_mode = 1
 stretch_mode = 5
+
+[node name="NameLabel" type="Label" parent="View/HUD/BottomBar/HBox/Menus/MainColumn/HandRow/Card3"]
+visible = false
+layout_mode = 0
+offset_left = 2.0
+offset_top = 30.0
+offset_right = 70.0
+offset_bottom = 46.0
+theme_override_colors/font_color = Color(0.96, 0.94, 0.88, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.65)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 10
+horizontal_alignment = 1
+autowrap_mode = 2
+clip_text = true
+
+[node name="DescLabel" type="Label" parent="View/HUD/BottomBar/HBox/Menus/MainColumn/HandRow/Card3"]
+visible = false
+layout_mode = 0
+offset_left = 3.0
+offset_top = 48.0
+offset_right = 69.0
+offset_bottom = 112.0
+theme_override_colors/font_color = Color(0.94, 0.92, 0.86, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.6)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 8
+horizontal_alignment = 1
+autowrap_mode = 3
 
 [node name="Button" type="Button" parent="View/HUD/BottomBar/HBox/Menus/MainColumn/HandRow/Card3"]
 layout_mode = 1
@@ -555,32 +603,17 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
-theme_override_font_sizes/font_size = 12
-autowrap_mode = 3
 theme_override_styles/normal = SubResource("StyleBoxFlat_card_btn_normal")
 theme_override_styles/hover = SubResource("StyleBoxFlat_card_btn_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_card_btn_normal")
 theme_override_styles/disabled = SubResource("StyleBoxFlat_card_btn_normal")
-text = "-"
 
 [node name="Card4" type="Control" parent="View/HUD/BottomBar/HBox/Menus/MainColumn/HandRow"]
-custom_minimum_size = Vector2(0, 52)
+custom_minimum_size = Vector2(72, 116)
 layout_mode = 2
-size_flags_horizontal = 3
 mouse_filter = 2
 
-[node name="Tint" type="ColorRect" parent="View/HUD/BottomBar/HBox/Menus/MainColumn/HandRow/Card4"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-color = Color(0, 0, 0, 0)
-
-[node name="Frame" type="Panel" parent="View/HUD/BottomBar/HBox/Menus/MainColumn/HandRow/Card4"]
+[node name="Frame" type="TextureRect" parent="View/HUD/BottomBar/HBox/Menus/MainColumn/HandRow/Card4"]
 visible = false
 texture_filter = 1
 layout_mode = 1
@@ -590,19 +623,49 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_card_frame_placeholder")
+expand_mode = 1
+stretch_mode = 2
 
 [node name="Icon" type="TextureRect" parent="View/HUD/BottomBar/HBox/Menus/MainColumn/HandRow/Card4"]
 visible = false
 texture_filter = 1
 layout_mode = 0
-offset_left = 4.0
-offset_top = 3.0
-offset_right = 20.0
-offset_bottom = 19.0
+offset_left = 25.0
+offset_top = 6.0
+offset_right = 47.0
+offset_bottom = 28.0
 mouse_filter = 2
 expand_mode = 1
 stretch_mode = 5
+
+[node name="NameLabel" type="Label" parent="View/HUD/BottomBar/HBox/Menus/MainColumn/HandRow/Card4"]
+visible = false
+layout_mode = 0
+offset_left = 2.0
+offset_top = 30.0
+offset_right = 70.0
+offset_bottom = 46.0
+theme_override_colors/font_color = Color(0.96, 0.94, 0.88, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.65)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 10
+horizontal_alignment = 1
+autowrap_mode = 2
+clip_text = true
+
+[node name="DescLabel" type="Label" parent="View/HUD/BottomBar/HBox/Menus/MainColumn/HandRow/Card4"]
+visible = false
+layout_mode = 0
+offset_left = 3.0
+offset_top = 48.0
+offset_right = 69.0
+offset_bottom = 112.0
+theme_override_colors/font_color = Color(0.94, 0.92, 0.86, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.6)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 8
+horizontal_alignment = 1
+autowrap_mode = 3
 
 [node name="Button" type="Button" parent="View/HUD/BottomBar/HBox/Menus/MainColumn/HandRow/Card4"]
 layout_mode = 1
@@ -611,32 +674,17 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
-theme_override_font_sizes/font_size = 12
-autowrap_mode = 3
 theme_override_styles/normal = SubResource("StyleBoxFlat_card_btn_normal")
 theme_override_styles/hover = SubResource("StyleBoxFlat_card_btn_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_card_btn_normal")
 theme_override_styles/disabled = SubResource("StyleBoxFlat_card_btn_normal")
-text = "-"
 
 [node name="Card5" type="Control" parent="View/HUD/BottomBar/HBox/Menus/MainColumn/HandRow"]
-custom_minimum_size = Vector2(0, 52)
+custom_minimum_size = Vector2(72, 116)
 layout_mode = 2
-size_flags_horizontal = 3
 mouse_filter = 2
 
-[node name="Tint" type="ColorRect" parent="View/HUD/BottomBar/HBox/Menus/MainColumn/HandRow/Card5"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-color = Color(0, 0, 0, 0)
-
-[node name="Frame" type="Panel" parent="View/HUD/BottomBar/HBox/Menus/MainColumn/HandRow/Card5"]
+[node name="Frame" type="TextureRect" parent="View/HUD/BottomBar/HBox/Menus/MainColumn/HandRow/Card5"]
 visible = false
 texture_filter = 1
 layout_mode = 1
@@ -646,19 +694,49 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_card_frame_placeholder")
+expand_mode = 1
+stretch_mode = 2
 
 [node name="Icon" type="TextureRect" parent="View/HUD/BottomBar/HBox/Menus/MainColumn/HandRow/Card5"]
 visible = false
 texture_filter = 1
 layout_mode = 0
-offset_left = 4.0
-offset_top = 3.0
-offset_right = 20.0
-offset_bottom = 19.0
+offset_left = 25.0
+offset_top = 6.0
+offset_right = 47.0
+offset_bottom = 28.0
 mouse_filter = 2
 expand_mode = 1
 stretch_mode = 5
+
+[node name="NameLabel" type="Label" parent="View/HUD/BottomBar/HBox/Menus/MainColumn/HandRow/Card5"]
+visible = false
+layout_mode = 0
+offset_left = 2.0
+offset_top = 30.0
+offset_right = 70.0
+offset_bottom = 46.0
+theme_override_colors/font_color = Color(0.96, 0.94, 0.88, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.65)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 10
+horizontal_alignment = 1
+autowrap_mode = 2
+clip_text = true
+
+[node name="DescLabel" type="Label" parent="View/HUD/BottomBar/HBox/Menus/MainColumn/HandRow/Card5"]
+visible = false
+layout_mode = 0
+offset_left = 3.0
+offset_top = 48.0
+offset_right = 69.0
+offset_bottom = 112.0
+theme_override_colors/font_color = Color(0.94, 0.92, 0.86, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.6)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 8
+horizontal_alignment = 1
+autowrap_mode = 3
 
 [node name="Button" type="Button" parent="View/HUD/BottomBar/HBox/Menus/MainColumn/HandRow/Card5"]
 layout_mode = 1
@@ -667,14 +745,10 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
-theme_override_font_sizes/font_size = 12
-autowrap_mode = 3
 theme_override_styles/normal = SubResource("StyleBoxFlat_card_btn_normal")
 theme_override_styles/hover = SubResource("StyleBoxFlat_card_btn_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_card_btn_normal")
 theme_override_styles/disabled = SubResource("StyleBoxFlat_card_btn_normal")
-text = "-"
 
 [node name="ControlRow" type="HBoxContainer" parent="View/HUD/BottomBar/HBox/Menus/MainColumn"]
 layout_mode = 2

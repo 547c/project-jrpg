@@ -94,23 +94,27 @@ const RESIST_ICON_REGION := {
 	EnemyResistance.ResistanceType.MAGIC: Rect2(224, 1696, RAVEN_ICON_SIZE, RAVEN_ICON_SIZE),     # fb856 — 하늘색 저항 방패
 }
 
-# GUI/02.png의 색상별 정사각 슬롯 테두리를 카드 프레임으로 재사용. 물리=주황(빨강 계열), 마법=하늘(파랑
-# 계열), 공용=초록 — 파일에 순수 빨강/파랑 테두리가 없어 가장 가까운 색으로 골랐다 (조사 리포트 참고)
-const CARD_FRAME_SHEET_PATH := "res://assets/GUI/02.png"
-const CARD_FRAME_MARGIN := 10.0
-const CARD_FRAME_REGION := {
-	Card.CardColor.PHYSICAL: Rect2(128, 48, 32, 32),
-	Card.CardColor.MAGIC: Rect2(0, 96, 32, 32),
-	Card.CardColor.NEUTRAL: Rect2(0, 48, 32, 32),
+# 카드 프레임/뒷면 전용 시트(assets/GUI/card_template.png). 칸 크기 68x109, 색상별 앞면(테두리)·
+# 뒷면(다이아몬드 문양) 좌표를 직접 픽셀 단위로 조사해 확정한 값이다 (주황 칸은 이번엔 안 씀).
+# 카드 색은 CardColor가 아니라 "효과"를 기준으로 고른다 — 물리 공격만 빨강이고 마법 공격은 파랑,
+# 회복류(체력/마나)는 초록, 방어·회피처럼 무기와 무관한 카드는 회색으로 묶는다
+const CARD_SHEET_PATH := "res://assets/GUI/card_template.png"
+const CARD_FRONT_REGION := {
+	"grey": Rect2(54, 33, 68, 109),
+	"red": Rect2(54, 162, 68, 109),
+	"blue": Rect2(166, 162, 68, 109),
+	"green": Rect2(54, 290, 68, 109),
 }
-# 카드 배경 반투명 틴트. 프레임 테두리보다 채도를 낮춰 카드 이름 텍스트가 그 위에서도 잘 읽히게 한다
-const CARD_TINT_COLOR := {
-	Card.CardColor.PHYSICAL: Color(0.72, 0.24, 0.2, 0.4),
-	Card.CardColor.MAGIC: Color(0.22, 0.42, 0.82, 0.4),
-	Card.CardColor.NEUTRAL: Color(0.3, 0.6, 0.32, 0.36),
-}
+# 5장 전부 동일한 회색 뒷면으로 통일한다 — 뒤집기 전에 카드 색으로 종류가 미리 드러나면 안 되기 때문
+const CARD_BACK_REGION := Rect2(54, 434, 68, 109)
+
+const CARD_SIZE := Vector2(72, 116) # HandRow의 각 카드 슬롯 크기 (.tscn과 일치시켜야 함)
 const CARD_ENABLED_MODULATE := Color(1, 1, 1, 1)
 const CARD_DISABLED_MODULATE := Color(0.5, 0.5, 0.5, 0.85) # 과열/마나부족 카드를 흐리게 (기존 disabled 느낌 유지)
+
+# ── 카드 드로우 뒤집기 연출 ──────────────────────────────────────────────────
+const DRAW_STAGGER := 0.08 # 카드마다 뒤집기 시작을 이만큼씩 늦춰 순서대로 펼쳐지는 느낌을 낸다
+const FLIP_HALF_DURATION := 0.15 # 뒷면->접힘, 접힘->앞면 각 구간 길이 (왕복 총 0.3초)
 
 @onready var _actors: Node2D = $View/Actors
 @onready var _player_sprite: AnimatedSprite2D = $View/Actors/PlayerSprite
@@ -147,16 +151,22 @@ var _mode: int = Mode.BUSY
 var _manager: BattleTurnManager
 var _hand_buttons: Array[Button] = []
 var _card_wrappers: Array[Control] = []
-var _card_tints: Array[ColorRect] = []
-var _card_frames: Array[Panel] = []
+var _card_frames: Array[TextureRect] = []
 var _card_icons: Array[TextureRect] = []
+var _card_names: Array[Label] = []
+var _card_descs: Array[Label] = []
 
-# _build_battle_ui_resources()가 한 번 채워 넣는 캐시 (게이지 프레임 텍스처, 스킬/저항 아이콘, 카드 프레임 스타일박스)
+# _build_battle_ui_resources()가 한 번 채워 넣는 캐시 (게이지 프레임 텍스처, 스킬/저항 아이콘, 카드 앞뒤 텍스처)
 var _sword_gauge_frames: Array[AtlasTexture] = []
 var _staff_gauge_frames: Array[AtlasTexture] = []
 var _skill_icon_textures: Dictionary = {}
 var _resist_icon_textures: Dictionary = {}
-var _card_frame_styleboxes: Dictionary = {}
+var _card_front_textures: Dictionary = {} # "grey"/"red"/"blue"/"green" -> AtlasTexture
+var _card_back_texture: AtlasTexture
+
+# 마지막으로 뒤집기 연출을 재생한 턴 번호. _manager.turn_number와 다르면 "방금 새로 뽑은 손패"라는
+# 뜻이라 뒤집기를 재생하고, 같으면 카드 한 장을 냈다거나 하는 중간 갱신이라 곧바로 반영한다
+var _last_drawn_turn_number: int = 0
 
 # 매니저 시그널로 받은 "방금 무슨 일이 있었는지"를 담아두는 버퍼. 시그널은 매니저 안에서 동기적으로
 # 발생하는데 연출은 그 뒤에 이어서 재생해야 하므로, 콜백은 기록만 하고 실제 애니메이션은
@@ -173,10 +183,12 @@ func _ready() -> void:
 
 	for i in range(HAND_BUTTON_COUNT):
 		var wrapper := _hand_row.get_node("Card%d" % (i + 1)) as Control
+		wrapper.pivot_offset = CARD_SIZE / 2.0 # 뒤집기 스케일이 카드 중심을 기준으로 일어나게
 		_card_wrappers.append(wrapper)
-		_card_tints.append(wrapper.get_node("Tint") as ColorRect)
-		_card_frames.append(wrapper.get_node("Frame") as Panel)
+		_card_frames.append(wrapper.get_node("Frame") as TextureRect)
 		_card_icons.append(wrapper.get_node("Icon") as TextureRect)
+		_card_names.append(wrapper.get_node("NameLabel") as Label)
+		_card_descs.append(wrapper.get_node("DescLabel") as Label)
 
 		var btn := wrapper.get_node("Button") as Button
 		_hand_buttons.append(btn)
@@ -201,15 +213,10 @@ func _build_battle_ui_resources() -> void:
 	for resistance in RESIST_ICON_REGION:
 		_resist_icon_textures[resistance] = _atlas(raven_sheet, RESIST_ICON_REGION[resistance])
 
-	var frame_sheet := load(CARD_FRAME_SHEET_PATH) as Texture2D
-	for card_color in CARD_FRAME_REGION:
-		var stylebox := StyleBoxTexture.new()
-		stylebox.texture = _atlas(frame_sheet, CARD_FRAME_REGION[card_color])
-		stylebox.texture_margin_left = CARD_FRAME_MARGIN
-		stylebox.texture_margin_top = CARD_FRAME_MARGIN
-		stylebox.texture_margin_right = CARD_FRAME_MARGIN
-		stylebox.texture_margin_bottom = CARD_FRAME_MARGIN
-		_card_frame_styleboxes[card_color] = stylebox
+	var card_sheet := load(CARD_SHEET_PATH) as Texture2D
+	for key in CARD_FRONT_REGION:
+		_card_front_textures[key] = _atlas(card_sheet, CARD_FRONT_REGION[key])
+	_card_back_texture = _atlas(card_sheet, CARD_BACK_REGION)
 
 
 # sheet에서 y행의 게이지 프레임 5장(0/25/50/75/100%)을 왼쪽부터 잘라 배열로 반환
@@ -261,9 +268,12 @@ func start_with(monster_type: String, variant: Dictionary) -> void:
 	_manager.start() # 첫 턴 시작 (저항 롤 + 손패 5장 드로우)
 
 	# _refresh_hand_buttons()가 _mode도 함께 반영하므로, 갱신 전에 먼저 ACTION으로 바꿔야
-	# 첫 턴 손패가 비활성인 채로 시작하지 않는다
+	# 첫 턴 손패가 비활성인 채로 시작하지 않는다. 뒤집기 연출이 도는 동안은 카드 말고도
+	# 무기/턴종료/도망 버튼까지 잠가둬 애니메이션 중 조작이 끼어들지 않게 한다
 	_mode = Mode.ACTION
-	_refresh_all()
+	_set_inputs_enabled(false)
+	await _refresh_all() # 손패가 새로 뽑힌 첫 턴이라 여기서 뒤집기 연출까지 끝날 때까지 기다린다
+	_set_inputs_enabled(true)
 	# 몬스터별 전용 등장 문구가 있으면 그걸, 없으면 기본 "N 출현!"을 쓴다
 	_message.text = _monster_data.get("appear_text", "%s 출현!" % _monster_data["name"])
 
@@ -317,12 +327,12 @@ func _play_card_flow(card: Card) -> void:
 
 	if not _manager.play_card(card):
 		_mode = Mode.ACTION
-		_refresh_all()
+		await _refresh_all()
 		return
 
 	await _animate_card(card, hp_before, mana_before)
 
-	_refresh_all()
+	await _refresh_all()
 
 	if _outcome == "victory":
 		_finish_victory()
@@ -397,7 +407,9 @@ func _end_turn_flow() -> void:
 
 	await _animate_enemy_turn()
 
-	_refresh_all()
+	# 여기서 _refresh_all()이 새 턴의 손패 뒤집기 연출까지 통째로 기다린다 — 그래야 바로 아래
+	# _set_inputs_enabled(true)가 애니메이션 도중에 카드 내용을 앞당겨 드러내며 끼어들지 않는다
+	await _refresh_all()
 
 	if _outcome == "defeat":
 		_finish_defeat()
@@ -461,7 +473,7 @@ func _on_flee_pressed() -> void:
 # ── UI 갱신 ────────────────────────────────────────────────────────────────
 
 func _refresh_all() -> void:
-	_refresh_hand_buttons()
+	await _refresh_hand_buttons()
 	_refresh_weapon_button()
 	_refresh_status_icons()
 	_update_mana_bar()
@@ -470,54 +482,164 @@ func _refresh_all() -> void:
 	_refresh_flee_button()
 
 
-# 손패 5칸을 현재 손패로 채운다. 빈 칸은 비활성 "-", 낼 수 없는 카드(과부하/마나부족)도 비활성 처리해
-# 왜 못 쓰는지 버튼 텍스트에 짧게 표시한다. 카드마다 색깔(물리/마법/공용) 배경 틴트 + GUI 프레임 +
-# 효과별 스킬 아이콘을 함께 갱신한다 — 레이어 순서(배경→프레임→아이콘→텍스트)는 .tscn의 자식 노드
-# 순서(Tint, Frame, Icon, Button)가 곧 그리기 순서이므로 여기서는 각 노드의 내용만 채우면 된다
+# 손패 5칸을 현재 손패 내용으로 채운다. turn_number가 마지막으로 뒤집었던 턴과 다르면 "방금 새로
+# 뽑은 손패"라는 뜻이므로, 내용을 채우자마자 카드 한 장을 낸 것 같은 중간 갱신과 달리 뒤집기
+# 연출로 드러낸다 (연출이 끝날 때까지 이 함수도 끝나지 않는다 — 호출부가 그 뒤 순서를
+# 안전하게 이어갈 수 있도록)
 func _refresh_hand_buttons() -> void:
 	var cards: Array = _manager.hand.cards if _manager != null else []
+	var is_new_hand := _manager != null and _manager.turn_number != _last_drawn_turn_number
+	if is_new_hand:
+		_last_drawn_turn_number = _manager.turn_number
+
 	for i in range(HAND_BUTTON_COUNT):
-		var btn := _hand_buttons[i]
-		var tint := _card_tints[i]
-		var frame := _card_frames[i]
-		var icon := _card_icons[i]
+		_populate_card_slot(i, cards)
 
-		if i >= cards.size():
-			btn.text = "-"
-			btn.disabled = true
-			tint.color = Color(0, 0, 0, 0)
-			frame.visible = false
-			icon.visible = false
-			_card_wrappers[i].modulate = CARD_ENABLED_MODULATE
-			continue
+	if is_new_hand:
+		await _play_draw_animation(cards)
 
-		var card: Card = cards[i]
-		var label := card.card_name
-		var mana_cost := card.get_mana_cost()
-		if mana_cost > 0:
-			label += "\n(MP %d)" % mana_cost
 
-		var playable: bool = _manager.can_play_card(card)
-		if not playable:
-			if not _manager.weapon.can_use_card(card):
-				label += "\n[과열]"
-			elif not GameState.can_afford_mana(mana_cost):
-				label += "\n[마나부족]"
+# 카드 슬롯 하나(프레임/아이콘/이름/설명/버튼 활성 상태)를 채운다. 빈 칸은 전부 숨긴다.
+# 낼 수 없는 카드(과부하/마나부족)는 설명 아래에 짧게 이유를 덧붙이고 카드 전체를 흐리게 만든다
+func _populate_card_slot(i: int, cards: Array) -> void:
+	var btn := _hand_buttons[i]
+	var frame := _card_frames[i]
+	var icon := _card_icons[i]
+	var name_label := _card_names[i]
+	var desc_label := _card_descs[i]
 
-		btn.text = label
-		btn.disabled = not playable or _mode != Mode.ACTION
+	if i >= cards.size():
+		btn.disabled = true
+		frame.visible = false
+		icon.visible = false
+		name_label.visible = false
+		desc_label.visible = false
+		_card_wrappers[i].modulate = CARD_ENABLED_MODULATE
+		return
 
-		tint.color = CARD_TINT_COLOR.get(card.color, Color(0, 0, 0, 0))
-		frame.visible = true
-		frame.add_theme_stylebox_override("panel", _card_frame_styleboxes[card.color])
+	var card: Card = cards[i]
+	var playable: bool = _manager.can_play_card(card)
 
-		if _skill_icon_textures.has(card.effect):
-			icon.texture = _skill_icon_textures[card.effect]
-			icon.visible = true
-		else:
-			icon.visible = false
+	var desc := _card_description(card)
+	if not playable:
+		if not _manager.weapon.can_use_card(card):
+			desc += "\n[과열]"
+		elif not GameState.can_afford_mana(card.get_mana_cost()):
+			desc += "\n[마나부족]"
 
-		_card_wrappers[i].modulate = CARD_ENABLED_MODULATE if playable else CARD_DISABLED_MODULATE
+	frame.visible = true
+	frame.texture = _card_front_textures[_card_style_key(card)]
+	icon.visible = true
+	icon.texture = _skill_icon_textures.get(card.effect)
+	name_label.visible = true
+	name_label.text = card.card_name
+	desc_label.visible = true
+	desc_label.text = desc
+
+	btn.disabled = not playable or _mode != Mode.ACTION
+	_card_wrappers[i].modulate = CARD_ENABLED_MODULATE if playable else CARD_DISABLED_MODULATE
+	_apply_card_tier_visuals(_card_wrappers[i], card)
+
+
+# card.effect(+물리/마법 구분)에 따라 프레임 색을 고른다: 물리 공격=빨강, 마법 공격=파랑,
+# 회복류(체력/마나)=초록, 방어·회피처럼 무기와 무관한 카드=회색
+func _card_style_key(card: Card) -> String:
+	match card.effect:
+		Card.EffectType.DAMAGE:
+			return "blue" if card.color == Card.CardColor.MAGIC else "red"
+		Card.EffectType.HEAL_HP, Card.EffectType.RESTORE_MANA:
+			return "green"
+		_:
+			return "grey"
+
+
+# 효과 종류에 맞춰 카드 설명을 자동으로 만든다. 카드 이름 밑에 그대로 표시된다
+func _card_description(card: Card) -> String:
+	match card.effect:
+		Card.EffectType.DAMAGE:
+			var kind := "마법" if card.color == Card.CardColor.MAGIC else "물리"
+			return "%s 피해 %d" % [kind, card.value]
+		Card.EffectType.HEAL_HP:
+			return "체력 %d 회복" % card.value
+		Card.EffectType.RESTORE_MANA:
+			return "마나 %d 회복" % card.value
+		Card.EffectType.DEFEND:
+			return "다음 피해 %d 감소" % card.value
+		Card.EffectType.DODGE:
+			return "이번 턴 완전 회피"
+		_:
+			return ""
+
+
+# 새 손패가 채워진 직후: 5장 전부 회색 뒷면으로 가려두고, 순서대로 DRAW_STAGGER만큼씩 텀을 두고
+# 뒤집어 실제 내용을 드러낸다. 연출이 도는 동안은 손패 버튼을 다시 잠가 어떤 카드도 누를 수 없게
+# 하고, 마지막 카드의 뒤집기가 끝나면 손패 상태를 다시 계산해 정확한 활성/비활성으로 되돌린다
+func _play_draw_animation(cards: Array) -> void:
+	for btn in _hand_buttons:
+		btn.disabled = true
+
+	if cards.is_empty():
+		return
+
+	var last_tween: Tween
+	for i in range(cards.size()):
+		last_tween = _flip_card_in(i)
+
+	await last_tween.finished
+	for i in range(HAND_BUTTON_COUNT):
+		_populate_card_slot(i, cards) # 잠가뒀던 버튼 활성 상태를 실제 사용 가능 여부로 되돌림
+
+
+# 카드 한 장을 "뒷면 -> 앞면" 순서로 뒤집는다. 회전 없이 가로 스케일을 1->0->1로 움직이는 것만으로
+# 뒤집는 느낌을 낸다 — 완전히 접힌(스케일 0) 그 순간에 텍스처와 아이콘/이름/설명을 뒷면에서
+# 앞면으로 바꿔치기하면, 옆에서 보면 카드가 홱 돌아가며 내용이 드러나는 것처럼 보인다
+func _flip_card_in(index: int) -> Tween:
+	var wrapper := _card_wrappers[index]
+	var frame := _card_frames[index]
+	var icon := _card_icons[index]
+	var name_label := _card_names[index]
+	var desc_label := _card_descs[index]
+
+	frame.texture = _card_back_texture
+	icon.visible = false
+	name_label.visible = false
+	desc_label.visible = false
+	wrapper.scale.x = 1.0
+
+	var tween := create_tween()
+	tween.tween_interval(index * DRAW_STAGGER)
+	tween.tween_property(wrapper, "scale:x", 0.0, FLIP_HALF_DURATION)
+	tween.tween_callback(_reveal_card_face.bind(index))
+	tween.tween_property(wrapper, "scale:x", 1.0, FLIP_HALF_DURATION)
+	return tween
+
+
+# 뒤집기 중간(스케일 0) 지점에 호출되어 실제 내용을 채운다. 애니메이션이 도는 짧은 시간 동안은
+# 손패 버튼이 전부 잠겨 있어 손패가 바뀌지 않으므로, 지금 손패를 다시 읽어도 안전하다
+func _reveal_card_face(index: int) -> void:
+	if _manager == null or index >= _manager.hand.cards.size():
+		return
+	var card: Card = _manager.hand.cards[index]
+	_card_frames[index].texture = _card_front_textures[_card_style_key(card)]
+	_card_icons[index].visible = true
+	_card_names[index].visible = true
+	_card_descs[index].visible = true
+
+
+# 카드 티어별 시각 연출(상위 티어 광채/파티클 등)을 붙일 지점. 아직 티어2/3 카드도, 연출도 없어
+# 지금은 어느 티어든 기본 외형 그대로 두지만, card.tier로 분기할 자리는 여기 하나로 정해둔다.
+# _refresh_hand_buttons()가 손패를 갱신할 때마다 카드마다 한 번씩 부르므로, 이 함수만 채우면
+# 손패 전체에 자동으로 반영된다.
+#
+# [연출을 실제로 붙일 때 주의] 손패 5칸은 매 턴 같은 wrapper 노드를 재사용한다 — 상위 티어 카드가
+# 있던 자리에 다음 턴 티어1 카드가 들어올 수 있으므로, 켜는 분기뿐 아니라 "끄는" 기본 분기도
+# 반드시 함께 채워야 이전 카드의 연출이 남지 않는다
+func _apply_card_tier_visuals(_wrapper: Control, card: Card) -> void:
+	match card.tier:
+		Card.CardTier.TIER_2, Card.CardTier.TIER_3:
+			pass # TODO: 상위 티어 강조 연출 (아직 해당 티어 카드가 없음)
+		_:
+			pass # TIER_1 — 기본 외형
 
 
 func _refresh_weapon_button() -> void:
@@ -732,10 +854,11 @@ func _build_portrait(sheet: Texture2D, region: Rect2) -> AtlasTexture:
 
 # 뷰포트 크기에 비례해 배우 위치를 잡고(해상도 독립), 각 발밑에 타원 그림자를 그린다
 func _layout_actors() -> void:
-	# 하단 UI 바(카드 손패 때문에 예전보다 높아짐)에 발이 가리지 않도록 배우를 위쪽으로 배치한다
+	# 하단 UI 바(카드 프레임 도입으로 손패가 세로로 길어져 예전보다도 더 높아짐)에 발이 가리지
+	# 않도록 배우를 위쪽으로 배치한다
 	var vp := get_viewport().get_visible_rect().size
-	_player_sprite.position = Vector2(vp.x * 0.24, vp.y * 0.55)
-	_monster_sprite.position = Vector2(vp.x * 0.74, vp.y * 0.30)
+	_player_sprite.position = Vector2(vp.x * 0.24, vp.y * 0.51)
+	_monster_sprite.position = Vector2(vp.x * 0.74, vp.y * 0.27)
 
 	var player_foot := _player_sprite.position + Vector2(0, PLAYER_FRAME_SIZE * PLAYER_SCALE * 0.5 - 6.0)
 	var idle_frame_size: int = _variant.get("idle_frame_size", BattleData.MOB_IDLE_FRAME_SIZE)
