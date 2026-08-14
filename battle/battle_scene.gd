@@ -62,6 +62,56 @@ const HAND_BUTTON_COUNT := 5
 # 턴 진행 상태: ACTION=플레이어 입력 대기, BUSY=연출 재생 중(입력 무시), OVER=전투 종료
 enum Mode { ACTION, BUSY, OVER }
 
+# ── 무기 과열 게이지 / 적 저항 / 카드 배경·프레임·아이콘용 에셋 (조사 리포트에서 확정한 매핑) ──
+# GUI/06.png의 대각선 게이지 스프라이트 시트: 색상 행마다 5프레임(0/25/50/75/100%)이 가로로 나열되어
+# 있다. 프레임 크기·간격은 픽셀 단위로 직접 측정한 값 (첫 프레임 x=3, 프레임 간격 48px, 폭 42px×높이 7px)
+const GAUGE_SHEET_PATH := "res://assets/GUI/06.png"
+const GAUGE_FRAME_X_START := 3
+const GAUGE_FRAME_X_STEP := 48
+const GAUGE_FRAME_WIDTH := 42
+const GAUGE_FRAME_HEIGHT := 7
+const GAUGE_FRAME_COUNT := 5
+# 검=주황/빨강 행(y=69), 지팡이=파랑 행(y=21) — 사용자가 확정한 색상 매핑
+const GAUGE_ROW_Y := {
+	WeaponState.WeaponType.SWORD: 69,
+	WeaponState.WeaponType.STAFF: 21,
+}
+
+# Free - Raven Fantasy Icons 시트(32x32 격자, 한 칸 32px). 카드 스킬 아이콘과 적 저항 방패 아이콘을
+# 여기서 잘라온다. 좌표는 시트를 직접 눈으로 훑어 찾은 값 (fb742/597/725/659/711 = 조사 리포트에서
+# 확정한 5장, fb859/856 = 53행의 저항 방패 8색 중 물리=빨강/마법=하늘색)
+const RAVEN_SHEET_PATH := "res://assets/items/Free - Raven Fantasy Icons/Full Spritesheet/32x32.png"
+const RAVEN_ICON_SIZE := 32
+const SKILL_ICON_REGION := {
+	Card.EffectType.DAMAGE: Rect2(160, 1472, RAVEN_ICON_SIZE, RAVEN_ICON_SIZE), # fb742 — 핏방울 검 슬래시
+	Card.EffectType.DEFEND: Rect2(128, 1184, RAVEN_ICON_SIZE, RAVEN_ICON_SIZE), # fb597 — 민무늬 은색 방패
+	Card.EffectType.DODGE: Rect2(128, 1440, RAVEN_ICON_SIZE, RAVEN_ICON_SIZE),  # fb725 — 바람 소용돌이
+	Card.EffectType.HEAL_HP: Rect2(64, 1312, RAVEN_ICON_SIZE, RAVEN_ICON_SIZE), # fb659 — 빨간 하트
+	Card.EffectType.RESTORE_MANA: Rect2(192, 1408, RAVEN_ICON_SIZE, RAVEN_ICON_SIZE), # fb711 — 파란 마나 물방울
+}
+const RESIST_ICON_REGION := {
+	EnemyResistance.ResistanceType.PHYSICAL: Rect2(320, 1696, RAVEN_ICON_SIZE, RAVEN_ICON_SIZE), # fb859 — 빨강 저항 방패
+	EnemyResistance.ResistanceType.MAGIC: Rect2(224, 1696, RAVEN_ICON_SIZE, RAVEN_ICON_SIZE),     # fb856 — 하늘색 저항 방패
+}
+
+# GUI/02.png의 색상별 정사각 슬롯 테두리를 카드 프레임으로 재사용. 물리=주황(빨강 계열), 마법=하늘(파랑
+# 계열), 공용=초록 — 파일에 순수 빨강/파랑 테두리가 없어 가장 가까운 색으로 골랐다 (조사 리포트 참고)
+const CARD_FRAME_SHEET_PATH := "res://assets/GUI/02.png"
+const CARD_FRAME_MARGIN := 10.0
+const CARD_FRAME_REGION := {
+	Card.CardColor.PHYSICAL: Rect2(128, 48, 32, 32),
+	Card.CardColor.MAGIC: Rect2(0, 96, 32, 32),
+	Card.CardColor.NEUTRAL: Rect2(0, 48, 32, 32),
+}
+# 카드 배경 반투명 틴트. 프레임 테두리보다 채도를 낮춰 카드 이름 텍스트가 그 위에서도 잘 읽히게 한다
+const CARD_TINT_COLOR := {
+	Card.CardColor.PHYSICAL: Color(0.72, 0.24, 0.2, 0.4),
+	Card.CardColor.MAGIC: Color(0.22, 0.42, 0.82, 0.4),
+	Card.CardColor.NEUTRAL: Color(0.3, 0.6, 0.32, 0.36),
+}
+const CARD_ENABLED_MODULATE := Color(1, 1, 1, 1)
+const CARD_DISABLED_MODULATE := Color(0.5, 0.5, 0.5, 0.85) # 과열/마나부족 카드를 흐리게 (기존 disabled 느낌 유지)
+
 @onready var _actors: Node2D = $View/Actors
 @onready var _player_sprite: AnimatedSprite2D = $View/Actors/PlayerSprite
 @onready var _monster_sprite: AnimatedSprite2D = $View/Actors/MonsterSprite
@@ -80,8 +130,9 @@ enum Mode { ACTION, BUSY, OVER }
 @onready var _monster_gold_label: Label = $View/HUD/MonsterCard/GoldLabel
 @onready var _message: Label = $View/HUD/BottomBar/HBox/MessageLabel
 @onready var _main_column: VBoxContainer = $View/HUD/BottomBar/HBox/Menus/MainColumn
-@onready var _gauge_label: Label = $View/HUD/BottomBar/HBox/Menus/MainColumn/StatusRow/GaugeLabel
-@onready var _resist_label: Label = $View/HUD/BottomBar/HBox/Menus/MainColumn/StatusRow/ResistLabel
+@onready var _sword_gauge_rect: TextureRect = $View/HUD/BottomBar/HBox/Menus/MainColumn/StatusRow/GaugeBars/SwordGauge
+@onready var _staff_gauge_rect: TextureRect = $View/HUD/BottomBar/HBox/Menus/MainColumn/StatusRow/GaugeBars/StaffGauge
+@onready var _resist_icon: TextureRect = $View/HUD/BottomBar/HBox/Menus/MainColumn/StatusRow/ResistBox/ResistIcon
 @onready var _hand_row: HBoxContainer = $View/HUD/BottomBar/HBox/Menus/MainColumn/HandRow
 @onready var _weapon_button: Button = $View/HUD/BottomBar/HBox/Menus/MainColumn/ControlRow/WeaponButton
 @onready var _end_turn_button: Button = $View/HUD/BottomBar/HBox/Menus/MainColumn/ControlRow/EndTurnButton
@@ -95,6 +146,17 @@ var _mode: int = Mode.BUSY
 
 var _manager: BattleTurnManager
 var _hand_buttons: Array[Button] = []
+var _card_wrappers: Array[Control] = []
+var _card_tints: Array[ColorRect] = []
+var _card_frames: Array[Panel] = []
+var _card_icons: Array[TextureRect] = []
+
+# _build_battle_ui_resources()가 한 번 채워 넣는 캐시 (게이지 프레임 텍스처, 스킬/저항 아이콘, 카드 프레임 스타일박스)
+var _sword_gauge_frames: Array[AtlasTexture] = []
+var _staff_gauge_frames: Array[AtlasTexture] = []
+var _skill_icon_textures: Dictionary = {}
+var _resist_icon_textures: Dictionary = {}
+var _card_frame_styleboxes: Dictionary = {}
 
 # 매니저 시그널로 받은 "방금 무슨 일이 있었는지"를 담아두는 버퍼. 시그널은 매니저 안에서 동기적으로
 # 발생하는데 연출은 그 뒤에 이어서 재생해야 하므로, 콜백은 기록만 하고 실제 애니메이션은
@@ -107,9 +169,16 @@ var _outcome: String = "" # "" / "victory" / "defeat"
 
 func _ready() -> void:
 	add_to_group("battle_box")
+	_build_battle_ui_resources()
 
 	for i in range(HAND_BUTTON_COUNT):
-		var btn := _hand_row.get_node("Card%d" % (i + 1)) as Button
+		var wrapper := _hand_row.get_node("Card%d" % (i + 1)) as Control
+		_card_wrappers.append(wrapper)
+		_card_tints.append(wrapper.get_node("Tint") as ColorRect)
+		_card_frames.append(wrapper.get_node("Frame") as Panel)
+		_card_icons.append(wrapper.get_node("Icon") as TextureRect)
+
+		var btn := wrapper.get_node("Button") as Button
 		_hand_buttons.append(btn)
 		btn.pressed.connect(_on_card_pressed.bind(i))
 
@@ -117,6 +186,46 @@ func _ready() -> void:
 	_end_turn_button.pressed.connect(_on_end_turn_pressed)
 	_flee_button.pressed.connect(_on_flee_pressed)
 	_close_button.pressed.connect(_on_close_pressed)
+
+
+# 과열 게이지 프레임, 카드 스킬/저항 아이콘, 카드 프레임 스타일박스를 한 번만 잘라서 캐시해둔다
+# (기존 _build_portrait()/_build_frames()와 같은 방식 — AtlasTexture로 시트 일부만 잘라 쓴다)
+func _build_battle_ui_resources() -> void:
+	var gauge_sheet := load(GAUGE_SHEET_PATH) as Texture2D
+	_sword_gauge_frames = _build_gauge_frames(gauge_sheet, GAUGE_ROW_Y[WeaponState.WeaponType.SWORD])
+	_staff_gauge_frames = _build_gauge_frames(gauge_sheet, GAUGE_ROW_Y[WeaponState.WeaponType.STAFF])
+
+	var raven_sheet := load(RAVEN_SHEET_PATH) as Texture2D
+	for effect in SKILL_ICON_REGION:
+		_skill_icon_textures[effect] = _atlas(raven_sheet, SKILL_ICON_REGION[effect])
+	for resistance in RESIST_ICON_REGION:
+		_resist_icon_textures[resistance] = _atlas(raven_sheet, RESIST_ICON_REGION[resistance])
+
+	var frame_sheet := load(CARD_FRAME_SHEET_PATH) as Texture2D
+	for card_color in CARD_FRAME_REGION:
+		var stylebox := StyleBoxTexture.new()
+		stylebox.texture = _atlas(frame_sheet, CARD_FRAME_REGION[card_color])
+		stylebox.texture_margin_left = CARD_FRAME_MARGIN
+		stylebox.texture_margin_top = CARD_FRAME_MARGIN
+		stylebox.texture_margin_right = CARD_FRAME_MARGIN
+		stylebox.texture_margin_bottom = CARD_FRAME_MARGIN
+		_card_frame_styleboxes[card_color] = stylebox
+
+
+# sheet에서 y행의 게이지 프레임 5장(0/25/50/75/100%)을 왼쪽부터 잘라 배열로 반환
+func _build_gauge_frames(sheet: Texture2D, y: int) -> Array[AtlasTexture]:
+	var frames: Array[AtlasTexture] = []
+	for i in range(GAUGE_FRAME_COUNT):
+		var x := GAUGE_FRAME_X_START + i * GAUGE_FRAME_X_STEP
+		frames.append(_atlas(sheet, Rect2(x, y, GAUGE_FRAME_WIDTH, GAUGE_FRAME_HEIGHT)))
+	return frames
+
+
+func _atlas(sheet: Texture2D, region: Rect2) -> AtlasTexture:
+	var atlas := AtlasTexture.new()
+	atlas.atlas = sheet
+	atlas.region = region
+	return atlas
 
 
 # SceneManager가 전투 씬을 트리에 넣은 직후 호출. 몬스터 종류/시각 변종(필드에서 뽑힌 것과 동일)을
@@ -354,7 +463,7 @@ func _on_flee_pressed() -> void:
 func _refresh_all() -> void:
 	_refresh_hand_buttons()
 	_refresh_weapon_button()
-	_refresh_status_labels()
+	_refresh_status_icons()
 	_update_mana_bar()
 	_update_player_hp_text()
 	_update_monster_hp_text()
@@ -362,14 +471,24 @@ func _refresh_all() -> void:
 
 
 # 손패 5칸을 현재 손패로 채운다. 빈 칸은 비활성 "-", 낼 수 없는 카드(과부하/마나부족)도 비활성 처리해
-# 왜 못 쓰는지 버튼 텍스트에 짧게 표시한다
+# 왜 못 쓰는지 버튼 텍스트에 짧게 표시한다. 카드마다 색깔(물리/마법/공용) 배경 틴트 + GUI 프레임 +
+# 효과별 스킬 아이콘을 함께 갱신한다 — 레이어 순서(배경→프레임→아이콘→텍스트)는 .tscn의 자식 노드
+# 순서(Tint, Frame, Icon, Button)가 곧 그리기 순서이므로 여기서는 각 노드의 내용만 채우면 된다
 func _refresh_hand_buttons() -> void:
 	var cards: Array = _manager.hand.cards if _manager != null else []
 	for i in range(HAND_BUTTON_COUNT):
 		var btn := _hand_buttons[i]
+		var tint := _card_tints[i]
+		var frame := _card_frames[i]
+		var icon := _card_icons[i]
+
 		if i >= cards.size():
 			btn.text = "-"
 			btn.disabled = true
+			tint.color = Color(0, 0, 0, 0)
+			frame.visible = false
+			icon.visible = false
+			_card_wrappers[i].modulate = CARD_ENABLED_MODULATE
 			continue
 
 		var card: Card = cards[i]
@@ -388,6 +507,18 @@ func _refresh_hand_buttons() -> void:
 		btn.text = label
 		btn.disabled = not playable or _mode != Mode.ACTION
 
+		tint.color = CARD_TINT_COLOR.get(card.color, Color(0, 0, 0, 0))
+		frame.visible = true
+		frame.add_theme_stylebox_override("panel", _card_frame_styleboxes[card.color])
+
+		if _skill_icon_textures.has(card.effect):
+			icon.texture = _skill_icon_textures[card.effect]
+			icon.visible = true
+		else:
+			icon.visible = false
+
+		_card_wrappers[i].modulate = CARD_ENABLED_MODULATE if playable else CARD_DISABLED_MODULATE
+
 
 func _refresh_weapon_button() -> void:
 	if _manager == null:
@@ -395,26 +526,31 @@ func _refresh_weapon_button() -> void:
 	_weapon_button.text = "무기: %s" % _weapon_name(_manager.weapon.equipped)
 
 
-# 무기 과열 게이지와 적 저항 상태를 텍스트로 표시 (게이지 바 등 비주얼은 다음 단계에서)
-func _refresh_status_labels() -> void:
+# 무기 과열 게이지 바(검/지팡이)와 적 저항 아이콘을 갱신한다. 게이지는 0/25/50/75/100 중 가장 가까운
+# 프레임을 골라 표시하고, 저항은 없음(NONE)이면 아이콘 자체를 숨긴다
+func _refresh_status_icons() -> void:
 	if _manager == null:
 		return
-	_gauge_label.text = "검 %d%% / 지팡이 %d%%" % [_manager.weapon.sword_gauge, _manager.weapon.staff_gauge]
-	_resist_label.text = "적 저항: %s" % _resistance_name(_manager.resistance.current)
+	_sword_gauge_rect.texture = _sword_gauge_frames[_gauge_frame_index(_manager.weapon.sword_gauge)]
+	_staff_gauge_rect.texture = _staff_gauge_frames[_gauge_frame_index(_manager.weapon.staff_gauge)]
+
+	var resistance: int = _manager.resistance.current
+	if _resist_icon_textures.has(resistance):
+		_resist_icon.texture = _resist_icon_textures[resistance]
+		_resist_icon.visible = true
+	else:
+		_resist_icon.visible = false
+
+
+# 게이지(0~100, GAUGE_STEP=25 단위)를 프레임 인덱스로 변환. 시트의 프레임 순서는 왼쪽(0번)이 꽉 찬
+# 상태고 오른쪽(4번)으로 갈수록 비므로, 게이지가 높을수록(=꽉 찰수록) 더 낮은 인덱스를 골라야 한다
+func _gauge_frame_index(gauge: int) -> int:
+	var filled_steps := clampi(int(round(float(gauge) / WeaponState.GAUGE_STEP)), 0, GAUGE_FRAME_COUNT - 1)
+	return GAUGE_FRAME_COUNT - 1 - filled_steps
 
 
 func _weapon_name(weapon: int) -> String:
 	return "검" if weapon == WeaponState.WeaponType.SWORD else "지팡이"
-
-
-func _resistance_name(resistance: int) -> String:
-	match resistance:
-		EnemyResistance.ResistanceType.PHYSICAL:
-			return "물리"
-		EnemyResistance.ResistanceType.MAGIC:
-			return "마법"
-		_:
-			return "없음"
 
 
 # 연출 중에는 모든 조작을 잠근다 (손패 버튼은 _refresh_hand_buttons가 _mode도 함께 반영)
