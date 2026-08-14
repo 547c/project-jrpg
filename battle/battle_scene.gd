@@ -65,6 +65,11 @@ enum Mode { ACTION, BUSY, OVER }
 # ── 무기 과열 게이지 / 적 저항 / 카드 배경·프레임·아이콘용 에셋 (조사 리포트에서 확정한 매핑) ──
 # GUI/06.png의 대각선 게이지 스프라이트 시트: 색상 행마다 5프레임(0/25/50/75/100%)이 가로로 나열되어
 # 있다. 프레임 크기·간격은 픽셀 단위로 직접 측정한 값 (첫 프레임 x=3, 프레임 간격 48px, 폭 42px×높이 7px)
+#
+# [세로 게이지] 이 시트는 가로 막대만 들어 있어서, 잘라낸 프레임을 코드에서 90도 돌려 세로로 쓴다.
+# GUI/04.png에 세로 전용 막대가 따로 있긴 한데 색이 초록/파랑/노랑뿐이라 "검=빨강, 지팡이=파랑"이라는
+# 기존 색 약속을 지킬 수 없어서, 색이 맞는 이 시트를 돌려 쓰는 쪽을 택했다. 반시계 방향으로 돌리면
+# 가로 막대의 "가득 찬 왼쪽"이 아래로 가서, 게이지가 아래에서 위로 차오르는 자연스러운 방향이 된다
 const GAUGE_SHEET_PATH := "res://assets/GUI/06.png"
 const GAUGE_FRAME_X_START := 3
 const GAUGE_FRAME_X_STEP := 48
@@ -108,13 +113,18 @@ const CARD_FRONT_REGION := {
 # 5장 전부 동일한 회색 뒷면으로 통일한다 — 뒤집기 전에 카드 색으로 종류가 미리 드러나면 안 되기 때문
 const CARD_BACK_REGION := Rect2(54, 434, 68, 109)
 
-const CARD_SIZE := Vector2(72, 116) # HandRow의 각 카드 슬롯 크기 (.tscn과 일치시켜야 함)
+const CARD_SIZE := Vector2(138, 221) # HandArea의 각 카드 슬롯 크기 (.tscn의 Card1~5 offset과 일치시켜야 함)
 const CARD_ENABLED_MODULATE := Color(1, 1, 1, 1)
 const CARD_DISABLED_MODULATE := Color(0.5, 0.5, 0.5, 0.85) # 과열/마나부족 카드를 흐리게 (기존 disabled 느낌 유지)
 
 # ── 카드 드로우 뒤집기 연출 ──────────────────────────────────────────────────
 const DRAW_STAGGER := 0.08 # 카드마다 뒤집기 시작을 이만큼씩 늦춰 순서대로 펼쳐지는 느낌을 낸다
 const FLIP_HALF_DURATION := 0.15 # 뒷면->접힘, 접힘->앞면 각 구간 길이 (왕복 총 0.3초)
+
+# ── 카드 마우스 호버 연출 ────────────────────────────────────────────────────
+const HOVER_SCALE := 1.15
+const HOVER_RISE := 14.0 # 확대와 함께 위로 떠오르는 픽셀 수
+const HOVER_DURATION := 0.12
 
 @onready var _actors: Node2D = $View/Actors
 @onready var _player_sprite: AnimatedSprite2D = $View/Actors/PlayerSprite
@@ -132,16 +142,16 @@ const FLIP_HALF_DURATION := 0.15 # 뒷면->접힘, 접힘->앞면 각 구간 길
 @onready var _monster_hp_bar: ProgressBar = $View/HUD/MonsterCard/HPBar
 @onready var _monster_hp_bar_label: Label = $View/HUD/MonsterCard/HPBarLabel
 @onready var _monster_gold_label: Label = $View/HUD/MonsterCard/GoldLabel
-@onready var _message: Label = $View/HUD/BottomBar/HBox/MessageLabel
-@onready var _main_column: VBoxContainer = $View/HUD/BottomBar/HBox/Menus/MainColumn
-@onready var _sword_gauge_rect: TextureRect = $View/HUD/BottomBar/HBox/Menus/MainColumn/StatusRow/GaugeBars/SwordGauge
-@onready var _staff_gauge_rect: TextureRect = $View/HUD/BottomBar/HBox/Menus/MainColumn/StatusRow/GaugeBars/StaffGauge
-@onready var _resist_icon: TextureRect = $View/HUD/BottomBar/HBox/Menus/MainColumn/StatusRow/ResistBox/ResistIcon
-@onready var _hand_row: HBoxContainer = $View/HUD/BottomBar/HBox/Menus/MainColumn/HandRow
-@onready var _weapon_button: Button = $View/HUD/BottomBar/HBox/Menus/MainColumn/ControlRow/WeaponButton
-@onready var _end_turn_button: Button = $View/HUD/BottomBar/HBox/Menus/MainColumn/ControlRow/EndTurnButton
-@onready var _flee_button: Button = $View/HUD/BottomBar/HBox/Menus/MainColumn/ControlRow/FleeButton
-@onready var _close_button: Button = $View/HUD/BottomBar/HBox/Menus/CloseButton
+@onready var _message: Label = $View/HUD/BottomBar/InfoPanel/InfoRow/MessageLabel
+@onready var _resist_icon: TextureRect = $View/HUD/BottomBar/InfoPanel/InfoRow/ResistIcon
+@onready var _main_column: Control = $View/HUD/BottomBar/MainControls
+@onready var _sword_gauge_rect: TextureRect = $View/HUD/BottomBar/MainControls/WeaponColumn/SwordGauge
+@onready var _staff_gauge_rect: TextureRect = $View/HUD/BottomBar/MainControls/WeaponColumn/StaffGauge
+@onready var _hand_row: Control = $View/HUD/BottomBar/MainControls/HandArea
+@onready var _weapon_button: Button = $View/HUD/BottomBar/MainControls/WeaponColumn/WeaponButton
+@onready var _end_turn_button: Button = $View/HUD/BottomBar/MainControls/LeftButtons/EndTurnButton
+@onready var _flee_button: Button = $View/HUD/BottomBar/MainControls/LeftButtons/FleeButton
+@onready var _close_button: Button = $View/HUD/BottomBar/CloseButton
 
 var _monster_type: String = ""
 var _monster_data: Dictionary = {}
@@ -155,10 +165,14 @@ var _card_frames: Array[TextureRect] = []
 var _card_icons: Array[TextureRect] = []
 var _card_names: Array[Label] = []
 var _card_descs: Array[Label] = []
+# 카드 5칸의 원래 위치. 호버로 카드를 띄웠다가 정확히 제자리로 되돌리기 위해 기억해둔다.
+# HandArea는 컨테이너가 아니라 평범한 Control이라 자식 위치를 다시 정렬하지 않으므로,
+# .tscn에 적힌 offset이 곧 최종 위치이고 _ready() 시점에 읽어도 안전하다
+var _card_base_positions: Array[Vector2] = []
 
 # _build_battle_ui_resources()가 한 번 채워 넣는 캐시 (게이지 프레임 텍스처, 스킬/저항 아이콘, 카드 앞뒤 텍스처)
-var _sword_gauge_frames: Array[AtlasTexture] = []
-var _staff_gauge_frames: Array[AtlasTexture] = []
+var _sword_gauge_frames: Array[Texture2D] = []
+var _staff_gauge_frames: Array[Texture2D] = []
 var _skill_icon_textures: Dictionary = {}
 var _resist_icon_textures: Dictionary = {}
 var _card_front_textures: Dictionary = {} # "grey"/"red"/"blue"/"green" -> AtlasTexture
@@ -183,8 +197,9 @@ func _ready() -> void:
 
 	for i in range(HAND_BUTTON_COUNT):
 		var wrapper := _hand_row.get_node("Card%d" % (i + 1)) as Control
-		wrapper.pivot_offset = CARD_SIZE / 2.0 # 뒤집기 스케일이 카드 중심을 기준으로 일어나게
+		wrapper.pivot_offset = CARD_SIZE / 2.0 # 뒤집기/호버 스케일이 카드 중심을 기준으로 일어나게
 		_card_wrappers.append(wrapper)
+		_card_base_positions.append(wrapper.position)
 		_card_frames.append(wrapper.get_node("Frame") as TextureRect)
 		_card_icons.append(wrapper.get_node("Icon") as TextureRect)
 		_card_names.append(wrapper.get_node("NameLabel") as Label)
@@ -193,6 +208,9 @@ func _ready() -> void:
 		var btn := wrapper.get_node("Button") as Button
 		_hand_buttons.append(btn)
 		btn.pressed.connect(_on_card_pressed.bind(i))
+		# 호버 판정은 카드 전체를 덮는 Button이 이미 하고 있으므로 그 시그널을 그대로 빌려 쓴다
+		btn.mouse_entered.connect(_on_card_hover.bind(i, true))
+		btn.mouse_exited.connect(_on_card_hover.bind(i, false))
 
 	_weapon_button.pressed.connect(_on_weapon_pressed)
 	_end_turn_button.pressed.connect(_on_end_turn_pressed)
@@ -219,12 +237,17 @@ func _build_battle_ui_resources() -> void:
 	_card_back_texture = _atlas(card_sheet, CARD_BACK_REGION)
 
 
-# sheet에서 y행의 게이지 프레임 5장(0/25/50/75/100%)을 왼쪽부터 잘라 배열로 반환
-func _build_gauge_frames(sheet: Texture2D, y: int) -> Array[AtlasTexture]:
-	var frames: Array[AtlasTexture] = []
+# sheet에서 y행의 게이지 프레임 5장(0/25/50/75/100%)을 왼쪽부터 잘라, 각각 반시계로 90도 돌린
+# 세로 막대 텍스처로 만들어 반환한다. AtlasTexture는 시트의 영역을 가리키기만 할 뿐 회전은 못 하므로,
+# 픽셀을 실제로 돌려서 별도 ImageTexture로 굽는다 (프레임 5장 x 무기 2종 = 10장뿐이라 부담 없음)
+func _build_gauge_frames(sheet: Texture2D, y: int) -> Array[Texture2D]:
+	var sheet_image := sheet.get_image()
+	var frames: Array[Texture2D] = []
 	for i in range(GAUGE_FRAME_COUNT):
 		var x := GAUGE_FRAME_X_START + i * GAUGE_FRAME_X_STEP
-		frames.append(_atlas(sheet, Rect2(x, y, GAUGE_FRAME_WIDTH, GAUGE_FRAME_HEIGHT)))
+		var slice := sheet_image.get_region(Rect2i(x, y, GAUGE_FRAME_WIDTH, GAUGE_FRAME_HEIGHT))
+		slice.rotate_90(COUNTERCLOCKWISE)
+		frames.append(ImageTexture.create_from_image(slice))
 	return frames
 
 
@@ -515,6 +538,7 @@ func _populate_card_slot(i: int, cards: Array) -> void:
 		name_label.visible = false
 		desc_label.visible = false
 		_card_wrappers[i].modulate = CARD_ENABLED_MODULATE
+		_reset_card_hover(i) # 카드를 내서 칸이 비었는데 확대만 남아 있는 상태를 막는다
 		return
 
 	var card: Card = cards[i]
@@ -538,6 +562,8 @@ func _populate_card_slot(i: int, cards: Array) -> void:
 
 	btn.disabled = not playable or _mode != Mode.ACTION
 	_card_wrappers[i].modulate = CARD_ENABLED_MODULATE if playable else CARD_DISABLED_MODULATE
+	if not playable:
+		_reset_card_hover(i) # 커서를 올려둔 채 카드가 과열/마나부족으로 바뀌면 확대를 풀어준다
 	_apply_card_tier_visuals(_card_wrappers[i], card)
 
 
@@ -553,8 +579,20 @@ func _card_style_key(card: Card) -> String:
 			return "grey"
 
 
-# 효과 종류에 맞춰 카드 설명을 자동으로 만든다. 카드 이름 밑에 그대로 표시된다
+# 효과 종류에 맞춰 카드 설명을 자동으로 만든다. 카드 이름 밑에 그대로 표시된다.
+# 마법 카드(마나 소모가 있는 카드)는 설명 끝에 "(마나 N)"을 덧붙인다 — get_mana_cost()가
+# 물리/공용 카드는 항상 0을 돌려주므로 그런 카드는 자연히 표시가 안 붙는다
 func _card_description(card: Card) -> String:
+	var base := _card_base_description(card)
+	var mana_cost := card.get_mana_cost()
+	if mana_cost <= 0:
+		return base
+	# 카드 폭이 좁아 "물리/마법 피해 N (마나 N)"이 대개 두 줄로 접힌다 — 줄바꿈 자체는 어쩔
+	# 수 없지만, 최소한 숫자와 닫는 괄호는 갈라지지 않게 그 사이만 nbsp로 묶어둔다
+	return "%s (마나 %d )" % [base, mana_cost]
+
+
+func _card_base_description(card: Card) -> String:
 	match card.effect:
 		Card.EffectType.DAMAGE:
 			var kind := "마법" if card.color == Card.CardColor.MAGIC else "물리"
@@ -604,7 +642,7 @@ func _flip_card_in(index: int) -> Tween:
 	icon.visible = false
 	name_label.visible = false
 	desc_label.visible = false
-	wrapper.scale.x = 1.0
+	_reset_card_hover(index) # 이전 손패에서 커져 있던 카드가 있으면 원래 크기/위치에서 뒤집기를 시작하도록
 
 	var tween := create_tween()
 	tween.tween_interval(index * DRAW_STAGGER)
@@ -616,6 +654,39 @@ func _flip_card_in(index: int) -> Tween:
 
 # 뒤집기 중간(스케일 0) 지점에 호출되어 실제 내용을 채운다. 애니메이션이 도는 짧은 시간 동안은
 # 손패 버튼이 전부 잠겨 있어 손패가 바뀌지 않으므로, 지금 손패를 다시 읽어도 안전하다
+# 마우스가 카드에 올라오거나 벗어났을 때. 낼 수 없는 카드(과부하/마나부족/빈 칸)나 연출 중에는
+# 확대하지 않는다 — 다만 "벗어남"은 어떤 상태에서도 처리해, 확대된 채 커서만 빠져나가 카드가
+# 커진 상태로 굳는 일이 없게 한다 (호버 중에 카드가 비활성으로 바뀌는 경우가 실제로 있다)
+func _on_card_hover(index: int, hovering: bool) -> void:
+	if hovering and (_hand_buttons[index].disabled or _mode != Mode.ACTION):
+		return
+	_tween_card_hover(index, hovering)
+
+
+func _tween_card_hover(index: int, hovering: bool) -> void:
+	var wrapper := _card_wrappers[index]
+	var target_pos := _card_base_positions[index]
+	if hovering:
+		target_pos.y -= HOVER_RISE
+	# 확대된 카드가 오른쪽 이웃 카드에 가리지 않도록 위로 띄우는 동안만 z를 올린다
+	# (손패는 형제 노드라 기본적으로 뒤쪽 카드가 앞쪽 위에 그려진다)
+	wrapper.z_index = 1 if hovering else 0
+
+	var tween := create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(wrapper, "scale", Vector2.ONE * (HOVER_SCALE if hovering else 1.0), HOVER_DURATION)
+	tween.tween_property(wrapper, "position", target_pos, HOVER_DURATION)
+
+
+# 호버 상태를 트윈 없이 즉시 되돌린다. 손패가 새로 깔리거나 칸이 비는 등 "그 카드가 더 이상 아까
+# 그 카드가 아닌" 순간에 불러, 확대/떠오름이 다음 카드로 잘못 이어지지 않게 한다
+func _reset_card_hover(index: int) -> void:
+	var wrapper := _card_wrappers[index]
+	wrapper.scale = Vector2.ONE
+	wrapper.position = _card_base_positions[index]
+	wrapper.z_index = 0
+
+
 func _reveal_card_face(index: int) -> void:
 	if _manager == null or index >= _manager.hand.cards.size():
 		return
@@ -854,11 +925,11 @@ func _build_portrait(sheet: Texture2D, region: Rect2) -> AtlasTexture:
 
 # 뷰포트 크기에 비례해 배우 위치를 잡고(해상도 독립), 각 발밑에 타원 그림자를 그린다
 func _layout_actors() -> void:
-	# 하단 UI 바(카드 프레임 도입으로 손패가 세로로 길어져 예전보다도 더 높아짐)에 발이 가리지
-	# 않도록 배우를 위쪽으로 배치한다
+	# 하단 UI가 차지하는 영역(카드가 커지면서 260px까지 올라옴)에 발이 가리지 않도록 배우를
+	# 위쪽으로 배치한다. 나무 판자 배경이 사라져 UI가 배경 위에 떠 있으므로, 겹치면 바로 티가 난다
 	var vp := get_viewport().get_visible_rect().size
-	_player_sprite.position = Vector2(vp.x * 0.24, vp.y * 0.51)
-	_monster_sprite.position = Vector2(vp.x * 0.74, vp.y * 0.27)
+	_player_sprite.position = Vector2(vp.x * 0.22, vp.y * 0.45)
+	_monster_sprite.position = Vector2(vp.x * 0.72, vp.y * 0.24)
 
 	var player_foot := _player_sprite.position + Vector2(0, PLAYER_FRAME_SIZE * PLAYER_SCALE * 0.5 - 6.0)
 	var idle_frame_size: int = _variant.get("idle_frame_size", BattleData.MOB_IDLE_FRAME_SIZE)
