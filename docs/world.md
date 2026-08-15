@@ -76,6 +76,26 @@ between existing story beats, not replacing them — starting
 with the smallest possible version (1 class, 1-2 enemy types,
 1-2 side quests) and expanding only after confirming it works.
 
+## v1.5 addition — Kasim (Weapon Merchant)
+
+Added alongside the v1.5 combat/equipment layer anticipated above (not a
+core/state-tracked NPC — no ending impact, sells gear only).
+
+- **Identity**: a hooded figure reusing the monster pack's Skeleton Crew
+  "Rogue" sprite rather than a dedicated NPC one (every human NPC sprite
+  was already spoken for). The dialogue leans into this on purpose —
+  Kasim neither confirms nor denies being a monster when asked directly
+  ("That's... not something to ask. Maybe someday, if the time comes.").
+- **Placement**: stationed inside the village tavern.
+- **Role**: sells all 9 pieces of equipment in the game — sword, staff,
+  and shield, each in wood/bone/gold tier.
+- **Dialogue structure**: shop entry ("What do you sell?"), self-intro
+  ("Who are you?" — identity stays deliberately unresolved either way),
+  and affinity-gated (50+) small talk about running a shop in such a
+  remote village. Uses the same affinity system as the core NPCs.
+- **Not yet implemented**: at max affinity, Kasim is meant to gift the
+  player a weapon. Only the reverse (player → Kasim gift) exists so far.
+
 ## Part 2 — "Traces in the Sand" (added, no longer deferred to v2)
 
 After the well is restored and reported to Elara, Yusuf reveals his true

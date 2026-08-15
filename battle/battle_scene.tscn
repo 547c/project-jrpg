@@ -108,6 +108,10 @@ color = Color(0, 0, 0, 0.28)
 
 [node name="MonsterSprite" type="AnimatedSprite2D" parent="View/Actors" unique_id=213535214]
 
+[node name="ResistBadge" type="Sprite2D" parent="View/Actors"]
+texture_filter = 1
+scale = Vector2(1.1, 1.1)
+
 [node name="HUD" type="Control" parent="View" unique_id=1995357692]
 layout_mode = 3
 anchors_preset = 15
@@ -337,16 +341,6 @@ grow_vertical = 2
 mouse_filter = 2
 theme_override_constants/separation = 6
 
-[node name="ResistIcon" type="TextureRect" parent="View/HUD/BottomBar/InfoPanel/InfoRow"]
-visible = false
-custom_minimum_size = Vector2(26, 26)
-layout_mode = 2
-size_flags_vertical = 4
-texture_filter = 1
-mouse_filter = 2
-expand_mode = 1
-stretch_mode = 5
-
 [node name="MessageLabel" type="Label" parent="View/HUD/BottomBar/InfoPanel/InfoRow"]
 layout_mode = 2
 size_flags_horizontal = 3
@@ -356,6 +350,7 @@ theme_override_colors/font_color = Color(0.95, 0.93, 0.87, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 0.6)
 theme_override_constants/outline_size = 2
 theme_override_font_sizes/font_size = 13
+horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 3
 
@@ -402,22 +397,12 @@ offset_right = 372.0
 offset_bottom = 252.0
 mouse_filter = 2
 
-[node name="WeaponButton" type="Button" parent="View/HUD/BottomBar/MainControls/WeaponColumn"]
-texture_filter = 1
-layout_mode = 0
-offset_right = 110.0
-offset_bottom = 40.0
-theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
-theme_override_font_sizes/font_size = 13
-theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
-text = "무기: 검"
-
 [node name="SwordGauge" type="TextureRect" parent="View/HUD/BottomBar/MainControls/WeaponColumn"]
 layout_mode = 0
 offset_left = 18.0
-offset_top = 50.0
+offset_top = 0.0
 offset_right = 46.0
-offset_bottom = 218.0
+offset_bottom = 168.0
 texture_filter = 1
 mouse_filter = 2
 expand_mode = 1
@@ -426,13 +411,24 @@ stretch_mode = 5
 [node name="StaffGauge" type="TextureRect" parent="View/HUD/BottomBar/MainControls/WeaponColumn"]
 layout_mode = 0
 offset_left = 64.0
-offset_top = 50.0
+offset_top = 0.0
 offset_right = 92.0
-offset_bottom = 218.0
+offset_bottom = 168.0
 texture_filter = 1
 mouse_filter = 2
 expand_mode = 1
 stretch_mode = 5
+
+[node name="WeaponButton" type="Button" parent="View/HUD/BottomBar/MainControls/WeaponColumn"]
+texture_filter = 1
+layout_mode = 0
+offset_top = 184.0
+offset_right = 110.0
+offset_bottom = 230.0
+theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_font_sizes/font_size = 13
+theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+text = "무기: 검"
 
 [node name="HandArea" type="Control" parent="View/HUD/BottomBar/MainControls"]
 layout_mode = 1
@@ -464,14 +460,38 @@ mouse_filter = 2
 expand_mode = 1
 stretch_mode = 0
 
+[node name="NameBanner" type="TextureRect" parent="View/HUD/BottomBar/MainControls/HandArea/Card1"]
+visible = false
+texture_filter = 1
+layout_mode = 0
+offset_left = 10.0
+offset_top = 62.0
+offset_right = 128.0
+offset_bottom = 92.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 0
+
+[node name="IconFrame" type="TextureRect" parent="View/HUD/BottomBar/MainControls/HandArea/Card1"]
+visible = false
+texture_filter = 1
+layout_mode = 0
+offset_left = 43.0
+offset_top = 4.0
+offset_right = 95.0
+offset_bottom = 56.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
 [node name="Icon" type="TextureRect" parent="View/HUD/BottomBar/MainControls/HandArea/Card1"]
 visible = false
 texture_filter = 1
 layout_mode = 0
-offset_left = 48.0
+offset_left = 51.0
 offset_top = 12.0
-offset_right = 90.0
-offset_bottom = 54.0
+offset_right = 87.0
+offset_bottom = 48.0
 mouse_filter = 2
 expand_mode = 1
 stretch_mode = 5
@@ -479,33 +499,62 @@ stretch_mode = 5
 [node name="NameLabel" type="Label" parent="View/HUD/BottomBar/MainControls/HandArea/Card1"]
 visible = false
 layout_mode = 0
-offset_left = 8.0
-offset_top = 60.0
-offset_right = 130.0
+offset_left = 12.0
+offset_top = 64.0
+offset_right = 126.0
 offset_bottom = 90.0
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.97, 0.95, 0.9, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 0.7)
-theme_override_constants/outline_size = 3
-theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(1, 0.98, 0.94, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.8)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 17
 horizontal_alignment = 1
+vertical_alignment = 1
 autowrap_mode = 2
 clip_text = true
 
 [node name="DescLabel" type="Label" parent="View/HUD/BottomBar/MainControls/HandArea/Card1"]
 visible = false
 layout_mode = 0
-offset_left = 10.0
-offset_top = 96.0
-offset_right = 128.0
-offset_bottom = 210.0
+offset_left = 12.0
+offset_top = 102.0
+offset_right = 126.0
+offset_bottom = 186.0
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.95, 0.93, 0.88, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 0.65)
-theme_override_constants/outline_size = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.7)
+theme_override_constants/outline_size = 3
 theme_override_font_sizes/font_size = 13
 horizontal_alignment = 1
+vertical_alignment = 1
 autowrap_mode = 3
+
+[node name="ManaBadge" type="TextureRect" parent="View/HUD/BottomBar/MainControls/HandArea/Card1"]
+visible = false
+texture_filter = 1
+layout_mode = 0
+offset_left = 8.0
+offset_top = 179.0
+offset_right = 42.0
+offset_bottom = 213.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ManaLabel" type="Label" parent="View/HUD/BottomBar/MainControls/HandArea/Card1"]
+visible = false
+layout_mode = 0
+offset_left = 8.0
+offset_top = 179.0
+offset_right = 42.0
+offset_bottom = 213.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.85, 0.93, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.85)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 15
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="Button" type="Button" parent="View/HUD/BottomBar/MainControls/HandArea/Card1"]
 layout_mode = 1
@@ -540,14 +589,38 @@ mouse_filter = 2
 expand_mode = 1
 stretch_mode = 0
 
+[node name="NameBanner" type="TextureRect" parent="View/HUD/BottomBar/MainControls/HandArea/Card2"]
+visible = false
+texture_filter = 1
+layout_mode = 0
+offset_left = 10.0
+offset_top = 62.0
+offset_right = 128.0
+offset_bottom = 92.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 0
+
+[node name="IconFrame" type="TextureRect" parent="View/HUD/BottomBar/MainControls/HandArea/Card2"]
+visible = false
+texture_filter = 1
+layout_mode = 0
+offset_left = 43.0
+offset_top = 4.0
+offset_right = 95.0
+offset_bottom = 56.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
 [node name="Icon" type="TextureRect" parent="View/HUD/BottomBar/MainControls/HandArea/Card2"]
 visible = false
 texture_filter = 1
 layout_mode = 0
-offset_left = 48.0
+offset_left = 51.0
 offset_top = 12.0
-offset_right = 90.0
-offset_bottom = 54.0
+offset_right = 87.0
+offset_bottom = 48.0
 mouse_filter = 2
 expand_mode = 1
 stretch_mode = 5
@@ -555,33 +628,62 @@ stretch_mode = 5
 [node name="NameLabel" type="Label" parent="View/HUD/BottomBar/MainControls/HandArea/Card2"]
 visible = false
 layout_mode = 0
-offset_left = 8.0
-offset_top = 60.0
-offset_right = 130.0
+offset_left = 12.0
+offset_top = 64.0
+offset_right = 126.0
 offset_bottom = 90.0
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.97, 0.95, 0.9, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 0.7)
-theme_override_constants/outline_size = 3
-theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(1, 0.98, 0.94, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.8)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 17
 horizontal_alignment = 1
+vertical_alignment = 1
 autowrap_mode = 2
 clip_text = true
 
 [node name="DescLabel" type="Label" parent="View/HUD/BottomBar/MainControls/HandArea/Card2"]
 visible = false
 layout_mode = 0
-offset_left = 10.0
-offset_top = 96.0
-offset_right = 128.0
-offset_bottom = 210.0
+offset_left = 12.0
+offset_top = 102.0
+offset_right = 126.0
+offset_bottom = 186.0
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.95, 0.93, 0.88, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 0.65)
-theme_override_constants/outline_size = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.7)
+theme_override_constants/outline_size = 3
 theme_override_font_sizes/font_size = 13
 horizontal_alignment = 1
+vertical_alignment = 1
 autowrap_mode = 3
+
+[node name="ManaBadge" type="TextureRect" parent="View/HUD/BottomBar/MainControls/HandArea/Card2"]
+visible = false
+texture_filter = 1
+layout_mode = 0
+offset_left = 8.0
+offset_top = 179.0
+offset_right = 42.0
+offset_bottom = 213.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ManaLabel" type="Label" parent="View/HUD/BottomBar/MainControls/HandArea/Card2"]
+visible = false
+layout_mode = 0
+offset_left = 8.0
+offset_top = 179.0
+offset_right = 42.0
+offset_bottom = 213.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.85, 0.93, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.85)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 15
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="Button" type="Button" parent="View/HUD/BottomBar/MainControls/HandArea/Card2"]
 layout_mode = 1
@@ -616,14 +718,38 @@ mouse_filter = 2
 expand_mode = 1
 stretch_mode = 0
 
+[node name="NameBanner" type="TextureRect" parent="View/HUD/BottomBar/MainControls/HandArea/Card3"]
+visible = false
+texture_filter = 1
+layout_mode = 0
+offset_left = 10.0
+offset_top = 62.0
+offset_right = 128.0
+offset_bottom = 92.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 0
+
+[node name="IconFrame" type="TextureRect" parent="View/HUD/BottomBar/MainControls/HandArea/Card3"]
+visible = false
+texture_filter = 1
+layout_mode = 0
+offset_left = 43.0
+offset_top = 4.0
+offset_right = 95.0
+offset_bottom = 56.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
 [node name="Icon" type="TextureRect" parent="View/HUD/BottomBar/MainControls/HandArea/Card3"]
 visible = false
 texture_filter = 1
 layout_mode = 0
-offset_left = 48.0
+offset_left = 51.0
 offset_top = 12.0
-offset_right = 90.0
-offset_bottom = 54.0
+offset_right = 87.0
+offset_bottom = 48.0
 mouse_filter = 2
 expand_mode = 1
 stretch_mode = 5
@@ -631,33 +757,62 @@ stretch_mode = 5
 [node name="NameLabel" type="Label" parent="View/HUD/BottomBar/MainControls/HandArea/Card3"]
 visible = false
 layout_mode = 0
-offset_left = 8.0
-offset_top = 60.0
-offset_right = 130.0
+offset_left = 12.0
+offset_top = 64.0
+offset_right = 126.0
 offset_bottom = 90.0
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.97, 0.95, 0.9, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 0.7)
-theme_override_constants/outline_size = 3
-theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(1, 0.98, 0.94, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.8)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 17
 horizontal_alignment = 1
+vertical_alignment = 1
 autowrap_mode = 2
 clip_text = true
 
 [node name="DescLabel" type="Label" parent="View/HUD/BottomBar/MainControls/HandArea/Card3"]
 visible = false
 layout_mode = 0
-offset_left = 10.0
-offset_top = 96.0
-offset_right = 128.0
-offset_bottom = 210.0
+offset_left = 12.0
+offset_top = 102.0
+offset_right = 126.0
+offset_bottom = 186.0
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.95, 0.93, 0.88, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 0.65)
-theme_override_constants/outline_size = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.7)
+theme_override_constants/outline_size = 3
 theme_override_font_sizes/font_size = 13
 horizontal_alignment = 1
+vertical_alignment = 1
 autowrap_mode = 3
+
+[node name="ManaBadge" type="TextureRect" parent="View/HUD/BottomBar/MainControls/HandArea/Card3"]
+visible = false
+texture_filter = 1
+layout_mode = 0
+offset_left = 8.0
+offset_top = 179.0
+offset_right = 42.0
+offset_bottom = 213.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ManaLabel" type="Label" parent="View/HUD/BottomBar/MainControls/HandArea/Card3"]
+visible = false
+layout_mode = 0
+offset_left = 8.0
+offset_top = 179.0
+offset_right = 42.0
+offset_bottom = 213.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.85, 0.93, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.85)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 15
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="Button" type="Button" parent="View/HUD/BottomBar/MainControls/HandArea/Card3"]
 layout_mode = 1
@@ -692,14 +847,38 @@ mouse_filter = 2
 expand_mode = 1
 stretch_mode = 0
 
+[node name="NameBanner" type="TextureRect" parent="View/HUD/BottomBar/MainControls/HandArea/Card4"]
+visible = false
+texture_filter = 1
+layout_mode = 0
+offset_left = 10.0
+offset_top = 62.0
+offset_right = 128.0
+offset_bottom = 92.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 0
+
+[node name="IconFrame" type="TextureRect" parent="View/HUD/BottomBar/MainControls/HandArea/Card4"]
+visible = false
+texture_filter = 1
+layout_mode = 0
+offset_left = 43.0
+offset_top = 4.0
+offset_right = 95.0
+offset_bottom = 56.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
 [node name="Icon" type="TextureRect" parent="View/HUD/BottomBar/MainControls/HandArea/Card4"]
 visible = false
 texture_filter = 1
 layout_mode = 0
-offset_left = 48.0
+offset_left = 51.0
 offset_top = 12.0
-offset_right = 90.0
-offset_bottom = 54.0
+offset_right = 87.0
+offset_bottom = 48.0
 mouse_filter = 2
 expand_mode = 1
 stretch_mode = 5
@@ -707,33 +886,62 @@ stretch_mode = 5
 [node name="NameLabel" type="Label" parent="View/HUD/BottomBar/MainControls/HandArea/Card4"]
 visible = false
 layout_mode = 0
-offset_left = 8.0
-offset_top = 60.0
-offset_right = 130.0
+offset_left = 12.0
+offset_top = 64.0
+offset_right = 126.0
 offset_bottom = 90.0
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.97, 0.95, 0.9, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 0.7)
-theme_override_constants/outline_size = 3
-theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(1, 0.98, 0.94, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.8)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 17
 horizontal_alignment = 1
+vertical_alignment = 1
 autowrap_mode = 2
 clip_text = true
 
 [node name="DescLabel" type="Label" parent="View/HUD/BottomBar/MainControls/HandArea/Card4"]
 visible = false
 layout_mode = 0
-offset_left = 10.0
-offset_top = 96.0
-offset_right = 128.0
-offset_bottom = 210.0
+offset_left = 12.0
+offset_top = 102.0
+offset_right = 126.0
+offset_bottom = 186.0
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.95, 0.93, 0.88, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 0.65)
-theme_override_constants/outline_size = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.7)
+theme_override_constants/outline_size = 3
 theme_override_font_sizes/font_size = 13
 horizontal_alignment = 1
+vertical_alignment = 1
 autowrap_mode = 3
+
+[node name="ManaBadge" type="TextureRect" parent="View/HUD/BottomBar/MainControls/HandArea/Card4"]
+visible = false
+texture_filter = 1
+layout_mode = 0
+offset_left = 8.0
+offset_top = 179.0
+offset_right = 42.0
+offset_bottom = 213.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ManaLabel" type="Label" parent="View/HUD/BottomBar/MainControls/HandArea/Card4"]
+visible = false
+layout_mode = 0
+offset_left = 8.0
+offset_top = 179.0
+offset_right = 42.0
+offset_bottom = 213.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.85, 0.93, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.85)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 15
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="Button" type="Button" parent="View/HUD/BottomBar/MainControls/HandArea/Card4"]
 layout_mode = 1
@@ -768,14 +976,38 @@ mouse_filter = 2
 expand_mode = 1
 stretch_mode = 0
 
+[node name="NameBanner" type="TextureRect" parent="View/HUD/BottomBar/MainControls/HandArea/Card5"]
+visible = false
+texture_filter = 1
+layout_mode = 0
+offset_left = 10.0
+offset_top = 62.0
+offset_right = 128.0
+offset_bottom = 92.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 0
+
+[node name="IconFrame" type="TextureRect" parent="View/HUD/BottomBar/MainControls/HandArea/Card5"]
+visible = false
+texture_filter = 1
+layout_mode = 0
+offset_left = 43.0
+offset_top = 4.0
+offset_right = 95.0
+offset_bottom = 56.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
 [node name="Icon" type="TextureRect" parent="View/HUD/BottomBar/MainControls/HandArea/Card5"]
 visible = false
 texture_filter = 1
 layout_mode = 0
-offset_left = 48.0
+offset_left = 51.0
 offset_top = 12.0
-offset_right = 90.0
-offset_bottom = 54.0
+offset_right = 87.0
+offset_bottom = 48.0
 mouse_filter = 2
 expand_mode = 1
 stretch_mode = 5
@@ -783,33 +1015,62 @@ stretch_mode = 5
 [node name="NameLabel" type="Label" parent="View/HUD/BottomBar/MainControls/HandArea/Card5"]
 visible = false
 layout_mode = 0
-offset_left = 8.0
-offset_top = 60.0
-offset_right = 130.0
+offset_left = 12.0
+offset_top = 64.0
+offset_right = 126.0
 offset_bottom = 90.0
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.97, 0.95, 0.9, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 0.7)
-theme_override_constants/outline_size = 3
-theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(1, 0.98, 0.94, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.8)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 17
 horizontal_alignment = 1
+vertical_alignment = 1
 autowrap_mode = 2
 clip_text = true
 
 [node name="DescLabel" type="Label" parent="View/HUD/BottomBar/MainControls/HandArea/Card5"]
 visible = false
 layout_mode = 0
-offset_left = 10.0
-offset_top = 96.0
-offset_right = 128.0
-offset_bottom = 210.0
+offset_left = 12.0
+offset_top = 102.0
+offset_right = 126.0
+offset_bottom = 186.0
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.95, 0.93, 0.88, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 0.65)
-theme_override_constants/outline_size = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.7)
+theme_override_constants/outline_size = 3
 theme_override_font_sizes/font_size = 13
 horizontal_alignment = 1
+vertical_alignment = 1
 autowrap_mode = 3
+
+[node name="ManaBadge" type="TextureRect" parent="View/HUD/BottomBar/MainControls/HandArea/Card5"]
+visible = false
+texture_filter = 1
+layout_mode = 0
+offset_left = 8.0
+offset_top = 179.0
+offset_right = 42.0
+offset_bottom = 213.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ManaLabel" type="Label" parent="View/HUD/BottomBar/MainControls/HandArea/Card5"]
+visible = false
+layout_mode = 0
+offset_left = 8.0
+offset_top = 179.0
+offset_right = 42.0
+offset_bottom = 213.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.85, 0.93, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.85)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 15
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="Button" type="Button" parent="View/HUD/BottomBar/MainControls/HandArea/Card5"]
 layout_mode = 1
@@ -827,11 +1088,11 @@ theme_override_styles/disabled = SubResource("StyleBoxFlat_card_btn_normal")
 visible = false
 texture_filter = 1
 layout_mode = 0
-offset_left = 430.0
-offset_top = 90.0
-offset_right = 730.0
-offset_bottom = 160.0
+offset_left = 16.0
+offset_top = 150.0
+offset_right = 250.0
+offset_bottom = 196.0
 theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 14
 theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
 text = "닫기"

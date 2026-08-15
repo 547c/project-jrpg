@@ -26,7 +26,14 @@ const MONSTER_DEATH_FPS := 8.0
 const PLAYER_PORTRAIT_SHEET_PATH := "res://assets/graphics/Pixel Crawler - Free Pack/Entities/Characters/Body_A/Animations/Idle_Base/Idle_Down-Sheet.png"
 const PLAYER_PORTRAIT_REGION := Rect2(23, 16, 18, 17)
 
-const PLAYER_SCALE := 2.4
+# 플레이어를 몬스터보다 크게 그려 "카메라에 더 가까이 있다"는 원근을 만든다.
+# PLAYER_FOOT_FROM_CENTER는 시트를 실제로 측정한 값이다 — Idle_Up 프레임(64px)에서 캐릭터의
+# 발끝은 y=47 근처이고 프레임 중심은 y=32라, 스프라이트 원점에서 발까지가 약 15.5px이다.
+# (이 값을 쓰지 않고 "프레임 높이의 절반"으로 잡으면 캐릭터가 프레임 안에서 위쪽에 그려져 있는
+#  만큼 그림자가 발보다 한참 아래에 깔려 캐릭터가 공중에 뜬 것처럼 보인다 — 실제로 그랬다)
+const PLAYER_SCALE := 3.4
+const PLAYER_FOOT_FROM_CENTER := 15.5
+const PLAYER_BODY_WIDTH := 16.0 # 시트에서 잰 캐릭터 실제 폭 (그림자 크기를 여기에 맞춘다)
 const MONSTER_SCALE := 3.2
 
 const HP_TWEEN_DURATION := 0.4
@@ -56,6 +63,50 @@ const FLEE_GOLD_PENALTY_MAX := 10
 # 한 등급에 장비가 3종뿐이고 장비는 소모되지 않아 한 번씩만 모으면 되므로, 15%면 대략 일곱 번에
 # 한 번 떨어져 한 등급을 다 모으는 데 스무 번 남짓 — 파밍이 의미는 있되 끝없이 늘어지지 않는 수준
 const EQUIPMENT_DROP_CHANCE := 0.15
+
+# ── 카드 발동 이펙트 (assets/vfx/Free — 불꽃/스파크 계열, 64x64 칸, 9색 행 공통 팔레트) ──
+# 시트 전체가 같은 팔레트를 공유한다: 행0=빨강 1=보라 2=하늘색 3=초록 4=주황 5=회백 6=적갈 7=진홍 8=암보라.
+# 카드 프레임 색 체계(_card_style_key: 빨강=물리/파랑=마법/초록=회복·마나/회색=방어·회피)와 맞춰 골랐고,
+# 회복과 마나는 카드 프레임은 같은 초록이라도 실제 타격 이펙트는 모양과 색을 다르게 해 구분되게 했다.
+# (조사 결과: 15개 Part 폴더 전체가 이 팔레트/그리드를 공유해서, 새 이펙트가 필요해지면 같은 방식으로
+#  아무 Part에서나 골라 추가하면 된다)
+const VFX_FRAME_SIZE := 64
+const VFX_DISPLAY_SCALE := 2.6
+const VFX_ROW_RED := 0
+const VFX_ROW_VIOLET := 1
+const VFX_ROW_SKY := 2
+const VFX_ROW_GREEN := 3
+const VFX_ROW_GREY := 5
+const VFX_ROW_CRIMSON := 7
+
+# key -> {path, row, frames, fps}. fps*프레임=재생 시간: 물리(0.3s, 툭 치는 느낌)/마법·회복·마나·방어
+# (~0.45~0.5s, 화려하게 펼쳐짐)/회피(0.2s, 스치듯 빠르게)로 카드 성격에 맞춰 길이를 다르게 뒀다
+const VFX_CONFIG := {
+	# 회전하는 표창 모양이 커지며 터진다 — 무기가 스치고 지나간 자국처럼 보여 물리 공격에 맞다
+	"physical": {"path": "res://assets/vfx/Free/Part 6/283.png", "row": VFX_ROW_CRIMSON, "frames": 9, "fps": 30.0},
+	# 방사형으로 뻗어나가는 별 모양 — 마법탄이 적중해 터지는 느낌
+	"magic": {"path": "res://assets/vfx/Free/Part 14/652.png", "row": VFX_ROW_VIOLET, "frames": 16, "fps": 34.0},
+	# 잔잔히 커지는 고리 — "부드러운 빛"에 해당하는, 이 팩에서 가장 폭발적이지 않은 모양
+	"heal": {"path": "res://assets/vfx/Free/Part 10/475.png", "row": VFX_ROW_GREEN, "frames": 12, "fps": 26.0},
+	# 소용돌이치는 문(포탈) 모양 — 마나를 끌어오는 느낌을 내려고 회복과는 다른 모양을 골랐다
+	"mana": {"path": "res://assets/vfx/Free/Part 1/03.png", "row": VFX_ROW_SKY, "frames": 13, "fps": 26.0},
+	# 회복과 같은 고리 텍스처를 회색으로만 바꿔 재사용 — 방어는 "빛"이 아니라 "막"이 둘러지는
+	# 느낌이라 강철색이 더 어울리고, 모양을 공유해도 색이 다르면 헷갈리지 않는다
+	"defend": {"path": "res://assets/vfx/Free/Part 10/475.png", "row": VFX_ROW_GREY, "frames": 12, "fps": 26.0},
+	# 짧은 대각선 스트릭 — 실제 이동이 아니라 "잔상"으로 회피를 표현
+	"dodge": {"path": "res://assets/vfx/Free/Part 8/377.png", "row": VFX_ROW_GREY, "frames": 8, "fps": 40.0},
+}
+
+# key -> 400 Sounds pack 경로. 물리/방어는 Weapons(금속·타격), 마법/마나는 복고풍 신스(폭발감/충전감),
+# 회복은 Musical Effects의 은은한 비브라폰 차임, 회피는 Other의 휙 스치는 소리
+const VFX_SFX := {
+	"physical": "res://assets/sfx/400 Sounds pack/Weapons/sword_slice.wav",
+	"magic": "res://assets/sfx/400 Sounds pack/Retro/explosion_quick.wav",
+	"heal": "res://assets/sfx/400 Sounds pack/Musical Effects/vibraphone_chime_positive.wav",
+	"mana": "res://assets/sfx/400 Sounds pack/Retro/power_up.wav",
+	"defend": "res://assets/sfx/400 Sounds pack/Weapons/sword_clash.wav",
+	"dodge": "res://assets/sfx/400 Sounds pack/Other/whoosh_2.wav",
+}
 
 const HAND_BUTTON_COUNT := 5
 
@@ -97,7 +148,17 @@ const SKILL_ICON_REGION := {
 const RESIST_ICON_REGION := {
 	EnemyResistance.ResistanceType.PHYSICAL: Rect2(320, 1696, RAVEN_ICON_SIZE, RAVEN_ICON_SIZE), # fb859 — 빨강 저항 방패
 	EnemyResistance.ResistanceType.MAGIC: Rect2(224, 1696, RAVEN_ICON_SIZE, RAVEN_ICON_SIZE),     # fb856 — 하늘색 저항 방패
+	EnemyResistance.ResistanceType.NONE: Rect2(128, 1184, RAVEN_ICON_SIZE, RAVEN_ICON_SIZE),      # fb597 — 민무늬 방패
 }
+# 저항 없음(NONE)은 같은 방패 그림을 회색으로 죽이고 반투명하게 깔아 "지금은 아무 저항도 없다"를
+# 나타낸다. 시트에 회색 저항 방패가 따로 없어서 색을 빼는 쪽을 택했다 — 빨강/파랑으로 또렷한
+# 저항 상태와, 흐릿한 무저항 상태가 색과 진하기 양쪽으로 확실히 구분된다
+const RESIST_BADGE_MODULATE := {
+	EnemyResistance.ResistanceType.PHYSICAL: Color(1, 1, 1, 1),
+	EnemyResistance.ResistanceType.MAGIC: Color(1, 1, 1, 1),
+	EnemyResistance.ResistanceType.NONE: Color(0.55, 0.55, 0.6, 0.5),
+}
+const RESIST_BADGE_GAP := 14.0 # 몬스터 그림 꼭대기 위로 이만큼 띄운다 (실측 간격 약 8px)
 
 # 카드 프레임/뒷면 전용 시트(assets/GUI/card_template.png). 칸 크기 68x109, 색상별 앞면(테두리)·
 # 뒷면(다이아몬드 문양) 좌표를 직접 픽셀 단위로 조사해 확정한 값이다 (주황 칸은 이번엔 안 씀).
@@ -112,6 +173,24 @@ const CARD_FRONT_REGION := {
 }
 # 5장 전부 동일한 회색 뒷면으로 통일한다 — 뒤집기 전에 카드 색으로 종류가 미리 드러나면 안 되기 때문
 const CARD_BACK_REGION := Rect2(54, 434, 68, 109)
+
+# 같은 시트의 안 쓰던 부속 요소들. 참고 이미지처럼 "원형 아이콘 테두리 + 이름 배너 + 모서리 배지"
+# 구조를 만들어 카드가 텍스트만 덩그러니 있는 느낌을 없앤다. 셋 다 카드 4색(회색/빨강/파랑/초록)이
+# 전부 갖춰져 있어 카드 색과 1:1로 맞출 수 있다
+const CARD_ICON_FRAME_REGION := { # 아이콘 뒤에 깔리는 원형 테두리 (20x20)
+	"grey": Rect2(294, 647, 20, 20),
+	"red": Rect2(294, 711, 20, 20),
+	"blue": Rect2(294, 775, 20, 20),
+	"green": Rect2(294, 743, 20, 20),
+}
+const CARD_NAME_BANNER_REGION := { # 카드 이름 뒤에 깔리는 띠 (46x11)
+	"grey": Rect2(369, 483, 46, 11),
+	"red": Rect2(369, 547, 46, 11),
+	"blue": Rect2(369, 611, 46, 11),
+	"green": Rect2(369, 579, 46, 11),
+}
+# 마나 소모량을 넣을 마름모 배지 (16x16). 마나는 언제나 마법 자원이라 카드 색과 무관하게 파랑 고정
+const CARD_MANA_BADGE_REGION := Rect2(432, 640, 16, 16)
 
 const CARD_SIZE := Vector2(138, 221) # HandArea의 각 카드 슬롯 크기 (.tscn의 Card1~5 offset과 일치시켜야 함)
 const CARD_ENABLED_MODULATE := Color(1, 1, 1, 1)
@@ -143,7 +222,7 @@ const HOVER_DURATION := 0.12
 @onready var _monster_hp_bar_label: Label = $View/HUD/MonsterCard/HPBarLabel
 @onready var _monster_gold_label: Label = $View/HUD/MonsterCard/GoldLabel
 @onready var _message: Label = $View/HUD/BottomBar/InfoPanel/InfoRow/MessageLabel
-@onready var _resist_icon: TextureRect = $View/HUD/BottomBar/InfoPanel/InfoRow/ResistIcon
+@onready var _resist_badge: Sprite2D = $View/Actors/ResistBadge
 @onready var _main_column: Control = $View/HUD/BottomBar/MainControls
 @onready var _sword_gauge_rect: TextureRect = $View/HUD/BottomBar/MainControls/WeaponColumn/SwordGauge
 @onready var _staff_gauge_rect: TextureRect = $View/HUD/BottomBar/MainControls/WeaponColumn/StaffGauge
@@ -165,6 +244,10 @@ var _card_frames: Array[TextureRect] = []
 var _card_icons: Array[TextureRect] = []
 var _card_names: Array[Label] = []
 var _card_descs: Array[Label] = []
+var _card_icon_frames: Array[TextureRect] = []
+var _card_name_banners: Array[TextureRect] = []
+var _card_mana_badges: Array[TextureRect] = []
+var _card_mana_labels: Array[Label] = []
 # 카드 5칸의 원래 위치. 호버로 카드를 띄웠다가 정확히 제자리로 되돌리기 위해 기억해둔다.
 # HandArea는 컨테이너가 아니라 평범한 Control이라 자식 위치를 다시 정렬하지 않으므로,
 # .tscn에 적힌 offset이 곧 최종 위치이고 _ready() 시점에 읽어도 안전하다
@@ -176,11 +259,18 @@ var _staff_gauge_frames: Array[Texture2D] = []
 var _skill_icon_textures: Dictionary = {}
 var _resist_icon_textures: Dictionary = {}
 var _card_front_textures: Dictionary = {} # "grey"/"red"/"blue"/"green" -> AtlasTexture
+var _card_icon_frame_textures: Dictionary = {}
+var _card_name_banner_textures: Dictionary = {}
 var _card_back_texture: AtlasTexture
+var _card_mana_badge_texture: AtlasTexture
+var _vfx_frames: Dictionary = {} # "physical"/"magic"/"heal"/"mana"/"defend"/"dodge" -> SpriteFrames
 
 # 마지막으로 뒤집기 연출을 재생한 턴 번호. _manager.turn_number와 다르면 "방금 새로 뽑은 손패"라는
 # 뜻이라 뒤집기를 재생하고, 같으면 카드 한 장을 냈다거나 하는 중간 갱신이라 곧바로 반영한다
 var _last_drawn_turn_number: int = 0
+# 몬스터 idle 프레임 안에서 실제 그림이 시작되는 y (원본 픽셀). 저항 배지를 머리 바로 위에
+# 붙이기 위해 _setup_sprites()에서 시트를 직접 재서 채운다
+var _monster_art_top_offset: float = 0.0
 
 # 매니저 시그널로 받은 "방금 무슨 일이 있었는지"를 담아두는 버퍼. 시그널은 매니저 안에서 동기적으로
 # 발생하는데 연출은 그 뒤에 이어서 재생해야 하므로, 콜백은 기록만 하고 실제 애니메이션은
@@ -204,6 +294,10 @@ func _ready() -> void:
 		_card_icons.append(wrapper.get_node("Icon") as TextureRect)
 		_card_names.append(wrapper.get_node("NameLabel") as Label)
 		_card_descs.append(wrapper.get_node("DescLabel") as Label)
+		_card_icon_frames.append(wrapper.get_node("IconFrame") as TextureRect)
+		_card_name_banners.append(wrapper.get_node("NameBanner") as TextureRect)
+		_card_mana_badges.append(wrapper.get_node("ManaBadge") as TextureRect)
+		_card_mana_labels.append(wrapper.get_node("ManaLabel") as Label)
 
 		var btn := wrapper.get_node("Button") as Button
 		_hand_buttons.append(btn)
@@ -234,7 +328,30 @@ func _build_battle_ui_resources() -> void:
 	var card_sheet := load(CARD_SHEET_PATH) as Texture2D
 	for key in CARD_FRONT_REGION:
 		_card_front_textures[key] = _atlas(card_sheet, CARD_FRONT_REGION[key])
+		_card_icon_frame_textures[key] = _atlas(card_sheet, CARD_ICON_FRAME_REGION[key])
+		_card_name_banner_textures[key] = _atlas(card_sheet, CARD_NAME_BANNER_REGION[key])
 	_card_back_texture = _atlas(card_sheet, CARD_BACK_REGION)
+	_card_mana_badge_texture = _atlas(card_sheet, CARD_MANA_BADGE_REGION)
+
+	for key in VFX_CONFIG:
+		_vfx_frames[key] = _build_vfx_frames(VFX_CONFIG[key])
+
+
+# VFX_CONFIG 항목 하나로 재생 한 번짜리 SpriteFrames를 만든다. 같은 시트를 카드마다 새로 열지 않도록
+# load()는 캐시되지만, SpriteFrames 자체는 한 번만 만들어 재사용한다 — 실제 재생은 _play_card_vfx()가
+# 매번 이 SpriteFrames를 참조하는 새 AnimatedSprite2D를 만들어서 하므로 여러 장 동시 재생도 안전하다
+func _build_vfx_frames(cfg: Dictionary) -> SpriteFrames:
+	var sheet := load(cfg["path"]) as Texture2D
+	var frames := SpriteFrames.new()
+	if frames.has_animation("default"):
+		frames.remove_animation("default")
+	frames.add_animation("play")
+	frames.set_animation_speed("play", cfg["fps"])
+	frames.set_animation_loop("play", false)
+	var row: int = cfg["row"]
+	for i in range(cfg["frames"]):
+		frames.add_frame("play", _atlas(sheet, Rect2(i * VFX_FRAME_SIZE, row * VFX_FRAME_SIZE, VFX_FRAME_SIZE, VFX_FRAME_SIZE)))
+	return frames
 
 
 # sheet에서 y행의 게이지 프레임 5장(0/25/50/75/100%)을 왼쪽부터 잘라, 각각 반시계로 90도 돌린
@@ -297,14 +414,61 @@ func start_with(monster_type: String, variant: Dictionary) -> void:
 	_set_inputs_enabled(false)
 	await _refresh_all() # 손패가 새로 뽑힌 첫 턴이라 여기서 뒤집기 연출까지 끝날 때까지 기다린다
 	_set_inputs_enabled(true)
-	# 몬스터별 전용 등장 문구가 있으면 그걸, 없으면 기본 "N 출현!"을 쓴다
+	# 몬스터별 전용 등장 문구가 있으면 그걸, 없으면 기본 "N 출현!"을 쓴다.
+	# 첫 턴 저항도 이미 굴려진 상태라, 등장 문구 뒤에 이어 붙여 1턴부터 저항을 알 수 있게 한다
 	_message.text = _monster_data.get("appear_text", "%s 출현!" % _monster_data["name"])
+	var first_resist := _resistance_announcement()
+	if first_resist != "":
+		_message.text += "\n" + first_resist
 
 
 # ── 매니저 시그널 수신 (기록만; 연출은 아래 flow 함수들이 담당) ──────────────
 
-func _on_turn_started(turn_number: int) -> void:
-	_message.text = "%d번째 턴 — 카드를 사용하세요." % turn_number
+func _on_turn_started(_turn_number: int) -> void:
+	_show_turn_message()
+
+
+# "N번째 턴" 안내 + (저항이 걸린 턴이면) 저항 안내를 인포창에 띄운다.
+# 턴 시작 시그널은 적 반격 연출보다 먼저 날아오는데 그 연출이 인포창을 덮어쓰므로, 연출이 끝난
+# 뒤에도 한 번 더 불러줘야 플레이어가 이번 턴 저항을 실제로 읽을 수 있다 (_end_turn_flow 참고)
+func _show_turn_message() -> void:
+	if _manager == null:
+		return
+	var text := "%d번째 턴 — 카드를 사용하세요." % _manager.turn_number
+	var resist_text := _resistance_announcement()
+	if resist_text != "":
+		text += "\n" + resist_text
+	_message.text = text
+
+
+# "오크가 물리 면역을 얻었다! 데미지 50% 감소" 같은 안내. 감소 퍼센트는 실제 규칙값
+# (EnemyResistance.RESIST_DAMAGE_MULTIPLIER)에서 계산하므로, 밸런스를 바꿔도 문구가 따라간다.
+# 저항이 없는 턴이면 빈 문자열
+func _resistance_announcement() -> String:
+	var resistance: int = _manager.resistance.current
+	var kind := ""
+	match resistance:
+		EnemyResistance.ResistanceType.PHYSICAL:
+			kind = "물리"
+		EnemyResistance.ResistanceType.MAGIC:
+			kind = "마법"
+		_:
+			return ""
+
+	var cut_percent := int(round((1.0 - EnemyResistance.RESIST_DAMAGE_MULTIPLIER) * 100.0))
+	var name_: String = _monster_data["name"]
+	return "%s%s %s 면역을 얻었다! 데미지 %d%% 감소" % [name_, _subject_particle(name_), kind, cut_percent]
+
+
+# 한글 이름 뒤에 붙일 주격 조사를 고른다 (받침 있으면 "이", 없으면 "가").
+# "오크가 / 스켈레톤이"처럼 몬스터마다 달라서, "이(가)"로 얼버무리지 않고 제대로 고른다
+func _subject_particle(word: String) -> String:
+	if word.is_empty():
+		return "가"
+	var last := word.unicode_at(word.length() - 1)
+	if last < 0xAC00 or last > 0xD7A3: # 한글 음절이 아니면(숫자/영문 등) 무난한 쪽으로
+		return "가"
+	return "이" if (last - 0xAC00) % 28 != 0 else "가"
 
 
 func _on_card_played(_card: Card, damage_dealt: int) -> void:
@@ -366,13 +530,16 @@ func _play_card_flow(card: Card) -> void:
 
 
 # 카드 종류별 연출. 데미지는 매니저가 계산한 최종 피해(_last_card_damage)를 그대로 표시하고,
-# 회복량은 GameState 값의 전후 차이로 실제 적용된 만큼만 보여준다
+# 회복량은 GameState 값의 전후 차이로 실제 적용된 만큼만 보여준다.
+# 이펙트/사운드는 여기서 카드별로 직접 부르지 않고 _vfx_key_for_card()로 종류를 정한 뒤
+# _play_card_vfx()에서 이펙트+사운드를 함께 재생한다 — 화면 흔들림만 DAMAGE에서 따로 켠다
 func _animate_card(card: Card, hp_before: int, mana_before: int) -> void:
 	match card.effect:
 		Card.EffectType.DAMAGE:
 			await _lunge(_player_sprite, _monster_sprite.position)
 			_shake_actors()
 			_flash_hit(_monster_sprite)
+			_play_card_vfx(card, _monster_sprite)
 			_show_popup(_monster_sprite.position, "-%d" % _last_card_damage, DAMAGE_COLOR)
 			_animate_hp_bar(_monster_hp_bar, _manager.monster_hp)
 			_update_monster_hp_text()
@@ -381,23 +548,67 @@ func _animate_card(card: Card, hp_before: int, mana_before: int) -> void:
 		Card.EffectType.HEAL_HP:
 			var healed: int = GameState.get_flag("player_hp") - hp_before
 			_flash_hit(_player_sprite)
+			_play_card_vfx(card, _player_sprite)
 			_show_popup(_player_sprite.position, "+%d" % healed, HEAL_COLOR)
 			_animate_hp_bar(_player_hp_bar, GameState.get_flag("player_hp"))
 			_message.text = "%s — 체력 %d 회복!" % [card.card_name, healed]
 			await _wait(0.4)
 		Card.EffectType.RESTORE_MANA:
 			var restored: int = GameState.get_flag("player_mana") - mana_before
+			_play_card_vfx(card, _player_sprite)
 			_show_popup(_player_sprite.position, "+%d MP" % restored, MANA_COLOR)
 			_message.text = "%s — 마나 %d 회복!" % [card.card_name, restored]
 			await _wait(0.4)
 		Card.EffectType.DEFEND:
+			_play_card_vfx(card, _player_sprite)
 			_show_popup(_player_sprite.position, "방어 %d" % _manager.get_pending_defense(), GUARD_COLOR)
 			_message.text = "%s — 다음 공격 피해를 %d 줄인다." % [card.card_name, _manager.get_pending_defense()]
 			await _wait(0.35)
 		Card.EffectType.DODGE:
+			_play_card_vfx(card, _player_sprite)
 			_show_popup(_player_sprite.position, "회피 준비", DODGE_COLOR)
 			_message.text = "%s — 다음 공격을 흘려낸다." % card.card_name
 			await _wait(0.35)
+
+
+# card.effect(+물리/마법 구분)에 맞는 VFX/SFX 키를 고른다. _card_style_key()와 판단 기준은 같지만
+# (물리=빨강/마법=파랑 계열) "회복"과 "마나"를 서로 다른 키로 나눈다는 점이 다르다 — 카드 프레임은
+# 둘 다 초록으로 묶지만, 타격 이펙트까지 같으면 두 결과를 구분하기 어렵기 때문
+func _vfx_key_for_card(card: Card) -> String:
+	match card.effect:
+		Card.EffectType.DAMAGE:
+			return "magic" if card.color == Card.CardColor.MAGIC else "physical"
+		Card.EffectType.HEAL_HP:
+			return "heal"
+		Card.EffectType.RESTORE_MANA:
+			return "mana"
+		Card.EffectType.DEFEND:
+			return "defend"
+		Card.EffectType.DODGE:
+			return "dodge"
+		_:
+			return ""
+
+
+# target 위치에 카드에 맞는 이펙트를 한 번 재생하고, 어울리는 타격음을 SFXPlayer로 함께 튼다.
+# 이펙트 스프라이트는 재생이 끝나면(animation_finished) 스스로 사라진다
+func _play_card_vfx(card: Card, target: Node2D) -> void:
+	var key := _vfx_key_for_card(card)
+	if key == "" or not _vfx_frames.has(key):
+		return
+
+	if VFX_SFX.has(key):
+		SFXPlayer.play(VFX_SFX[key])
+
+	var sprite := AnimatedSprite2D.new()
+	sprite.sprite_frames = _vfx_frames[key]
+	sprite.position = target.position
+	sprite.scale = Vector2.ONE * VFX_DISPLAY_SCALE
+	sprite.z_index = 15
+	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_actors.add_child(sprite)
+	sprite.animation_finished.connect(sprite.queue_free)
+	sprite.play("play")
 
 
 # [무기 전환]: 턴당 3회 제한은 매니저(WeaponState)가 관리하므로 여기서는 요청만 하고 결과를 표시한다
@@ -437,6 +648,9 @@ func _end_turn_flow() -> void:
 	if _outcome == "defeat":
 		_finish_defeat()
 		return
+
+	# 적 반격 연출이 인포창을 덮어썼으므로, 이제 새 턴 안내(+이번 턴 저항)를 다시 띄운다
+	_show_turn_message()
 
 	_mode = Mode.ACTION
 	_set_inputs_enabled(true)
@@ -533,16 +747,14 @@ func _populate_card_slot(i: int, cards: Array) -> void:
 
 	if i >= cards.size():
 		btn.disabled = true
-		frame.visible = false
-		icon.visible = false
-		name_label.visible = false
-		desc_label.visible = false
+		_set_card_parts_visible(i, false)
 		_card_wrappers[i].modulate = CARD_ENABLED_MODULATE
 		_reset_card_hover(i) # 카드를 내서 칸이 비었는데 확대만 남아 있는 상태를 막는다
 		return
 
 	var card: Card = cards[i]
 	var playable: bool = _manager.can_play_card(card)
+	var style_key := _card_style_key(card)
 
 	var desc := _card_description(card)
 	if not playable:
@@ -551,14 +763,22 @@ func _populate_card_slot(i: int, cards: Array) -> void:
 		elif not GameState.can_afford_mana(card.get_mana_cost()):
 			desc += "\n[마나부족]"
 
-	frame.visible = true
-	frame.texture = _card_front_textures[_card_style_key(card)]
-	icon.visible = true
+	_set_card_parts_visible(i, true)
+	frame.texture = _card_front_textures[style_key]
+	_card_icon_frames[i].texture = _card_icon_frame_textures[style_key]
+	_card_name_banners[i].texture = _card_name_banner_textures[style_key]
 	icon.texture = _skill_icon_textures.get(card.effect)
-	name_label.visible = true
 	name_label.text = card.card_name
-	desc_label.visible = true
 	desc_label.text = desc
+
+	# 마나 소모량은 설명 문장에 끼워 넣지 않고 왼쪽 아래 마름모 배지로 뺀다 — 참고 이미지의
+	# 모서리 배지와 같은 방식이고, 좁은 설명칸도 한 줄 아낀다. 마나를 안 쓰는 카드면 배지째 숨긴다
+	var mana_cost := card.get_mana_cost()
+	_card_mana_badges[i].visible = mana_cost > 0
+	_card_mana_labels[i].visible = mana_cost > 0
+	if mana_cost > 0:
+		_card_mana_badges[i].texture = _card_mana_badge_texture
+		_card_mana_labels[i].text = str(mana_cost)
 
 	btn.disabled = not playable or _mode != Mode.ACTION
 	_card_wrappers[i].modulate = CARD_ENABLED_MODULATE if playable else CARD_DISABLED_MODULATE
@@ -569,6 +789,20 @@ func _populate_card_slot(i: int, cards: Array) -> void:
 
 # card.effect(+물리/마법 구분)에 따라 프레임 색을 고른다: 물리 공격=빨강, 마법 공격=파랑,
 # 회복류(체력/마나)=초록, 방어·회피처럼 무기와 무관한 카드=회색
+# 카드 한 칸의 그림 요소를 한꺼번에 켜고 끈다. 마나 배지는 마나를 쓰는 카드에서만 따로 켜므로
+# 여기서는 항상 끄기만 하고, 켜는 쪽은 호출부가 담당한다
+func _set_card_parts_visible(i: int, shown: bool) -> void:
+	_card_frames[i].visible = shown
+	_card_icon_frames[i].visible = shown
+	_card_name_banners[i].visible = shown
+	_card_icons[i].visible = shown
+	_card_names[i].visible = shown
+	_card_descs[i].visible = shown
+	if not shown:
+		_card_mana_badges[i].visible = false
+		_card_mana_labels[i].visible = false
+
+
 func _card_style_key(card: Card) -> String:
 	match card.effect:
 		Card.EffectType.DAMAGE:
@@ -580,16 +814,10 @@ func _card_style_key(card: Card) -> String:
 
 
 # 효과 종류에 맞춰 카드 설명을 자동으로 만든다. 카드 이름 밑에 그대로 표시된다.
-# 마법 카드(마나 소모가 있는 카드)는 설명 끝에 "(마나 N)"을 덧붙인다 — get_mana_cost()가
-# 물리/공용 카드는 항상 0을 돌려주므로 그런 카드는 자연히 표시가 안 붙는다
+# 마나 소모량은 여기 넣지 않는다 — 왼쪽 아래 마름모 배지가 따로 보여주므로 좁은 설명칸을
+# 아끼고, 참고 이미지처럼 수치는 모서리 배지에 모아두는 편이 읽기도 쉽다
 func _card_description(card: Card) -> String:
-	var base := _card_base_description(card)
-	var mana_cost := card.get_mana_cost()
-	if mana_cost <= 0:
-		return base
-	# 카드 폭이 좁아 "물리/마법 피해 N (마나 N)"이 대개 두 줄로 접힌다 — 줄바꿈 자체는 어쩔
-	# 수 없지만, 최소한 숫자와 닫는 괄호는 갈라지지 않게 그 사이만 nbsp로 묶어둔다
-	return "%s (마나 %d )" % [base, mana_cost]
+	return _card_base_description(card)
 
 
 func _card_base_description(card: Card) -> String:
@@ -638,7 +866,13 @@ func _flip_card_in(index: int) -> Tween:
 	var name_label := _card_names[index]
 	var desc_label := _card_descs[index]
 
+	# 뒷면일 때는 카드 그림(테두리/배너/아이콘/글자)을 전부 숨겨 종류가 미리 드러나지 않게 한다
+	frame.visible = true
 	frame.texture = _card_back_texture
+	_card_icon_frames[index].visible = false
+	_card_name_banners[index].visible = false
+	_card_mana_badges[index].visible = false
+	_card_mana_labels[index].visible = false
 	icon.visible = false
 	name_label.visible = false
 	desc_label.visible = false
@@ -652,8 +886,6 @@ func _flip_card_in(index: int) -> Tween:
 	return tween
 
 
-# 뒤집기 중간(스케일 0) 지점에 호출되어 실제 내용을 채운다. 애니메이션이 도는 짧은 시간 동안은
-# 손패 버튼이 전부 잠겨 있어 손패가 바뀌지 않으므로, 지금 손패를 다시 읽어도 안전하다
 # 마우스가 카드에 올라오거나 벗어났을 때. 낼 수 없는 카드(과부하/마나부족/빈 칸)나 연출 중에는
 # 확대하지 않는다 — 다만 "벗어남"은 어떤 상태에서도 처리해, 확대된 채 커서만 빠져나가 카드가
 # 커진 상태로 굳는 일이 없게 한다 (호버 중에 카드가 비활성으로 바뀌는 경우가 실제로 있다)
@@ -687,14 +919,13 @@ func _reset_card_hover(index: int) -> void:
 	wrapper.z_index = 0
 
 
+# 뒤집기 중간(스케일 0) 지점에 호출되어 앞면 내용을 채운다. 애니메이션이 도는 짧은 시간 동안은
+# 손패 버튼이 전부 잠겨 있어 손패가 바뀌지 않으므로, 지금 손패를 다시 읽어도 안전하다.
+# 채우는 내용은 _populate_card_slot과 완전히 같아야 하므로 그 함수를 그대로 재사용한다
 func _reveal_card_face(index: int) -> void:
-	if _manager == null or index >= _manager.hand.cards.size():
+	if _manager == null:
 		return
-	var card: Card = _manager.hand.cards[index]
-	_card_frames[index].texture = _card_front_textures[_card_style_key(card)]
-	_card_icons[index].visible = true
-	_card_names[index].visible = true
-	_card_descs[index].visible = true
+	_populate_card_slot(index, _manager.hand.cards)
 
 
 # 카드 티어별 시각 연출(상위 티어 광채/파티클 등)을 붙일 지점. 아직 티어2/3 카드도, 연출도 없어
@@ -727,12 +958,12 @@ func _refresh_status_icons() -> void:
 	_sword_gauge_rect.texture = _sword_gauge_frames[_gauge_frame_index(_manager.weapon.sword_gauge)]
 	_staff_gauge_rect.texture = _staff_gauge_frames[_gauge_frame_index(_manager.weapon.staff_gauge)]
 
+	# 저항 배지는 "없음"일 때도 흐릿하게 항상 띄운다 — 아이콘이 사라졌다 나타났다 하면 플레이어가
+	# 저항 상태를 확인하려고 매번 같은 자리를 다시 찾아봐야 하기 때문
 	var resistance: int = _manager.resistance.current
-	if _resist_icon_textures.has(resistance):
-		_resist_icon.texture = _resist_icon_textures[resistance]
-		_resist_icon.visible = true
-	else:
-		_resist_icon.visible = false
+	_resist_badge.texture = _resist_icon_textures.get(resistance)
+	_resist_badge.modulate = RESIST_BADGE_MODULATE.get(resistance, Color.WHITE)
+	_resist_badge.visible = _resist_badge.texture != null
 
 
 # 게이지(0~100, GAUGE_STEP=25 단위)를 프레임 인덱스로 변환. 시트의 프레임 순서는 왼쪽(0번)이 꽉 찬
@@ -795,6 +1026,7 @@ func _update_monster_hp_text() -> void:
 # (승패 판정 자체는 매니저가 하고, 이 함수는 전투 "바깥"의 보상 처리만 담당한다)
 func _finish_victory() -> void:
 	_mode = Mode.OVER
+	_resist_badge.visible = false # 쓰러진 몬스터 위에 저항 배지만 남아 떠 있지 않게
 	await _play_monster_death()
 
 	MusicManager.play("Victory!")
@@ -848,6 +1080,7 @@ func _roll_equipment_drop() -> String:
 # 패배 처리: 플레이어 노드를 다시 보이게 하고 게임오버 화면으로 넘긴다 (회복/복귀는 게임오버 화면이 담당)
 func _finish_defeat() -> void:
 	_mode = Mode.OVER
+	_resist_badge.visible = false
 	_main_column.visible = false
 	_message.text = "정신을 잃었다..."
 	SceneManager.reveal_player()
@@ -880,6 +1113,7 @@ func _setup_sprites() -> void:
 	if monster_frames.has_animation("default"):
 		monster_frames.remove_animation("default")
 	var idle_frame_size: int = _variant.get("idle_frame_size", BattleData.MOB_IDLE_FRAME_SIZE)
+	_monster_art_top_offset = _measure_art_top_offset(idle_sheet, idle_frame_size)
 	_add_monster_animation(monster_frames, "idle", idle_sheet, idle_frame_size, idle_frame_size, _variant.get("idle_frame_count", BattleData.MOB_IDLE_FRAME_COUNT), MONSTER_IDLE_FPS, true)
 	_add_monster_animation(monster_frames, "death", load(_variant["death_path"]) as Texture2D, _variant["death_frame_width"], _variant["death_frame_height"], _variant["death_frame_count"], MONSTER_DEATH_FPS, false)
 
@@ -915,6 +1149,20 @@ func _add_monster_animation(frames: SpriteFrames, anim_name: String, sheet: Text
 		frames.add_frame(anim_name, atlas)
 
 
+# 시트 첫 프레임에서 실제 그림이 시작되는 y를 잰다 (위쪽 투명 여백의 높이).
+# 스프라이트는 프레임 안에서 대개 아래쪽에 그려져 있어, 프레임 상단을 기준으로 뭔가를 붙이면
+# 그 여백만큼 떠 보인다 — 그걸 보정하기 위한 값
+func _measure_art_top_offset(sheet: Texture2D, frame_size: int) -> float:
+	var img := sheet.get_image()
+	var w: int = min(frame_size, img.get_width())
+	var h: int = min(frame_size, img.get_height())
+	for y in range(h):
+		for x in range(w):
+			if img.get_pixel(x, y).a > 0.04:
+				return float(y)
+	return 0.0
+
+
 # 시트에서 region 영역만 잘라 카드 초상화용 AtlasTexture로 만듦
 func _build_portrait(sheet: Texture2D, region: Rect2) -> AtlasTexture:
 	var atlas := AtlasTexture.new()
@@ -931,11 +1179,20 @@ func _layout_actors() -> void:
 	_player_sprite.position = Vector2(vp.x * 0.22, vp.y * 0.45)
 	_monster_sprite.position = Vector2(vp.x * 0.72, vp.y * 0.24)
 
-	var player_foot := _player_sprite.position + Vector2(0, PLAYER_FRAME_SIZE * PLAYER_SCALE * 0.5 - 6.0)
+	# 그림자는 "프레임 아래쪽"이 아니라 실제로 잰 발 위치에 맞춘다 (PLAYER_FOOT_FROM_CENTER 주석 참고).
+	# 크기도 캐릭터 실제 폭에 비례시켜, 스케일을 바꿔도 그림자가 따로 놀지 않게 한다
+	var player_foot := _player_sprite.position + Vector2(0, PLAYER_FOOT_FROM_CENTER * PLAYER_SCALE)
+	var player_shadow_rx := PLAYER_BODY_WIDTH * PLAYER_SCALE * 0.62
 	var idle_frame_size: int = _variant.get("idle_frame_size", BattleData.MOB_IDLE_FRAME_SIZE)
 	var monster_foot := _monster_sprite.position + Vector2(0, idle_frame_size * MONSTER_SCALE * 0.5 - 4.0)
-	_setup_shadow(_player_shadow, player_foot, 48.0, 14.0)
+	_setup_shadow(_player_shadow, player_foot, player_shadow_rx, player_shadow_rx * 0.3)
 	_setup_shadow(_monster_shadow, monster_foot, 40.0, 12.0)
+
+	# 적 저항 배지를 몬스터 머리 위에 띄운다. Actors의 자식이라 피격 흔들림도 몬스터와 함께 따라간다.
+	# 기준은 프레임 위쪽이 아니라 "실제로 그림이 시작되는 y"다 — 몬스터마다 프레임 안 여백이 제각각이라
+	# 프레임 기준으로 잡으면 배지가 머리에서 한참 떨어져 허공에 뜬다 (플레이어 그림자와 같은 이유)
+	var monster_art_top := _monster_sprite.position.y - idle_frame_size * MONSTER_SCALE * 0.5 + _monster_art_top_offset * MONSTER_SCALE
+	_resist_badge.position = Vector2(_monster_sprite.position.x, monster_art_top - RESIST_BADGE_GAP)
 
 
 # 타원형 그림자 폴리곤(반지름 rx*ry)을 만들어 지정 위치에 배치

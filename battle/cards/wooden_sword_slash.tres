@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1_card")
-card_name = "나무검 베기"
+card_name = "베기"
 color = 0
 effect = 0
 value = 4
