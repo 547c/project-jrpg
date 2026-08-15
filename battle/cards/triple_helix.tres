@@ -4,10 +4,12 @@
 
 [resource]
 script = ExtResource("1_card")
-card_name = "마나 회복"
-color = 2
-effect = 2
-value = 5
+card_name = "삼중나선"
+color = 0
+tier = 2
+effect = 0
+value = 16
+secondary_value = 0
 mana_cost = 0
-hp_cost = 2
-flavor_text = "체력을 대가로 마력의 흐름을 되찾는다."
+hp_cost = 3
+flavor_text = "검기가 세 겹의 나선으로 소용돌이치며 적을 짓밟는다."

@@ -10,10 +10,13 @@ extends Resource
 
 
 # 카드 색깔. 장착 무기와의 궁합을 결정한다 (스펙 3항)
-# - PHYSICAL(🔴): 검을 장착했을 때 위력이 극대화된다. 마나를 쓰지 않는다
-# - MAGIC(🔵): 지팡이를 장착했을 때 위력이 극대화된다. 사용 시 마나를 소모한다
+# - PHYSICAL(🔴): 검을 장착했을 때 위력이 극대화된다
+# - MAGIC(🔵): 지팡이를 장착했을 때 위력이 극대화된다
 # - NEUTRAL(🟢): 무기 상태와 무관 (회복/방어/회피 — 턴당 공격 횟수를 자연스럽게 제한하는 역할)
 # (Godot 내장 Color 타입과 이름이 겹치지 않도록 CardColor로 둔다)
+#
+# [비용과 색깔은 분리돼 있다] 처음에는 "마나는 마법 카드만 쓴다"는 규칙이었지만, 지금은 공용 카드도
+# 마나/체력을 비용으로 낼 수 있다 — 색깔은 무기 궁합만 정하고, 비용은 mana_cost/hp_cost가 따로 정한다
 enum CardColor { PHYSICAL, MAGIC, NEUTRAL }
 
 # 카드 등급. 높을수록 강한 대신 덱에서 덜 자주 뽑히게 할 용도다.
@@ -22,23 +25,23 @@ enum CardColor { PHYSICAL, MAGIC, NEUTRAL }
 # 지금은 모든 카드가 TIER_1이고, 티어2/3 카드 콘텐츠와 티어별 시각 연출은 아직 없다
 enum CardTier { TIER_1, TIER_2, TIER_3 }
 
-# 카드가 실제로 일으키는 효과의 종류. value의 의미가 이 값에 따라 달라진다
+# 카드가 실제로 일으키는 효과의 종류. value의 의미가 이 값에 따라 달라진다.
+# [주의] 이미 저장된 .tres들이 이 순서를 정수로 들고 있으므로, 새 값은 반드시 끝에만 추가할 것 —
+# 중간에 끼워 넣으면 기존 카드들의 효과가 통째로 밀려서 다른 효과로 바뀐다
 enum EffectType {
 	DAMAGE,        # 적에게 피해
 	HEAL_HP,       # 체력 회복
 	RESTORE_MANA,  # 마나 회복
 	DEFEND,        # 다음 피격 시 받는 피해 감소
 	DODGE,         # 회피 (성공/실패라 수치가 필요 없음)
+	COUNTER,       # 다음 적 공격을 완전 무효화하고, 그 즉시 적에게 value만큼 반격
+	RESTORE_BOTH,  # 체력과 마나를 동시에 회복 (체력=value, 마나=secondary_value)
 }
 
 # 화면에 표시할 카드 이름
 @export var card_name: String = ""
 
-# 카드 색깔. 바뀌면 마나 소모량 항목의 표시 여부가 달라지므로 인스펙터를 갱신시킨다
-@export var color: CardColor = CardColor.PHYSICAL:
-	set(value_):
-		color = value_
-		notify_property_list_changed()
+@export var color: CardColor = CardColor.PHYSICAL
 
 # 카드 등급. 기존 카드 .tres들은 이 값을 저장하고 있지 않아 전부 기본값(TIER_1)으로 읽힌다
 @export var tier: CardTier = CardTier.TIER_1
@@ -48,27 +51,44 @@ enum EffectType {
 
 # 효과의 크기. effect에 따라 해석이 달라진다:
 # DAMAGE=피해량 / HEAL_HP=회복할 체력 / RESTORE_MANA=회복할 마나 /
-# DEFEND=감소시킬 피해량 / DODGE=사용하지 않음(0)
+# DEFEND=감소시킬 피해량 / DODGE=사용하지 않음(0) / COUNTER=반격 피해량 /
+# RESTORE_BOTH=회복할 체력
 @export var value: int = 0
 
-# 사용 시 소모할 마나. 스펙상 마법 카드에만 해당하며, 물리/공용 카드는 마나와 무관하다.
-# 직접 읽지 말고 get_mana_cost()를 쓰면 색깔에 관계없이 항상 올바른 값이 나온다
+# value 하나로는 모자란 효과에서 쓰는 두 번째 수치. 지금은 RESTORE_BOTH(회복할 마나)만 사용하고,
+# 다른 효과에서는 읽지 않는다.
+# (효과 목록을 배열로 바꿔 "여러 효과를 가진 카드"를 일반적으로 표현하는 방법도 있었지만, 그건
+#  카드 한 장 = 효과 하나라는 기존 구조와 그걸 전제로 쓰인 UI/연출 분기를 전부 갈아엎어야 한다.
+#  두 자원을 같이 회복하는 카드 하나 때문에 그러기보다, value의 의미가 effect마다 다르다는 기존
+#  규칙을 그대로 한 칸 늘리는 쪽이 변경 범위가 훨씬 작다)
+@export var secondary_value: int = 0
+
+# 카드의 짧은 분위기 문구. 효과 설명("마법 피해 6")은 수치에서 자동으로 만들어지지만,
+# 이건 손으로 쓴 문장이라 자동 생성과 섞이지 않게 별도 필드로 둔다
+@export_multiline var flavor_text: String = ""
+
+# 사용 시 소모할 마나. 색깔과 무관하게 어떤 카드든 가질 수 있다
+# (예: 공용 카드인 방어/피하기도 마나를 쓴다)
 @export var mana_cost: int = 0
 
-
-# 마법 카드일 때만 인스펙터에 마나 소모량을 노출한다 (물리/공용 카드에서 실수로 값을 넣는 것을 방지)
-func _validate_property(property: Dictionary) -> void:
-	if property.name == "mana_cost" and color != CardColor.MAGIC:
-		property.usage = PROPERTY_USAGE_NO_EDITOR
+# 사용 시 소모할 체력. 마나 대신 체력을 대가로 치르는 카드(예: 마나 회복)에 쓴다.
+# 체력이 이 값 이하면 카드 자체를 낼 수 없다 — 카드를 쓰다가 죽는 일은 없다
+# (판정은 BattleTurnManager.can_play_card가 담당)
+@export var hp_cost: int = 0
 
 
 func is_magic() -> bool:
 	return color == CardColor.MAGIC
 
 
-# 이 카드를 쓰는 데 실제로 필요한 마나. 마법 카드가 아니면 저장된 값과 무관하게 항상 0
+# 이 카드를 쓰는 데 실제로 필요한 마나
 func get_mana_cost() -> int:
-	return mana_cost if is_magic() else 0
+	return mana_cost
+
+
+# 이 카드를 쓰는 데 실제로 필요한 체력
+func get_hp_cost() -> int:
+	return hp_cost
 
 
 # 무기 상태의 영향을 받는 카드인지 (물리/마법 카드는 받고, 공용 카드는 받지 않는다).

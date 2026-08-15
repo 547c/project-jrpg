@@ -4,10 +4,12 @@
 
 [resource]
 script = ExtResource("1_card")
-card_name = "마나 회복"
-color = 2
-effect = 2
-value = 5
-mana_cost = 0
-hp_cost = 2
-flavor_text = "체력을 대가로 마력의 흐름을 되찾는다."
+card_name = "파이어볼"
+color = 1
+tier = 1
+effect = 0
+value = 10
+secondary_value = 0
+mana_cost = 6
+hp_cost = 0
+flavor_text = "타오르는 불꽃 덩어리를 적에게 던진다."

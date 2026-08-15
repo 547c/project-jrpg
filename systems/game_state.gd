@@ -17,6 +17,10 @@ signal gold_changed(new_gold: int)
 # 인벤토리 아이템이 추가/제거될 때 방출 (item_id 인자로 전달)
 signal inventory_changed(item_id: String)
 
+# 카드가 새로 잠금해제될 때 방출 (덱빌더/잠금해제 UI가 구독해 갱신).
+# 스킬포인트 잔량은 flags의 "skill_points"라 flag_changed로 이미 알 수 있으므로 따로 시그널을 두지 않는다
+signal card_unlocked(card_id: String)
+
 # NPC 호감도가 실제로 바뀔 때 방출 (npc_id, 새 값). 대화 톤/게이팅이 이 값을 참조한다
 signal affinity_changed(npc_id: String, new_value: int)
 
@@ -47,6 +51,11 @@ var affinity: Dictionary = DEFAULT_AFFINITY.duplicate()
 
 # 이미 표시된 적 있는 대화 노드 id 모음 (DialogueBox가 "다시 듣기" 옵션을 회색+하단정렬로 구분하는 데 사용)
 var seen_dialogue_nodes: Array = []
+
+# 잠금해제된 카드 id 모음 (CardLibrary.CARD_PATHS의 키). 여기 있는 카드만 실제로 덱에 들어간다
+# (StarterDeck.build()가 이 목록으로 걸러낸다). 개수가 아니라 "가졌다/아니다"뿐이라
+# 인벤토리(개수 딕셔너리)보다 seen_dialogue_nodes(id 배열) 쪽 패턴이 맞아 그쪽을 따랐다
+var unlocked_cards: Array = CardLibrary.DEFAULT_UNLOCKED.duplicate()
 
 # --- 엔딩 도감(영구 기록) ---
 # 지금까지 도달한 엔딩 id 모음. 슬롯 세이브와 성격이 다른 "계정 단위 영구 기록"이라
@@ -105,6 +114,9 @@ const DEFAULT_FLAGS: Dictionary = {
 	"truth_revealed": false,               # 2부 결정적 플래그: 진실을 세상에 알렸는가 (false면 비밀로 묻음)
 	"part2_complete": false,               # 2부를 완료했는가 (카밀과의 결정적 선택을 마쳤을 때 true)
 	"quest_level": 0,                      # 완료한 서브퀘스트 개수
+	# 카드 잠금해제에 쓰는 자원. 레벨업(_apply_level_up)마다 SKILL_POINTS_PER_LEVEL만큼 들어온다.
+	# 어떤 카드를 풀었는지는 개수가 아니라 목록이라 flags에 담기 어색해서 unlocked_cards로 따로 뺐다
+	"skill_points": 0,
 }
 
 # 씬 전환에도 유지되는 게임 상태. DEFAULT_FLAGS를 복사해 시작한다
@@ -197,6 +209,9 @@ func reset_progress() -> void:
 
 	reset_affinity()
 	seen_dialogue_nodes.clear()
+	# 잠금해제 목록은 비우는 게 아니라 기본 제공 6종으로 되돌린다 (새 게임도 기본 카드는 갖고 시작).
+	# skill_points는 DEFAULT_FLAGS에 있어 위 플래그 루프에서 이미 0으로 돌아갔다
+	unlocked_cards = CardLibrary.DEFAULT_UNLOCKED.duplicate()
 	# seen_endings(엔딩 도감)는 의도적으로 건드리지 않는다 — 새 게임을 시작해도 유지되는 영구 기록
 
 
@@ -484,6 +499,63 @@ func restore_seen_dialogue_nodes(data: Array) -> void:
 		seen_dialogue_nodes.append(String(node_id))
 
 
+# ── 스킬포인트 / 카드 잠금해제 ──────────────────────────────────────────────
+# 포인트는 flags("skill_points")에, 잠금해제 목록은 unlocked_cards에 나눠 담긴다.
+# 카드의 비용/티어 정보는 전부 CardLibrary가 갖고 있고 여기서는 "쓸 수 있는가/얼마나 남았는가"만 다룬다
+
+func get_skill_points() -> int:
+	return get_flag("skill_points")
+
+
+# 스킬포인트를 amount만큼 지급 (레벨업에서 호출). 음수는 받지 않는다 —
+# 차감은 잠금해제 경로(unlock_card)에서만 일어나야 잔량이 어긋나지 않기 때문
+func add_skill_points(amount: int) -> void:
+	if amount <= 0:
+		return
+	set_flag("skill_points", get_skill_points() + amount)
+
+
+# 해당 카드를 이미 갖고 있는지 (기본 제공 티어1 카드 포함)
+func is_card_unlocked(card_id: String) -> bool:
+	return unlocked_cards.has(card_id)
+
+
+# 지금 이 카드를 잠금해제할 수 있는지. "이미 가진 카드"와 "포인트 부족"과 "없는 카드"를
+# 전부 여기서 한 번에 판정해, unlock_card()와 UI 버튼 활성화가 같은 기준을 쓰게 한다
+func can_unlock_card(card_id: String) -> bool:
+	if is_card_unlocked(card_id):
+		return false
+	var cost := CardLibrary.get_unlock_cost(card_id)
+	if cost == CardLibrary.UNKNOWN_COST:
+		return false
+	return get_skill_points() >= cost
+
+
+# 카드를 잠금해제하고 비용만큼 스킬포인트를 차감한다. 성공하면 true.
+# 실패 조건(이미 보유 / 포인트 부족 / 없는 카드id)에서는 아무것도 바꾸지 않고 false —
+# 호출부가 결과만 보고 "부족합니다" 같은 안내를 띄울 수 있게 한다
+func unlock_card(card_id: String) -> bool:
+	if not can_unlock_card(card_id):
+		return false
+	var cost := CardLibrary.get_unlock_cost(card_id)
+	set_flag("skill_points", get_skill_points() - cost)
+	unlocked_cards.append(card_id)
+	card_unlocked.emit(card_id)
+	return true
+
+
+# 저장 데이터(문자열 배열)로부터 잠금해제 목록을 복원.
+# 저장 당시 없던 카드가 남지 않도록 기본값으로 되돌린 뒤 덮어쓰고, CardLibrary에 없는 id(옛 세이브에
+# 남은 삭제된 카드 등)는 조용히 버린다. 기본 제공 카드는 세이브에 없더라도 항상 포함시켜야
+# 구버전 세이브를 불러왔을 때 기본 카드까지 사라지는 일이 없다
+func restore_unlocked_cards(data: Array) -> void:
+	unlocked_cards = CardLibrary.DEFAULT_UNLOCKED.duplicate()
+	for card_id in data:
+		var id := String(card_id)
+		if CardLibrary.CARD_PATHS.has(id) and not unlocked_cards.has(id):
+			unlocked_cards.append(id)
+
+
 # ── 엔딩 도감(영구 기록) ────────────────────────────────────────────────────
 # 슬롯 세이브(SaveManager)와 완전히 독립적으로 동작한다: 전용 파일에 즉시 쓰고,
 # 게임 시작 시 한 번 읽어오며, reset_progress()의 영향도 받지 않는다
@@ -632,6 +704,8 @@ func _apply_quest_completion_affinity(quest_id: String) -> void:
 # 레벨업(quest_level 상승) 시 늘어나는 최대 체력/마나 폭
 const LEVEL_UP_HP_GAIN := 8
 const LEVEL_UP_MANA_GAIN := 10
+# 레벨업 1회당 지급되는 스킬포인트 (티어2 카드 하나 = 3점이라, 레벨업 한 번에 티어2 하나를 풀 수 있다)
+const SKILL_POINTS_PER_LEVEL := 3
 
 
 # quest_level이 오를 때마다 호출됨. 최대 체력/마나를 늘리고 같은 폭만큼 현재치도 회복시킨 뒤(최대치 초과 방지)
@@ -644,6 +718,7 @@ func _apply_level_up(quest_title: String) -> void:
 	set_flag("player_hp", min(get_flag("player_max_hp"), get_flag("player_hp") + LEVEL_UP_HP_GAIN))
 	set_flag("player_max_mana", get_flag("player_max_mana") + LEVEL_UP_MANA_GAIN)
 	set_flag("player_mana", min(get_flag("player_max_mana"), get_flag("player_mana") + LEVEL_UP_MANA_GAIN))
+	add_skill_points(SKILL_POINTS_PER_LEVEL)
 	quest_completed_with_level_up.emit(quest_title, LEVEL_UP_HP_GAIN, LEVEL_UP_MANA_GAIN)
 
 

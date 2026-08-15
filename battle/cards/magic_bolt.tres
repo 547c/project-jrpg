@@ -9,3 +9,5 @@ color = 1
 effect = 0
 value = 6
 mana_cost = 4
+hp_cost = 0
+flavor_text = "손끝에 모인 마력을 압축해 쏘아내는 초급 마법."

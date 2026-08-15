@@ -4,10 +4,12 @@
 
 [resource]
 script = ExtResource("1_card")
-card_name = "마나 회복"
+card_name = "초재생"
 color = 2
-effect = 2
-value = 5
+tier = 1
+effect = 6
+value = 6
+secondary_value = 3
 mana_cost = 0
-hp_cost = 2
-flavor_text = "체력을 대가로 마력의 흐름을 되찾는다."
+hp_cost = 0
+flavor_text = "육체와 마력이 동시에 빠르게 재생된다."

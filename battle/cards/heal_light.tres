@@ -8,4 +8,6 @@ card_name = "치유의 빛"
 color = 2
 effect = 1
 value = 6
-mana_cost = 0
+mana_cost = 3
+hp_cost = 0
+flavor_text = "따스한 빛이 상처를 어루만진다."

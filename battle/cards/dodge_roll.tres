@@ -8,4 +8,6 @@ card_name = "피하기"
 color = 2
 effect = 4
 value = 0
-mana_cost = 0
+mana_cost = 2
+hp_cost = 0
+flavor_text = "본능적으로 몸을 비틀어 공격을 흘려낸다."

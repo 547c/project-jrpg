@@ -16,7 +16,7 @@ extends RefCounted
 signal turn_started(turn_number: int)
 signal card_played(card: Card, damage_dealt: int) # 데미지 카드가 아니면 damage_dealt는 0
 signal weapon_switched(weapon: WeaponState.WeaponType)
-signal enemy_turn_resolved(damage_taken: int, dodged: bool)
+signal enemy_turn_resolved(damage_taken: int, dodged: bool, counter_damage: int) # 반격이 없었으면 counter_damage는 0
 signal player_defeated
 signal enemy_defeated
 
@@ -38,6 +38,7 @@ var battle_over: bool = false
 # (스펙에 세부 규칙이 없어 아래처럼 설계했다 — 근거는 _resolve_enemy_turn() 주석 참고)
 var _pending_defense: int = 0
 var _pending_dodge: bool = false
+var _pending_counter: int = 0 # 반격(COUNTER) 카드로 예약해둔 반격 피해량. 0이면 반격 대기 아님
 
 
 # monster_type_은 BattleData.MONSTERS의 키("ORC" 등), cards는 이번 전투에 쓸 카드 목록.
@@ -76,7 +77,7 @@ func _start_turn() -> void:
 # ── 플레이어 행동 ──────────────────────────────────────────────────────────
 
 # 이 카드를 지금 낼 수 있는지. 손에 있어야 하고, 무기가 과부하가 아니어야 하고(WeaponState),
-# 마법 카드라면 마나가 충분해야 한다. UI가 카드 버튼을 회색 처리할 때도 이 함수를 쓰면 된다
+# 마나와 체력 비용을 모두 감당할 수 있어야 한다. UI가 카드 버튼을 회색 처리할 때도 이 함수를 쓴다
 func can_play_card(card: Card) -> bool:
 	if battle_over or card == null:
 		return false
@@ -84,17 +85,35 @@ func can_play_card(card: Card) -> bool:
 		return false
 	if not weapon.can_use_card(card):
 		return false
-	return GameState.can_afford_mana(card.get_mana_cost())
+	if not GameState.can_afford_mana(card.get_mana_cost()):
+		return false
+	return can_afford_hp(card.get_hp_cost())
+
+
+# 체력 비용을 치를 수 있는지. "남은 체력 > 비용"이라 비용을 내고도 최소 1은 남는다 —
+# 같으면(체력 == 비용) 카드를 내는 순간 체력이 0이 되어 자기 카드로 죽어버리므로 그 경우도 막는다.
+# 비용이 0인 카드는 체력과 무관하게 항상 통과한다
+func can_afford_hp(cost: int) -> bool:
+	if cost <= 0:
+		return true
+	return GameState.get_flag("player_hp") > cost
 
 
 # 카드 한 장을 낸다. 낼 수 없는 상황이면 아무 일도 하지 않고 false를 반환한다.
-# 성공하면: 마나 소모 → 과열 게이지 갱신 → 효과 적용 → 손패에서 버린 더미로 이동 → card_played 방출.
-# 카드는 손에 있는 한 자유로운 순서로 낼 수 있고, 5장을 다 쓰지 않고 end_turn()해도 된다
+# 성공하면: 비용(마나/체력) 소모 → 과열 게이지 갱신 → 효과 적용 → 손패에서 버린 더미로 이동 →
+# card_played 방출. 카드는 손에 있는 한 자유로운 순서로 낼 수 있고, 5장을 다 쓰지 않고 end_turn()해도 된다.
+#
+# 비용을 효과보다 먼저 치르는 순서에 주의 — 체력을 회복하는 카드가 체력 비용을 갖는 경우
+# "먼저 내고 그 다음 회복"이 되어야 순서가 뒤집혀 이득이 나지 않는다.
+# 체력 비용으로 죽는 일은 can_play_card가 이미 막아둬서(can_afford_hp) 여기서 다시 확인하지 않는다
 func play_card(card: Card) -> bool:
 	if not can_play_card(card):
 		return false
 
-	GameState.spend_mana(card.get_mana_cost()) # 물리/공용 카드는 get_mana_cost()가 0이라 그대로 통과
+	GameState.spend_mana(card.get_mana_cost()) # 비용이 0이면 그대로 통과
+	var hp_cost := card.get_hp_cost()
+	if hp_cost > 0:
+		GameState.damage_player(hp_cost)
 	weapon.register_card_use(card)
 
 	var damage_dealt := _apply_card_effect(card)
@@ -142,6 +161,16 @@ func _apply_card_effect(card: Card) -> int:
 			_pending_defense += card.value
 		Card.EffectType.DODGE:
 			_pending_dodge = true
+		Card.EffectType.COUNTER:
+			# 방어와 같은 이유로 합산한다 — 두 장 냈는데 한 장이 조용히 사라지면 손해이기 때문
+			_pending_counter += card.value
+		Card.EffectType.RESTORE_BOTH:
+			var both_max_hp: int = GameState.get_flag("player_max_hp")
+			if both_max_hp > 0:
+				GameState.heal_player_partial(float(card.value) / both_max_hp)
+			var both_max_mana: int = GameState.get_flag("player_max_mana")
+			if both_max_mana > 0:
+				GameState.restore_mana_partial(float(card.secondary_value) / both_max_mana)
 	return 0
 
 
@@ -189,6 +218,12 @@ func end_turn() -> void:
 		_finish_battle(true)
 		return
 
+	# 반격으로 적이 쓰러졌을 수 있다. 이 검사가 없으면 HP가 0인 몬스터를 상대로 다음 턴이 열린다
+	# (플레이어 턴에 카드로 죽인 경우는 play_card가 이미 처리하지만, 반격은 적 턴에 일어난다)
+	if monster_hp <= 0:
+		_finish_battle(false)
+		return
+
 	_start_turn()
 
 
@@ -207,21 +242,32 @@ func end_turn() -> void:
 # 3. 피하기와 방어를 같이 걸면 피하기가 먼저 적용돼 어차피 피해가 0이 되고, 남은 방어값은 그대로
 #    소멸한다(다음 턴으로 이월되지 않음). 둘 다 "다음 적 턴에만 적용되는 임시 상태"라는 요구사항을
 #    문자 그대로 지키기 위해, 적 턴을 해결한 직후 무조건 초기화한다.
+# 4. 반격(COUNTER)은 피하기처럼 이번 공격을 완전 무효화하면서, 동시에 적에게 예약해둔 만큼 되돌려준다.
+#    반격 피해에는 적 저항도 장비 보너스도 붙지 않는데, 이건 특례가 아니라 일관성이다 — 반격 카드는
+#    공용(NEUTRAL)이고, 공용 카드는 원래도 저항 대상이 아니며(EnemyResistance.resists) 무기 보너스도
+#    받지 않는다(_equipment_damage_bonus). 즉 카드로 직접 때렸을 때와 같은 계산 결과가 나온다.
 func _resolve_enemy_turn() -> void:
 	var raw_damage: int = randi_range(monster_data["damage_min"], monster_data["damage_max"])
 
+	var countering := _pending_counter > 0
 	var damage_taken := 0
-	if not _pending_dodge:
+	if not _pending_dodge and not countering:
 		damage_taken = max(0, raw_damage - _pending_defense)
 
 	if damage_taken > 0:
 		GameState.damage_player(damage_taken)
 
-	enemy_turn_resolved.emit(damage_taken, _pending_dodge)
+	var counter_damage := 0
+	if countering:
+		counter_damage = _pending_counter
+		monster_hp = max(0, monster_hp - counter_damage)
+
+	enemy_turn_resolved.emit(damage_taken, _pending_dodge, counter_damage)
 
 	# 임시 상태는 이번 적 턴에서만 유효 — 결과와 무관하게 소모하고 초기화한다
 	_pending_defense = 0
 	_pending_dodge = false
+	_pending_counter = 0
 
 
 func _finish_battle(player_lost: bool) -> void:
@@ -240,6 +286,19 @@ func get_monster_max_hp() -> int:
 	return monster_data["max_hp"]
 
 
+# 손패를 전부 소진했는지. 전투 씬이 "자동 턴 종료" 조건으로 쓴다.
+#
+# [왜 "낼 수 있는 카드가 없다"가 아니라 "손패가 비었다"인가]
+# 카드가 남았는데 전부 과부하/자원부족이면 사실 그 턴에 카드를 더 낼 방법은 없다 — 과부하는 카드
+# 색깔 기준이라 무기를 바꿔도 안 풀리고(WeaponState.can_use_card), 자원을 채워줄 회복 카드마저
+# 못 내는 상황이기 때문이다. 그런데도 그때는 자동으로 넘기지 않는다: 도망가기가 여전히 유효한 턴
+# 행동이라, 자동 종료해버리면 플레이어가 도망칠 기회를 쓰지 못한 채 적 공격을 강제로 맞게 된다.
+# 반면 손패를 다 쓴 경우는 플레이어가 이미 5번의 선택을 끝낸 뒤라 "턴 종료" 클릭이 형식적이므로,
+# 그것만 대신 눌러주는 것이고 선택지를 뺏지 않는다
+func is_hand_exhausted() -> bool:
+	return hand.is_empty()
+
+
 # 이번 적 턴에 대비해 쌓아둔 방어량 (피하기 중이면 어차피 전무효라 별개로 확인할 것)
 func get_pending_defense() -> int:
 	return _pending_defense
@@ -247,3 +306,8 @@ func get_pending_defense() -> int:
 
 func is_dodging() -> bool:
 	return _pending_dodge
+
+
+# 이번 적 턴에 되돌려줄 반격 피해량 (0이면 반격 대기 아님)
+func get_pending_counter() -> int:
+	return _pending_counter

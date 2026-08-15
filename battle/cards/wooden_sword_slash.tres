@@ -9,3 +9,5 @@ color = 0
 effect = 0
 value = 4
 mana_cost = 0
+hp_cost = 0
+flavor_text = "가장 기본적이지만 믿음직한 검술. 망설임 없이 휘두른다."

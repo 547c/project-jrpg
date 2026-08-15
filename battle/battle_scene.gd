@@ -76,6 +76,7 @@ const VFX_ROW_RED := 0
 const VFX_ROW_VIOLET := 1
 const VFX_ROW_SKY := 2
 const VFX_ROW_GREEN := 3
+const VFX_ROW_ORANGE := 4
 const VFX_ROW_GREY := 5
 const VFX_ROW_CRIMSON := 7
 
@@ -95,6 +96,27 @@ const VFX_CONFIG := {
 	"defend": {"path": "res://assets/vfx/Free/Part 10/475.png", "row": VFX_ROW_GREY, "frames": 12, "fps": 26.0},
 	# 짧은 대각선 스트릭 — 실제 이동이 아니라 "잔상"으로 회피를 표현
 	"dodge": {"path": "res://assets/vfx/Free/Part 8/377.png", "row": VFX_ROW_GREY, "frames": 8, "fps": 40.0},
+	# 대각선으로 그어지는 검기 자국 — "physical"(표창 폭발)과 달리 순간적으로 스쳐 지나가는 궤적이라
+	# 섬광의 "번쩍이고 빠르게 베어낸다"는 컨셉에 맞다. 주황 행이 이 시트에서 가장 노란빛에 가깝다
+	"physical_flash": {"path": "res://assets/vfx/Free/Part 5/222.png", "row": VFX_ROW_ORANGE, "frames": 9, "fps": 45.0},
+	# 크게 부풀었다 흩어지는 뭉게구름 폭발 — "magic"(별 모양 폭발)보다 훨씬 크고 화염 덩어리처럼
+	# 뭉실하게 터져서 파이어볼의 "불꽃 덩어리를 던진다"는 묘사에 어울린다
+	"magic_fire": {"path": "res://assets/vfx/Free/Part 10/484.png", "row": VFX_ROW_RED, "frames": 12, "fps": 28.0},
+	# X자로 부딪혀 번쩍이는 충돌 자국 — "defend"(부드러운 고리)와 달리 무기와 무기가 맞부딪히는
+	# 순간을 표현해, 그냥 막기(Guard)와는 다른 "받아넘긴다"는 느낌을 낸다
+	"counter": {"path": "res://assets/vfx/Free/Part 5/232.png", "row": VFX_ROW_GREY, "frames": 9, "fps": 32.0},
+	# 안쪽으로 말려 들어가는 나선 — 바깥에서 안으로 감기며 한 점에 모이는 모양이라 "마력을 응축한다"는
+	# 차징에 맞다 (실제로 시트를 훑어 프레임별 반지름을 재보니 이 시트가 가장 확실하게 수렴한다)
+	"charge_fire": {"path": "res://assets/vfx/Free/Part 3/123.png", "row": VFX_ROW_ORANGE, "frames": 12, "fps": 65.0},
+	# 네 조각이 사방에서 날아와 가운데서 마름모로 합쳐지는 모양 — 나선(charge_fire)보다 훨씬 크고
+	# 무겁게 "끌어모으는" 인상이라 익스플로전의 2단 차징에 쓴다. 1단계는 보라, 2단계는 같은 시트의
+	# 빨강 행을 더 크게 띄워서 "색이 달아오르며 더 강해진다"는 단계감을 낸다
+	"charge_heavy_1": {"path": "res://assets/vfx/Free/Part 15/700.png", "row": VFX_ROW_VIOLET, "frames": 22, "fps": 70.0},
+	"charge_heavy_2": {"path": "res://assets/vfx/Free/Part 15/700.png", "row": VFX_ROW_RED, "frames": 22, "fps": 60.0},
+	# 크게 부풀었다 파편으로 산산이 흩어지는 폭발 — magic_fire(뭉게구름)와 달리 조각이 사방으로
+	# 튀어나가 "훨씬 큰 한 방"으로 읽힌다. fps를 낮춰(24) 재생 시간을 늘려 묵직하게 터지게 했고,
+	# 재생할 때 스케일도 따로 키워 띄운다(EXPLOSION_VFX_SCALE_MULT)
+	"explosion_big": {"path": "res://assets/vfx/Free/Part 2/71.png", "row": VFX_ROW_RED, "frames": 10, "fps": 24.0},
 }
 
 # key -> 400 Sounds pack 경로. 물리/방어는 Weapons(금속·타격), 마법/마나는 복고풍 신스(폭발감/충전감),
@@ -106,7 +128,104 @@ const VFX_SFX := {
 	"mana": "res://assets/sfx/400 Sounds pack/Retro/power_up.wav",
 	"defend": "res://assets/sfx/400 Sounds pack/Weapons/sword_clash.wav",
 	"dodge": "res://assets/sfx/400 Sounds pack/Other/whoosh_2.wav",
+	# sword_slice보다 더 가볍고 짧은 타격음 — 섬광의 "번쩍하고 스치는" 속도감에 맞춘다
+	"physical_flash": "res://assets/sfx/400 Sounds pack/Weapons/sword_light.wav",
+	# 마법 공격 3종을 폭발음 크기 순으로 줄세운다: 마력탄=quick < 파이어볼=medium < 익스플로전=large.
+	# (파이어볼이 원래 large를 쓰고 있었는데, 익스플로전이 "훨씬 큰 한 방"이 되려면 가장 큰 소리를
+	#  익스플로전에 양보해야 세 카드의 무게 차이가 소리만 듣고도 구분된다)
+	"magic_fire": "res://assets/sfx/400 Sounds pack/Retro/explosion_medium.wav",
+	"explosion_big": "res://assets/sfx/400 Sounds pack/Retro/explosion_large.wav",
+	# sword_clash와 같은 계열이지만 다른 샘플(_2) — 방어(Guard)와 소리가 겹치지 않으면서도
+	# "금속이 부딪힌다"는 같은 계열감은 유지한다
+	"counter": "res://assets/sfx/400 Sounds pack/Weapons/sword_clash_2.wav",
+	# 오르골 특유의 여리고 영롱한 음색 — "신비롭게 두 자원이 차오른다"는 인상에 맞고, 다른 카드가
+	# 아직 안 쓴 악기라 회복(비브라폰)/마나(파워업)와도 확실히 구분된다
+	"restore_both": "res://assets/sfx/400 Sounds pack/Musical Effects/music_box_chime_positive.wav",
 }
+
+# 카드 이름 -> VFX 키 강제 지정. DAMAGE처럼 같은 효과·색을 공유하는 카드들도 이 표에 있으면
+# _vfx_key_for_card()가 효과 기반 기본값(physical/magic) 대신 이 값을 쓴다 — 이름에 매달아 두는 건
+# Card에 별도 id 필드가 없어서다. 카드 이름을 바꿀 계획이 생기면 이 표도 같이 고쳐야 한다
+const CARD_NAME_VFX_OVERRIDE := {
+	"섬광": "physical_flash",
+	"파이어볼": "magic_fire",
+	"익스플로전": "explosion_big",
+}
+
+# ── 원거리 마법 차징 연출 (파이어볼 / 익스플로전) ────────────────────────────
+# 섬광의 "차징 → 돌진" 구조를 그대로 빌려오되, 원거리 마법이라 캐릭터는 제자리에 선 채
+# 앞쪽 허공에 마력이 모였다가 날아가는 형태로 바꿨다.
+#
+# 차징 이펙트가 뜨는 위치: 플레이어 발밑이 아니라 "몬스터를 향한 앞쪽 허공"이라야 손에서
+# 모으는 것처럼 보이므로, 몬스터 방향으로 이만큼 띄운 지점에 띄운다
+const CAST_CHARGE_FORWARD := 56.0
+const CAST_CHARGE_RISE := 26.0 # 살짝 위(가슴~손 높이)로도 올린다 — 낮으면 큰 차징이 캐릭터를 덮는다
+
+# 파이어볼: 짧게 한 번 응축하고 곧바로 터진다
+const FIREBALL_CHARGE_DURATION := 0.18
+const FIREBALL_CHARGE_SCALE := 1.1
+const FIREBALL_CHARGE_SFX := "res://assets/sfx/400 Sounds pack/Retro/power_up_2.wav"
+
+# 익스플로전: 낮은 톤으로 한 번(1단계), 더 크고 높은 톤으로 한 번 더(2단계) 모았다가 발사한다.
+# 같은 차징 사운드를 pitch_scale만 올려 두 번 울리면 "삥- 삥-" 하고 음이 올라가는 긴박감이 난다
+# (SFXPlayer.play가 pitch_scale 인자를 이미 받고, 풀 방식이라 겹쳐 울려도 서로 안 끊긴다)
+# (스케일은 화면에 실제로 띄워보고 맞춘 값이다 — 1.3/2.0으로 잡았더니 2단계 차징이 화면 위와
+#  아래 카드 영역까지 삐져나갔다. 1.0→1.5면 "확실히 커졌다"는 단계감은 그대로면서 전장 안에 담긴다)
+const EXPLOSION_CHARGE1_DURATION := 0.3
+const EXPLOSION_CHARGE1_SCALE := 1.0
+const EXPLOSION_CHARGE1_PITCH := 0.75
+const EXPLOSION_CHARGE1_SFX := "res://assets/sfx/400 Sounds pack/Musical Effects/synth_bass_chime_quick.wav"
+const EXPLOSION_CHARGE2_DURATION := 0.36
+const EXPLOSION_CHARGE2_SCALE := 1.5
+const EXPLOSION_CHARGE2_PITCH := 1.25
+const EXPLOSION_CHARGE2_SFX := "res://assets/sfx/400 Sounds pack/Retro/grow_big.wav"
+const EXPLOSION_TRAVEL_DURATION := 0.16 # 응축된 덩어리가 몬스터까지 날아가는 시간
+const EXPLOSION_VFX_SCALE_MULT := 2.0   # 폭발 이펙트를 기본 배율보다 이만큼 더 키워 띄운다
+const EXPLOSION_SHAKE_AMOUNT := 16.0    # 섬광/삼중나선(기본 7)보다 훨씬 세게 흔든다
+const EXPLOSION_SHAKE_STEPS := 6
+# 큰 폭발음에 저역 충격음을 겹쳐 몸통을 채운다 (한 파일로는 "쿵" 하는 저음이 부족했다)
+const EXPLOSION_IMPACT_SFX := "res://assets/sfx/400 Sounds pack/Weapons/harsh_thud.wav"
+
+# 섬광 전용: 베기 전에 노랗게 "차징"하는 짧은 깜빡임
+const FLASH_SLASH_CHARGE_TINT := Color(1.0, 0.92, 0.35, 1)
+const FLASH_SLASH_CHARGE_DURATION := 0.1
+
+# 섬광 전용: 일반 _lunge()의 고정 26px 대신, 몬스터 코앞(부딪히지 않을 만큼만 띄운 지점)까지
+# 실제로 달려갔다가 돌아온다. HIT_GAP은 두 스프라이트 테두리 사이에 남길 최소 간격
+const FLASH_SLASH_DASH_DURATION := 0.16
+const FLASH_SLASH_RETURN_DURATION := 0.15
+const FLASH_SLASH_HIT_GAP := 12.0
+
+# 섬광 전용: 돌진 궤적에 남기는 반투명 잔상 (스프라이트 복제본을 경로상에 몇 장 뿌리고 각각 페이드).
+# 몬스터 코앞까지 달려가면서 실제 이동 거리가 카드마다(몬스터 위치마다) 달라지므로, 개수를 고정하지
+# 않고 "대략 이 간격마다 한 장" 기준으로 거리에 비례해 늘어나게 한다 — 거리가 짧아도 최소 개수는
+# 보장하고, 너무 많아지지 않게 상한도 둔다
+const DASH_AFTERIMAGE_TARGET_SPACING := 45.0
+const DASH_AFTERIMAGE_MIN_COUNT := 3
+const DASH_AFTERIMAGE_MAX_COUNT := 7
+const DASH_AFTERIMAGE_ALPHA := 0.6
+const DASH_AFTERIMAGE_FADE_DURATION := 0.22
+const DASH_AFTERIMAGE_STAGGER := 0.02
+
+# 섬광 전용: 타격 순간 화면 전체가 짧게 번쩍이는 풀스크린 플래시
+const HIT_FLASH_DURATION := 0.05
+
+# ── 삼중나선 전용 3연타 컷신 ─────────────────────────────────────────────────
+# 섬광의 돌진/잔상/화면플래시를 재사용하되, "번쩍하고 나면 이미 반대편에 가 있는" 순간이동으로
+# 바꾼 버전. 색은 섬광(노랑)과 겹치지 않게 흰색에 가까운 청록으로, 이동은 트윈 없이 즉시 좌표만
+# 바꿔 "시간이 멈춘 것 같은" 속도감을 낸다
+const TRIPLE_HELIX_TINT := Color(0.85, 1.0, 1.0, 1)
+const TRIPLE_HELIX_FLASH_IN_DURATION := 0.05  # 화면이 완전히 덮일 때까지
+const TRIPLE_HELIX_FLASH_OUT_DURATION := 0.09 # 걷히면서 새 위치의 캐릭터가 드러남
+const TRIPLE_HELIX_FLASH_ALPHA := 0.92        # 순간이동을 완전히 가릴 만큼 진하게 (섬광의 히트플래시 0.55보다 훨씬 진함)
+const TRIPLE_HELIX_HIT_GAP := 12.0
+const TRIPLE_HELIX_SET_GAP := 0.22 # 한 타격이 끝나고 다음 번쩍임이 시작되기 전까지 정지하는 시간
+const TRIPLE_HELIX_RETURN_DURATION := 0.15
+const TRIPLE_HELIX_HIT_SFX := [
+	"res://assets/sfx/400 Sounds pack/Weapons/sword_slice.wav",
+	"res://assets/sfx/400 Sounds pack/Weapons/sword_light.wav",
+	"res://assets/sfx/400 Sounds pack/Combat and Gore/swipe.wav",
+]
 
 const HAND_BUTTON_COUNT := 5
 
@@ -144,6 +263,11 @@ const SKILL_ICON_REGION := {
 	Card.EffectType.DODGE: Rect2(128, 1440, RAVEN_ICON_SIZE, RAVEN_ICON_SIZE),  # fb725 — 바람 소용돌이
 	Card.EffectType.HEAL_HP: Rect2(64, 1312, RAVEN_ICON_SIZE, RAVEN_ICON_SIZE), # fb659 — 빨간 하트
 	Card.EffectType.RESTORE_MANA: Rect2(192, 1408, RAVEN_ICON_SIZE, RAVEN_ICON_SIZE), # fb711 — 파란 마나 물방울
+	# 아래 둘은 기존 아이콘을 그대로 빌려 쓴다 — 전용 아이콘 고르기는 카드 UI 단계에서 할 일이라
+	# 여기서는 "아이콘이 비어 카드가 깨져 보이는 것"만 막는 게 목적이다.
+	# 반격은 막는 동작이 먼저라 방패를, 초재생은 체력 회복이 주효과라 하트를 쓴다
+	Card.EffectType.COUNTER: Rect2(128, 1184, RAVEN_ICON_SIZE, RAVEN_ICON_SIZE),      # fb597 (방어와 공유)
+	Card.EffectType.RESTORE_BOTH: Rect2(64, 1312, RAVEN_ICON_SIZE, RAVEN_ICON_SIZE),  # fb659 (치유와 공유)
 }
 const RESIST_ICON_REGION := {
 	EnemyResistance.ResistanceType.PHYSICAL: Rect2(320, 1696, RAVEN_ICON_SIZE, RAVEN_ICON_SIZE), # fb859 — 빨강 저항 방패
@@ -189,12 +313,36 @@ const CARD_NAME_BANNER_REGION := { # 카드 이름 뒤에 깔리는 띠 (46x11)
 	"blue": Rect2(369, 611, 46, 11),
 	"green": Rect2(369, 579, 46, 11),
 }
-# 마나 소모량을 넣을 마름모 배지 (16x16). 마나는 언제나 마법 자원이라 카드 색과 무관하게 파랑 고정
-const CARD_MANA_BADGE_REGION := Rect2(432, 640, 16, 16)
+# 비용을 넣을 마름모 배지 (16x16). 카드 색과 무관하게 자원 색으로 고정한다 —
+# 마나=파랑, 체력=빨강으로 HP바/마나바와 같은 색이라 숫자만 봐도 무슨 자원인지 바로 안다
+const CARD_MANA_BADGE_REGION := Rect2(432, 768, 16, 16)
+const CARD_HP_BADGE_REGION := Rect2(432, 704, 16, 16)
 
-const CARD_SIZE := Vector2(138, 221) # HandArea의 각 카드 슬롯 크기 (.tscn의 Card1~5 offset과 일치시켜야 함)
+const CARD_SIZE := Vector2(138, 256) # HandArea의 각 카드 슬롯 크기 (.tscn의 Card1~5 offset과 일치시켜야 함).
+# 폭은 그대로 두고 높이만 221->256으로 키웠다 — flavor_text 박스가 들어갈 자리를 만들어야 했는데,
+# 폭을 키우면 손패 5장이 가로로 화면 밖까지 밀려날 위험이 있어(HandArea가 딱 그 폭에 맞춰져 있음)
+# 세로로만 늘리는 쪽이 안전했다
 const CARD_ENABLED_MODULATE := Color(1, 1, 1, 1)
 const CARD_DISABLED_MODULATE := Color(0.5, 0.5, 0.5, 0.85) # 과열/마나부족 카드를 흐리게 (기존 disabled 느낌 유지)
+
+# ── 카드 티어 시각 연출 (_apply_card_tier_visuals) ──────────────────────────
+# TierGlow는 카드 프레임과 같은 텍스처를 카드보다 조금 크게 띄워, 실제 카드 밑에서 테두리
+# 바깥으로 삐져나온 부분만 "발광 테두리"처럼 보이게 하는 값싼 트릭이다 (전용 아웃라인 셰이더 없이도
+# 이 픽셀아트 프레임 모양 그대로 광채가 도는 것처럼 보인다)
+const TIER_GLOW_MARGIN := 10.0
+const TIER2_GLOW_COLOR := Color(1.0, 0.85, 0.45, 1) # 옅은 금색
+const TIER2_GLOW_ALPHA_MIN := 0.12
+const TIER2_GLOW_ALPHA_MAX := 0.34
+const TIER2_GLOW_PULSE_DURATION := 1.1 # 은은하게 천천히 맥동
+const TIER3_GLOW_COLOR := Color(1.0, 0.76, 0.15, 1) # 더 진하고 강한 금빛
+const TIER3_GLOW_ALPHA_MIN := 0.28
+const TIER3_GLOW_ALPHA_MAX := 0.62
+const TIER3_GLOW_PULSE_DURATION := 0.7 # 티어2보다 빠르고 강하게 맥동
+
+# 티어3 전용 반짝임 파티클. "카드 주변에 떠다니는 작은 반짝임 몇 개" 정도로 절제한다
+const TIER3_SPARKLE_AMOUNT := 6
+const TIER3_SPARKLE_LIFETIME := 1.6
+const TIER3_SPARKLE_COLOR := Color(1.0, 0.92, 0.55, 1)
 
 # ── 카드 드로우 뒤집기 연출 ──────────────────────────────────────────────────
 const DRAW_STAGGER := 0.08 # 카드마다 뒤집기 시작을 이만큼씩 늦춰 순서대로 펼쳐지는 느낌을 낸다
@@ -206,6 +354,7 @@ const HOVER_RISE := 14.0 # 확대와 함께 위로 떠오르는 픽셀 수
 const HOVER_DURATION := 0.12
 
 @onready var _actors: Node2D = $View/Actors
+@onready var _hit_flash: ColorRect = $View/HitFlash
 @onready var _player_sprite: AnimatedSprite2D = $View/Actors/PlayerSprite
 @onready var _monster_sprite: AnimatedSprite2D = $View/Actors/MonsterSprite
 @onready var _player_shadow: Polygon2D = $View/PlayerShadow
@@ -248,6 +397,16 @@ var _card_icon_frames: Array[TextureRect] = []
 var _card_name_banners: Array[TextureRect] = []
 var _card_mana_badges: Array[TextureRect] = []
 var _card_mana_labels: Array[Label] = []
+var _card_hp_badges: Array[TextureRect] = []
+var _card_hp_labels: Array[Label] = []
+var _card_flavor_boxes: Array[Panel] = []
+var _card_flavor_labels: Array[Label] = []
+var _card_tier_glows: Array[TextureRect] = []
+var _card_tier_sparkles: Array[CPUParticles2D] = []
+# 카드칸은 매 턴 같은 wrapper를 재사용하므로, 이전에 걸어둔 루프 트윈을 추적해뒀다가 다시 칠하기
+# 전에 반드시 죽여야 한다 — 안 그러면 populate가 불릴 때마다(호버/재사용 등으로 잦다) 같은
+# modulate:a 위에 루프 트윈이 계속 쌓여 서로 싸우며 깜빡인다
+var _card_tier_glow_tweens: Array[Tween] = []
 # 카드 5칸의 원래 위치. 호버로 카드를 띄웠다가 정확히 제자리로 되돌리기 위해 기억해둔다.
 # HandArea는 컨테이너가 아니라 평범한 Control이라 자식 위치를 다시 정렬하지 않으므로,
 # .tscn에 적힌 offset이 곧 최종 위치이고 _ready() 시점에 읽어도 안전하다
@@ -263,7 +422,9 @@ var _card_icon_frame_textures: Dictionary = {}
 var _card_name_banner_textures: Dictionary = {}
 var _card_back_texture: AtlasTexture
 var _card_mana_badge_texture: AtlasTexture
+var _card_hp_badge_texture: AtlasTexture
 var _vfx_frames: Dictionary = {} # "physical"/"magic"/"heal"/"mana"/"defend"/"dodge" -> SpriteFrames
+var _tier_sparkle_texture: ImageTexture # 티어3 카드 파티클용 (한 번만 절차적으로 만들어 재사용)
 
 # 마지막으로 뒤집기 연출을 재생한 턴 번호. _manager.turn_number와 다르면 "방금 새로 뽑은 손패"라는
 # 뜻이라 뒤집기를 재생하고, 같으면 카드 한 장을 냈다거나 하는 중간 갱신이라 곧바로 반영한다
@@ -278,6 +439,7 @@ var _monster_art_top_offset: float = 0.0
 var _last_card_damage: int = 0
 var _last_enemy_damage: int = 0
 var _last_enemy_dodged: bool = false
+var _last_counter_damage: int = 0
 var _outcome: String = "" # "" / "victory" / "defeat"
 
 
@@ -298,6 +460,16 @@ func _ready() -> void:
 		_card_name_banners.append(wrapper.get_node("NameBanner") as TextureRect)
 		_card_mana_badges.append(wrapper.get_node("ManaBadge") as TextureRect)
 		_card_mana_labels.append(wrapper.get_node("ManaLabel") as Label)
+		_card_hp_badges.append(wrapper.get_node("HpBadge") as TextureRect)
+		_card_hp_labels.append(wrapper.get_node("HpLabel") as Label)
+		_card_flavor_boxes.append(wrapper.get_node("FlavorBox") as Panel)
+		_card_flavor_labels.append(wrapper.get_node("FlavorLabel") as Label)
+
+		var glow := wrapper.get_node("TierGlow") as TextureRect
+		glow.modulate.a = 0.0
+		_card_tier_glows.append(glow)
+		_card_tier_sparkles.append(_setup_tier_sparkles(wrapper.get_node("TierSparkles") as CPUParticles2D))
+		_card_tier_glow_tweens.append(null)
 
 		var btn := wrapper.get_node("Button") as Button
 		_hand_buttons.append(btn)
@@ -332,9 +504,12 @@ func _build_battle_ui_resources() -> void:
 		_card_name_banner_textures[key] = _atlas(card_sheet, CARD_NAME_BANNER_REGION[key])
 	_card_back_texture = _atlas(card_sheet, CARD_BACK_REGION)
 	_card_mana_badge_texture = _atlas(card_sheet, CARD_MANA_BADGE_REGION)
+	_card_hp_badge_texture = _atlas(card_sheet, CARD_HP_BADGE_REGION)
 
 	for key in VFX_CONFIG:
 		_vfx_frames[key] = _build_vfx_frames(VFX_CONFIG[key])
+
+	_tier_sparkle_texture = _build_sparkle_texture()
 
 
 # VFX_CONFIG 항목 하나로 재생 한 번짜리 SpriteFrames를 만든다. 같은 시트를 카드마다 새로 열지 않도록
@@ -352,6 +527,55 @@ func _build_vfx_frames(cfg: Dictionary) -> SpriteFrames:
 	for i in range(cfg["frames"]):
 		frames.add_frame("play", _atlas(sheet, Rect2(i * VFX_FRAME_SIZE, row * VFX_FRAME_SIZE, VFX_FRAME_SIZE, VFX_FRAME_SIZE)))
 	return frames
+
+
+# 티어3 카드 파티클용 작은 십자 반짝임(sparkle)을 코드로 직접 그려 만든다. 전용 에셋을 찾는 대신
+# 5x5 흰 픽셀 이미지를 만들어 CPUParticles2D.color로 금색을 입힌다 — 이렇게 하면 시트 조사 없이도
+# 어떤 색 티어든 재사용 가능한 중립 스프라이트가 된다
+func _build_sparkle_texture() -> ImageTexture:
+	var size := 5
+	var img := Image.create(size, size, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 0))
+	var mid := size / 2
+	for x in range(size):
+		img.set_pixel(x, mid, Color(1, 1, 1, 1))
+	for y in range(size):
+		img.set_pixel(mid, y, Color(1, 1, 1, 1))
+	img.set_pixel(mid - 1, mid - 1, Color(1, 1, 1, 0.6))
+	img.set_pixel(mid + 1, mid - 1, Color(1, 1, 1, 0.6))
+	img.set_pixel(mid - 1, mid + 1, Color(1, 1, 1, 0.6))
+	img.set_pixel(mid + 1, mid + 1, Color(1, 1, 1, 0.6))
+	return ImageTexture.create_from_image(img)
+
+
+# 카드칸 하나의 CPUParticles2D를 티어3 스파클 설정으로 한 번만 채운다 (emitting은 꺼둔 채로 —
+# 실제로 켜고 끄는 건 _apply_card_tier_visuals()가 카드 티어에 따라 담당한다)
+func _setup_tier_sparkles(particles: CPUParticles2D) -> CPUParticles2D:
+	particles.emitting = false
+	particles.amount = TIER3_SPARKLE_AMOUNT
+	particles.lifetime = TIER3_SPARKLE_LIFETIME
+	particles.preprocess = TIER3_SPARKLE_LIFETIME # 켜지자마자 이미 떠다니고 있던 것처럼 시작
+	particles.randomness = 0.5
+	particles.local_coords = true
+	particles.texture = _tier_sparkle_texture
+	particles.position = CARD_SIZE / 2.0
+	particles.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+	particles.emission_rect_extents = CARD_SIZE / 2.0 + Vector2(TIER_GLOW_MARGIN, TIER_GLOW_MARGIN)
+	particles.direction = Vector2(0, -1)
+	particles.spread = 180.0
+	particles.gravity = Vector2(0, -6)
+	particles.initial_velocity_min = 2.0
+	particles.initial_velocity_max = 8.0
+	particles.scale_amount_min = 1.2
+	particles.scale_amount_max = 2.4
+	particles.color = TIER3_SPARKLE_COLOR
+	var ramp := Gradient.new()
+	ramp.offsets = PackedFloat32Array([0.0, 0.15, 0.85, 1.0])
+	ramp.colors = PackedColorArray([
+		Color(1, 1, 1, 0), Color(1, 1, 1, 1), Color(1, 1, 1, 1), Color(1, 1, 1, 0),
+	])
+	particles.color_ramp = ramp
+	return particles
 
 
 # sheet에서 y행의 게이지 프레임 5장(0/25/50/75/100%)을 왼쪽부터 잘라, 각각 반시계로 90도 돌린
@@ -475,9 +699,10 @@ func _on_card_played(_card: Card, damage_dealt: int) -> void:
 	_last_card_damage = damage_dealt
 
 
-func _on_enemy_turn_resolved(damage_taken: int, dodged: bool) -> void:
+func _on_enemy_turn_resolved(damage_taken: int, dodged: bool, counter_damage: int) -> void:
 	_last_enemy_damage = damage_taken
 	_last_enemy_dodged = dodged
+	_last_counter_damage = counter_damage
 
 
 func _on_enemy_defeated() -> void:
@@ -510,6 +735,7 @@ func _play_card_flow(card: Card) -> void:
 
 	var hp_before: int = GameState.get_flag("player_hp")
 	var mana_before: int = GameState.get_flag("player_mana")
+	var monster_hp_before: int = _manager.monster_hp
 	_last_card_damage = 0
 
 	if not _manager.play_card(card):
@@ -517,12 +743,21 @@ func _play_card_flow(card: Card) -> void:
 		await _refresh_all()
 		return
 
-	await _animate_card(card, hp_before, mana_before)
+	await _animate_card(card, hp_before, mana_before, monster_hp_before)
 
 	await _refresh_all()
 
 	if _outcome == "victory":
 		_finish_victory()
+		return
+
+	# 손패를 전부 소진했으면 "턴 종료"를 누를 일만 남으므로 대신 눌러준다.
+	# (어떤 조건에서 자동으로 넘기고 어떤 조건에서 안 넘기는지는 is_hand_exhausted() 주석 참고)
+	# 마지막 카드 연출이 끝나자마자 적이 달려들면 급하게 느껴져서, 안내 문구와 함께 한 박자 둔다
+	if _manager.is_hand_exhausted():
+		_message.text = "손패를 모두 사용했다 — 턴을 넘긴다."
+		await _wait(0.5)
+		await _end_turn_flow()
 		return
 
 	_mode = Mode.ACTION
@@ -533,13 +768,57 @@ func _play_card_flow(card: Card) -> void:
 # 회복량은 GameState 값의 전후 차이로 실제 적용된 만큼만 보여준다.
 # 이펙트/사운드는 여기서 카드별로 직접 부르지 않고 _vfx_key_for_card()로 종류를 정한 뒤
 # _play_card_vfx()에서 이펙트+사운드를 함께 재생한다 — 화면 흔들림만 DAMAGE에서 따로 켠다
-func _animate_card(card: Card, hp_before: int, mana_before: int) -> void:
+func _animate_card(card: Card, hp_before: int, mana_before: int, monster_hp_before: int) -> void:
 	match card.effect:
 		Card.EffectType.DAMAGE:
-			await _lunge(_player_sprite, _monster_sprite.position)
-			_shake_actors()
-			_flash_hit(_monster_sprite)
-			_play_card_vfx(card, _monster_sprite)
+			if card.card_name == "삼중나선":
+				# 삼중나선은 팝업/HP바를 스스로 3단계로 나눠 보여주는 완전히 독립된 컷신이라,
+				# 아래 공통 꼬리(단일 팝업+HP바 트윈)를 타지 않고 여기서 바로 끝낸다
+				await _play_triple_helix_cutscene(card, monster_hp_before)
+				return
+			if card.card_name == "파이어볼":
+				# 원거리 마법이라 캐릭터는 제자리에 선 채, 앞쪽 허공에 불꽃을 짧게 응축했다가 터뜨린다
+				await _play_charge_stage("charge_fire", FIREBALL_CHARGE_SFX, 1.0, FIREBALL_CHARGE_SCALE, FIREBALL_CHARGE_DURATION)
+				_shake_actors()
+				_flash_hit(_monster_sprite)
+				_play_card_vfx(card, _monster_sprite)
+			elif card.card_name == "익스플로전":
+				# 2단 차징: 낮은 톤으로 한 번, 더 크고 높은 톤으로 한 번 더 모은 뒤 발사한다
+				await _play_charge_stage("charge_heavy_1", EXPLOSION_CHARGE1_SFX, EXPLOSION_CHARGE1_PITCH, EXPLOSION_CHARGE1_SCALE, EXPLOSION_CHARGE1_DURATION)
+				await _play_charge_stage("charge_heavy_2", EXPLOSION_CHARGE2_SFX, EXPLOSION_CHARGE2_PITCH, EXPLOSION_CHARGE2_SCALE, EXPLOSION_CHARGE2_DURATION)
+				await _launch_projectile(_cast_charge_origin(), _monster_sprite.position, "charge_heavy_2", 0.9, EXPLOSION_TRAVEL_DURATION)
+				_shake_actors(EXPLOSION_SHAKE_AMOUNT, EXPLOSION_SHAKE_STEPS)
+				_flash_hit(_monster_sprite)
+				SFXPlayer.play(EXPLOSION_IMPACT_SFX) # 큰 폭발음 위에 저역 "쿵"을 겹친다
+				_play_card_vfx(card, _monster_sprite, EXPLOSION_VFX_SCALE_MULT)
+				await _wait(0.18) # 폭발이 부풀어오르는 동안 숫자를 잠깐 참았다가 띄운다
+			elif card.card_name == "섬광":
+				# 섬광은 그냥 살짝 찌르는(_lunge) 대신, 몬스터 코앞까지 실제로 달려가서 때리고
+				# 곧바로 원위치로 돌아온다 — 베기 전에 노랗게 짧게 번쩍이는 "차징"도 함께 넣는다
+				await _flash_charge(_player_sprite)
+				var dash_start := _player_sprite.position
+				var dash_target := _flash_slash_dash_target(dash_start, _monster_sprite.position)
+				# 잔상은 돌진과 같은 시간 동안 나란히 재생돼야 "지나간 궤적"처럼 보이므로
+				# await 없이 던져서 돌진과 병렬로 돈다
+				_spawn_dash_afterimages(_player_sprite, dash_start, dash_target, FLASH_SLASH_CHARGE_TINT)
+				var dash_tween := create_tween()
+				dash_tween.tween_property(_player_sprite, "position", dash_target, FLASH_SLASH_DASH_DURATION)
+				await dash_tween.finished
+				_shake_actors()
+				_flash_hit(_monster_sprite)
+				_play_card_vfx(card, _monster_sprite)
+				_screen_flash(FLASH_SLASH_CHARGE_TINT, HIT_FLASH_DURATION)
+				# 원위치 복귀는 await 없이 던진다 — 메시지/팝업이 뜨는 동안 뒤에서 자연스럽게 돌아가면 되고,
+				# 계속 몬스터 앞에 머물러 있으면 다음 턴 배치가 어색해지므로 짧게(0.15s) 돌아온다
+				var return_tween := create_tween()
+				return_tween.tween_property(_player_sprite, "position", dash_start, FLASH_SLASH_RETURN_DURATION)
+				# 이펙트가 스치고 지나간 뒤에야 숫자가 뜨는 "찰나의 딜레이"
+				await _wait(0.12)
+			else:
+				await _lunge(_player_sprite, _monster_sprite.position)
+				_shake_actors()
+				_flash_hit(_monster_sprite)
+				_play_card_vfx(card, _monster_sprite)
 			_show_popup(_monster_sprite.position, "-%d" % _last_card_damage, DAMAGE_COLOR)
 			_animate_hp_bar(_monster_hp_bar, _manager.monster_hp)
 			_update_monster_hp_text()
@@ -569,12 +848,34 @@ func _animate_card(card: Card, hp_before: int, mana_before: int) -> void:
 			_show_popup(_player_sprite.position, "회피 준비", DODGE_COLOR)
 			_message.text = "%s — 다음 공격을 흘려낸다." % card.card_name
 			await _wait(0.35)
+		Card.EffectType.COUNTER:
+			# 실제 반격 타격(2단계)은 _play_counter_vfx()가 적 턴에 따로 재생한다 — 여기서는
+			# "받아넘길 준비를 했다"는 1단계 연출만 보여준다
+			_play_card_vfx(card, _player_sprite)
+			_show_popup(_player_sprite.position, "반격 준비", GUARD_COLOR)
+			_message.text = "%s — 다음 공격을 받아넘기고 반격한다." % card.card_name
+			await _wait(0.35)
+		Card.EffectType.RESTORE_BOTH:
+			var healed: int = GameState.get_flag("player_hp") - hp_before
+			var mana_restored: int = GameState.get_flag("player_mana") - mana_before
+			if VFX_SFX.has("restore_both"):
+				SFXPlayer.play(VFX_SFX["restore_both"])
+			# 체력(heal)과 마나(mana) 이펙트를 좌우로 살짝 갈라 동시에 띄운다 — 겹쳐서 하나로
+			# 뭉개지지 않으면서도 "두 자원이 한 번에 차오른다"는 인상을 준다
+			_spawn_vfx_sprite("heal", _player_sprite.position + Vector2(-14, -6))
+			_spawn_vfx_sprite("mana", _player_sprite.position + Vector2(14, -6))
+			_show_popup(_player_sprite.position, "+%d / +%d MP" % [healed, mana_restored], HEAL_COLOR)
+			_animate_hp_bar(_player_hp_bar, GameState.get_flag("player_hp"))
+			_message.text = "%s — 체력 %d, 마나 %d 회복!" % [card.card_name, healed, mana_restored]
+			await _wait(0.4)
 
 
 # card.effect(+물리/마법 구분)에 맞는 VFX/SFX 키를 고른다. _card_style_key()와 판단 기준은 같지만
 # (물리=빨강/마법=파랑 계열) "회복"과 "마나"를 서로 다른 키로 나눈다는 점이 다르다 — 카드 프레임은
 # 둘 다 초록으로 묶지만, 타격 이펙트까지 같으면 두 결과를 구분하기 어렵기 때문
 func _vfx_key_for_card(card: Card) -> String:
+	if CARD_NAME_VFX_OVERRIDE.has(card.card_name):
+		return CARD_NAME_VFX_OVERRIDE[card.card_name]
 	match card.effect:
 		Card.EffectType.DAMAGE:
 			return "magic" if card.color == Card.CardColor.MAGIC else "physical"
@@ -586,13 +887,28 @@ func _vfx_key_for_card(card: Card) -> String:
 			return "defend"
 		Card.EffectType.DODGE:
 			return "dodge"
+		Card.EffectType.COUNTER:
+			return "counter" # 낼 때는 "받아넘길 준비" — 실제 반격 타격은 적 턴에 따로 재생한다
+		Card.EffectType.RESTORE_BOTH:
+			return "heal"
 		_:
 			return ""
 
 
+# 반격이 실제로 적을 때리는 순간의 연출. 이때는 카드가 손을 떠난 뒤(적 턴)라 카드 객체가 없으므로,
+# 카드 기반인 _play_card_vfx() 대신 물리 타격 이펙트를 몬스터 위에 직접 재생한다
+func _play_counter_vfx() -> void:
+	if not _vfx_frames.has("physical"):
+		return
+	SFXPlayer.play(VFX_SFX["physical"])
+	_spawn_vfx_sprite("physical", _monster_sprite.position)
+
+
 # target 위치에 카드에 맞는 이펙트를 한 번 재생하고, 어울리는 타격음을 SFXPlayer로 함께 튼다.
-# 이펙트 스프라이트는 재생이 끝나면(animation_finished) 스스로 사라진다
-func _play_card_vfx(card: Card, target: Node2D) -> void:
+# 이펙트 스프라이트는 재생이 끝나면(animation_finished) 스스로 사라진다.
+# scale_mult로 기본 배율(VFX_DISPLAY_SCALE)보다 더 크게/작게 띄울 수 있다 — 익스플로전처럼
+# 같은 재생 경로를 쓰되 "훨씬 크게" 보여야 하는 카드용
+func _play_card_vfx(card: Card, target: Node2D, scale_mult: float = 1.0) -> void:
 	var key := _vfx_key_for_card(card)
 	if key == "" or not _vfx_frames.has(key):
 		return
@@ -600,15 +916,60 @@ func _play_card_vfx(card: Card, target: Node2D) -> void:
 	if VFX_SFX.has(key):
 		SFXPlayer.play(VFX_SFX[key])
 
+	_spawn_vfx_sprite(key, target.position, scale_mult)
+
+
+# VFX_CONFIG의 key에 해당하는 이펙트 스프라이트 하나를 pos에 재생한다 (사운드는 호출부 책임).
+# _play_card_vfx()/_play_counter_vfx()가 공유하고, 초재생처럼 한 카드에서 이펙트 두 개를
+# 서로 다른 위치에 동시에 띄워야 할 때도 이걸 그대로 두 번 부르면 된다
+func _spawn_vfx_sprite(key: String, pos: Vector2, scale_mult: float = 1.0) -> void:
+	if not _vfx_frames.has(key):
+		return
 	var sprite := AnimatedSprite2D.new()
 	sprite.sprite_frames = _vfx_frames[key]
-	sprite.position = target.position
-	sprite.scale = Vector2.ONE * VFX_DISPLAY_SCALE
+	sprite.position = pos
+	sprite.scale = Vector2.ONE * VFX_DISPLAY_SCALE * scale_mult
 	sprite.z_index = 15
 	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	_actors.add_child(sprite)
 	sprite.animation_finished.connect(sprite.queue_free)
 	sprite.play("play")
+
+
+# 플레이어가 원거리 마법을 "모으는" 지점 — 몬스터를 향한 앞쪽 허공(가슴~손 높이).
+# 캐릭터 위에 겹쳐 띄우면 자기 몸에 이펙트가 터지는 것처럼 보여서 앞으로 밀어냈다
+func _cast_charge_origin() -> Vector2:
+	var offset := _monster_sprite.position - _player_sprite.position
+	var direction := offset.normalized() if offset.length() > 0.001 else Vector2.RIGHT
+	return _player_sprite.position + direction * CAST_CHARGE_FORWARD + Vector2(0, -CAST_CHARGE_RISE)
+
+
+# 차징 한 단계: 앞쪽 허공에 응축 이펙트를 띄우고 차징음을 울린 뒤, 그 단계가 끝날 때까지 기다린다
+func _play_charge_stage(key: String, sfx_path: String, pitch: float, scale_mult: float, duration: float) -> void:
+	if sfx_path != "":
+		SFXPlayer.play(sfx_path, SFXPlayer.DEFAULT_VOLUME_DB, pitch)
+	_spawn_vfx_sprite(key, _cast_charge_origin(), scale_mult)
+	await _wait(duration)
+
+
+# 응축된 마력 덩어리가 from에서 to까지 날아가는 짧은 투사체. 폭발 이펙트 시트의 한 프레임을
+# 정지 이미지로 빌려 쓴다 — 날아가는 동안은 모양이 변할 필요가 없어 AnimatedSprite2D까지는 필요 없다
+func _launch_projectile(from: Vector2, to: Vector2, key: String, scale_mult: float, duration: float) -> void:
+	if not _vfx_frames.has(key):
+		await _wait(duration)
+		return
+	var frames: SpriteFrames = _vfx_frames[key]
+	var sprite := Sprite2D.new()
+	sprite.texture = frames.get_frame_texture("play", frames.get_frame_count("play") / 2)
+	sprite.position = from
+	sprite.scale = Vector2.ONE * VFX_DISPLAY_SCALE * scale_mult
+	sprite.z_index = 15
+	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_actors.add_child(sprite)
+	var tween := create_tween()
+	tween.tween_property(sprite, "position", to, duration)
+	tween.tween_callback(sprite.queue_free)
+	await tween.finished
 
 
 # [무기 전환]: 턴당 3회 제한은 매니저(WeaponState)가 관리하므로 여기서는 요청만 하고 결과를 표시한다
@@ -636,6 +997,7 @@ func _end_turn_flow() -> void:
 
 	_last_enemy_damage = 0
 	_last_enemy_dodged = false
+	_last_counter_damage = 0
 
 	_manager.end_turn() # 적 반격 + 승패 판정 + (안 끝났으면) 다음 턴 시작까지 전부 여기서 일어남
 
@@ -660,6 +1022,21 @@ func _end_turn_flow() -> void:
 # 여기서는 결과값(_last_enemy_damage/_last_enemy_dodged)에 맞춰 보여주기만 한다
 func _animate_enemy_turn() -> void:
 	await _lunge(_monster_sprite, _player_sprite.position)
+
+	# 반격: 공격을 받아넘긴 뒤 곧바로 적을 때린다. 피해 적용은 매니저가 이미 끝냈으므로
+	# 여기서는 적 HP바/숫자를 그 결과에 맞춰 따라가게만 한다 (플레이어는 피해를 안 받는다)
+	if _last_counter_damage > 0:
+		_show_popup(_player_sprite.position, "반격!", GUARD_COLOR)
+		await _wait(0.2)
+		_shake_actors()
+		_flash_hit(_monster_sprite)
+		_play_counter_vfx()
+		_show_popup(_monster_sprite.position, "-%d" % _last_counter_damage, DAMAGE_COLOR)
+		_animate_hp_bar(_monster_hp_bar, _manager.monster_hp)
+		_update_monster_hp_text()
+		_message.text = "공격을 받아넘겼다! %d 피해로 되돌려줬다!" % _last_counter_damage
+		await _wait(0.4)
+		return
 
 	if _last_enemy_dodged:
 		_show_popup(_player_sprite.position, "회피!", DODGE_COLOR)
@@ -748,6 +1125,7 @@ func _populate_card_slot(i: int, cards: Array) -> void:
 	if i >= cards.size():
 		btn.disabled = true
 		_set_card_parts_visible(i, false)
+		_clear_card_tier_visuals(i) # 카드를 내서 칸이 비었는데 이전 카드의 티어 광채/파티클이 남으면 안 된다
 		_card_wrappers[i].modulate = CARD_ENABLED_MODULATE
 		_reset_card_hover(i) # 카드를 내서 칸이 비었는데 확대만 남아 있는 상태를 막는다
 		return
@@ -762,6 +1140,8 @@ func _populate_card_slot(i: int, cards: Array) -> void:
 			desc += "\n[과열]"
 		elif not GameState.can_afford_mana(card.get_mana_cost()):
 			desc += "\n[마나부족]"
+		elif not _manager.can_afford_hp(card.get_hp_cost()):
+			desc += "\n[체력부족]"
 
 	_set_card_parts_visible(i, true)
 	frame.texture = _card_front_textures[style_key]
@@ -770,9 +1150,15 @@ func _populate_card_slot(i: int, cards: Array) -> void:
 	icon.texture = _skill_icon_textures.get(card.effect)
 	name_label.text = card.card_name
 	desc_label.text = desc
+	# flavor_text는 수치 설명(desc_label)과 별개로 손으로 쓴 짧은 분위기 문구다. 비워둔 카드도
+	# 있을 수 있으니(예: 나중에 급하게 추가한 카드) 그런 경우 박스 자체를 숨겨 빈 칸이 안 보이게 한다
+	_card_flavor_boxes[i].visible = card.flavor_text != ""
+	_card_flavor_labels[i].visible = card.flavor_text != ""
+	_card_flavor_labels[i].text = card.flavor_text
 
-	# 마나 소모량은 설명 문장에 끼워 넣지 않고 왼쪽 아래 마름모 배지로 뺀다 — 참고 이미지의
-	# 모서리 배지와 같은 방식이고, 좁은 설명칸도 한 줄 아낀다. 마나를 안 쓰는 카드면 배지째 숨긴다
+	# 비용은 설명 문장에 끼워 넣지 않고 아래 두 모서리의 마름모 배지로 뺀다 — 참고 이미지의
+	# 모서리 배지와 같은 방식이고, 좁은 설명칸도 아낀다. 왼쪽=마나(파랑), 오른쪽=체력(빨강)이고
+	# 해당 비용이 0인 카드는 그 배지만 통째로 숨겨서, 배지가 보이면 곧 비용이 있다는 뜻이 된다
 	var mana_cost := card.get_mana_cost()
 	_card_mana_badges[i].visible = mana_cost > 0
 	_card_mana_labels[i].visible = mana_cost > 0
@@ -780,11 +1166,18 @@ func _populate_card_slot(i: int, cards: Array) -> void:
 		_card_mana_badges[i].texture = _card_mana_badge_texture
 		_card_mana_labels[i].text = str(mana_cost)
 
+	var hp_cost := card.get_hp_cost()
+	_card_hp_badges[i].visible = hp_cost > 0
+	_card_hp_labels[i].visible = hp_cost > 0
+	if hp_cost > 0:
+		_card_hp_badges[i].texture = _card_hp_badge_texture
+		_card_hp_labels[i].text = str(hp_cost)
+
 	btn.disabled = not playable or _mode != Mode.ACTION
 	_card_wrappers[i].modulate = CARD_ENABLED_MODULATE if playable else CARD_DISABLED_MODULATE
 	if not playable:
 		_reset_card_hover(i) # 커서를 올려둔 채 카드가 과열/마나부족으로 바뀌면 확대를 풀어준다
-	_apply_card_tier_visuals(_card_wrappers[i], card)
+	_apply_card_tier_visuals(i, card)
 
 
 # card.effect(+물리/마법 구분)에 따라 프레임 색을 고른다: 물리 공격=빨강, 마법 공격=파랑,
@@ -798,16 +1191,20 @@ func _set_card_parts_visible(i: int, shown: bool) -> void:
 	_card_icons[i].visible = shown
 	_card_names[i].visible = shown
 	_card_descs[i].visible = shown
+	_card_flavor_boxes[i].visible = shown
+	_card_flavor_labels[i].visible = shown
 	if not shown:
 		_card_mana_badges[i].visible = false
 		_card_mana_labels[i].visible = false
+		_card_hp_badges[i].visible = false
+		_card_hp_labels[i].visible = false
 
 
 func _card_style_key(card: Card) -> String:
 	match card.effect:
 		Card.EffectType.DAMAGE:
 			return "blue" if card.color == Card.CardColor.MAGIC else "red"
-		Card.EffectType.HEAL_HP, Card.EffectType.RESTORE_MANA:
+		Card.EffectType.HEAL_HP, Card.EffectType.RESTORE_MANA, Card.EffectType.RESTORE_BOTH:
 			return "green"
 		_:
 			return "grey"
@@ -833,6 +1230,10 @@ func _card_base_description(card: Card) -> String:
 			return "다음 피해 %d 감소" % card.value
 		Card.EffectType.DODGE:
 			return "이번 턴 완전 회피"
+		Card.EffectType.COUNTER:
+			return "피해 무효 + 반격 %d" % card.value
+		Card.EffectType.RESTORE_BOTH:
+			return "체력 %d, 마나 %d 회복" % [card.value, card.secondary_value]
 		_:
 			return ""
 
@@ -873,9 +1274,14 @@ func _flip_card_in(index: int) -> Tween:
 	_card_name_banners[index].visible = false
 	_card_mana_badges[index].visible = false
 	_card_mana_labels[index].visible = false
+	_card_hp_badges[index].visible = false
+	_card_hp_labels[index].visible = false
+	_card_flavor_boxes[index].visible = false
+	_card_flavor_labels[index].visible = false
 	icon.visible = false
 	name_label.visible = false
 	desc_label.visible = false
+	_clear_card_tier_visuals(index) # 뒷면일 때 이전 카드의 티어 광채/파티클이 비쳐 보이면 안 된다
 	_reset_card_hover(index) # 이전 손패에서 커져 있던 카드가 있으면 원래 크기/위치에서 뒤집기를 시작하도록
 
 	var tween := create_tween()
@@ -928,20 +1334,66 @@ func _reveal_card_face(index: int) -> void:
 	_populate_card_slot(index, _manager.hand.cards)
 
 
-# 카드 티어별 시각 연출(상위 티어 광채/파티클 등)을 붙일 지점. 아직 티어2/3 카드도, 연출도 없어
-# 지금은 어느 티어든 기본 외형 그대로 두지만, card.tier로 분기할 자리는 여기 하나로 정해둔다.
-# _refresh_hand_buttons()가 손패를 갱신할 때마다 카드마다 한 번씩 부르므로, 이 함수만 채우면
-# 손패 전체에 자동으로 반영된다.
+# 카드 티어별 시각 연출(상위 티어 광채/파티클). _refresh_hand_buttons()가 손패를 갱신할 때마다
+# 카드마다 한 번씩 부르므로, 이 함수만 채우면 손패 전체에 자동으로 반영된다.
 #
-# [연출을 실제로 붙일 때 주의] 손패 5칸은 매 턴 같은 wrapper 노드를 재사용한다 — 상위 티어 카드가
-# 있던 자리에 다음 턴 티어1 카드가 들어올 수 있으므로, 켜는 분기뿐 아니라 "끄는" 기본 분기도
-# 반드시 함께 채워야 이전 카드의 연출이 남지 않는다
-func _apply_card_tier_visuals(_wrapper: Control, card: Card) -> void:
-	match card.tier:
-		Card.CardTier.TIER_2, Card.CardTier.TIER_3:
-			pass # TODO: 상위 티어 강조 연출 (아직 해당 티어 카드가 없음)
-		_:
-			pass # TIER_1 — 기본 외형
+# [재사용 노드 주의] 손패 5칸은 매 턴 같은 wrapper를 재사용한다 — 상위 티어 카드가 있던 자리에
+# 다음 턴 티어1 카드가 들어올 수 있으므로, TIER_1은 그냥 지나치지 않고 반드시 _clear_card_tier_visuals()로
+# 광채/파티클/루프 트윈을 전부 꺼야 이전 카드의 연출이 남지 않는다. 같은 이유로 TIER_2/3 분기도
+# 시작하자마자 이전에 걸려 있던 루프 트윈부터 죽인다 — 안 그러면 populate가 호출될 때마다(호버 등으로
+# 잦다) 트윈이 계속 쌓여 같은 modulate:a 위에서 서로 싸운다
+func _apply_card_tier_visuals(i: int, card: Card) -> void:
+	if card.tier == Card.CardTier.TIER_1:
+		_clear_card_tier_visuals(i)
+		return
+
+	var glow := _card_tier_glows[i]
+	var sparkles := _card_tier_sparkles[i]
+	_kill_tier_glow_tween(i)
+
+	glow.visible = true
+	glow.texture = _card_front_textures[_card_style_key(card)]
+
+	var color: Color
+	var alpha_min: float
+	var alpha_max: float
+	var pulse_duration: float
+	if card.tier == Card.CardTier.TIER_3:
+		color = TIER3_GLOW_COLOR
+		alpha_min = TIER3_GLOW_ALPHA_MIN
+		alpha_max = TIER3_GLOW_ALPHA_MAX
+		pulse_duration = TIER3_GLOW_PULSE_DURATION
+		sparkles.emitting = true
+	else: # TIER_2
+		color = TIER2_GLOW_COLOR
+		alpha_min = TIER2_GLOW_ALPHA_MIN
+		alpha_max = TIER2_GLOW_ALPHA_MAX
+		pulse_duration = TIER2_GLOW_PULSE_DURATION
+		sparkles.emitting = false
+
+	glow.modulate = Color(color.r, color.g, color.b, alpha_min)
+
+	var tween := create_tween()
+	tween.set_loops()
+	tween.tween_property(glow, "modulate:a", alpha_max, pulse_duration)
+	tween.tween_property(glow, "modulate:a", alpha_min, pulse_duration)
+	_card_tier_glow_tweens[i] = tween
+
+
+# TierGlow/TierSparkles를 완전히 끄고 진행 중이던 루프 트윈도 죽인다. 슬롯이 비었을 때, 카드가
+# 뒷면으로 뒤집힐 때, 그리고 TIER_1 카드가 이 자리를 새로 차지했을 때 모두 이 함수로 정리한다
+func _clear_card_tier_visuals(i: int) -> void:
+	_kill_tier_glow_tween(i)
+	_card_tier_glows[i].visible = false
+	_card_tier_glows[i].modulate.a = 0.0
+	_card_tier_sparkles[i].emitting = false
+
+
+func _kill_tier_glow_tween(i: int) -> void:
+	var tween: Tween = _card_tier_glow_tweens[i]
+	if tween != null and tween.is_valid():
+		tween.kill()
+	_card_tier_glow_tweens[i] = null
 
 
 func _refresh_weapon_button() -> void:
@@ -1173,11 +1625,12 @@ func _build_portrait(sheet: Texture2D, region: Rect2) -> AtlasTexture:
 
 # 뷰포트 크기에 비례해 배우 위치를 잡고(해상도 독립), 각 발밑에 타원 그림자를 그린다
 func _layout_actors() -> void:
-	# 하단 UI가 차지하는 영역(카드가 커지면서 260px까지 올라옴)에 발이 가리지 않도록 배우를
-	# 위쪽으로 배치한다. 나무 판자 배경이 사라져 UI가 배경 위에 떠 있으므로, 겹치면 바로 티가 난다
+	# 하단 UI가 차지하는 영역(flavor_text 박스 추가로 카드가 더 길어져 295px까지 올라옴)에 발이
+	# 가리지 않도록 배우를 위쪽으로 배치한다. 나무 판자 배경이 사라져 UI가 배경 위에 떠 있으므로,
+	# 겹치면 바로 티가 난다
 	var vp := get_viewport().get_visible_rect().size
-	_player_sprite.position = Vector2(vp.x * 0.22, vp.y * 0.45)
-	_monster_sprite.position = Vector2(vp.x * 0.72, vp.y * 0.24)
+	_player_sprite.position = Vector2(vp.x * 0.22, vp.y * 0.40)
+	_monster_sprite.position = Vector2(vp.x * 0.72, vp.y * 0.19)
 
 	# 그림자는 "프레임 아래쪽"이 아니라 실제로 잰 발 위치에 맞춘다 (PLAYER_FOOT_FROM_CENTER 주석 참고).
 	# 크기도 캐릭터 실제 폭에 비례시켜, 스케일을 바꿔도 그림자가 따로 놀지 않게 한다
@@ -1233,6 +1686,129 @@ func _flash_hit(sprite: CanvasItem) -> void:
 	tween.tween_property(sprite, "modulate", Color.WHITE, HIT_TINT_DURATION)
 
 
+# 섬광 전용 "차징" 연출: 달려들기 직전에 노랗게 번쩍였다가 원래 색으로 돌아온다 (완료까지 await)
+func _flash_charge(sprite: CanvasItem) -> void:
+	sprite.modulate = FLASH_SLASH_CHARGE_TINT
+	var tween := create_tween()
+	tween.tween_property(sprite, "modulate", Color.WHITE, FLASH_SLASH_CHARGE_DURATION)
+	await tween.finished
+
+
+# 섬광 전용: sprite가 start에서 end까지 실제로 이동하는 돌진 경로 위에 반투명 스프라이트
+# 복제본을 늘어놓는다. 개수는 고정하지 않고 이동 거리에 비례시켜(DASH_AFTERIMAGE_TARGET_SPACING당
+# 한 장꼴) 몬스터가 가깝든 멀든 트레일 밀도가 비슷하게 유지되게 한다. end 쪽(가장 최근 위치)이
+# 가장 진하고 start 쪽(가장 오래된 위치)으로 갈수록 옅어져 "과거로 흐려지는" 느낌을 낸다.
+# 돌진 트윈과 병렬로(await 없이) 호출되므로 스스로도 await를 쓰는 코루틴이지만 호출부는 기다리지
+# 않는다 — 각 잔상은 스스로 사라진다
+func _spawn_dash_afterimages(sprite: AnimatedSprite2D, start: Vector2, end: Vector2, tint: Color) -> void:
+	var distance := start.distance_to(end)
+	if distance < 1.0:
+		return
+	var count := clampi(int(round(distance / DASH_AFTERIMAGE_TARGET_SPACING)), DASH_AFTERIMAGE_MIN_COUNT, DASH_AFTERIMAGE_MAX_COUNT)
+	var frame_tex := sprite.sprite_frames.get_frame_texture(sprite.animation, sprite.frame)
+
+	for i in range(count):
+		var t := float(i + 1) / (count + 1)
+		var ghost := Sprite2D.new()
+		ghost.texture = frame_tex
+		ghost.position = start.lerp(end, t)
+		ghost.scale = sprite.scale
+		ghost.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		ghost.modulate = Color(tint.r, tint.g, tint.b, DASH_AFTERIMAGE_ALPHA * t)
+		_actors.add_child(ghost)
+		var tween := create_tween()
+		tween.tween_property(ghost, "modulate:a", 0.0, DASH_AFTERIMAGE_FADE_DURATION)
+		tween.tween_callback(ghost.queue_free)
+		await _wait(DASH_AFTERIMAGE_STAGGER)
+
+
+# 섬광 전용: start에서 monster_pos 방향으로, 두 스프라이트 테두리가 FLASH_SLASH_HIT_GAP만큼
+# 떨어지는 지점을 계산한다. 몬스터 폭은 변종마다 프레임 크기가 달라 _variant에서 직접 읽는다
+# (_layout_actors()의 몬스터 발 위치 계산과 같은 방식)
+func _flash_slash_dash_target(start: Vector2, monster_pos: Vector2) -> Vector2:
+	var offset := monster_pos - start
+	var distance := offset.length()
+	if distance < 1.0:
+		return start
+	var direction := offset / distance
+	var idle_frame_size: float = _variant.get("idle_frame_size", BattleData.MOB_IDLE_FRAME_SIZE)
+	var monster_half_width := idle_frame_size * MONSTER_SCALE * 0.5
+	var player_half_width := PLAYER_BODY_WIDTH * PLAYER_SCALE * 0.5
+	var stop_distance: float = clamp(distance - monster_half_width - player_half_width - FLASH_SLASH_HIT_GAP, 0.0, distance)
+	return start + direction * stop_distance
+
+
+# 화면 전체를 color로 아주 짧게 번쩍였다가 투명하게 되돌린다 (풀스크린 히트 플래시)
+func _screen_flash(color: Color, duration: float) -> void:
+	_hit_flash.color = Color(color.r, color.g, color.b, 0.55)
+	var tween := create_tween()
+	tween.tween_property(_hit_flash, "color:a", 0.0, duration)
+
+
+# 삼중나선 전용 3연타 컷신. 세트마다: 화면이 완전히 덮일 때까지 번쩍 → (가려진 프레임에) 캐릭터를
+# 몬스터 앞/뒤로 순간이동 → 화면이 걷히며 이미 새 위치에서 베는 이펙트 재생 → 흔들림 → 피해 일부
+# 표시. 3세트가 끝나면 원래 자리로 짧게 돌아온다.
+#
+# 데미지 표시는 card.value가 아니라 (호출부가 넘겨준) monster_hp_before와 _manager.monster_hp의
+# 실제 차이를 3등분한다 — 마지막 한 방으로 몬스터를 잡으면 실제로 깎인 체력이 카드 수치보다 작을
+# 수 있는데(HP가 음수로 안 내려가게 클램프되므로), card.value를 그대로 쓰면 표시된 피해 합이
+# HP바가 실제로 줄어든 양과 안 맞아 숫자가 어긋나 보인다
+func _play_triple_helix_cutscene(card: Card, monster_hp_before: int) -> void:
+	var start_pos := _player_sprite.position
+	var monster_pos := _monster_sprite.position
+	var offset := monster_pos - start_pos
+	var distance := offset.length()
+	var direction := offset / distance if distance > 1.0 else Vector2.RIGHT
+	var idle_frame_size: float = _variant.get("idle_frame_size", BattleData.MOB_IDLE_FRAME_SIZE)
+	var monster_half_width := idle_frame_size * MONSTER_SCALE * 0.5
+
+	var front_pos := _flash_slash_dash_target(start_pos, monster_pos) # 몬스터 코앞
+	var back_pos := monster_pos + direction * (monster_half_width + TRIPLE_HELIX_HIT_GAP) # 몬스터 등 뒤
+	var hit_positions := [front_pos, back_pos, front_pos] # 앞→뒤→앞으로 번갈아 "휙휙" 도는 느낌
+
+	var total_damage := monster_hp_before - _manager.monster_hp
+	var base_dmg := total_damage / 3
+	var remainder := total_damage % 3
+	var hit_damages := [base_dmg, base_dmg, base_dmg + remainder] # 나머지는 마지막 일격에 몰아준다
+
+	var hp_step := monster_hp_before
+	_message.text = "%s!" % card.card_name
+
+	for i in range(3):
+		_hit_flash.color = Color(TRIPLE_HELIX_TINT.r, TRIPLE_HELIX_TINT.g, TRIPLE_HELIX_TINT.b, 0.0)
+		var flash_in := create_tween()
+		flash_in.tween_property(_hit_flash, "color:a", TRIPLE_HELIX_FLASH_ALPHA, TRIPLE_HELIX_FLASH_IN_DURATION)
+		await flash_in.finished
+
+		# 화면이 가려진 바로 그 프레임에 좌표만 즉시 바꾼다 — 이동 트윈이 없어 "번쩍하고 나니
+		# 이미 가 있는" 순간이동처럼 보인다
+		_player_sprite.position = hit_positions[i]
+
+		var flash_out := create_tween()
+		flash_out.tween_property(_hit_flash, "color:a", 0.0, TRIPLE_HELIX_FLASH_OUT_DURATION)
+
+		_shake_actors()
+		_flash_hit(_monster_sprite)
+		_spawn_vfx_sprite("physical", _monster_sprite.position)
+		SFXPlayer.play(TRIPLE_HELIX_HIT_SFX[i])
+
+		hp_step -= hit_damages[i]
+		_show_popup(_monster_sprite.position, "-%d" % hit_damages[i], DAMAGE_COLOR)
+		_animate_hp_bar(_monster_hp_bar, hp_step)
+		_monster_hp_bar_label.text = "HP: %d/%d" % [hp_step, _monster_data["max_hp"]]
+
+		await flash_out.finished
+		await _wait(TRIPLE_HELIX_SET_GAP)
+
+	var return_tween := create_tween()
+	return_tween.tween_property(_player_sprite, "position", start_pos, TRIPLE_HELIX_RETURN_DURATION)
+	await return_tween.finished
+
+	_update_monster_hp_text() # 실제 소유자(매니저) 값과 최종적으로 다시 맞춰둔다
+	_message.text = "%s! %d 피해!" % [card.card_name, total_damage]
+	await _wait(0.2)
+
+
 # 맞은 캐릭터 머리 위로 "-N"/"+N"/"회피!" 텍스트를 크게 띄웠다가 위로 떠오르며 사라지게 함
 func _show_popup(sprite_pos: Vector2, text: String, color: Color) -> void:
 	var popup := Label.new()
@@ -1251,10 +1827,10 @@ func _show_popup(sprite_pos: Vector2, text: String, color: Color) -> void:
 
 
 # 배우 컨테이너 전체를 짧게 흔들었다가 원위치 (타격감용). 그림자는 View 직속이라 함께 흔들리지 않음
-func _shake_actors() -> void:
+func _shake_actors(amount: float = SHAKE_AMOUNT, steps: int = SHAKE_STEPS) -> void:
 	var tween := create_tween()
-	for i in range(SHAKE_STEPS):
-		var offset := Vector2(randf_range(-SHAKE_AMOUNT, SHAKE_AMOUNT), randf_range(-SHAKE_AMOUNT, SHAKE_AMOUNT))
+	for i in range(steps):
+		var offset := Vector2(randf_range(-amount, amount), randf_range(-amount, amount))
 		tween.tween_property(_actors, "position", offset, SHAKE_STEP_DURATION)
 	tween.tween_property(_actors, "position", Vector2.ZERO, SHAKE_STEP_DURATION)
 

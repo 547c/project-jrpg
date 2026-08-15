@@ -4,10 +4,12 @@
 
 [resource]
 script = ExtResource("1_card")
-card_name = "방어"
-color = 2
-effect = 3
-value = 4
-mana_cost = 2
+card_name = "익스플로전"
+color = 1
+tier = 2
+effect = 0
+value = 20
+secondary_value = 0
+mana_cost = 10
 hp_cost = 0
-flavor_text = "다가올 일격에 대비해 자세를 낮춘다."
+flavor_text = "압도적인 마력이 폭발하여 모든 것을 집어삼킨다."

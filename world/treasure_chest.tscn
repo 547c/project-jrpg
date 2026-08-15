@@ -1,20 +1,20 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene format=3 uid="uid://d08fypp7ehein"]
 
-[ext_resource type="Script" path="res://world/treasure_chest.gd" id="1_chest"]
+[ext_resource type="Script" uid="uid://dvvspt84ttjbv" path="res://world/treasure_chest.gd" id="1_chest"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_range"]
 radius = 20.0
 
-[node name="TreasureChest" type="Area2D"]
+[node name="TreasureChest" type="Area2D" unique_id=1187811956]
 script = ExtResource("1_chest")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=33363450]
 shape = SubResource("CircleShape2D_range")
 
-[node name="InteractPrompt" type="Label" parent="."]
+[node name="InteractPrompt" type="Label" parent="." unique_id=645931555]
 offset_left = -44.0
 offset_top = -50.0
 offset_right = 44.0
 offset_bottom = -30.0
-horizontal_alignment = 1
 text = "[E] 상자 열기"
+horizontal_alignment = 1

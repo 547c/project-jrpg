@@ -4,10 +4,12 @@
 
 [resource]
 script = ExtResource("1_card")
-card_name = "방어"
-color = 2
-effect = 3
-value = 4
+card_name = "섬광"
+color = 0
+tier = 1
+effect = 0
+value = 8
+secondary_value = 0
 mana_cost = 2
 hp_cost = 0
-flavor_text = "다가올 일격에 대비해 자세를 낮춘다."
+flavor_text = "순간적으로 빛나며 빠르게 이동해 베어내는 검기."
