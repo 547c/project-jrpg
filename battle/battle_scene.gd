@@ -117,6 +117,29 @@ const VFX_CONFIG := {
 	# 튀어나가 "훨씬 큰 한 방"으로 읽힌다. fps를 낮춰(24) 재생 시간을 늘려 묵직하게 터지게 했고,
 	# 재생할 때 스케일도 따로 키워 띄운다(EXPLOSION_VFX_SCALE_MULT)
 	"explosion_big": {"path": "res://assets/vfx/Free/Part 2/71.png", "row": VFX_ROW_RED, "frames": 10, "fps": 24.0},
+	# "magic"(마력탄)과 완전히 같은 별 모양 폭발 시트를 행만 하늘색(VFX_ROW_SKY)으로 바꿔 재사용한다 —
+	# 이 팩은 15개 Part 폴더 전체가 같은 9색 팔레트를 공유해서, 모양은 그대로 두고 행만 바꾸면 색만
+	# 갈아입는다. 얼음화살이 "차가운 냉기"라 보라색 마력탄과는 다른 시안 계열로 확실히 구분된다
+	"magic_ice": {"path": "res://assets/vfx/Free/Part 14/652.png", "row": VFX_ROW_SKY, "frames": 16, "fps": 34.0},
+	# "physical"(표창 폭발)과 완전히 같은 시트/색 — 회전베기는 모양이 아니라 "같은 타격을 두 번
+	# 잇따라 재생한다"는 연출로 차별화하므로, 새 그림 대신 기존 물리 이펙트를 그대로 재사용한다.
+	# SFX만 다른 키(physical_spin)로 따로 둬서 물리 공격 중에서도 소리로 구분되게 했다
+	"physical_spin": {"path": "res://assets/vfx/Free/Part 6/283.png", "row": VFX_ROW_CRIMSON, "frames": 9, "fps": 30.0},
+	# 뾰족하게 솟았다가 파편으로 갈라지는 날카로운 쐐기 모양 — 이 팩에서 가장 "직선적으로 내리꽂는"
+	# 느낌이 나는 시트라 번개창의 "번개를 창처럼 내리꽂는다"는 묘사에 맞다. 회백(흰색) 행을 써서
+	# 노랗게 차징하는 섬광과는 톤을 다르게 하면서도 "밝고 강렬한 빛"이라는 인상은 유지한다
+	"magic_lightning": {"path": "res://assets/vfx/Free/Part 11/507.png", "row": VFX_ROW_GREY, "frames": 12, "fps": 40.0},
+	# X자로 갈라지는 뾰족한 균열이 생겼다가 파편으로 부서지는 6프레임 —
+	# 시공균열은 이 애니메이션을 중간(균열이 완성된 프레임)에서 pause()로 얼려뒀다가 한꺼번에
+	# 마저 재생해 "얼어붙었다 부서진다"를 만든다. 그래서 fps를 낮게(18) 잡아 얼기 전 형성 과정이
+	# 눈에 들어오게 했다. 색은 시간/한기 느낌의 하늘색
+	"time_crack": {"path": "res://assets/vfx/Free/Part 7/323.png", "row": VFX_ROW_SKY, "frames": 6, "fps": 18.0},
+	# 세로로 곧게 뻗은 빛줄기가 내리꽂혀 바닥에서 터지는 모양 — 시트 전체를 프레임별 세로/가로 비율로
+	# 훑어 가장 세로로 긴 형태(비율 11.2)를 찾아 골랐다. 실제로는 여기에 stretch로 세로를 더 늘려
+	# 화면을 관통하는 기둥처럼 보이게 한다.
+	# 색은 회백(신성한 흰빛)에서 0번 행으로 바꿨다 — 이 행은 줄기 중심이 노랗고 가장자리만 붉어
+	# "낙뢰"에 가장 가깝다 (4번 주황 행은 전체가 탁한 주황이라 번개 느낌이 덜했다)
+	"light_pillar": {"path": "res://assets/vfx/Free/Part 15/701.png", "row": VFX_ROW_RED, "frames": 14, "fps": 30.0},
 }
 
 # key -> 400 Sounds pack 경로. 물리/방어는 Weapons(금속·타격), 마법/마나는 복고풍 신스(폭발감/충전감),
@@ -141,6 +164,14 @@ const VFX_SFX := {
 	# 오르골 특유의 여리고 영롱한 음색 — "신비롭게 두 자원이 차오른다"는 인상에 맞고, 다른 카드가
 	# 아직 안 쓴 악기라 회복(비브라폰)/마나(파워업)와도 확실히 구분된다
 	"restore_both": "res://assets/sfx/400 Sounds pack/Musical Effects/music_box_chime_positive.wav",
+	# 색만 바꾼 VFX라 소리까지 새로 고를 필요는 없다는 판단 — 마력탄과 같은 타격음을 그대로 쓴다
+	"magic_ice": "res://assets/sfx/400 Sounds pack/Retro/explosion_quick.wav",
+	# sword_slice/sword_light은 이미 다른 카드(베기/섬광)가 쓰고 있어 제외하고, 칼을 뽑는 듯한
+	# 날카로운 스윽 소리로 "회전하며 두 번 벤다"의 첫/두 번째 타격 모두에 쓴다
+	"physical_spin": "res://assets/sfx/400 Sounds pack/Weapons/sword_unsheath.wav",
+	# 번개 전용 사운드가 팩에 없어 마법 계열 타격음을 그대로 재사용 — 대신 화면 히트 플래시로
+	# "전기가 튀는" 느낌을 시각적으로 보강한다
+	"magic_lightning": "res://assets/sfx/400 Sounds pack/Retro/explosion_quick.wav",
 }
 
 # 카드 이름 -> VFX 키 강제 지정. DAMAGE처럼 같은 효과·색을 공유하는 카드들도 이 표에 있으면
@@ -150,7 +181,14 @@ const CARD_NAME_VFX_OVERRIDE := {
 	"섬광": "physical_flash",
 	"파이어볼": "magic_fire",
 	"익스플로전": "explosion_big",
+	"얼음화살": "magic_ice",
+	"회전베기": "physical_spin",
+	"번개창": "magic_lightning",
 }
+
+# 번개창 전용: 화면 전체가 짧게 번쩍이는 히트 플래시 색 (섬광의 HitFlash 로직을 그대로 재사용하고
+# 색과 재생 시점만 다르게 준다)
+const LIGHTNING_FLASH_TINT := Color(1.0, 0.98, 0.72, 1)
 
 # ── 원거리 마법 차징 연출 (파이어볼 / 익스플로전) ────────────────────────────
 # 섬광의 "차징 → 돌진" 구조를 그대로 빌려오되, 원거리 마법이라 캐릭터는 제자리에 선 채
@@ -227,6 +265,174 @@ const TRIPLE_HELIX_HIT_SFX := [
 	"res://assets/sfx/400 Sounds pack/Combat and Gore/swipe.wav",
 ]
 
+# ── 신속 전용 컷신 ("순간이동 → 정적 → 연속 폭발") ──────────────────────────
+# 삼중나선의 "화면을 덮은 프레임에 좌표만 즉시 바꿔 순간이동을 가린다"는 트릭을 그대로 쓰되,
+# 구조를 뒤집었다: 삼중나선은 [번쩍+이동+타격]을 3세트 반복하는데, 신속은 이동을 한 번만 하고
+# (몬스터 등 뒤 고정) 거기서 "정적 → 연타 → 마무리 흔들림"으로 한 호흡에 몰아친다.
+# 색도 삼중나선(청록)과 겹치지 않게 순은백색으로 구분한다
+const SWIFT_TINT := Color(1.0, 1.0, 1.0, 1)
+const SWIFT_FLASH_IN_DURATION := 0.06  # 화면이 완전히 덮일 때까지
+const SWIFT_FLASH_OUT_DURATION := 0.10 # 걷히면서 등 뒤에 선 모습이 드러남
+const SWIFT_FLASH_ALPHA := 0.94        # 순간이동을 완전히 가릴 만큼 진하게
+const SWIFT_HIT_GAP := 12.0            # 몬스터 등 뒤에 설 때 남길 간격
+
+# "베기 직전의 정적". 티어3 궁극기라 이 대목을 충분히 끌어 긴장을 쌓는다 —
+# 화면을 살짝 눌러(어둡게) 시간이 멎은 듯한 인상을 주고, 그 상태로 잠시 멈춘다.
+# 별도 비네트 셰이더 없이 기존 HitFlash(풀스크린 ColorRect)에 어두운 색을 넣어 재사용한다
+const SWIFT_DIM_COLOR := Color(0.03, 0.03, 0.08, 1)
+const SWIFT_DIM_ALPHA := 0.42
+const SWIFT_DIM_IN_DURATION := 0.10
+const SWIFT_PAUSE_HOLD := 0.42 # 정적을 버티는 시간 (짧으면 스치듯 지나가 긴장이 안 생긴다)
+
+const SWIFT_HIT_COUNT := 5
+const SWIFT_HIT_INTERVAL := 0.09 # 5회 x 0.09 = 약 0.45초의 연타
+const SWIFT_HIT_SHAKE := 4.0     # 연타마다 작게 (기본 7보다 약하게)
+const SWIFT_HIT_SHAKE_STEPS := 1
+const SWIFT_FINAL_SHAKE := 18.0  # 마무리 한 방은 크게
+const SWIFT_FINAL_SHAKE_STEPS := 5
+const SWIFT_FINAL_HOLD := 0.35   # 마무리 흔들림을 보여주는 시간
+const SWIFT_RETURN_DURATION := 0.18
+# 연타 이펙트가 한 점에 겹쳐 뭉치지 않도록 몬스터 몸 주위로 조금씩 흩어 뿌린다
+const SWIFT_HIT_OFFSETS := [
+	Vector2(-16, -10), Vector2(14, 6), Vector2(-8, 14), Vector2(18, -14), Vector2(0, 0),
+]
+const SWIFT_HIT_SFX := [
+	"res://assets/sfx/400 Sounds pack/Combat and Gore/swipe.wav",
+	"res://assets/sfx/400 Sounds pack/Weapons/sword_light.wav",
+]
+
+# ── 유성낙하 전용 컷신 ("점프 → 화면 밖 → 정적 → 낙하 강타") ────────────────
+# 섬광/삼중나선/신속이 쓰던 "화면 플래시로 위치 이동을 가린다"는 트릭은 그대로지만, 가로 이동이
+# 아니라 세로다: 위로 튀어올라 화면 밖으로 사라진 뒤, 플래시가 덮인 사이 몬스터 머리 위 공중에
+# 다시 나타나 그대로 내리꽂는다. 연타가 아니라 단발 강타라 데미지도 한 번에 표시한다
+const METEOR_JUMP_DURATION := 0.15
+const METEOR_JUMP_EXIT_Y := -80.0 # 화면(0~648) 위로 완전히 빠져나가는 y
+const METEOR_HANG_DURATION := 0.3 # 사라진 뒤 "뭔가 떨어질 것 같은" 정적
+const METEOR_TINT := Color(1, 1, 1, 1) # 순백 — 낙하 직전의 강한 섬광
+const METEOR_FLASH_IN_DURATION := 0.06
+const METEOR_FLASH_OUT_DURATION := 0.12
+const METEOR_FLASH_ALPHA := 0.96
+const METEOR_DROP_HEIGHT := 260.0 # 몬스터 위 이 높이에서 떨어진다
+const METEOR_DROP_DURATION := 0.08 # 거의 순간적으로 내리꽂는다
+# 지금까지 만든 것 중 가장 큰 흔들림 (기본 7 < 익스플로전 16 < 신속 마무리 18 < 여기 26)
+const METEOR_IMPACT_SHAKE := 26.0
+const METEOR_IMPACT_SHAKE_STEPS := 7
+const METEOR_IMPACT_HOLD := 0.4 # 착지 여운
+const METEOR_RETURN_DURATION := 0.2
+const METEOR_VFX_SCALE := 2.2 # 착지 타격 이펙트를 크게 띄운다
+const METEOR_JUMP_SFX := "res://assets/sfx/400 Sounds pack/Other/whoosh_1.wav" # 회피(whoosh_2)와 다른 샘플
+# 낙하 충격은 저역 "쿵"(harsh_thud)에 중간 폭발음을 겹쳐 무게를 만든다
+# (익스플로전이 harsh_thud + explosion_large라 그보다 한 단계 낮은 medium을 써서 서로 구분된다)
+const METEOR_IMPACT_SFX := [
+	"res://assets/sfx/400 Sounds pack/Weapons/harsh_thud.wav",
+	"res://assets/sfx/400 Sounds pack/Retro/explosion_medium.wav",
+]
+# 낙하 지점 예고 마커: 몬스터 발밑에서 붉게 맥동하는 타원 ("여기로 떨어진다"는 예고).
+# 그림자(Polygon2D 타원)를 만드는 기존 방식을 그대로 빌려 코드로 생성한다 — 전용 에셋이 필요 없다
+const METEOR_MARKER_COLOR := Color(0.95, 0.25, 0.2, 0.5)
+const METEOR_MARKER_RX := 46.0
+const METEOR_MARKER_RY := 14.0
+const METEOR_MARKER_PULSE := 0.3 # 한 번 커졌다 작아지는 데 걸리는 시간
+
+# ── 시공균열 전용 컷신 ("시간 정지 → 일괄 해제") ────────────────────────────
+# 지금까지의 컷신이 전부 "캐릭터를 어디로 옮기느냐"였다면 이건 화면 자체를 멈추는 연출이다.
+# 캐릭터는 파이어볼/익스플로전처럼 제자리에 선 채, 몬스터 주위에 생긴 균열이 재생 도중 얼어붙고
+# (AnimatedSprite2D.pause) 정적을 버틴 뒤 한꺼번에 풀려나며 터진다.
+const TIME_RIFT_FREEZE_COLOR := Color(0.34, 0.42, 0.55, 1) # 차갑고 탁한 블루그레이
+const TIME_RIFT_FREEZE_ALPHA := 0.4
+const TIME_RIFT_FREEZE_IN_DURATION := 0.3 # 서서히 덮인다
+const TIME_RIFT_HOLD := 0.55              # 얼어붙은 채 버티는 정적
+# 균열이 "완성된" 프레임에서 멈춘다. 이 시트는 6프레임이고 2번 프레임이 X자가 가장 또렷한 지점이라
+# 거기서 pause()를 건다 (0~1은 아직 생기는 중, 3부터는 부서지기 시작)
+const TIME_RIFT_FREEZE_FRAME := 2
+const TIME_RIFT_CRACK_SCALE := 1.6
+# 몬스터 주위 세 곳에 균열을 흩어 놓는다 (한 점에 겹치면 그냥 큰 이펙트 하나로 보인다)
+const TIME_RIFT_CRACK_OFFSETS := [Vector2(-34, -22), Vector2(30, 10), Vector2(-4, 30)]
+# 해제 순간 밝은 시안으로 번쩍이며 걷힌다
+const TIME_RIFT_RELEASE_TINT := Color(0.75, 1.0, 1.0, 1)
+const TIME_RIFT_RELEASE_ALPHA := 0.9
+const TIME_RIFT_RELEASE_IN_DURATION := 0.05
+const TIME_RIFT_RELEASE_OUT_DURATION := 0.22
+const TIME_RIFT_BURST_FPS := 46.0 # 얼렸던 균열을 풀 때는 훨씬 빠르게 돌려 "쨍그랑" 터지게 한다
+const TIME_RIFT_SHAKE := 22.0
+const TIME_RIFT_SHAKE_STEPS := 6
+const TIME_RIFT_IMPACT_HOLD := 0.45
+# 정적 구간에 까는 불안한 지속음. 피치를 낮춰 더 기괴하게 끌고, 해제 순간엔 유리 깨지는 소리를 얹는다
+const TIME_RIFT_FREEZE_SFX := "res://assets/sfx/400 Sounds pack/Musical Effects/horror_sting.wav"
+const TIME_RIFT_FREEZE_SFX_PITCH := 0.6
+const TIME_RIFT_RELEASE_SFX := [
+	"res://assets/sfx/400 Sounds pack/Materials/glass_ping_big.wav",
+	"res://assets/sfx/400 Sounds pack/Retro/explosion_medium.wav",
+]
+
+# ── 천벌 전용 컷신 ("예고 마커 → 화이트아웃 → 빛기둥") ──────────────────────
+# 유성낙하의 "예고 마커 → 화이트아웃 → 내리꽂기" 뼈대를 그대로 쓰되, 원거리 마법이라 캐릭터는
+# 제자리에 선 채 하늘에서 빛기둥만 떨어진다. 마커도 붉은 낙하 표식이 아니라 금빛 심판의 원이다
+const JUDGMENT_MARKER_COLOR := Color(1.0, 0.92, 0.45, 0.5) # 밝은 노란빛
+const JUDGMENT_MARKER_RX := 52.0
+const JUDGMENT_MARKER_RY := 17.0
+const JUDGMENT_MARKER_PULSE := 0.11
+# 진폭을 키워가며 맥동한다 — 6단계 x 0.11초 = 약 0.66초 동안 차오르는 느낌
+const JUDGMENT_MARKER_GROW := [0.5, 0.85, 0.7, 1.15, 0.95, 1.5]
+const JUDGMENT_CHARGE_DURATION := 0.5
+
+# 화이트아웃은 지금까지 중 가장 강하다 (삼중나선 0.92 < 신속 0.94 < 유성낙하 0.96 < 여기 1.0)
+const JUDGMENT_WHITEOUT_ALPHA := 1.0
+const JUDGMENT_WHITEOUT_IN_DURATION := 0.1
+const JUDGMENT_WHITEOUT_OUT_DURATION := 0.28
+
+const JUDGMENT_BEAM_SCALE := 1.4
+const JUDGMENT_BEAM_STRETCH := Vector2(1.0, 4.2) # 세로로만 늘려 화면을 관통하는 기둥으로
+# 이 시트는 빛줄기가 프레임 아래쪽에서 터지는 구성이라, 스프라이트의 "아래 끝"을 몬스터 발밑에
+# 맞춰야 기둥이 하늘에서 내려와 적을 때리는 그림이 된다. 중심을 몬스터에 두면 기둥이 발밑을 지나
+# 하단 UI까지 뚫고 내려가 어색했다 — 그래서 고정 오프셋 대신 스프라이트 높이의 절반을 계산해 올린다
+const JUDGMENT_BEAM_FOOT_SINK := 6.0 # 발밑보다 살짝 더 내려 꽂아 지면에 닿은 느낌을 준다
+# 노란 낙뢰 톤으로 한 번 더 밀어준다 (0번 행이 이미 노란 중심이지만 붉은 기가 남아 있어,
+# 살짝 노랑을 얹으면 "번개"에 더 가까워진다)
+const JUDGMENT_BEAM_TINT := Color(1.0, 0.96, 0.55, 1)
+
+# 착탄 순간 화이트아웃이 걷히는 그 위로 파란 기운이 아주 짧게 스친다 — 번개가 친 직후의 잔광.
+# 흰 화이트아웃과 섞이지 않게 별도 오버레이(_bolt_flash)를 쓴다
+const JUDGMENT_BOLT_TINT := Color(0.35, 0.62, 1.0, 1)
+const JUDGMENT_BOLT_ALPHA := 0.45
+const JUDGMENT_BOLT_IN_DURATION := 0.02
+const JUDGMENT_BOLT_OUT_DURATION := 0.06 # 인+아웃 합쳐 0.08초
+const JUDGMENT_SHAKE := 26.0
+const JUDGMENT_SHAKE_STEPS := 8 # 유성낙하와 진폭은 비슷하되 더 길게 울리게 한다
+const JUDGMENT_IMPACT_HOLD := 0.5
+
+# 낮고 웅장한 차징(브라스를 피치 다운) + 착탄은 큰 폭발 + 저역 쿵에 성스러운 브라스 차임을 얹는다
+# ── 불사조의 축복 전용 연출 ────────────────────────────────────────────────
+# 초재생(치유+마나 이펙트 동시 재생)을 뼈대로 삼되, 티어3답게 더 화려하게 간다:
+# 이펙트를 좌우+중앙 세 겹으로 겹치고, 스펠북 티어3 카드에 쓴 반짝임 파티클을 캐릭터 주위에
+# 깃털처럼 흩날리게 얹는다. 캐릭터는 이동하지 않는다
+const PHOENIX_HEAL_OFFSETS := [Vector2(-22, -8), Vector2(22, -8), Vector2(0, -30)]
+const PHOENIX_VFX_SCALE := 1.35
+const PHOENIX_STAGGER := 0.07 # 세 겹을 조금씩 늦춰 띄워 한 덩어리로 뭉치지 않게
+const PHOENIX_GLOW_TINT := Color(1.0, 0.86, 0.45, 1) # 불사조의 금빛
+const PHOENIX_HOLD := 0.55
+# 흩날리는 깃털 파티클 (스펠북 티어3 반짝임과 같은 방식으로 텍스처를 코드로 만들어 쓴다)
+const PHOENIX_FEATHER_COUNT := 26
+const PHOENIX_FEATHER_LIFETIME := 1.5
+const PHOENIX_FEATHER_SPREAD := Vector2(46, 58)
+const PHOENIX_SFX := [
+	# 브라스(트럼펫 같은 팡파르)는 유치하게 들린다는 피드백이 있어 피아노+시타르로 갔다 —
+	# 길게 상승하는 그랜드 피아노 화음이 웅장함을, 시타르 차임이 신비로운 여운을 담당한다
+	"res://assets/sfx/400 Sounds pack/Musical Effects/grand_piano_positive_long.wav",
+	"res://assets/sfx/400 Sounds pack/Musical Effects/sitar_chime_positive.wav",
+]
+
+const JUDGMENT_CHARGE_SFX := "res://assets/sfx/400 Sounds pack/Musical Effects/brass_level_start.wav"
+const JUDGMENT_CHARGE_SFX_PITCH := 0.7
+# 이 팩에는 천둥/번개 전용 샘플이 아예 없어서(400개를 이름으로 전부 훑어 확인) 낙뢰를 조합으로 만든다:
+# 날카로운 노이즈 파열(white_noise_short) = 번개가 갈라지는 "쩍" + 큰 폭발음과 저역 쿵 = 뒤따르는 천둥.
+# 원래 있던 brass_chime_positive(트럼펫 같은 팡파르)는 "낙뢰"와 맞지 않아 뺐다
+const JUDGMENT_IMPACT_SFX := [
+	"res://assets/sfx/400 Sounds pack/Other/white_noise_short.wav",
+	"res://assets/sfx/400 Sounds pack/Retro/explosion_large.wav",
+	"res://assets/sfx/400 Sounds pack/Weapons/harsh_thud.wav",
+]
+
 const HAND_BUTTON_COUNT := 5
 
 # 턴 진행 상태: ACTION=플레이어 입력 대기, BUSY=연출 재생 중(입력 무시), OVER=전투 종료
@@ -257,18 +463,9 @@ const GAUGE_ROW_Y := {
 # 확정한 5장, fb859/856 = 53행의 저항 방패 8색 중 물리=빨강/마법=하늘색)
 const RAVEN_SHEET_PATH := "res://assets/items/Free - Raven Fantasy Icons/Full Spritesheet/32x32.png"
 const RAVEN_ICON_SIZE := 32
-const SKILL_ICON_REGION := {
-	Card.EffectType.DAMAGE: Rect2(160, 1472, RAVEN_ICON_SIZE, RAVEN_ICON_SIZE), # fb742 — 핏방울 검 슬래시
-	Card.EffectType.DEFEND: Rect2(128, 1184, RAVEN_ICON_SIZE, RAVEN_ICON_SIZE), # fb597 — 민무늬 은색 방패
-	Card.EffectType.DODGE: Rect2(128, 1440, RAVEN_ICON_SIZE, RAVEN_ICON_SIZE),  # fb725 — 바람 소용돌이
-	Card.EffectType.HEAL_HP: Rect2(64, 1312, RAVEN_ICON_SIZE, RAVEN_ICON_SIZE), # fb659 — 빨간 하트
-	Card.EffectType.RESTORE_MANA: Rect2(192, 1408, RAVEN_ICON_SIZE, RAVEN_ICON_SIZE), # fb711 — 파란 마나 물방울
-	# 아래 둘은 기존 아이콘을 그대로 빌려 쓴다 — 전용 아이콘 고르기는 카드 UI 단계에서 할 일이라
-	# 여기서는 "아이콘이 비어 카드가 깨져 보이는 것"만 막는 게 목적이다.
-	# 반격은 막는 동작이 먼저라 방패를, 초재생은 체력 회복이 주효과라 하트를 쓴다
-	Card.EffectType.COUNTER: Rect2(128, 1184, RAVEN_ICON_SIZE, RAVEN_ICON_SIZE),      # fb597 (방어와 공유)
-	Card.EffectType.RESTORE_BOTH: Rect2(64, 1312, RAVEN_ICON_SIZE, RAVEN_ICON_SIZE),  # fb659 (치유와 공유)
-}
+# 카드 효과별 스킬 아이콘 좌표는 CardLibrary가 갖고 있다 — 스펠북 컬렉션 목록도 같은 아이콘을
+# 써야 해서 전투 씬이 아니라 카드 카탈로그 쪽으로 옮겼다
+const SKILL_ICON_REGION := CardLibrary.SKILL_ICON_REGION
 const RESIST_ICON_REGION := {
 	EnemyResistance.ResistanceType.PHYSICAL: Rect2(320, 1696, RAVEN_ICON_SIZE, RAVEN_ICON_SIZE), # fb859 — 빨강 저항 방패
 	EnemyResistance.ResistanceType.MAGIC: Rect2(224, 1696, RAVEN_ICON_SIZE, RAVEN_ICON_SIZE),     # fb856 — 하늘색 저항 방패
@@ -355,6 +552,9 @@ const HOVER_DURATION := 0.12
 
 @onready var _actors: Node2D = $View/Actors
 @onready var _hit_flash: ColorRect = $View/HitFlash
+# 화이트아웃(_hit_flash)이 걷히는 동안 그 위에 겹쳐 스치는 두 번째 오버레이.
+# 같은 노드를 쓰면 진행 중인 페이드 트윈과 서로 덮어써서 둘 다 망가지므로 별도 노드로 뒀다
+@onready var _bolt_flash: ColorRect = $View/BoltFlash
 @onready var _player_sprite: AnimatedSprite2D = $View/Actors/PlayerSprite
 @onready var _monster_sprite: AnimatedSprite2D = $View/Actors/MonsterSprite
 @onready var _player_shadow: Polygon2D = $View/PlayerShadow
@@ -436,6 +636,11 @@ var _monster_art_top_offset: float = 0.0
 # 매니저 시그널로 받은 "방금 무슨 일이 있었는지"를 담아두는 버퍼. 시그널은 매니저 안에서 동기적으로
 # 발생하는데 연출은 그 뒤에 이어서 재생해야 하므로, 콜백은 기록만 하고 실제 애니메이션은
 # _play_card_flow()/_end_turn_flow()가 담당한다
+# 진행 중인 화면 흔들림 트윈 (_shake_actors가 겹쳐 호출될 때 이전 것을 죽이기 위해 들고 있는다)
+var _shake_tween: Tween
+# 유성낙하의 낙하 지점 예고 마커와 그 맥동 트윈 (착지 순간 함께 정리한다)
+var _impact_marker: Polygon2D
+var _impact_marker_tween: Tween
 var _last_card_damage: int = 0
 var _last_enemy_damage: int = 0
 var _last_enemy_dodged: bool = false
@@ -776,6 +981,22 @@ func _animate_card(card: Card, hp_before: int, mana_before: int, monster_hp_befo
 				# 아래 공통 꼬리(단일 팝업+HP바 트윈)를 타지 않고 여기서 바로 끝낸다
 				await _play_triple_helix_cutscene(card, monster_hp_before)
 				return
+			if card.card_name == "신속":
+				# 신속도 같은 이유(스스로 5단계로 나눠 표시)로 공통 꼬리를 타지 않는다
+				await _play_swift_cutscene(card, monster_hp_before)
+				return
+			if card.card_name == "유성낙하":
+				# 단발 강타지만 팝업/HP바를 착지 순간에 맞춰 스스로 띄우므로 공통 꼬리를 타지 않는다
+				await _play_meteor_cutscene(card, monster_hp_before)
+				return
+			if card.card_name == "시공균열":
+				# 해제 순간에 맞춰 스스로 팝업/HP바를 띄우므로 공통 꼬리를 타지 않는다
+				await _play_time_rift_cutscene(card, monster_hp_before)
+				return
+			if card.card_name == "천벌":
+				# 빛기둥 착탄에 맞춰 스스로 팝업/HP바를 띄우므로 공통 꼬리를 타지 않는다
+				await _play_judgment_cutscene(card, monster_hp_before)
+				return
 			if card.card_name == "파이어볼":
 				# 원거리 마법이라 캐릭터는 제자리에 선 채, 앞쪽 허공에 불꽃을 짧게 응축했다가 터뜨린다
 				await _play_charge_stage("charge_fire", FIREBALL_CHARGE_SFX, 1.0, FIREBALL_CHARGE_SCALE, FIREBALL_CHARGE_DURATION)
@@ -792,6 +1013,23 @@ func _animate_card(card: Card, hp_before: int, mana_before: int, monster_hp_befo
 				SFXPlayer.play(EXPLOSION_IMPACT_SFX) # 큰 폭발음 위에 저역 "쿵"을 겹친다
 				_play_card_vfx(card, _monster_sprite, EXPLOSION_VFX_SCALE_MULT)
 				await _wait(0.18) # 폭발이 부풀어오르는 동안 숫자를 잠깐 참았다가 띄운다
+			elif card.card_name == "번개창":
+				# 하늘에서 그대로 내리꽂히는 그림이라 파이어볼/익스플로전처럼 캐릭터는 움직이지 않는다.
+				# 새 컷신은 아니고, 기존 히트 이펙트에 화면 플래시 한 번만 얹은 정도의 보강이다
+				_shake_actors()
+				_flash_hit(_monster_sprite)
+				_play_card_vfx(card, _monster_sprite)
+				_screen_flash(LIGHTNING_FLASH_TINT, HIT_FLASH_DURATION)
+			elif card.card_name == "회전베기":
+				# 새 이펙트를 만드는 대신, 같은 물리 이펙트(physical_spin — physical과 동일한 그림)를
+				# 0.1초 간격으로 두 번 재생해 "회전하며 여러 방향을 벤다"는 인상을 낸다
+				await _lunge(_player_sprite, _monster_sprite.position)
+				_shake_actors()
+				_flash_hit(_monster_sprite)
+				_play_card_vfx(card, _monster_sprite)
+				await _wait(0.1)
+				_flash_hit(_monster_sprite)
+				_play_card_vfx(card, _monster_sprite)
 			elif card.card_name == "섬광":
 				# 섬광은 그냥 살짝 찌르는(_lunge) 대신, 몬스터 코앞까지 실제로 달려가서 때리고
 				# 곧바로 원위치로 돌아온다 — 베기 전에 노랗게 짧게 번쩍이는 "차징"도 함께 넣는다
@@ -856,6 +1094,10 @@ func _animate_card(card: Card, hp_before: int, mana_before: int, monster_hp_befo
 			_message.text = "%s — 다음 공격을 받아넘기고 반격한다." % card.card_name
 			await _wait(0.35)
 		Card.EffectType.RESTORE_BOTH:
+			if card.card_name == "불사조의 축복":
+				# 같은 RESTORE_BOTH지만 티어3 전용 연출이 따로 있다 (더 화려한 이펙트 + 깃털 파티클)
+				await _play_phoenix_cutscene(card, hp_before, mana_before)
+				return
 			var healed: int = GameState.get_flag("player_hp") - hp_before
 			var mana_restored: int = GameState.get_flag("player_mana") - mana_before
 			if VFX_SFX.has("restore_both"):
@@ -921,19 +1163,23 @@ func _play_card_vfx(card: Card, target: Node2D, scale_mult: float = 1.0) -> void
 
 # VFX_CONFIG의 key에 해당하는 이펙트 스프라이트 하나를 pos에 재생한다 (사운드는 호출부 책임).
 # _play_card_vfx()/_play_counter_vfx()가 공유하고, 초재생처럼 한 카드에서 이펙트 두 개를
-# 서로 다른 위치에 동시에 띄워야 할 때도 이걸 그대로 두 번 부르면 된다
-func _spawn_vfx_sprite(key: String, pos: Vector2, scale_mult: float = 1.0) -> void:
+# 서로 다른 위치에 동시에 띄워야 할 때도 이걸 그대로 두 번 부르면 된다.
+# 만든 스프라이트를 돌려주므로, 시공균열처럼 재생 도중 멈췄다가(pause) 다시 돌려야 하는 연출은
+# 이 핸들을 붙잡아 두면 된다 (대부분의 호출부는 반환값을 무시한다)
+func _spawn_vfx_sprite(key: String, pos: Vector2, scale_mult: float = 1.0, stretch: Vector2 = Vector2.ONE) -> AnimatedSprite2D:
 	if not _vfx_frames.has(key):
-		return
+		return null
 	var sprite := AnimatedSprite2D.new()
 	sprite.sprite_frames = _vfx_frames[key]
 	sprite.position = pos
-	sprite.scale = Vector2.ONE * VFX_DISPLAY_SCALE * scale_mult
+	# stretch로 축별 배율을 따로 줄 수 있다 — 천벌의 빛기둥처럼 세로로만 길게 늘려야 하는 경우용
+	sprite.scale = Vector2.ONE * VFX_DISPLAY_SCALE * scale_mult * stretch
 	sprite.z_index = 15
 	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	_actors.add_child(sprite)
 	sprite.animation_finished.connect(sprite.queue_free)
 	sprite.play("play")
+	return sprite
 
 
 # 플레이어가 원거리 마법을 "모으는" 지점 — 몬스터를 향한 앞쪽 허공(가슴~손 높이).
@@ -1210,32 +1456,11 @@ func _card_style_key(card: Card) -> String:
 			return "grey"
 
 
-# 효과 종류에 맞춰 카드 설명을 자동으로 만든다. 카드 이름 밑에 그대로 표시된다.
-# 마나 소모량은 여기 넣지 않는다 — 왼쪽 아래 마름모 배지가 따로 보여주므로 좁은 설명칸을
-# 아끼고, 참고 이미지처럼 수치는 모서리 배지에 모아두는 편이 읽기도 쉽다
+# 카드 설명 문장은 카드 자신이 만든다 (Card.get_effect_description) — 스펠북 컬렉션 목록도
+# 같은 문장을 써야 해서 어느 한쪽 UI에 두지 않았다. 여기서는 그 위에 전투 상황에서만 붙는
+# 사유([과열]/[마나부족] 등)를 덧붙이는 역할만 남는다
 func _card_description(card: Card) -> String:
-	return _card_base_description(card)
-
-
-func _card_base_description(card: Card) -> String:
-	match card.effect:
-		Card.EffectType.DAMAGE:
-			var kind := "마법" if card.color == Card.CardColor.MAGIC else "물리"
-			return "%s 피해 %d" % [kind, card.value]
-		Card.EffectType.HEAL_HP:
-			return "체력 %d 회복" % card.value
-		Card.EffectType.RESTORE_MANA:
-			return "마나 %d 회복" % card.value
-		Card.EffectType.DEFEND:
-			return "다음 피해 %d 감소" % card.value
-		Card.EffectType.DODGE:
-			return "이번 턴 완전 회피"
-		Card.EffectType.COUNTER:
-			return "피해 무효 + 반격 %d" % card.value
-		Card.EffectType.RESTORE_BOTH:
-			return "체력 %d, 마나 %d 회복" % [card.value, card.secondary_value]
-		_:
-			return ""
+	return card.get_effect_description()
 
 
 # 새 손패가 채워진 직후: 5장 전부 회색 뒷면으로 가려두고, 순서대로 DRAW_STAGGER만큼씩 텀을 두고
@@ -1767,9 +1992,7 @@ func _play_triple_helix_cutscene(card: Card, monster_hp_before: int) -> void:
 	var hit_positions := [front_pos, back_pos, front_pos] # 앞→뒤→앞으로 번갈아 "휙휙" 도는 느낌
 
 	var total_damage := monster_hp_before - _manager.monster_hp
-	var base_dmg := total_damage / 3
-	var remainder := total_damage % 3
-	var hit_damages := [base_dmg, base_dmg, base_dmg + remainder] # 나머지는 마지막 일격에 몰아준다
+	var hit_damages := _split_damage(total_damage, 3)
 
 	var hp_step := monster_hp_before
 	_message.text = "%s!" % card.card_name
@@ -1793,7 +2016,8 @@ func _play_triple_helix_cutscene(card: Card, monster_hp_before: int) -> void:
 		SFXPlayer.play(TRIPLE_HELIX_HIT_SFX[i])
 
 		hp_step -= hit_damages[i]
-		_show_popup(_monster_sprite.position, "-%d" % hit_damages[i], DAMAGE_COLOR)
+		if hit_damages[i] > 0: # 신속과 같은 이유 — 몫이 0인 타격에 "-0"을 띄우지 않는다
+			_show_popup(_monster_sprite.position, "-%d" % hit_damages[i], DAMAGE_COLOR)
 		_animate_hp_bar(_monster_hp_bar, hp_step)
 		_monster_hp_bar_label.text = "HP: %d/%d" % [hp_step, _monster_data["max_hp"]]
 
@@ -1807,6 +2031,429 @@ func _play_triple_helix_cutscene(card: Card, monster_hp_before: int) -> void:
 	_update_monster_hp_text() # 실제 소유자(매니저) 값과 최종적으로 다시 맞춰둔다
 	_message.text = "%s! %d 피해!" % [card.card_name, total_damage]
 	await _wait(0.2)
+
+
+# 여러 번 나눠 때리는 컷신에서 총 피해를 타격 수만큼 쪼갠다.
+# 나머지는 뒤쪽 타격에 한 대씩 얹어 합계가 정확히 total이 되게 하면서도(팝업 합계 = HP바 감소량),
+# 한 방에 몰아주지 않아 숫자가 고르게 보인다
+func _split_damage(total: int, parts: int) -> Array[int]:
+	var result: Array[int] = []
+	if parts <= 0:
+		return result
+	var base := total / parts
+	var remainder := total % parts
+	for i in range(parts):
+		result.append(base + (1 if i >= parts - remainder else 0))
+	return result
+
+
+# 신속 전용 컷신. 삼중나선과 같은 "화면을 덮은 프레임에 좌표만 즉시 바꾸는" 순간이동 트릭을 쓰지만
+# 구조가 다르다 — 이동은 딱 한 번(몬스터 등 뒤 고정)이고, 그 뒤에 정적을 길게 끌었다가 연타로
+# 몰아친 다음 큰 흔들림으로 마무리한다.
+#
+# 피해 표시는 삼중나선과 같은 이유로 card.value가 아니라 "실제로 깎인 체력"(monster_hp_before와
+# 매니저 값의 차이)을 나눈다 — 마지막 일격이 몬스터를 잡으면 HP가 0에서 멈춰 실제 감소량이
+# 카드 수치보다 작아지는데, 그때도 팝업 숫자의 합과 HP바가 어긋나지 않게 하려는 것
+func _play_swift_cutscene(card: Card, monster_hp_before: int) -> void:
+	var start_pos := _player_sprite.position
+	var monster_pos := _monster_sprite.position
+	var offset := monster_pos - start_pos
+	var distance := offset.length()
+	var direction := offset / distance if distance > 1.0 else Vector2.RIGHT
+	var idle_frame_size: float = _variant.get("idle_frame_size", BattleData.MOB_IDLE_FRAME_SIZE)
+	var monster_half_width := idle_frame_size * MONSTER_SCALE * 0.5
+	var back_pos := monster_pos + direction * (monster_half_width + SWIFT_HIT_GAP) # 몬스터를 지나친 등 뒤
+
+	var total_damage := monster_hp_before - _manager.monster_hp
+	var hit_damages := _split_damage(total_damage, SWIFT_HIT_COUNT)
+	var hp_step := monster_hp_before
+	_message.text = "%s!" % card.card_name
+
+	# 1) 화면을 은백색으로 덮는다
+	_hit_flash.color = Color(SWIFT_TINT.r, SWIFT_TINT.g, SWIFT_TINT.b, 0.0)
+	var flash_in := create_tween()
+	flash_in.tween_property(_hit_flash, "color:a", SWIFT_FLASH_ALPHA, SWIFT_FLASH_IN_DURATION)
+	await flash_in.finished
+
+	# 2) 완전히 가려진 이 프레임에 좌표만 즉시 바꾼다 (이동 트윈이 없어 순간이동으로 보인다)
+	_player_sprite.position = back_pos
+
+	# 3) 플래시가 걷히며 등 뒤에 선 모습이 드러난다
+	var flash_out := create_tween()
+	flash_out.tween_property(_hit_flash, "color:a", 0.0, SWIFT_FLASH_OUT_DURATION)
+	await flash_out.finished
+
+	# 4) 베기 직전의 정적 — 화면을 눌러 어둡게 한 채 잠시 멈춘다
+	_hit_flash.color = Color(SWIFT_DIM_COLOR.r, SWIFT_DIM_COLOR.g, SWIFT_DIM_COLOR.b, 0.0)
+	var dim_in := create_tween()
+	dim_in.tween_property(_hit_flash, "color:a", SWIFT_DIM_ALPHA, SWIFT_DIM_IN_DURATION)
+	await dim_in.finished
+	await _wait(SWIFT_PAUSE_HOLD)
+
+	# 5) 연타. 어둠은 연타가 도는 동안 서서히 걷혀서 "정적이 깨지며 터진다"처럼 보인다
+	var dim_out := create_tween()
+	dim_out.tween_property(_hit_flash, "color:a", 0.0, SWIFT_HIT_INTERVAL * SWIFT_HIT_COUNT)
+
+	for i in range(SWIFT_HIT_COUNT):
+		_shake_actors(SWIFT_HIT_SHAKE, SWIFT_HIT_SHAKE_STEPS)
+		_flash_hit(_monster_sprite)
+		_spawn_vfx_sprite("physical", _monster_sprite.position + SWIFT_HIT_OFFSETS[i % SWIFT_HIT_OFFSETS.size()])
+		# 타격마다 음을 조금씩 올려 연타가 몰아치는 느낌을 준다
+		SFXPlayer.play(SWIFT_HIT_SFX[i % SWIFT_HIT_SFX.size()], SFXPlayer.DEFAULT_VOLUME_DB, 0.95 + 0.05 * i)
+
+		hp_step -= hit_damages[i]
+		# 남은 체력이 타격 수보다 적으면(약해진 몬스터에게 마지막 일격) 일부 타격의 몫이 0이 된다.
+		# 그때 "-0"을 띄우면 버그처럼 보이므로 숫자만 생략한다 — 타격 이펙트/흔들림은 그대로 둬서
+		# 연타 연출 자체는 끊기지 않게 한다
+		if hit_damages[i] > 0:
+			_show_popup(_monster_sprite.position, "-%d" % hit_damages[i], DAMAGE_COLOR)
+		_animate_hp_bar(_monster_hp_bar, hp_step)
+		_monster_hp_bar_label.text = "HP: %d/%d" % [hp_step, _monster_data["max_hp"]]
+
+		await _wait(SWIFT_HIT_INTERVAL)
+
+	# 6) 마무리 큰 흔들림
+	_shake_actors(SWIFT_FINAL_SHAKE, SWIFT_FINAL_SHAKE_STEPS)
+	await _wait(SWIFT_FINAL_HOLD)
+
+	# 7) 원위치 복귀
+	var return_tween := create_tween()
+	return_tween.tween_property(_player_sprite, "position", start_pos, SWIFT_RETURN_DURATION)
+	await return_tween.finished
+
+	_update_monster_hp_text()
+	_message.text = "%s! %d 피해!" % [card.card_name, total_damage]
+	await _wait(0.25)
+
+
+# 시공균열 전용 컷신. 캐릭터는 움직이지 않고 화면 자체가 멈춘다:
+# 차가운 오버레이가 서서히 덮이는 동안 몬스터 주위에 균열이 생기다가 중간 프레임에서 얼어붙고,
+# 정적을 버틴 뒤 밝은 시안 플래시와 함께 한꺼번에 풀려나며 터진다.
+#
+# 표시 데미지는 다른 컷신들과 같은 이유로 card.value가 아니라 실제로 깎인 체력을 쓴다
+# (마무리 일격이면 HP가 0에서 멈춰 실제 감소량이 카드 수치보다 작아지기 때문)
+func _play_time_rift_cutscene(card: Card, monster_hp_before: int) -> void:
+	var total_damage := monster_hp_before - _manager.monster_hp
+	_message.text = "%s!" % card.card_name
+
+	# 1) 차갑고 탁한 블루그레이가 서서히 화면을 덮는다
+	_hit_flash.color = Color(TIME_RIFT_FREEZE_COLOR.r, TIME_RIFT_FREEZE_COLOR.g, TIME_RIFT_FREEZE_COLOR.b, 0.0)
+	var freeze_in := create_tween()
+	freeze_in.tween_property(_hit_flash, "color:a", TIME_RIFT_FREEZE_ALPHA, TIME_RIFT_FREEZE_IN_DURATION)
+
+	# 2) 그와 동시에 몬스터 주위에 균열을 띄우고, 완성된 프레임에서 얼린다.
+	# 재생 속도가 18fps라 TIME_RIFT_FREEZE_FRAME(2번)까지 오는 데 약 0.11초 — 오버레이가 덮이는
+	# 동안 균열이 자라다가 멈추는 그림이 된다
+	var cracks: Array[AnimatedSprite2D] = []
+	for offset in TIME_RIFT_CRACK_OFFSETS:
+		var crack := _spawn_vfx_sprite("time_crack", _monster_sprite.position + offset, TIME_RIFT_CRACK_SCALE)
+		if crack != null:
+			cracks.append(crack)
+	SFXPlayer.play(TIME_RIFT_FREEZE_SFX, SFXPlayer.DEFAULT_VOLUME_DB, TIME_RIFT_FREEZE_SFX_PITCH)
+
+	for crack in cracks:
+		while crack.frame < TIME_RIFT_FREEZE_FRAME and crack.is_playing():
+			await get_tree().process_frame
+		crack.pause()
+		crack.frame = TIME_RIFT_FREEZE_FRAME # 프레임을 못 맞추고 끝난 경우까지 확실히 고정
+
+	await freeze_in.finished
+
+	# 3) 얼어붙은 채로 버티는 정적
+	await _wait(TIME_RIFT_HOLD)
+
+	# 4) 해제 — 오버레이를 밝은 시안으로 갈아끼워 번쩍인 뒤 걷고, 얼렸던 균열을 빠르게 마저 돌린다
+	_hit_flash.color = Color(TIME_RIFT_RELEASE_TINT.r, TIME_RIFT_RELEASE_TINT.g, TIME_RIFT_RELEASE_TINT.b, TIME_RIFT_FREEZE_ALPHA)
+	var release_in := create_tween()
+	release_in.tween_property(_hit_flash, "color:a", TIME_RIFT_RELEASE_ALPHA, TIME_RIFT_RELEASE_IN_DURATION)
+	await release_in.finished
+
+	for crack in cracks:
+		if is_instance_valid(crack):
+			crack.speed_scale = TIME_RIFT_BURST_FPS / float(VFX_CONFIG["time_crack"]["fps"])
+			crack.play("play") # 멈춰 있던 지점부터 나머지를 이어서 재생
+
+	var release_out := create_tween()
+	release_out.tween_property(_hit_flash, "color:a", 0.0, TIME_RIFT_RELEASE_OUT_DURATION)
+
+	# 5) 강한 흔들림 + 유리 깨지는 타격음
+	_shake_actors(TIME_RIFT_SHAKE, TIME_RIFT_SHAKE_STEPS)
+	_flash_hit(_monster_sprite)
+	for sfx in TIME_RIFT_RELEASE_SFX:
+		SFXPlayer.play(sfx)
+
+	# 6) 여러 지점에서 동시에 터지는 것이라 데미지는 나누지 않고 한 번에
+	if total_damage > 0:
+		_show_popup(_monster_sprite.position, "-%d" % total_damage, DAMAGE_COLOR)
+	_animate_hp_bar(_monster_hp_bar, _manager.monster_hp)
+	_update_monster_hp_text()
+	await _wait(TIME_RIFT_IMPACT_HOLD)
+
+	# 7) 오버레이를 확실히 원상복귀시킨다.
+	# [주의] release_out.finished를 await하면 안 된다 — 이 트윈(0.22초)은 바로 위 여운 대기
+	# (0.45초)가 끝나기 훨씬 전에 이미 완료돼 있어서, 이미 발신된 시그널을 기다리다 코루틴이
+	# 영영 멈춘다. 실제로 그렇게 짜서 최종 메시지가 안 뜨고 _play_card_flow가 끝나지 않았다.
+	# 어차피 알파를 직접 0으로 되돌리므로 트윈 완료를 기다릴 이유도 없다
+	_hit_flash.color = Color(TIME_RIFT_FREEZE_COLOR.r, TIME_RIFT_FREEZE_COLOR.g, TIME_RIFT_FREEZE_COLOR.b, 0.0)
+
+	_message.text = "%s! %d 피해!" % [card.card_name, total_damage]
+	await _wait(0.25)
+
+
+# 낙하 지점 예고 마커(붉은 타원)를 pos에 띄우고 맥동시킨다. 정리는 _clear_impact_marker()가 한다.
+# 그림자(_setup_shadow)와 같은 방식으로 타원 폴리곤을 코드로 만들어 전용 에셋 없이 처리한다
+# 불사조의 축복 전용 연출. 초재생의 "치유+마나 이펙트를 좌우로 갈라 동시에" 구조를 세 겹으로
+# 늘리고, 금빛 깃털 파티클을 얹었다. 회복 자체는 이미 매니저가 적용해둔 상태라 여기서는 결과를
+# 보여주기만 하고, 과열 게이지 페널티도 매니저(Card.on_use_set_gauge)가 처리한 뒤라 표시만 한다
+func _play_phoenix_cutscene(card: Card, hp_before: int, mana_before: int) -> void:
+	var healed: int = GameState.get_flag("player_hp") - hp_before
+	var mana_restored: int = GameState.get_flag("player_mana") - mana_before
+	var pos := _player_sprite.position
+
+	_message.text = "%s!" % card.card_name
+	for sfx in PHOENIX_SFX:
+		SFXPlayer.play(sfx)
+	_spawn_feather_particles(pos)
+
+	# 치유(초록 고리)와 마나(하늘색 소용돌이)를 번갈아 세 겹으로 겹쳐 띄운다
+	for i in range(PHOENIX_HEAL_OFFSETS.size()):
+		var key := "heal" if i % 2 == 0 else "mana"
+		var sprite := _spawn_vfx_sprite(key, pos + PHOENIX_HEAL_OFFSETS[i], PHOENIX_VFX_SCALE)
+		if sprite != null:
+			sprite.modulate = PHOENIX_GLOW_TINT # 전부 금빛으로 물들여 "불사조"라는 한 덩어리로 보이게
+		await _wait(PHOENIX_STAGGER)
+
+	_flash_hit(_player_sprite)
+	_show_popup(pos, "+%d / +%d MP" % [healed, mana_restored], HEAL_COLOR)
+	_animate_hp_bar(_player_hp_bar, GameState.get_flag("player_hp"))
+	_message.text = "%s — 체력과 마나를 완전히 회복했다! (무기 과열 %d%%)" % [card.card_name, card.on_use_set_gauge]
+	await _wait(PHOENIX_HOLD)
+
+
+# 캐릭터 주위에 금빛 반짝임이 흩날리는 일회성 파티클. 스펠북 티어3 카드의 반짝임과 같은 방식으로
+# 텍스처를 코드로 그려 쓰고(전용 에셋 불필요), 수명이 다하면 스스로 사라진다
+func _spawn_feather_particles(pos: Vector2) -> void:
+	var particles := CPUParticles2D.new()
+	particles.texture = _build_sparkle_texture()
+	particles.position = pos
+	particles.z_index = 16
+	particles.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	particles.emitting = true
+	particles.one_shot = true
+	particles.explosiveness = 0.35 # 한꺼번에 확 퍼졌다가 남은 것들이 천천히 흩날리게
+	particles.amount = PHOENIX_FEATHER_COUNT
+	particles.lifetime = PHOENIX_FEATHER_LIFETIME
+	particles.randomness = 0.6
+	particles.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+	particles.emission_rect_extents = PHOENIX_FEATHER_SPREAD
+	particles.direction = Vector2(0, -1)
+	particles.spread = 180.0
+	particles.gravity = Vector2(0, 26) # 깃털처럼 천천히 내려앉는다
+	particles.initial_velocity_min = 12.0
+	particles.initial_velocity_max = 42.0
+	particles.scale_amount_min = 1.4
+	particles.scale_amount_max = 3.0
+	particles.color = PHOENIX_GLOW_TINT
+	var ramp := Gradient.new()
+	ramp.offsets = PackedFloat32Array([0.0, 0.2, 0.75, 1.0])
+	ramp.colors = PackedColorArray([
+		Color(1, 1, 1, 0), Color(1, 1, 1, 1), Color(1, 1, 1, 1), Color(1, 1, 1, 0),
+	])
+	particles.color_ramp = ramp
+	_actors.add_child(particles)
+
+	# one_shot이라 방출은 알아서 끝나지만 노드는 남으므로, 마지막 입자가 사라질 시간까지 기다렸다 지운다
+	var cleanup := get_tree().create_timer(PHOENIX_FEATHER_LIFETIME * 2.0)
+	cleanup.timeout.connect(func():
+		if is_instance_valid(particles):
+			particles.queue_free()
+	)
+
+
+# 천벌 전용 컷신. 유성낙하의 "예고 마커 → 화이트아웃 → 내리꽂기" 뼈대를 그대로 쓰지만 캐릭터는
+# 전혀 움직이지 않는다 — 파이어볼/익스플로전처럼 제자리에서 시전하고, 하늘에서 빛기둥만 떨어진다.
+#
+# 표시 데미지는 다른 컷신들과 같은 이유로 card.value가 아니라 실제로 깎인 체력을 쓴다
+func _play_judgment_cutscene(card: Card, monster_hp_before: int) -> void:
+	var monster_pos := _monster_sprite.position
+	var total_damage := monster_hp_before - _manager.monster_hp
+	_message.text = "%s!" % card.card_name
+
+	# 1) 몬스터 발밑에 금빛 심판의 원이 나타나 진폭을 키워가며 맥동한다
+	var foot_offset: float = _variant.get("idle_frame_size", BattleData.MOB_IDLE_FRAME_SIZE) * MONSTER_SCALE * 0.5 - 4.0
+	_spawn_impact_marker(
+		monster_pos + Vector2(0, foot_offset),
+		JUDGMENT_MARKER_COLOR, JUDGMENT_MARKER_RX, JUDGMENT_MARKER_RY,
+		JUDGMENT_MARKER_PULSE, JUDGMENT_MARKER_GROW
+	)
+
+	# 2) 낮고 웅장한 차징
+	SFXPlayer.play(JUDGMENT_CHARGE_SFX, SFXPlayer.DEFAULT_VOLUME_DB, JUDGMENT_CHARGE_SFX_PITCH)
+	await _wait(JUDGMENT_CHARGE_DURATION)
+
+	# 3) 순수한 흰색으로 완전히 화이트아웃
+	_hit_flash.color = Color(1, 1, 1, 0.0)
+	var white_in := create_tween()
+	white_in.tween_property(_hit_flash, "color:a", JUDGMENT_WHITEOUT_ALPHA, JUDGMENT_WHITEOUT_IN_DURATION)
+	await white_in.finished
+
+	# 4) 화면이 완전히 하얀 이 순간에 빛기둥을 세운다 (세로로만 크게 늘려 하늘에서 내리꽂히는 형태로).
+	# 스프라이트 아래 끝이 몬스터 발밑에 오도록 높이의 절반만큼 올려 배치한다
+	var beam_half_height := VFX_FRAME_SIZE * 0.5 * VFX_DISPLAY_SCALE * JUDGMENT_BEAM_SCALE * JUDGMENT_BEAM_STRETCH.y
+	var beam_pos := Vector2(monster_pos.x, monster_pos.y + foot_offset + JUDGMENT_BEAM_FOOT_SINK - beam_half_height)
+	var beam := _spawn_vfx_sprite("light_pillar", beam_pos, JUDGMENT_BEAM_SCALE, JUDGMENT_BEAM_STRETCH)
+	if beam != null:
+		beam.modulate = JUDGMENT_BEAM_TINT
+
+	# 5) 화이트아웃이 걷히며 임팩트가 드러난다 (걷히는 트윈은 던져두고 흔들림/사운드를 바로 얹는다).
+	# [주의] 이 트윈은 아래 여운 대기보다 먼저 끝나므로 finished를 await하면 안 된다 —
+	# 이미 발신된 시그널을 기다리다 코루틴이 멈춘다 (시공균열에서 실제로 겪은 함정)
+	var white_out := create_tween()
+	white_out.tween_property(_hit_flash, "color:a", 0.0, JUDGMENT_WHITEOUT_OUT_DURATION)
+
+	_clear_impact_marker() # 빛기둥이 떨어졌으니 예고 마커는 치운다
+	_shake_actors(JUDGMENT_SHAKE, JUDGMENT_SHAKE_STEPS)
+	_flash_hit(_monster_sprite)
+	for sfx in JUDGMENT_IMPACT_SFX:
+		SFXPlayer.play(sfx)
+
+	# 흰빛이 걷히는 위로 파란 잔광이 스친다 (별도 오버레이라 화이트아웃 페이드와 안 부딪힌다).
+	# await 없이 던져두고 아래 여운 대기가 흘러가게 둔다
+	_bolt_flash.color = Color(JUDGMENT_BOLT_TINT.r, JUDGMENT_BOLT_TINT.g, JUDGMENT_BOLT_TINT.b, 0.0)
+	var bolt := create_tween()
+	bolt.tween_property(_bolt_flash, "color:a", JUDGMENT_BOLT_ALPHA, JUDGMENT_BOLT_IN_DURATION)
+	bolt.tween_property(_bolt_flash, "color:a", 0.0, JUDGMENT_BOLT_OUT_DURATION)
+
+	# 6) 단발 심판이라 데미지는 한 번에
+	if total_damage > 0:
+		_show_popup(monster_pos, "-%d" % total_damage, DAMAGE_COLOR)
+	_animate_hp_bar(_monster_hp_bar, _manager.monster_hp)
+	_update_monster_hp_text()
+	await _wait(JUDGMENT_IMPACT_HOLD)
+
+	# 7) 화면 색을 확실히 원상복귀 (트윈에 맡기지 않고 직접 0으로 되돌린다)
+	_hit_flash.color = Color(1, 1, 1, 0.0)
+	_bolt_flash.color = Color(JUDGMENT_BOLT_TINT.r, JUDGMENT_BOLT_TINT.g, JUDGMENT_BOLT_TINT.b, 0.0)
+	_message.text = "%s! %d 피해!" % [card.card_name, total_damage]
+	await _wait(0.25)
+
+
+# grow_scales가 비어 있으면 유성낙하처럼 "일정하게 커졌다 작아지길 무한 반복"하고,
+# 값이 들어오면 천벌처럼 "그 배율들을 차례로 밟으며 점점 커지는" 한 번짜리 연출이 된다
+func _spawn_impact_marker(pos: Vector2, color: Color, rx: float, ry: float, pulse: float, grow_scales: Array = []) -> void:
+	_clear_impact_marker()
+
+	var marker := Polygon2D.new()
+	var pts := PackedVector2Array()
+	for i in range(24):
+		var a := TAU * i / 24.0
+		pts.append(Vector2(cos(a) * rx, sin(a) * ry))
+	marker.polygon = pts
+	marker.color = color
+	marker.position = pos
+	marker.z_index = 14
+	_actors.add_child(marker)
+	_impact_marker = marker
+
+	_impact_marker_tween = create_tween()
+	if grow_scales.is_empty():
+		# 커졌다 작아지길 반복해 "조준되고 있다"는 인상을 준다
+		_impact_marker_tween.set_loops()
+		_impact_marker_tween.tween_property(marker, "scale", Vector2(1.25, 1.25), pulse)
+		_impact_marker_tween.tween_property(marker, "scale", Vector2(0.85, 0.85), pulse)
+	else:
+		# 맥동하되 진폭이 점점 커진다 — 차징이 차오르는 느낌
+		marker.scale = Vector2(grow_scales[0], grow_scales[0])
+		for s in grow_scales:
+			_impact_marker_tween.tween_property(marker, "scale", Vector2(s, s), pulse)
+
+
+# 마커와 맥동 트윈을 함께 정리한다.
+# [주의] 트윈을 먼저 죽이지 않고 마커만 free하면 Godot이 "Infinite loop detected"를 뱉는다 —
+# set_loops()로 무한 반복 중인 트윈의 대상이 사라져 한 바퀴가 0초에 끝나기 때문이다 (실제로 겪음)
+func _clear_impact_marker() -> void:
+	if _impact_marker_tween != null and _impact_marker_tween.is_valid():
+		_impact_marker_tween.kill()
+	_impact_marker_tween = null
+	if is_instance_valid(_impact_marker):
+		_impact_marker.queue_free()
+	_impact_marker = null
+
+
+# 유성낙하 전용 컷신. 지금까지의 컷신들과 같은 "플래시로 위치 이동을 가린다"는 트릭을 쓰되
+# 방향이 세로다 — 위로 튀어올라 화면 밖으로 사라진 뒤, 플래시가 덮인 사이 몬스터 머리 위 공중에
+# 다시 나타나 내리꽂는다. 연타가 아닌 단발 강타라 데미지도 한 번에 표시한다.
+#
+# 표시 데미지는 다른 컷신들과 같은 이유로 card.value가 아니라 실제로 깎인 체력을 쓴다 —
+# 마무리 일격으로 몬스터를 잡으면 HP가 0에서 멈춰 실제 감소량이 카드 수치보다 작아지기 때문
+func _play_meteor_cutscene(card: Card, monster_hp_before: int) -> void:
+	var start_pos := _player_sprite.position
+	var monster_pos := _monster_sprite.position
+	var landing_pos := _flash_slash_dash_target(start_pos, monster_pos) # 몬스터 코앞에 내려꽂힌다
+	var air_pos := Vector2(landing_pos.x, landing_pos.y - METEOR_DROP_HEIGHT)
+
+	var total_damage := monster_hp_before - _manager.monster_hp
+	_message.text = "%s!" % card.card_name
+
+	# 1) 위로 튀어올라 화면 밖으로 빠져나간다 (가속하며 솟구치도록 EASE_IN)
+	SFXPlayer.play(METEOR_JUMP_SFX)
+	var jump := create_tween()
+	jump.set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
+	jump.tween_property(_player_sprite, "position", Vector2(start_pos.x, METEOR_JUMP_EXIT_Y), METEOR_JUMP_DURATION)
+	await jump.finished
+
+	# 2) 화면 밖으로 나간 시점에 완전히 감춘다. 그림자도 같이 숨긴다 — 캐릭터가 사라졌는데
+	# 발밑 그림자만 원래 자리에 남아 있으면 "하늘로 올라갔다"는 인상이 깨진다
+	_player_sprite.visible = false
+	_player_shadow.visible = false
+
+	# 3) 정적. 몬스터 발밑에 낙하 지점 마커를 띄워 "여기로 떨어진다"를 예고한다
+	var foot_offset: float = _variant.get("idle_frame_size", BattleData.MOB_IDLE_FRAME_SIZE) * MONSTER_SCALE * 0.5 - 4.0
+	_spawn_impact_marker(monster_pos + Vector2(0, foot_offset), METEOR_MARKER_COLOR, METEOR_MARKER_RX, METEOR_MARKER_RY, METEOR_MARKER_PULSE)
+	await _wait(METEOR_HANG_DURATION)
+
+	# 4) 화면 전체를 강한 흰빛으로 덮는다
+	_hit_flash.color = Color(METEOR_TINT.r, METEOR_TINT.g, METEOR_TINT.b, 0.0)
+	var flash_in := create_tween()
+	flash_in.tween_property(_hit_flash, "color:a", METEOR_FLASH_ALPHA, METEOR_FLASH_IN_DURATION)
+	await flash_in.finished
+
+	# 5) 가려진 프레임에 몬스터 머리 위 공중으로 재배치하고 다시 보이게 한다
+	_player_sprite.position = air_pos
+	_player_sprite.visible = true
+
+	# 6) 플래시가 걷히는 동안(병렬) 그대로 내리꽂는다
+	var flash_out := create_tween()
+	flash_out.tween_property(_hit_flash, "color:a", 0.0, METEOR_FLASH_OUT_DURATION)
+	var drop := create_tween()
+	drop.set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
+	drop.tween_property(_player_sprite, "position", landing_pos, METEOR_DROP_DURATION)
+	await drop.finished
+
+	# 착지 순간: 예고 마커를 치우고 가장 강한 흔들림 + 큰 타격 이펙트
+	_clear_impact_marker()
+	_player_shadow.visible = true
+	_shake_actors(METEOR_IMPACT_SHAKE, METEOR_IMPACT_SHAKE_STEPS)
+	_flash_hit(_monster_sprite)
+	for sfx in METEOR_IMPACT_SFX:
+		SFXPlayer.play(sfx)
+	_spawn_vfx_sprite("explosion_big", _monster_sprite.position, METEOR_VFX_SCALE) # 지면이 부서지는 충격파
+	_spawn_vfx_sprite("physical", _monster_sprite.position)                        # 그 위에 얹는 타격 자국
+
+	# 7) 단발 강타라 데미지는 한 번에. 0이면(완전 무효화 등) 숫자를 띄우지 않는다
+	if total_damage > 0:
+		_show_popup(_monster_sprite.position, "-%d" % total_damage, DAMAGE_COLOR)
+	_animate_hp_bar(_monster_hp_bar, _manager.monster_hp)
+	_update_monster_hp_text()
+	await _wait(METEOR_IMPACT_HOLD)
+
+	# 8) 원위치 복귀
+	var return_tween := create_tween()
+	return_tween.tween_property(_player_sprite, "position", start_pos, METEOR_RETURN_DURATION)
+	await return_tween.finished
+
+	_message.text = "%s! %d 피해!" % [card.card_name, total_damage]
+	await _wait(0.25)
 
 
 # 맞은 캐릭터 머리 위로 "-N"/"+N"/"회피!" 텍스트를 크게 띄웠다가 위로 떠오르며 사라지게 함
@@ -1828,11 +2475,16 @@ func _show_popup(sprite_pos: Vector2, text: String, color: Color) -> void:
 
 # 배우 컨테이너 전체를 짧게 흔들었다가 원위치 (타격감용). 그림자는 View 직속이라 함께 흔들리지 않음
 func _shake_actors(amount: float = SHAKE_AMOUNT, steps: int = SHAKE_STEPS) -> void:
-	var tween := create_tween()
+	# 이전 흔들림이 아직 돌고 있으면 죽이고 새로 시작한다. 신속의 연타처럼 흔들림이 끝나기 전에
+	# 다음 흔들림이 들어오면 같은 _actors.position을 두 트윈이 서로 잡아당겨 떨림이 엉키고,
+	# 최악의 경우 늦게 끝난 트윈이 배우를 원점이 아닌 곳에 두고 끝난다
+	if _shake_tween != null and _shake_tween.is_valid():
+		_shake_tween.kill()
+	_shake_tween = create_tween()
 	for i in range(steps):
 		var offset := Vector2(randf_range(-amount, amount), randf_range(-amount, amount))
-		tween.tween_property(_actors, "position", offset, SHAKE_STEP_DURATION)
-	tween.tween_property(_actors, "position", Vector2.ZERO, SHAKE_STEP_DURATION)
+		_shake_tween.tween_property(_actors, "position", offset, SHAKE_STEP_DURATION)
+	_shake_tween.tween_property(_actors, "position", Vector2.ZERO, SHAKE_STEP_DURATION)
 
 
 # 공격하는 스프라이트를 상대 방향으로 짧게 찔렀다가 원위치로 돌아오게 함 (완료까지 await)

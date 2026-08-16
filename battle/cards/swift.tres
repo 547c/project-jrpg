@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="Card" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://battle/card.gd" id="1_card"]
+
+[resource]
+script = ExtResource("1_card")
+card_name = "신속"
+color = 0
+tier = 2
+effect = 0
+value = 18
+secondary_value = 0
+mana_cost = 0
+hp_cost = 2
+flavor_text = "눈으로 좇을 수 없는 속도로 파고들어, 숨 한 번에 베어낸다."

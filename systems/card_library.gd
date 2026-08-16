@@ -22,13 +22,27 @@ const CARD_PATHS: Dictionary = {
 	"dodge_roll": CARDS_DIR + "dodge_roll.tres",
 	"heal_light": CARDS_DIR + "heal_light.tres",
 	"mana_draught": CARDS_DIR + "mana_draught.tres",
-	# ── 스킬포인트로 잠금해제하는 상위 카드 ──
+	# ── 스킬포인트로 잠금해제하는 상위 카드(티어2/3) ──
 	"flash_slash": CARDS_DIR + "flash_slash.tres",
 	"fireball": CARDS_DIR + "fireball.tres",
 	"super_regen": CARDS_DIR + "super_regen.tres",
 	"triple_helix": CARDS_DIR + "triple_helix.tres",
 	"explosion": CARDS_DIR + "explosion.tres",
 	"counter_slash": CARDS_DIR + "counter_slash.tres",
+	# ── 스킬포인트로 잠금해제하는 티어1 카드 (기본 제공 6종과 달리 처음엔 잠겨 있다.
+	# 티어1이라 UNLOCK_COST_BY_TIER상 비용은 1점으로 가장 싸다) ──
+	"stab": CARDS_DIR + "stab.tres",
+	"ice_arrow": CARDS_DIR + "ice_arrow.tres",
+	# ── 스킬포인트로 잠금해제하는 티어2 카드 (비용 3점) ──
+	"spin_slash": CARDS_DIR + "spin_slash.tres",
+	"lightning_spear": CARDS_DIR + "lightning_spear.tres",
+	"reflect_shield": CARDS_DIR + "reflect_shield.tres",
+	# ── 스킬포인트로 잠금해제하는 티어3 카드 (비용 5점) ──
+	"swift": CARDS_DIR + "swift.tres",
+	"meteor_drop": CARDS_DIR + "meteor_drop.tres",
+	"time_rift": CARDS_DIR + "time_rift.tres",
+	"judgment": CARDS_DIR + "judgment.tres",
+	"phoenix_blessing": CARDS_DIR + "phoenix_blessing.tres",
 }
 
 # 게임 시작 시(그리고 reset_progress 후) 이미 갖고 있는 카드. 기존 6종을 그대로 둬서
@@ -52,6 +66,37 @@ const UNLOCK_COST_BY_TIER: Dictionary = {
 
 # 알 수 없는 카드 id의 비용 (잠금해제를 시도해도 실패하도록 하는 안전값)
 const UNKNOWN_COST := -1
+
+# ── 카드 아이콘 ────────────────────────────────────────────────────────────
+# Free - Raven Fantasy Icons 시트(32x32 격자)에서 효과별로 잘라 쓴다. 원래 battle_scene.gd에
+# 있던 표인데, 스펠북 컬렉션 목록도 전투 손패와 같은 아이콘을 보여줘야 해서 카탈로그로 옮겼다
+# (battle_scene.gd는 CardLibrary.SKILL_ICON_REGION을 그대로 참조한다)
+const RAVEN_SHEET_PATH := "res://assets/items/Free - Raven Fantasy Icons/Full Spritesheet/32x32.png"
+const RAVEN_ICON_SIZE := 32
+const SKILL_ICON_REGION: Dictionary = {
+	Card.EffectType.DAMAGE: Rect2(160, 1472, RAVEN_ICON_SIZE, RAVEN_ICON_SIZE), # fb742 — 핏방울 검 슬래시
+	Card.EffectType.DEFEND: Rect2(128, 1184, RAVEN_ICON_SIZE, RAVEN_ICON_SIZE), # fb597 — 민무늬 은색 방패
+	Card.EffectType.DODGE: Rect2(128, 1440, RAVEN_ICON_SIZE, RAVEN_ICON_SIZE),  # fb725 — 바람 소용돌이
+	Card.EffectType.HEAL_HP: Rect2(64, 1312, RAVEN_ICON_SIZE, RAVEN_ICON_SIZE), # fb659 — 빨간 하트
+	Card.EffectType.RESTORE_MANA: Rect2(192, 1408, RAVEN_ICON_SIZE, RAVEN_ICON_SIZE), # fb711 — 파란 마나 물방울
+	# 아래 둘은 기존 아이콘을 그대로 빌려 쓴다 — 전용 아이콘 고르기는 카드 UI 단계에서 할 일이라
+	# 여기서는 "아이콘이 비어 카드가 깨져 보이는 것"만 막는 게 목적이다.
+	# 반격은 막는 동작이 먼저라 방패를, 초재생은 체력 회복이 주효과라 하트를 쓴다
+	Card.EffectType.COUNTER: Rect2(128, 1184, RAVEN_ICON_SIZE, RAVEN_ICON_SIZE),      # fb597 (방어와 공유)
+	Card.EffectType.RESTORE_BOTH: Rect2(64, 1312, RAVEN_ICON_SIZE, RAVEN_ICON_SIZE),  # fb659 (치유와 공유)
+}
+
+
+# card_id의 효과에 맞는 스킬 아이콘 텍스처. ItemData.build_icon()과 같은 방식(AtlasTexture로
+# 시트 일부만 잘라 쓰기)이라 호출부는 그대로 TextureRect.texture에 넣으면 된다
+static func build_icon(card_id: String) -> AtlasTexture:
+	var card := get_card(card_id)
+	if card == null or not SKILL_ICON_REGION.has(card.effect):
+		return null
+	var atlas := AtlasTexture.new()
+	atlas.atlas = load(RAVEN_SHEET_PATH) as Texture2D
+	atlas.region = SKILL_ICON_REGION[card.effect]
+	return atlas
 
 
 # card_id에 해당하는 Card 리소스를 반환. 없는 id면 null.

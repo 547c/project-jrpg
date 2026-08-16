@@ -71,10 +71,60 @@ enum EffectType {
 # (예: 공용 카드인 방어/피하기도 마나를 쓴다)
 @export var mana_cost: int = 0
 
+# 사용 시 양쪽 무기 과열 게이지를 이 값으로 "즉시 세팅"하는 페널티 (0이면 아무 일도 없음).
+# register_card_use()의 기존 ±25 누적과는 완전히 다른 경로다 — 누적이 아니라 강제 대입이라,
+# "강력한 대신 무기가 확 달아오르는" 카드를 데이터만으로 만들 수 있다 (불사조의 축복 = 75).
+#
+# [주의] 0을 "효과 없음"으로 쓰기 때문에 이 필드로는 "양쪽 게이지를 0으로 식히는" 카드를 표현할 수
+# 없다. 그런 카드가 필요해지면 별도 필드(예: on_use_cool_gauge)를 두거나 이 필드를 -1 기본값으로
+# 바꿔야 한다 — 지금은 페널티 쪽만 필요해서 단순한 규칙을 택했다
+@export_range(0, 100) var on_use_set_gauge: int = 0
+
+# 회복 수치가 이 값 이상이면 "완전 회복"으로 간주해 설명문에 숫자 대신 그렇게 쓴다.
+# (회복은 최대치에서 clamp되므로, 최대치보다 확실히 큰 값을 넣는 게 곧 완전 회복이다)
+const FULL_RESTORE_VALUE := 999
+
 # 사용 시 소모할 체력. 마나 대신 체력을 대가로 치르는 카드(예: 마나 회복)에 쓴다.
 # 체력이 이 값 이하면 카드 자체를 낼 수 없다 — 카드를 쓰다가 죽는 일은 없다
 # (판정은 BattleTurnManager.can_play_card가 담당)
 @export var hp_cost: int = 0
+
+
+# 효과 종류와 수치로 카드 설명문을 자동으로 만든다 ("물리 피해 4", "체력 6 회복" 등).
+# 전투 손패의 카드 설명칸과 스펠북 컬렉션 목록이 같은 문장을 써야 하므로, 어느 한쪽 UI가 아니라
+# 카드 자신이 들고 있게 뒀다 — 새 EffectType을 추가할 때 고칠 자리도 여기 하나로 줄어든다.
+#
+# 마나/체력 비용은 일부러 넣지 않는다. 전투 카드에서는 모서리 마름모 배지가, 스펠북에서는 별도
+# 비용 줄이 따로 보여주므로 여기까지 넣으면 같은 수치가 두 번 나온다
+func get_effect_description() -> String:
+	match effect:
+		EffectType.DAMAGE:
+			var kind := "마법" if color == CardColor.MAGIC else "물리"
+			return "%s 피해 %d" % [kind, value]
+		EffectType.HEAL_HP:
+			return "체력 %d 회복" % value
+		EffectType.RESTORE_MANA:
+			return "마나 %d 회복" % value
+		EffectType.DEFEND:
+			return "다음 피해 %d 감소" % value
+		EffectType.DODGE:
+			return "이번 턴 완전 회피"
+		EffectType.COUNTER:
+			return "피해 무효 + 반격 %d" % value
+		EffectType.RESTORE_BOTH:
+			# "완전 회복" 카드는 최대치보다 확실히 큰 값을 넣고 clamp에 맡기는데(불사조의 축복=999),
+			# 그 숫자를 그대로 보여주면 "체력 999 회복"이라는 이상한 문구가 나온다 — 임계값을 넘으면
+			# 수치 대신 완전 회복이라고 쓴다
+			if value >= FULL_RESTORE_VALUE and secondary_value >= FULL_RESTORE_VALUE:
+				return "체력·마나 완전 회복"
+			return "체력 %d, 마나 %d 회복" % [value, secondary_value]
+		_:
+			return ""
+
+
+# 화면에 보여줄 티어 이름 ("티어 1" 등). 저장값이 0부터라 +1 해서 사람이 읽는 번호로 바꾼다
+func get_tier_label() -> String:
+	return "티어 %d" % (int(tier) + 1)
 
 
 func is_magic() -> bool:

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="Card" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://battle/card.gd" id="1_card"]
+
+[resource]
+script = ExtResource("1_card")
+card_name = "불사조의 축복"
+color = 2
+tier = 2
+effect = 6
+value = 999
+secondary_value = 999
+on_use_set_gauge = 75
+mana_cost = 0
+hp_cost = 0
+flavor_text = "불사조의 깃털이 감싸며 상처와 지친 마력을 단숨에 되돌린다. 다만 그 대가로 다음 몇 턴은 무기가 뜨겁게 달아오른다."

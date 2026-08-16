@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="Card" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://battle/card.gd" id="1_card"]
+
+[resource]
+script = ExtResource("1_card")
+card_name = "회전베기"
+color = 0
+tier = 1
+effect = 0
+value = 9
+mana_cost = 3
+hp_cost = 0
+flavor_text = "몸을 팽이처럼 회전시켜 주위를 한 번에 베어낸다."

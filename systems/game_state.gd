@@ -21,6 +21,9 @@ signal inventory_changed(item_id: String)
 # 스킬포인트 잔량은 flags의 "skill_points"라 flag_changed로 이미 알 수 있으므로 따로 시그널을 두지 않는다
 signal card_unlocked(card_id: String)
 
+# 전투 덱 구성이 바뀔 때 방출 (덱 구성 UI가 구독해 갱신)
+signal battle_deck_changed
+
 # NPC 호감도가 실제로 바뀔 때 방출 (npc_id, 새 값). 대화 톤/게이팅이 이 값을 참조한다
 signal affinity_changed(npc_id: String, new_value: int)
 
@@ -56,6 +59,12 @@ var seen_dialogue_nodes: Array = []
 # (StarterDeck.build()가 이 목록으로 걸러낸다). 개수가 아니라 "가졌다/아니다"뿐이라
 # 인벤토리(개수 딕셔너리)보다 seen_dialogue_nodes(id 배열) 쪽 패턴이 맞아 그쪽을 따랐다
 var unlocked_cards: Array = CardLibrary.DEFAULT_UNLOCKED.duplicate()
+
+# 플레이어가 직접 짠 전투 덱 (카드 id 목록, 같은 카드를 여러 장 넣을 수 있어 중복 허용).
+# 비어 있으면 "아직 한 번도 덱을 건드리지 않았다"는 뜻이고, 그때는 StarterDeck.build()가
+# 기존처럼 보유 카드 전부로 덱을 자동 구성한다 (덱 구성 기능 이전 세이브와의 하위 호환)
+const MAX_BATTLE_DECK_SIZE := 15
+var battle_deck: Array = []
 
 # --- 엔딩 도감(영구 기록) ---
 # 지금까지 도달한 엔딩 id 모음. 슬롯 세이브와 성격이 다른 "계정 단위 영구 기록"이라
@@ -212,6 +221,9 @@ func reset_progress() -> void:
 	# 잠금해제 목록은 비우는 게 아니라 기본 제공 6종으로 되돌린다 (새 게임도 기본 카드는 갖고 시작).
 	# skill_points는 DEFAULT_FLAGS에 있어 위 플래그 루프에서 이미 0으로 돌아갔다
 	unlocked_cards = CardLibrary.DEFAULT_UNLOCKED.duplicate()
+	# 덱은 비워서 "아직 안 건드림" 상태로 되돌린다 (StarterDeck이 다시 자동 구성하게 됨)
+	battle_deck.clear()
+	battle_deck_changed.emit()
 	# seen_endings(엔딩 도감)는 의도적으로 건드리지 않는다 — 새 게임을 시작해도 유지되는 영구 기록
 
 
@@ -554,6 +566,66 @@ func restore_unlocked_cards(data: Array) -> void:
 		var id := String(card_id)
 		if CardLibrary.CARD_PATHS.has(id) and not unlocked_cards.has(id):
 			unlocked_cards.append(id)
+
+
+# ── 전투 덱 구성 ────────────────────────────────────────────────────────────
+# battle_deck은 "카드 id를 장 수만큼 늘어놓은 배열"이다. {id: 개수} 딕셔너리로 둘 수도 있었지만,
+# 배열이면 그대로 순회해 덱을 만들 수 있어(StarterDeck.build) 변환 단계가 없고, 나중에 순서가
+# 의미를 갖게 되더라도 구조를 바꿀 필요가 없다
+
+func get_deck_size() -> int:
+	return battle_deck.size()
+
+
+# 덱에 들어 있는 해당 카드의 장 수
+func get_deck_card_count(card_id: String) -> int:
+	return battle_deck.count(card_id)
+
+
+func get_deck_remaining() -> int:
+	return MAX_BATTLE_DECK_SIZE - battle_deck.size()
+
+
+# 덱에 카드를 한 장 넣는다. 한도를 넘거나 아직 잠금해제하지 않은 카드면 실패(false)
+func add_card_to_deck(card_id: String) -> bool:
+	if battle_deck.size() >= MAX_BATTLE_DECK_SIZE:
+		return false
+	if not is_card_unlocked(card_id):
+		return false
+	battle_deck.append(card_id)
+	battle_deck_changed.emit()
+	return true
+
+
+# 덱에서 카드를 한 장 뺀다 (여러 장이면 하나만). 들어있지 않으면 실패(false)
+func remove_card_from_deck(card_id: String) -> bool:
+	var index := battle_deck.find(card_id)
+	if index < 0:
+		return false
+	battle_deck.remove_at(index)
+	battle_deck_changed.emit()
+	return true
+
+
+func clear_battle_deck() -> void:
+	if battle_deck.is_empty():
+		return
+	battle_deck.clear()
+	battle_deck_changed.emit()
+
+
+# 저장 데이터(문자열 배열)로부터 덱 구성을 복원. 모르는 카드 id나 잠금해제되지 않은 카드는 버리고,
+# 한도를 넘는 분량도 잘라낸다 — 세이브가 손상됐거나 카드가 삭제된 뒤에도 전투가 깨지지 않게 하려는 것.
+# (unlocked_cards가 먼저 복원돼 있어야 하므로 SaveManager에서 그 뒤에 부른다)
+func restore_battle_deck(data: Array) -> void:
+	battle_deck.clear()
+	for card_id in data:
+		if battle_deck.size() >= MAX_BATTLE_DECK_SIZE:
+			break
+		var id := String(card_id)
+		if CardLibrary.CARD_PATHS.has(id) and is_card_unlocked(id):
+			battle_deck.append(id)
+	battle_deck_changed.emit()
 
 
 # ── 엔딩 도감(영구 기록) ────────────────────────────────────────────────────

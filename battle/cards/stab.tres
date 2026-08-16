@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="Card" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://battle/card.gd" id="1_card"]
+
+[resource]
+script = ExtResource("1_card")
+card_name = "찌르기"
+color = 0
+tier = 0
+effect = 0
+value = 3
+mana_cost = 0
+hp_cost = 0
+flavor_text = "빠르고 가벼운 찌르기, 준비 없이 즉각 반응할 수 있다."

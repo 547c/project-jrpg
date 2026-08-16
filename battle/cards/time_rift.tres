@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="Card" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://battle/card.gd" id="1_card"]
+
+[resource]
+script = ExtResource("1_card")
+card_name = "시공균열"
+color = 1
+tier = 2
+effect = 0
+value = 22
+secondary_value = 0
+mana_cost = 12
+hp_cost = 0
+flavor_text = "시간의 틈을 열어 순간을 얼려버린다. 모든 타격이 그 안에 갇혔다가 한꺼번에 풀려난다."

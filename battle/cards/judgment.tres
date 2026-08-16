@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="Card" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://battle/card.gd" id="1_card"]
+
+[resource]
+script = ExtResource("1_card")
+card_name = "천벌"
+color = 1
+tier = 2
+effect = 0
+value = 24
+secondary_value = 0
+mana_cost = 14
+hp_cost = 0
+flavor_text = "하늘의 심판을 빌려와 적을 벌한다. 거스를 수 없는 빛이 모든 것을 꿰뚫는다."

@@ -90,6 +90,23 @@ func register_card_use(card: Card) -> void:
 	_add_gauge(other, -GAUGE_STEP)
 
 
+# 게이지를 지정한 값으로 직접 세팅한다 (누적이 아니라 대입). register_card_use()의 ±25 규칙과
+# 별개로, Card.on_use_set_gauge 같은 "즉시 이만큼 달아오른다" 페널티를 표현하기 위한 통로다.
+# 범위를 벗어난 값은 0~100으로 clamp된다
+func set_gauge(weapon: WeaponType, value: int) -> void:
+	var clamped: int = clampi(value, GAUGE_MIN, GAUGE_MAX)
+	if weapon == WeaponType.SWORD:
+		sword_gauge = clamped
+	else:
+		staff_gauge = clamped
+
+
+# 검/지팡이 양쪽 게이지를 같은 값으로 세팅
+func set_both_gauges(value: int) -> void:
+	set_gauge(WeaponType.SWORD, value)
+	set_gauge(WeaponType.STAFF, value)
+
+
 func _add_gauge(weapon: WeaponType, delta: int) -> void:
 	var clamped: int = clampi(get_gauge(weapon) + delta, GAUGE_MIN, GAUGE_MAX)
 	if weapon == WeaponType.SWORD:

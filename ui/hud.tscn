@@ -6,10 +6,16 @@
 [ext_resource type="Texture2D" path="res://assets/graphics/Pixel Crawler - Free Pack/Entities/Characters/Body_A/Animations/Idle_Base/Idle_Down-Sheet.png" id="4_playersheet"]
 [ext_resource type="PackedScene" path="res://ui/inventory_menu.tscn" id="5_invmenu"]
 [ext_resource type="Script" path="res://ui/compass.gd" id="6_compass"]
+[ext_resource type="PackedScene" path="res://ui/spellbook_menu.tscn" id="7_spellbook"]
+[ext_resource type="Texture2D" path="res://assets/GUI/card_template.png" id="8_cardsheet"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_backpack"]
 atlas = ExtResource("2_medieval")
 region = Rect2(209, 818, 62, 77)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_spellbook_icon"]
+atlas = ExtResource("8_cardsheet")
+region = Rect2(563, 547, 27, 27)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_panel_wood"]
 atlas = ExtResource("2_medieval")
@@ -221,6 +227,31 @@ texture = SubResource("AtlasTexture_backpack")
 expand_mode = 1
 stretch_mode = 5
 
+[node name="SpellbookButton" type="Button" parent="MainHud"]
+texture_filter = 1
+layout_mode = 0
+offset_left = 198.0
+offset_top = 100.0
+offset_right = 240.0
+offset_bottom = 142.0
+theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+text = ""
+
+[node name="Icon" type="TextureRect" parent="MainHud/SpellbookButton"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 6.0
+offset_top = 6.0
+offset_right = -6.0
+offset_bottom = -6.0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_spellbook_icon")
+expand_mode = 1
+stretch_mode = 5
+
 [node name="ObjectiveHud" type="Control" parent="." unique_id=424238753]
 layout_mode = 3
 anchors_preset = 15
@@ -298,3 +329,5 @@ joint_mode = 2
 [node name="QuestLog" parent="." unique_id=1347969478 instance=ExtResource("3_qlog")]
 
 [node name="InventoryMenu" parent="." instance=ExtResource("5_invmenu")]
+
+[node name="SpellbookMenu" parent="." instance=ExtResource("7_spellbook")]

@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="Card" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://battle/card.gd" id="1_card"]
+
+[resource]
+script = ExtResource("1_card")
+card_name = "얼음화살"
+color = 1
+tier = 0
+effect = 0
+value = 4
+mana_cost = 2
+hp_cost = 0
+flavor_text = "차가운 냉기를 압축해 쏘아내는 초급 빙결 마법."

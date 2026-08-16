@@ -115,6 +115,10 @@ func play_card(card: Card) -> bool:
 	if hp_cost > 0:
 		GameState.damage_player(hp_cost)
 	weapon.register_card_use(card)
+	# 게이지 강제 세팅 페널티는 누적(register_card_use) 뒤에 적용해야 한다 — 순서가 반대면
+	# 세팅한 값 위에 ±25가 덮여 카드가 약속한 값과 달라진다
+	if card.on_use_set_gauge > 0:
+		weapon.set_both_gauges(card.on_use_set_gauge)
 
 	var damage_dealt := _apply_card_effect(card)
 

@@ -39,6 +39,7 @@ func save_game(slot: int) -> bool:
 		"affinity": GameState.affinity,
 		"seen_dialogue_nodes": GameState.seen_dialogue_nodes,
 		"unlocked_cards": GameState.unlocked_cards,
+		"battle_deck": GameState.battle_deck,
 		# --- 슬롯 목록 미리보기용 (복원엔 안 쓰임) ---
 		"objective_text": GameState.get_objective_text(),
 		"quest_level": GameState.get_flag("quest_level"),
@@ -73,6 +74,9 @@ func load_game(slot: int) -> bool:
 	# 카드 잠금해제 시스템 이전 세이브에는 이 키가 없다 — 빈 배열을 넘기면
 	# restore_unlocked_cards가 기본 제공 6종으로 채워주므로 구버전 세이브도 그대로 열린다
 	GameState.restore_unlocked_cards(data.get("unlocked_cards", []))
+	# 덱은 잠금해제 목록보다 반드시 뒤에 복원해야 한다 — restore_battle_deck이 "보유한 카드인지"를
+	# 검사해 걸러내기 때문. 덱 구성 이전 세이브에는 이 키가 없고, 그때는 빈 덱 = 자동 구성이 된다
+	GameState.restore_battle_deck(data.get("battle_deck", []))
 
 	var position := _dict_to_vector2(data.get("player_position", {}))
 	SceneManager.ensure_player_exists()

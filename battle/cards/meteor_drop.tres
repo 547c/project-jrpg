@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="Card" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://battle/card.gd" id="1_card"]
+
+[resource]
+script = ExtResource("1_card")
+card_name = "유성낙하"
+color = 0
+tier = 2
+effect = 0
+value = 18
+secondary_value = 0
+mana_cost = 0
+hp_cost = 4
+flavor_text = "하늘 높이 뛰어올라 온몸의 무게를 실어 내리찍는다."

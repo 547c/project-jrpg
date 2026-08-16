@@ -1,0 +1,308 @@
+[gd_scene load_steps=15 format=3]
+
+[ext_resource type="Script" path="res://ui/spellbook_menu.gd" id="1_spellbook"]
+[ext_resource type="Texture2D" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Spellbook & Tabs/Spellbook.png" id="2_book"]
+[ext_resource type="Texture2D" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Background boxes/BGbox_01A.png" id="3_bgbox"]
+[ext_resource type="Texture2D" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Buttons/Button_01A_Normal.png" id="4_btn_normal"]
+[ext_resource type="Texture2D" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Buttons/Button_01A_Selected.png" id="5_btn_hover"]
+[ext_resource type="Texture2D" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Buttons/Button_01A_Pressed.png" id="6_btn_pressed"]
+[ext_resource type="Texture2D" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Buttons/Button_02A_Normal.png" id="7_cbtn_normal"]
+[ext_resource type="Texture2D" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Buttons/Button_02A_Selected.png" id="8_cbtn_hover"]
+[ext_resource type="Texture2D" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Buttons/Button_02A_Pressed.png" id="9_cbtn_pressed"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_popup"]
+texture = ExtResource("3_bgbox")
+texture_margin_left = 30.0
+texture_margin_top = 30.0
+texture_margin_right = 30.0
+texture_margin_bottom = 30.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_btn_normal"]
+texture = ExtResource("4_btn_normal")
+texture_margin_left = 14.0
+texture_margin_top = 12.0
+texture_margin_right = 14.0
+texture_margin_bottom = 12.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_btn_hover"]
+texture = ExtResource("5_btn_hover")
+texture_margin_left = 14.0
+texture_margin_top = 12.0
+texture_margin_right = 14.0
+texture_margin_bottom = 12.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_btn_pressed"]
+texture = ExtResource("6_btn_pressed")
+texture_margin_left = 14.0
+texture_margin_top = 12.0
+texture_margin_right = 14.0
+texture_margin_bottom = 12.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_cbtn_normal"]
+texture = ExtResource("7_cbtn_normal")
+texture_margin_left = 14.0
+texture_margin_top = 12.0
+texture_margin_right = 14.0
+texture_margin_bottom = 12.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_cbtn_hover"]
+texture = ExtResource("8_cbtn_hover")
+texture_margin_left = 14.0
+texture_margin_top = 12.0
+texture_margin_right = 14.0
+texture_margin_bottom = 12.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_cbtn_pressed"]
+texture = ExtResource("9_cbtn_pressed")
+texture_margin_left = 14.0
+texture_margin_top = 12.0
+texture_margin_right = 14.0
+texture_margin_bottom = 12.0
+
+[node name="SpellbookMenu" type="Control"]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_spellbook")
+
+[node name="Dim" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.6)
+
+[node name="Book" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -384.0
+offset_top = -264.0
+offset_right = 384.0
+offset_bottom = 216.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Background" type="TextureRect" parent="Book"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("2_book")
+expand_mode = 1
+stretch_mode = 0
+
+[node name="PageFlip" type="TextureRect" parent="Book"]
+visible = false
+texture_filter = 1
+layout_mode = 0
+offset_top = -48.0
+offset_right = 768.0
+offset_bottom = 480.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 0
+
+[node name="Tabs" type="Control" parent="Book"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="TitleLabel" type="Label" parent="Book"]
+layout_mode = 0
+offset_left = 84.0
+offset_top = 30.0
+offset_right = 348.0
+offset_bottom = 62.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.62, 0.24, 0.16, 1)
+theme_override_font_sizes/font_size = 20
+text = "카드 컬렉션"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="PointsLabel" type="Label" parent="Book"]
+layout_mode = 0
+offset_left = 423.0
+offset_top = 30.0
+offset_right = 687.0
+offset_bottom = 62.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.42, 0.26, 0.16, 1)
+theme_override_font_sizes/font_size = 16
+text = "스킬포인트: 0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Entries" type="Control" parent="Book"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="HintLabel" type="Label" parent="Book"]
+visible = false
+layout_mode = 0
+offset_left = 423.0
+offset_top = 376.0
+offset_right = 568.0
+offset_bottom = 404.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.98, 0.9, 0.82, 1)
+theme_override_colors/font_outline_color = Color(0.25, 0.12, 0.06, 0.85)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+text = ""
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="PrevButton" type="Button" parent="Book"]
+texture_filter = 1
+layout_mode = 0
+offset_left = 96.0
+offset_top = 374.0
+offset_right = 192.0
+offset_bottom = 406.0
+theme_override_colors/font_color = Color(0.35, 0.18, 0.1, 1)
+theme_override_colors/font_disabled_color = Color(0.55, 0.44, 0.38, 0.55)
+theme_override_font_sizes/font_size = 14
+theme_override_styles/normal = SubResource("StyleBoxTexture_btn_normal")
+theme_override_styles/hover = SubResource("StyleBoxTexture_btn_hover")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_btn_pressed")
+theme_override_styles/disabled = SubResource("StyleBoxTexture_btn_normal")
+text = "< 이전"
+
+[node name="NextButton" type="Button" parent="Book"]
+texture_filter = 1
+layout_mode = 0
+offset_left = 576.0
+offset_top = 374.0
+offset_right = 672.0
+offset_bottom = 406.0
+theme_override_colors/font_color = Color(0.35, 0.18, 0.1, 1)
+theme_override_colors/font_disabled_color = Color(0.55, 0.44, 0.38, 0.55)
+theme_override_font_sizes/font_size = 14
+theme_override_styles/normal = SubResource("StyleBoxTexture_btn_normal")
+theme_override_styles/hover = SubResource("StyleBoxTexture_btn_hover")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_btn_pressed")
+theme_override_styles/disabled = SubResource("StyleBoxTexture_btn_normal")
+text = "다음 >"
+
+[node name="CloseButton" type="Button" parent="."]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -72.0
+offset_top = -70.0
+offset_right = 72.0
+offset_bottom = -26.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_colors/font_color = Color(0.35, 0.18, 0.1, 1)
+theme_override_font_sizes/font_size = 16
+theme_override_styles/normal = SubResource("StyleBoxTexture_btn_normal")
+theme_override_styles/hover = SubResource("StyleBoxTexture_btn_hover")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_btn_pressed")
+text = "닫기"
+
+[node name="ConfirmPopup" type="Control" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Dim" type="ColorRect" parent="ConfirmPopup"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.5)
+
+[node name="Panel" type="Panel" parent="ConfirmPopup"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -220.0
+offset_top = -104.0
+offset_right = 220.0
+offset_bottom = 104.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxTexture_popup")
+
+[node name="MessageLabel" type="Label" parent="ConfirmPopup/Panel"]
+layout_mode = 0
+offset_left = 34.0
+offset_top = 34.0
+offset_right = 406.0
+offset_bottom = 130.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.35, 0.18, 0.1, 1)
+theme_override_font_sizes/font_size = 15
+text = ""
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="ConfirmButton" type="Button" parent="ConfirmPopup/Panel"]
+texture_filter = 1
+layout_mode = 0
+offset_left = 52.0
+offset_top = 142.0
+offset_right = 196.0
+offset_bottom = 182.0
+theme_override_colors/font_color = Color(1, 0.95, 0.88, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 0.95, 1)
+theme_override_font_sizes/font_size = 15
+theme_override_styles/normal = SubResource("StyleBoxTexture_cbtn_normal")
+theme_override_styles/hover = SubResource("StyleBoxTexture_cbtn_hover")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_cbtn_pressed")
+text = "잠금해제"
+
+[node name="CancelButton" type="Button" parent="ConfirmPopup/Panel"]
+texture_filter = 1
+layout_mode = 0
+offset_left = 244.0
+offset_top = 142.0
+offset_right = 388.0
+offset_bottom = 182.0
+theme_override_colors/font_color = Color(0.35, 0.18, 0.1, 1)
+theme_override_font_sizes/font_size = 15
+theme_override_styles/normal = SubResource("StyleBoxTexture_btn_normal")
+theme_override_styles/hover = SubResource("StyleBoxTexture_btn_hover")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_btn_pressed")
+text = "취소"
