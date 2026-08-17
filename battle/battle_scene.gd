@@ -436,7 +436,9 @@ const JUDGMENT_IMPACT_SFX := [
 const HAND_BUTTON_COUNT := 5
 
 # 턴 진행 상태: ACTION=플레이어 입력 대기, BUSY=연출 재생 중(입력 무시), OVER=전투 종료
-enum Mode { ACTION, BUSY, OVER }
+# ACTION: 평소 조작 가능 / BUSY: 연출 재생 중 / OVER: 승패 확정 /
+# TARGETING: 피해 카드를 고른 뒤 "누구를 때릴지" 클릭을 기다리는 중 (몬스터가 2마리 이상일 때만 들어간다)
+enum Mode { ACTION, BUSY, OVER, TARGETING }
 
 # ── 무기 과열 게이지 / 적 저항 / 카드 배경·프레임·아이콘용 에셋 (조사 리포트에서 확정한 매핑) ──
 # GUI/06.png의 대각선 게이지 스프라이트 시트: 색상 행마다 5프레임(0/25/50/75/100%)이 가로로 나열되어
@@ -495,6 +497,25 @@ const MONSTER_CARD_GAP := 6.0
 const MONSTER_CARD_MARGIN := 24.0 # 카드 열과 몬스터 스프라이트 사이 여백
 # 쓰러진 몬스터의 HUD 카드에 씌우는 색조 (지우지 않고 흐리게 남겨 자리 번호가 계속 맞게)
 const DEFEATED_CARD_MODULATE := Color(0.45, 0.45, 0.5, 0.75)
+
+# ── 타겟 선택 표시 ───────────────────────────────────────────────────────────
+# 발밑 원(선택 가능 표시)과 머리 위 화살표. 전용 아이콘 에셋이 없어 그림자(_setup_shadow)와 같은
+# 방식으로 폴리곤을 직접 만들어 쓴다 — 에셋이 생기면 _build_target_marker()만 갈아끼우면 된다
+const TARGET_RING_RX := 46.0
+const TARGET_RING_RY := 15.0
+const TARGET_RING_FILL := Color(1.0, 0.85, 0.25, 0.22)
+const TARGET_RING_LINE := Color(1.0, 0.88, 0.35, 0.95)
+const TARGET_RING_LINE_WIDTH := 3.0
+const TARGET_ARROW_COLOR := Color(1.0, 0.88, 0.35, 0.95)
+const TARGET_ARROW_HALF_WIDTH := 14.0
+const TARGET_ARROW_HEIGHT := 20.0
+# 화살표 아래 끝을 몬스터 그림 꼭대기에서 이만큼 위에 둔다. 저항 배지(RESIST_BADGE_GAP + 아이콘 절반)
+# 보다 더 위로 올려, 둘이 겹쳐 읽기 어려워지지 않게 한 값
+const TARGET_ARROW_GAP := 38.0
+const TARGET_ARROW_BOB := 6.0 # 화살표가 위아래로 까딱이는 폭
+const TARGET_ARROW_BOB_DURATION := 0.45
+const TARGET_RING_PULSE_DURATION := 0.6
+const TARGET_RING_PULSE_ALPHA := 0.45 # 맥동할 때 원 테두리가 옅어지는 정도
 
 # 카드 프레임/뒷면 전용 시트(assets/GUI/card_template.png). 칸 크기 68x109, 색상별 앞면(테두리)·
 # 뒷면(다이아몬드 문양) 좌표를 직접 픽셀 단위로 조사해 확정한 값이다 (주황 칸은 이번엔 안 씀).
@@ -621,6 +642,15 @@ var _monster_art_tops: Array[float] = []
 # 매니저가 "쓰러졌다"고 알려준 뒤 아직 사망 연출을 재생하지 않은 자리 번호들.
 # 시그널은 매니저 안에서 동기적으로 날아오는데 연출은 카드 연출이 끝난 뒤에 이어야 해서 버퍼에 모은다
 var _pending_deaths: Array[int] = []
+
+# 타겟 선택 대기 중인 카드와, 그때 각 몬스터 밑/위에 띄우는 표시 노드들.
+# 표시는 Actors의 자식이라 화면 흔들림에도 몬스터와 함께 따라간다
+var _pending_target_card: Card = null
+var _target_markers: Array[Node2D] = []
+# 맥동/까딱임 트윈. 노드를 지우기 전에 반드시 먼저 죽여야 한다 —
+# 루프 트윈이 살아있는 채로 대상 노드를 free하면 "Infinite loop detected" 오류가 난다
+# (_clear_impact_marker에서 한 번 겪은 문제라 같은 순서를 지킨다)
+var _target_marker_tweens: Array[Tween] = []
 
 var _mode: int = Mode.BUSY
 
@@ -989,33 +1019,237 @@ func _on_player_defeated() -> void:
 
 # ── 플레이어 입력 ──────────────────────────────────────────────────────────
 
-# 손패 버튼 클릭: 해당 슬롯의 카드를 낸다 (낼 수 없는 카드면 버튼이 이미 비활성이라 눌리지 않음)
+# 손패 버튼 클릭: 해당 슬롯의 카드를 낸다 (낼 수 없는 카드면 버튼이 이미 비활성이라 눌리지 않음).
+# 대상을 골라야 하는 카드면 바로 내지 않고 타겟 선택 모드로 들어간다.
+# 타겟 선택 중에 다른 카드를 눌러도 여기로 들어오는데, 그때는 고른 카드가 새 카드로 갈아끼워진다
 func _on_card_pressed(index: int) -> void:
-	if _mode != Mode.ACTION or _manager == null:
+	if not _is_interactive() or _manager == null:
 		return
 	if index >= _manager.hand.cards.size():
 		return
 	var card: Card = _manager.hand.cards[index]
 	if not _manager.can_play_card(card):
 		return
+
+	if _needs_target(card):
+		_begin_targeting(card)
+		return
+
+	# 대상이 필요 없는 카드(회복/방어/피하기/반격 등)는 고르는 절차 없이 즉시 발동한다
+	_cancel_targeting()
 	_play_card_flow(card)
+
+
+# 조작을 받을 수 있는 상태인지 (평소 + 타겟 선택 중). 연출 중(BUSY)이거나 전투가 끝났으면(OVER) 아니다
+func _is_interactive() -> bool:
+	return _mode == Mode.ACTION or _mode == Mode.TARGETING
+
+
+# 이 카드가 "누구를 때릴지" 고를 필요가 있는지.
+#
+# 기준은 카드 색깔이 아니라 효과다 — 대상이 갈리는 건 "적에게 피해를 주는가"이지 물리/마법 여부가
+# 아니기 때문이다. 회복/마나회복/체력마나회복은 자기 자신에게, 방어/피하기/반격은 "다음 적 공격"에
+# 거는 상태라 어느 것도 고를 대상이 없다. 반격은 되받아칠 상대가 공격해온 몬스터로 이미 정해져 있다
+# (BattleTurnManager._resolve_single_attack).
+#
+# 살아있는 몬스터가 하나뿐이면 고를 여지가 없으므로 선택 UI를 건너뛴다 — 1:1 전투의 조작감이
+# 다인전 도입 전과 완전히 똑같이 유지된다
+func _needs_target(card: Card) -> bool:
+	if card.effect != Card.EffectType.DAMAGE:
+		return false
+	return _manager != null and _manager.alive_monsters().size() > 1
+
+
+# ── 타겟 선택 ──────────────────────────────────────────────────────────────
+
+# 카드를 손에 든 채 "누구를 때릴지" 고르는 상태로 들어간다. 이미 다른 카드로 고르는 중이었다면
+# 그 선택은 버리고 새 카드 기준으로 다시 시작한다
+func _begin_targeting(card: Card) -> void:
+	_clear_target_markers()
+	_pending_target_card = card
+	_mode = Mode.TARGETING
+
+	for monster in _manager.alive_monsters():
+		_target_markers.append(_build_target_marker(monster.index))
+
+	_message.text = "%s — 대상을 선택하세요.\n(빈 곳 클릭 · 우클릭 · ESC로 취소)" % card.card_name
+	_refresh_hand_buttons()
+
+
+# 타겟 선택을 물린다. 카드는 아직 손에 남아 있으므로 잃는 것은 없다
+func _cancel_targeting() -> void:
+	if _mode != Mode.TARGETING:
+		return
+	_clear_target_markers()
+	_pending_target_card = null
+	_mode = Mode.ACTION
+	_show_turn_message()
+	_refresh_hand_buttons()
+
+
+# 고른 몬스터에게 대기 중이던 카드를 낸다
+func _confirm_target(index: int) -> void:
+	var card := _pending_target_card
+	_clear_target_markers()
+	_pending_target_card = null
+	_mode = Mode.ACTION # _play_card_flow가 곧바로 BUSY로 바꾼다
+	if card != null:
+		_play_card_flow(card, index)
+
+
+# 타겟 선택 중 마우스/키보드 입력 처리.
+#
+# [입력을 소비하는 기준] 몬스터를 실제로 골랐거나 취소 키를 눌렀을 때만 소비한다. 빈 곳 좌클릭은
+# 취소만 하고 소비하지 않는데, 그래야 "손패의 다른 카드를 클릭"이 한 번의 클릭으로 처리된다 —
+# _input이 먼저 돌아 선택을 취소하고, 이어서 그 클릭이 카드 버튼까지 전달돼 새 카드로 다시 고르게 된다.
+# (Godot 입력 순서: _input → Control GUI → _unhandled_input)
+func _input(event: InputEvent) -> void:
+	if _mode != Mode.TARGETING:
+		return
+
+	if event.is_action_pressed("ui_cancel"):
+		_cancel_targeting()
+		get_viewport().set_input_as_handled()
+		return
+
+	if not (event is InputEventMouseButton) or not event.pressed:
+		return
+
+	if event.button_index == MOUSE_BUTTON_RIGHT:
+		_cancel_targeting()
+		get_viewport().set_input_as_handled()
+		return
+
+	if event.button_index != MOUSE_BUTTON_LEFT:
+		return
+
+	# 몬스터들은 CanvasLayer(View) 안의 Actors 밑에 있으므로, 뷰포트 좌표를 그대로 비교하면 어긋난다.
+	# get_global_transform_with_canvas()가 캔버스 레이어 변환까지 포함한 "Actors 로컬 → 화면" 변환이라,
+	# 그 역변환으로 클릭 지점을 Actors 로컬 좌표로 되돌린다.
+	#
+	# 커서 위치(get_local_mouse_position)가 아니라 "이 이벤트가 들고 온 좌표"를 쓰는 게 중요하다 —
+	# 둘은 보통 같지만, 이벤트가 실제 커서와 따로 전달되는 경우(입력 주입/터치/리매핑)에는 갈라져서
+	# 엉뚱한 곳을 짚게 된다
+	var local: Vector2 = _actors.get_global_transform_with_canvas().affine_inverse() * event.position
+	var picked := _monster_at_point(local)
+	if picked >= 0:
+		_confirm_target(picked)
+		get_viewport().set_input_as_handled()
+		return
+
+	_cancel_targeting() # 빈 곳을 눌렀으면 취소만 하고 클릭은 흘려보낸다(위 주석 참고)
+
+
+# local_point가 어느 몬스터의 선택 영역 안에 있는지 (없으면 -1).
+# 영역은 스프라이트만이 아니라 머리 위 화살표와 발밑 원까지 감싸므로, 표시된 것 아무데나 눌러도 잡힌다
+func _monster_at_point(local_point: Vector2) -> int:
+	if _manager == null:
+		return -1
+	for monster in _manager.alive_monsters():
+		if _target_hit_rect(monster.index).has_point(local_point):
+			return monster.index
+	return -1
+
+
+func _target_hit_rect(index: int) -> Rect2:
+	var sprite := _monster_sprite_at(index)
+	var frame_size: float = _variants[index].get("idle_frame_size", BattleData.MOB_IDLE_FRAME_SIZE) if index < _variants.size() else BattleData.MOB_IDLE_FRAME_SIZE
+	var half_width := maxf(frame_size * MONSTER_SCALE * 0.5, TARGET_RING_RX)
+	var art_top := sprite.position.y - frame_size * MONSTER_SCALE * 0.5 + _monster_art_tops[index] * MONSTER_SCALE
+	var top := art_top - TARGET_ARROW_GAP - TARGET_ARROW_HEIGHT
+	var bottom := sprite.position.y + frame_size * MONSTER_SCALE * 0.5 - 4.0 + TARGET_RING_RY
+	return Rect2(sprite.position.x - half_width, top, half_width * 2.0, bottom - top)
+
+
+# 몬스터 하나의 선택 표시(발밑 원 + 머리 위 화살표)를 만들어 Actors에 붙이고, 맥동/까딱임을 걸어둔다
+func _build_target_marker(index: int) -> Node2D:
+	var sprite := _monster_sprite_at(index)
+	var frame_size: float = _variants[index].get("idle_frame_size", BattleData.MOB_IDLE_FRAME_SIZE) if index < _variants.size() else BattleData.MOB_IDLE_FRAME_SIZE
+
+	var root := Node2D.new()
+	root.z_index = 1 # 몬스터보다 앞에 그려 원이 발에 가리지 않게
+	_actors.add_child(root)
+
+	# 발밑 원: 반투명 채움 + 또렷한 테두리 (그림자와 같은 타원 계산)
+	var foot := sprite.position + Vector2(0, frame_size * MONSTER_SCALE * 0.5 - 4.0)
+	var points := PackedVector2Array()
+	for i in range(24):
+		var a := TAU * i / 24.0
+		points.append(Vector2(cos(a) * TARGET_RING_RX, sin(a) * TARGET_RING_RY))
+
+	var fill := Polygon2D.new()
+	fill.polygon = points
+	fill.color = TARGET_RING_FILL
+	fill.position = foot
+	root.add_child(fill)
+
+	var outline := Line2D.new()
+	outline.points = points
+	outline.closed = true
+	outline.width = TARGET_RING_LINE_WIDTH
+	outline.default_color = TARGET_RING_LINE
+	outline.position = foot
+	root.add_child(outline)
+
+	# 머리 위 화살표 (몬스터를 가리키도록 아래를 향한 삼각형)
+	var art_top := sprite.position.y - frame_size * MONSTER_SCALE * 0.5 + _monster_art_tops[index] * MONSTER_SCALE
+	var arrow := Polygon2D.new()
+	arrow.polygon = PackedVector2Array([
+		Vector2(-TARGET_ARROW_HALF_WIDTH, -TARGET_ARROW_HEIGHT),
+		Vector2(TARGET_ARROW_HALF_WIDTH, -TARGET_ARROW_HEIGHT),
+		Vector2(0, 0),
+	])
+	arrow.color = TARGET_ARROW_COLOR
+	arrow.position = Vector2(sprite.position.x, art_top - TARGET_ARROW_GAP)
+	root.add_child(arrow)
+
+	var ring_tween := create_tween().set_loops()
+	ring_tween.tween_property(outline, "modulate:a", TARGET_RING_PULSE_ALPHA, TARGET_RING_PULSE_DURATION)
+	ring_tween.tween_property(outline, "modulate:a", 1.0, TARGET_RING_PULSE_DURATION)
+	_target_marker_tweens.append(ring_tween)
+
+	var arrow_tween := create_tween().set_loops()
+	var arrow_base := arrow.position
+	arrow_tween.tween_property(arrow, "position", arrow_base + Vector2(0, TARGET_ARROW_BOB), TARGET_ARROW_BOB_DURATION)
+	arrow_tween.tween_property(arrow, "position", arrow_base, TARGET_ARROW_BOB_DURATION)
+	_target_marker_tweens.append(arrow_tween)
+
+	return root
+
+
+# 선택 표시를 전부 걷어낸다. 트윈을 먼저 죽이고 나서 노드를 지우는 순서를 반드시 지킬 것
+# (루프 트윈이 살아있는 대상을 free하면 Godot이 "Infinite loop detected"로 멈춘다)
+func _clear_target_markers() -> void:
+	for tween in _target_marker_tweens:
+		if tween != null and tween.is_valid():
+			tween.kill()
+	_target_marker_tweens.clear()
+
+	for marker in _target_markers:
+		if is_instance_valid(marker):
+			marker.queue_free()
+	_target_markers.clear()
 
 
 # 카드 한 장을 내고 그 결과를 연출로 보여준다. 규칙 적용은 전부 매니저가 이미 끝낸 상태이므로
 # 여기서는 HP/마나를 다시 건드리지 않고 화면만 따라간다
-func _play_card_flow(card: Card) -> void:
+# target_index는 플레이어가 고른 대상의 자리 번호. -1이면 자동으로 살아있는 첫 몬스터를 고른다
+# (대상을 고를 필요가 없는 카드이거나, 몬스터가 한 마리뿐이라 선택 UI를 건너뛴 경우)
+func _play_card_flow(card: Card, target_index: int = -1) -> void:
 	_mode = Mode.BUSY
 	_set_inputs_enabled(false)
 
 	var hp_before: int = GameState.get_flag("player_hp")
 	var mana_before: int = GameState.get_flag("player_mana")
-	# [임시 자동 타겟팅] 카드는 살아있는 첫 몬스터를 때린다. 진짜 타겟팅 UI가 붙는 다음 단계에서는
-	# 플레이어가 고른 자리 번호가 여기로 들어온다. play_card()에 넘기는 값과 연출이 가리키는 대상이
-	# 반드시 같아야 하므로, 매니저를 부르기 "전에" 한 번 정해 양쪽에 같은 값을 쓴다
-	var target := _manager.get_auto_target()
-	var target_index := target.index if target != null else 0
+	# play_card()에 넘기는 값과 연출이 가리키는 대상이 반드시 같아야 하므로,
+	# 매니저를 부르기 "전에" 대상을 확정해 양쪽에 같은 값을 쓴다
+	var target := _manager.get_monster(target_index)
+	if target == null or not target.is_alive():
+		target = _manager.get_auto_target()
+	var resolved_index := target.index if target != null else 0
 	var monster_hp_before: int = target.hp if target != null else 0
 	_last_card_damage = 0
+	target_index = resolved_index
 
 	if not _manager.play_card(card, target_index):
 		_mode = Mode.ACTION
@@ -1301,8 +1535,11 @@ func _launch_projectile(from: Vector2, to: Vector2, key: String, scale_mult: flo
 
 # [무기 전환]: 턴당 3회 제한은 매니저(WeaponState)가 관리하므로 여기서는 요청만 하고 결과를 표시한다
 func _on_weapon_pressed() -> void:
-	if _mode != Mode.ACTION or _manager == null:
+	if not _is_interactive() or _manager == null:
 		return
+	# 카드 말고 다른 행동을 하면 고르던 대상은 물린다 — 무기를 바꾸면 어떤 카드를 낼지 판단 자체가
+	# 달라지므로, 고른 카드를 그대로 들고 있는 쪽이 오히려 헷갈린다
+	_cancel_targeting()
 	var next_weapon = WeaponState.WeaponType.STAFF if _manager.weapon.equipped == WeaponState.WeaponType.SWORD else WeaponState.WeaponType.SWORD
 	if _manager.switch_weapon(next_weapon):
 		_message.text = "무기를 %s(으)로 바꿨다." % _weapon_name(next_weapon)
@@ -1313,8 +1550,9 @@ func _on_weapon_pressed() -> void:
 
 # [턴 종료]: 적이 반격하고 다음 턴이 열린다 (매니저가 처리). 여기서는 그 결과를 연출로 보여준다
 func _on_end_turn_pressed() -> void:
-	if _mode != Mode.ACTION or _manager == null:
+	if not _is_interactive() or _manager == null:
 		return
+	_cancel_targeting() # 고르던 대상이 있으면 물리고 턴을 넘긴다
 	_end_turn_flow()
 
 
@@ -1424,8 +1662,9 @@ func _monster_display_name(index: int) -> String:
 # 여기서는 min(무작위값, 보유 골드)로 미리 clamp해 spend_gold()가 항상 성공하도록 만든다 —
 # 결과적으로 마나(spend_mana)의 "0 밑으로 안 내려가고 있는 만큼만 깎는" 방식과 같은 철학이다.
 func _on_flee_pressed() -> void:
-	if _mode != Mode.ACTION or _flee_button.disabled:
+	if not _is_interactive() or _flee_button.disabled:
 		return
+	_cancel_targeting()
 	_mode = Mode.BUSY
 	_set_inputs_enabled(false)
 
@@ -1532,7 +1771,8 @@ func _populate_card_slot(i: int, cards: Array) -> void:
 		_card_hp_badges[i].texture = _card_hp_badge_texture
 		_card_hp_labels[i].text = str(hp_cost)
 
-	btn.disabled = not playable or _mode != Mode.ACTION
+	# 타겟 선택 중에도 손패는 눌릴 수 있어야 한다 — 다른 카드를 누르면 그 카드로 다시 고르게 되므로
+	btn.disabled = not playable or not _is_interactive()
 	_card_wrappers[i].modulate = CARD_ENABLED_MODULATE if playable else CARD_DISABLED_MODULATE
 	if not playable:
 		_reset_card_hover(i) # 커서를 올려둔 채 카드가 과열/마나부족으로 바뀌면 확대를 풀어준다
@@ -1634,7 +1874,7 @@ func _flip_card_in(index: int) -> Tween:
 # 확대하지 않는다 — 다만 "벗어남"은 어떤 상태에서도 처리해, 확대된 채 커서만 빠져나가 카드가
 # 커진 상태로 굳는 일이 없게 한다 (호버 중에 카드가 비활성으로 바뀌는 경우가 실제로 있다)
 func _on_card_hover(index: int, hovering: bool) -> void:
-	if hovering and (_hand_buttons[index].disabled or _mode != Mode.ACTION):
+	if hovering and (_hand_buttons[index].disabled or not _is_interactive()):
 		return
 	_tween_card_hover(index, hovering)
 

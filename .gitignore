@@ -6,3 +6,7 @@
 assets/GUI/
 assets/graphics/Pixel Crawler - Desert/
 assets/vfx/
+
+# README용 스크린샷은 문서일 뿐 게임이 쓰지 않는데, 프로젝트 폴더 안에 있다는 이유로
+# Godot가 임포트 메타데이터를 자동 생성한다 — 커밋할 이유가 없어 제외
+docs/screenshots/*.import
