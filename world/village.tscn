@@ -34,7 +34,7 @@
 [ext_resource type="Texture2D" uid="uid://df0vth5va25ja" path="res://assets/graphics/Pixel Crawler - Free Pack/Environment/Props/Static/Trees/Model_03/Size_05.png" id="22_angcc"]
 [ext_resource type="Texture2D" uid="uid://b74evivivr8xs" path="res://assets/graphics/Pixel Crawler - Free Pack/Environment/Props/Static/Vegetation.png" id="24_mi1im"]
 [ext_resource type="PackedScene" path="res://world/campfire.tscn" id="25_campfire"]
-[ext_resource type="PackedScene" path="res://world/treasure_chest.tscn" id="26_chest"]
+[ext_resource type="PackedScene" uid="uid://d08fypp7ehein" path="res://world/treasure_chest.tscn" id="26_chest"]
 [ext_resource type="Texture2D" uid="uid://dq5qfss4f4x12" path="res://assets/graphics/Pixel Crawler - Free Pack/MockUps/Tavern.png" id="26_yrodc"]
 [ext_resource type="PackedScene" path="res://world/locked_door.tscn" id="27_lockeddoor"]
 [ext_resource type="Script" uid="uid://cyh28ehqlcgjt" path="res://npc/kamil_npc.gd" id="28_kamil"]
