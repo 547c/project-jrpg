@@ -307,7 +307,11 @@ func _enter_wander_state() -> void:
 
 
 # 플레이어가 닿으면(전투/리젠/전환 중이 아닐 때만) 현재 좌표를 복귀 지점으로 삼아 전용 전투 씬으로 진입.
-# 필드에서 본 것과 같은 변종이 전투 씬에도 그대로 이어지도록 _variant를 함께 넘긴다
+#
+# 이 순간에 이번 전투의 마리 수(1~3, 보스는 항상 1)가 정해진다 — 필드에는 개체 하나만 배회하지만
+# 전투에서는 "무리로 덤벼든다"는 설정이라, 필드 스폰과 무관하게 진입 시점에 굴린다.
+# 필드에서 본 그 모습이 전투 첫 번째 자리에 그대로 이어지도록 _variant를 첫 변종으로 넘기고,
+# 나머지 마리의 변종은 BattleData가 새로 뽑는다
 func _on_body_entered(body: Node2D) -> void:
 	if _triggered or _regenerating:
 		return
@@ -324,7 +328,8 @@ func _on_body_entered(body: Node2D) -> void:
 	if current != null:
 		return_path = current.scene_file_path
 
-	SceneManager.enter_battle(monster_type, _variant, encounter_id, return_path, SceneManager.get_player_position())
+	var variants := BattleData.build_group_variants(monster_type, _variant)
+	SceneManager.enter_battle(monster_type, variants, encounter_id, return_path, SceneManager.get_player_position())
 
 
 # 전투 승리 후 복귀 시 SceneManager가 호출. 이 몬스터를 리젠 상태(숨김 → 일정 시간 후 재등장)로 전환

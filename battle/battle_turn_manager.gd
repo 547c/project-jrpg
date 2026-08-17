@@ -10,29 +10,43 @@ extends RefCounted
 # [상태 보관 위치] 기존 battle_scene.gd의 방식을 그대로 따른다:
 # - 플레이어 HP/마나: GameState.flags ("player_hp" 등). 전투 밖에서도 유지되고 세이브에 포함되므로
 #   여기서 따로 들고 있지 않고 GameState 헬퍼(damage_player/heal_player_partial 등)로만 조작한다.
-# - 몬스터 HP: 이 매니저의 로컬 변수(monster_hp). battle_scene.gd도 _monster_hp를 로컬로 들고 있었다 —
-#   전투가 끝나면 사라지는 값이라 GameState에 넣을 이유가 없다.
+# - 몬스터 상태: 이 매니저가 들고 있는 monsters 배열(MonsterState). 전투가 끝나면 사라지는 값이라
+#   GameState에 넣을 이유가 없다. 다인전 도입 전에는 monster_hp라는 단일 int였다.
 
 signal turn_started(turn_number: int)
 signal card_played(card: Card, damage_dealt: int) # 데미지 카드가 아니면 damage_dealt는 0
 signal weapon_switched(weapon: WeaponState.WeaponType)
-signal enemy_turn_resolved(damage_taken: int, dodged: bool, counter_damage: int) # 반격이 없었으면 counter_damage는 0
+# 몬스터 한 마리가 플레이어를 때린 결과. 다인전에서는 살아있는 마리 수만큼 순차로 발생한다
+# (예전 단일 전투의 enemy_turn_resolved를 마리별로 쪼갠 것 — attacker_index가 누가 때렸는지 알려준다)
+signal enemy_attack_resolved(attacker_index: int, damage_taken: int, dodged: bool, counter_damage: int)
+signal monster_defeated(index: int) # 마리 하나가 쓰러짐 (전투는 아직 안 끝났을 수 있음)
 signal player_defeated
-signal enemy_defeated
+signal enemy_defeated # 살아있는 몬스터가 하나도 남지 않음 = 전투 승리
 
 const HAND_SIZE := 5
 
 var deck: Deck
 var hand: Hand
 var weapon: WeaponState
-var resistance: EnemyResistance
 
-var monster_type: String = ""
-var monster_data: Dictionary = {}
-var monster_hp: int = 0
+# 이번 전투에 등장한 몬스터들 (1~3마리, 전부 같은 종류). 자리 순서가 곧 MonsterState.index다
+var monsters: Array[MonsterState] = []
+
+var monster_type: String = "" # 그룹 전체가 같은 종류라 스칼라로 둔다
+var monster_data: Dictionary = {} # 그 종류의 스탯 표 (마리별 값은 MonsterState.monster_data로 접근)
 
 var turn_number: int = 0
 var battle_over: bool = false
+
+
+# [임시 — 다음 단계에서 제거] 기존 VFX 컷신 5종(삼중나선/신속/유성낙하/시공균열/천벌)이 아직
+# 단일 몬스터 가정으로 이 값을 읽는다. 자동 타겟(살아있는 첫 마리)의 HP를 돌려주므로 그 컷신들은
+# 지금도 "첫 번째 몬스터를 때린다"는 전제로 정확히 동작한다. 진짜 타겟팅 UI가 붙는 다음 단계에서
+# 컷신들이 대상을 인자로 받게 바뀌면 이 프로퍼티는 지워야 한다
+var monster_hp: int:
+	get:
+		var target := get_auto_target()
+		return target.hp if target != null else 0
 
 # 방어/피하기 카드가 만드는 "다음 적 턴 한정" 임시 상태. 적 턴을 해결하는 즉시 소모되고 0/false로 돌아간다.
 # (스펙에 세부 규칙이 없어 아래처럼 설계했다 — 근거는 _resolve_enemy_turn() 주석 참고)
@@ -41,17 +55,31 @@ var _pending_dodge: bool = false
 var _pending_counter: int = 0 # 반격(COUNTER) 카드로 예약해둔 반격 피해량. 0이면 반격 대기 아님
 
 
-# monster_type_은 BattleData.MONSTERS의 키("ORC" 등), cards는 이번 전투에 쓸 카드 목록.
-# Deck이 생성 시 알아서 섞으므로 여기서 따로 셔플하지 않는다
-func _init(monster_type_: String, cards: Array[Card]) -> void:
+# monster_type_은 BattleData.MONSTERS의 키("ORC" 등), variants는 등장할 마리 수만큼의 시각 변종
+# (BattleData.build_group_variants가 만든 것 — 배열 길이가 곧 마리 수다), cards는 이번 전투에 쓸 카드 목록.
+# Deck이 생성 시 알아서 섞으므로 여기서 따로 셔플하지 않는다.
+#
+# variants가 비어 있으면 변종 하나를 즉석에서 뽑아 1마리 전투로 만든다 — 헤드리스 테스트처럼
+# 필드를 거치지 않고 매니저만 직접 만드는 호출부가 마리 수를 신경 쓰지 않아도 되게 하기 위함
+func _init(monster_type_: String, variants: Array, cards: Array[Card]) -> void:
 	monster_type = monster_type_
 	monster_data = BattleData.MONSTERS[monster_type_]
-	monster_hp = monster_data["max_hp"]
+
+	var group: Array = variants
+	if group.is_empty():
+		group = [BattleData.pick_variant(monster_type_)]
+
+	for i in range(group.size()):
+		monsters.append(MonsterState.new(i, monster_type_, group[i]))
+
+	# 같은 종류가 여러 마리면 이름에 번호를 붙여 메시지에서 구분되게 한다 (한 마리면 그냥 "오크")
+	if monsters.size() > 1:
+		for monster in monsters:
+			monster.display_name = "%s %d" % [monster.monster_data["name"], monster.index + 1]
 
 	deck = Deck.new(cards)
 	hand = Hand.new()
 	weapon = WeaponState.new()
-	resistance = EnemyResistance.new()
 
 
 # 전투를 시작하고 첫 턴을 연다 (_init과 분리해 둬서, 바깥이 시그널을 먼저 연결한 뒤 시작할 수 있다).
@@ -64,14 +92,51 @@ func start() -> void:
 
 
 # ── 턴 시작 ────────────────────────────────────────────────────────────────
-# 적 저항을 새로 굴리고, 무기 전환 횟수를 리셋하고, 손패를 5장으로 새로 채운다.
+# 살아있는 몬스터마다 저항을 따로 굴리고, 무기 전환 횟수를 리셋하고, 손패를 5장으로 새로 채운다.
 # (남은 손패는 Hand.draw_new_hand()가 알아서 버린 더미로 보낸 뒤 새로 뽑는다)
+#
+# 저항을 마리별로 굴리는 이유는 그게 다인전의 핵심 압박이기 때문이다 — 한 마리는 물리 저항,
+# 옆은 마법 저항인 상황이 나오면 "어느 쪽부터 어떤 무기로 때릴지"를 매 턴 다시 판단해야 한다.
+# 쓰러진 몬스터는 굴리지 않는다 (죽은 뒤에도 저항 배지가 갱신되며 깜빡이지 않게)
 func _start_turn() -> void:
 	turn_number += 1
-	resistance.roll_new_turn()
+	for monster in monsters:
+		if monster.is_alive():
+			monster.resistance.roll_new_turn()
 	weapon.reset_turn()
 	hand.draw_new_hand(deck, HAND_SIZE)
 	turn_started.emit(turn_number)
+
+
+# ── 몬스터 조회 / 타겟팅 ───────────────────────────────────────────────────
+
+# index 자리의 몬스터 (범위를 벗어나면 null)
+func get_monster(index: int) -> MonsterState:
+	if index < 0 or index >= monsters.size():
+		return null
+	return monsters[index]
+
+
+# [임시 자동 타겟팅] 살아있는 몬스터 중 첫 번째. 진짜 타겟팅 UI(카드 클릭 → 대상 선택)가 붙는
+# 다음 단계에서는 호출부가 플레이어가 고른 index를 직접 넘기게 되고, 이 함수는 "아무것도 안 골랐을 때의
+# 기본값" 역할만 남는다. 전멸했으면 null
+func get_auto_target() -> MonsterState:
+	for monster in monsters:
+		if monster.is_alive():
+			return monster
+	return null
+
+
+func alive_monsters() -> Array[MonsterState]:
+	var alive: Array[MonsterState] = []
+	for monster in monsters:
+		if monster.is_alive():
+			alive.append(monster)
+	return alive
+
+
+func all_monsters_defeated() -> bool:
+	return alive_monsters().is_empty()
 
 
 # ── 플레이어 행동 ──────────────────────────────────────────────────────────
@@ -105,8 +170,12 @@ func can_afford_hp(cost: int) -> bool:
 #
 # 비용을 효과보다 먼저 치르는 순서에 주의 — 체력을 회복하는 카드가 체력 비용을 갖는 경우
 # "먼저 내고 그 다음 회복"이 되어야 순서가 뒤집혀 이득이 나지 않는다.
-# 체력 비용으로 죽는 일은 can_play_card가 이미 막아둬서(can_afford_hp) 여기서 다시 확인하지 않는다
-func play_card(card: Card) -> bool:
+# 체력 비용으로 죽는 일은 can_play_card가 이미 막아둬서(can_afford_hp) 여기서 다시 확인하지 않는다.
+#
+# target_index는 피해 카드가 때릴 몬스터의 자리 번호다. -1(기본값)이면 자동 타겟(살아있는 첫 마리)을
+# 고른다 — 지금은 UI가 대상을 고를 방법이 없어 호출부가 전부 기본값으로 부르고, 타겟팅 UI가 붙는
+# 다음 단계에서 플레이어가 고른 값이 여기로 들어온다. 피해 카드가 아니면 이 값은 쓰이지 않는다
+func play_card(card: Card, target_index: int = -1) -> bool:
 	if not can_play_card(card):
 		return false
 
@@ -120,7 +189,7 @@ func play_card(card: Card) -> bool:
 	if card.on_use_set_gauge > 0:
 		weapon.set_both_gauges(card.on_use_set_gauge)
 
-	var damage_dealt := _apply_card_effect(card)
+	var damage_dealt := _apply_card_effect(card, target_index)
 
 	hand.cards.erase(card)
 	var moved: Array[Card] = [card]
@@ -128,7 +197,8 @@ func play_card(card: Card) -> bool:
 
 	card_played.emit(card, damage_dealt)
 
-	if monster_hp <= 0:
+	# 전투 종료는 "전멸"이어야 한다 — 한 마리가 쓰러져도 남은 몬스터가 있으면 계속 싸운다
+	if all_monsters_defeated():
 		_finish_battle(false)
 
 	return true
@@ -149,10 +219,10 @@ func switch_weapon(to: WeaponState.WeaponType) -> bool:
 # Card.value는 "회복할 체력/마나"라는 절대값이므로, value/최대치로 환산해 넘긴다.
 # (헬퍼 안에서 max * fraction = value로 되돌아가 결과적으로 정확히 value만큼 회복되고,
 #  최대치 초과 clamp 같은 기존 규칙도 그대로 적용받는다 — 양쪽 계약을 다 지키는 방법)
-func _apply_card_effect(card: Card) -> int:
+func _apply_card_effect(card: Card, target_index: int) -> int:
 	match card.effect:
 		Card.EffectType.DAMAGE:
-			return _damage_monster(card)
+			return _damage_monster(card, target_index)
 		Card.EffectType.HEAL_HP:
 			var max_hp: int = GameState.get_flag("player_max_hp")
 			if max_hp > 0:
@@ -178,14 +248,28 @@ func _apply_card_effect(card: Card) -> int:
 	return 0
 
 
-# 데미지 카드 처리: 카드의 기본 위력(value)에 장비 보너스를 더한 뒤, 그 값을 적 저항 판정에
-# 통과시킨 최종값을 몬스터 HP에서 깎는다. 몬스터 HP는 battle_scene.gd와 동일하게
-# 0 밑으로 내려가지 않게 max(0, ...)로 막는다
-func _damage_monster(card: Card) -> int:
+# 데미지 카드 처리: 카드의 기본 위력(value)에 장비 보너스를 더한 뒤, 그 값을 "그 대상의" 저항
+# 판정에 통과시킨 최종값을 대상 HP에서 깎는다. 저항은 마리마다 따로 굴리므로, 같은 카드라도
+# 누구를 때리느냐에 따라 결과가 달라진다.
+#
+# 반환값은 카드가 약속한 수치가 아니라 MonsterState.take_damage()가 돌려준 "실제로 깎인 양"이다 —
+# 오버킬일 때 팝업 숫자와 HP바 감소폭이 어긋나지 않게 하기 위함(자세한 이유는 take_damage 주석 참고).
+# 이미 쓰러진 대상이거나 없는 자리를 지목하면 아무 일도 일어나지 않고 0을 반환한다
+func _damage_monster(card: Card, target_index: int) -> int:
+	var target := get_monster(target_index)
+	if target == null or not target.is_alive():
+		target = get_auto_target() # 지목이 없거나(-1) 이미 죽은 대상이면 살아있는 첫 마리로
+	if target == null:
+		return 0
+
 	var raw_damage: int = card.value + _equipment_damage_bonus(card)
-	var final_damage: int = resistance.calculate_damage(card, raw_damage)
-	monster_hp = max(0, monster_hp - final_damage)
-	return final_damage
+	var final_damage: int = target.resistance.calculate_damage(card, raw_damage)
+	var applied := target.take_damage(final_damage)
+
+	if not target.is_alive():
+		monster_defeated.emit(target.index)
+
+	return applied
 
 
 # 장비의 피해 보너스. "카드 색깔이 지금 장착한 무기와 일치할 때"만 그 무기의 등급 보너스가 붙는다
@@ -222,9 +306,9 @@ func end_turn() -> void:
 		_finish_battle(true)
 		return
 
-	# 반격으로 적이 쓰러졌을 수 있다. 이 검사가 없으면 HP가 0인 몬스터를 상대로 다음 턴이 열린다
+	# 반격으로 적이 쓰러졌을 수 있다. 이 검사가 없으면 전멸한 상대로 다음 턴이 열린다
 	# (플레이어 턴에 카드로 죽인 경우는 play_card가 이미 처리하지만, 반격은 적 턴에 일어난다)
-	if monster_hp <= 0:
+	if all_monsters_defeated():
 		_finish_battle(false)
 		return
 
@@ -250,28 +334,67 @@ func end_turn() -> void:
 #    반격 피해에는 적 저항도 장비 보너스도 붙지 않는데, 이건 특례가 아니라 일관성이다 — 반격 카드는
 #    공용(NEUTRAL)이고, 공용 카드는 원래도 저항 대상이 아니며(EnemyResistance.resists) 무기 보너스도
 #    받지 않는다(_equipment_damage_bonus). 즉 카드로 직접 때렸을 때와 같은 계산 결과가 나온다.
+#
+# [다인전 설계 결정 — 동시가 아니라 "순차"] 살아있는 몬스터가 자리 순서대로 한 마리씩 공격한다.
+# 동시 처리(피해를 다 더해 한 번에 적용)와 견줘 순차를 택한 이유:
+#  - 방어/피하기/반격이 전부 "다음 한 방"을 전제로 만들어진 카드라, 동시 처리에서는 그 한 방이
+#    무엇인지 정의할 수 없다. 순차면 "먼저 오는 공격에 쓰인다"로 규칙이 자명해진다.
+#  - 화면 연출도 이미 "몬스터가 달려들어 때린다"는 1:1 모션(battle_scene의 _lunge)으로 되어 있어,
+#    순차 공격이 기존 연출을 마리별로 반복하는 것만으로 자연스럽게 확장된다.
+#  - 피해 총량은 어느 쪽이든 같지만, 순차면 플레이어가 "몇 마리에게 얼마씩 맞았는지"를 눈으로 읽는다.
+#
+# [방어/피하기/반격이 마리 수만큼 뻥튀기되지 않게 하는 규칙] 이게 순차 처리의 핵심 쟁점이라 명시한다:
+#  - 피하기/반격은 "가장 먼저 오는 공격 한 방"에만 쓰이고 그 자리에서 소모된다. 한 장으로 3마리
+#    공격을 전부 무효화하면 다인전이 오히려 1:1보다 쉬워지는 역전이 일어난다.
+#  - 방어는 "값만큼의 피해를 흡수하는 총량 풀"로 동작한다(각 공격마다 값을 다시 빼주는 게 아니라,
+#    흡수한 만큼 풀에서 깎인다). 그래서 방어 카드 한 장의 값어치가 상대 마리 수와 무관하게 일정하고,
+#    1마리 전투에서는 기존과 완전히 동일하게 동작한다(값 4로 5 피해를 받으면 1만 들어옴).
+#  - 반격은 "때린 그 몬스터"에게 되돌려준다 (자동 타겟이 아니라 공격자). 받아넘긴 상대를 되받아친다는
+#    카드 설명 그대로이고, 여러 마리 중 누구를 치는지도 이 규칙이면 헷갈릴 여지가 없다.
 func _resolve_enemy_turn() -> void:
-	var raw_damage: int = randi_range(monster_data["damage_min"], monster_data["damage_max"])
-
-	var countering := _pending_counter > 0
-	var damage_taken := 0
-	if not _pending_dodge and not countering:
-		damage_taken = max(0, raw_damage - _pending_defense)
-
-	if damage_taken > 0:
-		GameState.damage_player(damage_taken)
-
-	var counter_damage := 0
-	if countering:
-		counter_damage = _pending_counter
-		monster_hp = max(0, monster_hp - counter_damage)
-
-	enemy_turn_resolved.emit(damage_taken, _pending_dodge, counter_damage)
+	for monster in monsters:
+		if not monster.is_alive():
+			continue
+		# 앞선 몬스터의 공격으로 이미 쓰러졌으면 남은 몬스터는 때리지 않는다 —
+		# 죽은 플레이어를 계속 때리는 연출이 이어지지 않게
+		if GameState.get_flag("player_hp") <= 0:
+			break
+		_resolve_single_attack(monster)
 
 	# 임시 상태는 이번 적 턴에서만 유효 — 결과와 무관하게 소모하고 초기화한다
+	# (피하기/반격은 위에서 이미 첫 공격에 소모됐을 수 있고, 방어는 남은 풀이 여기서 버려진다)
 	_pending_defense = 0
 	_pending_dodge = false
 	_pending_counter = 0
+
+
+# 몬스터 한 마리의 공격을 해결한다. 피하기/반격은 여기서 소모되므로, 뒤이어 공격하는 몬스터는
+# 그 보호를 받지 못한다 (위 _resolve_enemy_turn 주석의 "뻥튀기 방지" 규칙)
+func _resolve_single_attack(attacker: MonsterState) -> void:
+	var raw_damage: int = randi_range(attacker.monster_data["damage_min"], attacker.monster_data["damage_max"])
+
+	var countering := _pending_counter > 0
+	var dodging := _pending_dodge
+
+	var damage_taken := 0
+	var counter_damage := 0
+
+	if countering:
+		counter_damage = _pending_counter
+		_pending_counter = 0 # 첫 공격에 소모
+		attacker.take_damage(counter_damage)
+		if not attacker.is_alive():
+			monster_defeated.emit(attacker.index)
+	elif dodging:
+		_pending_dodge = false # 첫 공격에 소모
+	else:
+		var absorbed: int = min(_pending_defense, raw_damage)
+		_pending_defense -= absorbed
+		damage_taken = raw_damage - absorbed
+		if damage_taken > 0:
+			GameState.damage_player(damage_taken)
+
+	enemy_attack_resolved.emit(attacker.index, damage_taken, dodging, counter_damage)
 
 
 func _finish_battle(player_lost: bool) -> void:
@@ -286,6 +409,7 @@ func _finish_battle(player_lost: bool) -> void:
 
 # ── 조회용 헬퍼 (UI가 붙을 때 쓰기 좋은 읽기 전용 정보) ────────────────────
 
+# 그룹 전체가 같은 종류라 최대 체력도 마리마다 같다 (마리별 값이 필요하면 MonsterState.max_hp를 볼 것)
 func get_monster_max_hp() -> int:
 	return monster_data["max_hp"]
 

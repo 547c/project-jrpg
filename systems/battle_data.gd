@@ -114,6 +114,57 @@ const MONSTER_VARIANTS: Dictionary = {
 }
 
 
+# ── 다인전 등장 마리 수 ────────────────────────────────────────────────────
+# 필드 잡몹 전투는 같은 종류가 1~3마리 등장한다 (전투 재설계 v3). 2마리가 기본이고 1/3마리는
+# 그보다 드물게 나와, 매 전투가 조금씩 다르게 느껴지되 극단이 자주 나오지는 않게 했다.
+# 값은 "가중치"라 합이 100이 아니어도 되지만, 지금은 그대로 확률(%)로 읽히게 맞춰뒀다
+const GROUP_SIZE_WEIGHTS: Dictionary = {
+	1: 20,
+	2: 60,
+	3: 20,
+}
+
+# 항상 혼자 나오는 몬스터. 보스는 "혼자 버티는 벽"이라는 설계라 여럿으로 늘리면 의미가 달라진다
+const SOLO_ONLY_TYPES: Array[String] = ["RUINS_BOSS"]
+
+
+# 이번 전투에 등장할 마리 수를 가중치대로 뽑는다. 보스 타입은 항상 1
+static func roll_group_size(monster_type: String) -> int:
+	if monster_type in SOLO_ONLY_TYPES:
+		return 1
+
+	var total := 0
+	for weight in GROUP_SIZE_WEIGHTS.values():
+		total += int(weight)
+	if total <= 0:
+		return 1
+
+	var roll := randi() % total
+	var cumulative := 0
+	for size in GROUP_SIZE_WEIGHTS:
+		cumulative += int(GROUP_SIZE_WEIGHTS[size])
+		if roll < cumulative:
+			return int(size)
+	return 1
+
+
+# 이번 전투에 등장할 몬스터들의 시각 변종 목록을 만든다. 마리 수는 roll_group_size()가 정하고,
+# 변종은 마리마다 따로 뽑아 같은 종류라도 겉모습이 섞이게 한다.
+#
+# first_variant를 받는 이유: 필드에서 배회하던 그 개체의 모습이 전투 첫 번째 자리에 그대로 이어져야
+# "방금 부딪힌 그 몬스터"로 읽힌다 (기존 단일 전투에서 지키던 규칙을 다인전에서도 0번 자리에 유지).
+# 비어 있으면(테스트 등 필드를 거치지 않은 호출) 첫 마리도 새로 뽑는다
+static func build_group_variants(monster_type: String, first_variant: Dictionary = {}) -> Array[Dictionary]:
+	var count := roll_group_size(monster_type)
+	var variants: Array[Dictionary] = []
+	for i in range(count):
+		if i == 0 and not first_variant.is_empty():
+			variants.append(first_variant)
+		else:
+			variants.append(pick_variant(monster_type))
+	return variants
+
+
 # monster_type의 변종 중 하나를 무작위로 골라, 애니메이션 시트 경로까지 채운 딕셔너리로 반환.
 # MonsterEncounter가 스폰/리젠 때, BattleScene이 전투 진입 때 이 정보로 스프라이트를 구성해
 # 필드에서 본 변종이 전투 씬까지 그대로 이어지게 한다
