@@ -2,7 +2,7 @@ extends Node
 
 # 5슬롯 세이브/로드. 각 슬롯은 user://save_slot_<N>.json 파일 하나.
 # 저장 데이터: 복원용(scene_path/player_position/flags/quests/gold/inventory) + 슬롯 목록 미리보기용
-# (objective_text/quest_level/player_hp/player_max_hp).
+# (objective_text/progress/player_hp/player_max_hp).
 const SLOT_COUNT := 5
 
 
@@ -42,7 +42,7 @@ func save_game(slot: int) -> bool:
 		"battle_deck": GameState.battle_deck,
 		# --- 슬롯 목록 미리보기용 (복원엔 안 쓰임) ---
 		"objective_text": GameState.get_objective_text(),
-		"quest_level": GameState.get_flag("quest_level"),
+		"progress": GameState.get_flag("progress"),
 		"player_hp": GameState.get_flag("player_hp"),
 		"player_max_hp": GameState.get_flag("player_max_hp"),
 	}
@@ -91,7 +91,7 @@ func get_save_summary(slot: int) -> Dictionary:
 		return {}
 	return {
 		"objective_text": data.get("objective_text", ""),
-		"quest_level": int(data.get("quest_level", 0)),
+		"progress": int(data.get("progress", 0)),
 		"player_hp": int(data.get("player_hp", 0)),
 		"player_max_hp": int(data.get("player_max_hp", 0)),
 	}

@@ -2262,6 +2262,7 @@ func _finish_victory() -> void:
 	# 도망쳐도 보상이 남아, 도망(골드 소모 + HP 게이팅)이 오히려 이득인 상황이 생긴다 —
 	# "전투를 끝내야 보상"이라는 기존 규칙을 그대로 유지하는 쪽을 택했다
 	var total_gold := 0
+	var total_xp := 0
 	var dropped_items: Array[String] = []
 	var defeated_count := 0
 	for monster in _manager.monsters:
@@ -2271,12 +2272,18 @@ func _finish_victory() -> void:
 		defeated_count += 1
 		_increment_defeat_counter()
 		total_gold += randi_range(monster.monster_data["gold_min"], monster.monster_data["gold_max"])
+		total_xp += int(monster.monster_data.get("xp", 0))
 		var dropped := _roll_equipment_drop()
 		if dropped != "":
 			dropped_items.append(dropped)
 
 	GameState.add_gold(total_gold)
 	_player_gold_label.text = str(GameState.gold)
+
+	# 경험치는 마리별로 더한 총합을 한 번에 준다 — add_xp()가 필요치를 넘긴 만큼 레벨을 올려주므로
+	# 여러 마리를 잡아 한 번에 두 레벨이 오르는 경우도 여기서 따로 처리할 게 없다.
+	# 레벨업 안내창은 전투 중에 끼어들지 않고, 전투를 빠져나온 뒤 LevelUpPopup이 알아서 띄운다
+	GameState.add_xp(total_xp)
 
 	GameState.heal_player_partial(VICTORY_HEAL_FRACTION)
 	_animate_hp_bar(_player_hp_bar, GameState.get_flag("player_hp"))
@@ -2286,7 +2293,7 @@ func _finish_victory() -> void:
 	var defeated_label: String = _monster_data["name"]
 	if defeated_count > 1:
 		defeated_label = "%s %d마리" % [_monster_data["name"], defeated_count]
-	_message.text = "%s 처치!\n골드 %d 획득!\n체력을 약간 회복했다." % [defeated_label, total_gold]
+	_message.text = "%s 처치!\n골드 %d · 경험치 %d 획득!\n체력을 약간 회복했다." % [defeated_label, total_gold, total_xp]
 	for item_id in dropped_items:
 		_message.text += "\n%s을(를) 얻었다!" % ItemData.ITEMS[item_id]["name"]
 

@@ -400,8 +400,8 @@ func _on_button_pressed(option: Dictionary) -> void:
 # 옵션 버튼 클릭 시, flag_to_set / start_quest / affinity_change 같은 부수효과를 적용한 뒤 next_id 노드로 이동.
 # - open_shop: 다음 노드로 넘어가지 않고 ShopMenu(포션/선물)를 그 위에 띄움 (대화는 현재 노드에 그대로 멈춰있음)
 # - open_weapon_shop: 위와 동일하되 WeaponShopMenu(장비 9종, 페이지네이션)를 띄움
-# - min_quest_level: quest_level이 이 값 미만이면 start_quest 등 나머지 효과를 전부 건너뛰고
-#   next_id_if_blocked로 대신 이동 (옵션 자체는 항상 보이되, 선택 시 조건만 검사하는 게이팅용)
+# - start_quest: 그 퀘스트의 수락 조건(진행도 + 레벨)을 만족하지 못하면 나머지 효과를 전부 건너뛰고
+#   부족한 조건을 대사 자리에 안내한다 (옵션 자체는 항상 보이되, 선택했을 때만 조건을 검사하는 게이팅)
 func _on_option_pressed(option: Dictionary) -> void:
 	SFXPlayer.play(UI_CLICK_SOUND)
 
@@ -418,9 +418,12 @@ func _on_option_pressed(option: Dictionary) -> void:
 		_handle_give_gift(give_gift)
 		return
 
-	var min_quest_level: int = option.get("min_quest_level", -1)
-	if min_quest_level >= 0 and GameState.get_flag("quest_level") < min_quest_level:
-		_show_node(option.get("next_id_if_blocked", ""))
+	# 퀘스트 수락 조건(진행도 + 레벨) 검사. 조건은 GameState.QUEST_REQUIREMENTS 한 곳에만 정의돼 있어
+	# 대화 데이터에 수치를 중복해 적지 않는다 — 밸런스를 바꿔도 대사 쪽은 손댈 필요가 없다.
+	# 안내는 호감도 부족(LOCKED_HINT)과 같은 방식으로 대사 자리에 타이핑한다 (노드/옵션은 그대로 유지)
+	var start_quest: String = option.get("start_quest", "")
+	if start_quest != "" and not GameState.can_start_quest(start_quest):
+		_typewriter.start(GameState.get_quest_requirement_text(start_quest))
 		return
 
 	var flag_to_set: String = option.get("flag_to_set", "")
@@ -431,7 +434,6 @@ func _on_option_pressed(option: Dictionary) -> void:
 	if not affinity_change.is_empty():
 		GameState.change_affinity(affinity_change.get("npc_id", ""), int(affinity_change.get("amount", 0)))
 
-	var start_quest: String = option.get("start_quest", "")
 	if start_quest != "":
 		GameState.start_quest(start_quest)
 

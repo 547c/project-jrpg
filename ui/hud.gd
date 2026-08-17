@@ -14,6 +14,13 @@ const OBJECTIVE_PANEL_MAX_WIDTH := 560.0
 const OBJECTIVE_LABEL_PADDING := 36.0
 const OBJECTIVE_PANEL_RIGHT_OFFSET := -12.0 # 화면 오른쪽 가장자리에서의 고정 여백 (이 값은 절대 안 바뀜)
 
+# 경험치 진행바 자리. Lv 라벨(x 12~100, y 89~100)과 같은 줄의 남는 오른쪽 공간을 쓴다 —
+# 위로는 스탯 카드가 y 87에서 끝나고 아래로는 퀘스트 버튼이 y 100에서 시작해, 이 줄만 비어 있다.
+# 색은 체력(빨강)/마나(파랑)와 겹치지 않는 황록색으로 골라 한눈에 구분되게 했다
+const XP_BAR_RECT := Rect2(106, 90, 137, 9)
+const XP_BAR_BG := Color(0.1, 0.1, 0.07, 0.85)
+const XP_BAR_FILL := Color(0.65, 0.82, 0.25, 1.0)
+
 @onready var _main_hud: Control = $MainHud
 @onready var _hp_bar: ProgressBar = $MainHud/StatCard/HPBar
 @onready var _hp_bar_label: Label = $MainHud/StatCard/HPBarLabel
@@ -33,12 +40,17 @@ const OBJECTIVE_PANEL_RIGHT_OFFSET := -12.0 # 화면 오른쪽 가장자리에�
 @onready var _compass: Compass = $Compass
 @onready var _compass_hint: Label = $ObjectiveHud/CompassHint
 
+# 경험치 진행바와 그 위에 겹친 숫자 라벨 (_build_xp_bar가 코드로 만들어 붙인다)
+var _xp_bar: ProgressBar
+var _xp_bar_label: Label
+
 
 func _ready() -> void:
 	_quest_button.pressed.connect(_on_quest_button_pressed)
 	_inventory_button.pressed.connect(_on_inventory_button_pressed)
 	_spellbook_button.pressed.connect(_on_spellbook_button_pressed)
 	_update_compass_hint()
+	_build_xp_bar()
 
 	# 진행 상황이 바뀔 때만 레벨/목표 텍스트를 다시 계산 (매 프레임 문자열을 만들 필요 없음)
 	GameState.flag_changed.connect(_on_progress_changed)
@@ -68,6 +80,42 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _update_compass_hint() -> void:
 	_compass_hint.text = "[M] 나침반: %s" % ("켜짐" if _compass.is_enabled() else "꺼짐")
+
+
+# 경험치 진행바를 코드로 만들어 Lv 라벨 오른쪽(스탯 카드 아래 한 줄)에 붙인다.
+# .tscn을 고치는 대신 코드로 만드는 이유는 몬스터 마나바와 같다 — 바 하나 때문에 씬 파일을
+# 건드리기보다, 만드는 규칙을 코드에 한 곳으로 모아두는 쪽이 나중에 위치를 조정하기 쉽다.
+# 자리: Lv 라벨이 x 12~100을 쓰고 그 줄의 오른쪽(스탯 카드 폭 243까지)이 비어 있어 거기에 넣는다
+func _build_xp_bar() -> void:
+	var bg := StyleBoxFlat.new()
+	bg.bg_color = XP_BAR_BG
+	bg.set_corner_radius_all(2)
+	var fill := StyleBoxFlat.new()
+	fill.bg_color = XP_BAR_FILL
+	fill.set_corner_radius_all(2)
+
+	_xp_bar = ProgressBar.new()
+	_xp_bar.name = "XpBar"
+	_xp_bar.show_percentage = false
+	_xp_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_xp_bar.add_theme_stylebox_override("background", bg)
+	_xp_bar.add_theme_stylebox_override("fill", fill)
+	_xp_bar.position = XP_BAR_RECT.position
+	_xp_bar.size = XP_BAR_RECT.size
+	_main_hud.add_child(_xp_bar)
+
+	_xp_bar_label = Label.new()
+	_xp_bar_label.name = "XpBarLabel"
+	_xp_bar_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_xp_bar_label.position = XP_BAR_RECT.position
+	_xp_bar_label.size = XP_BAR_RECT.size
+	_xp_bar_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_xp_bar_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_xp_bar_label.add_theme_font_size_override("font_size", 9)
+	_xp_bar_label.add_theme_color_override("font_color", Color(1, 1, 1, 1))
+	_xp_bar_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.75))
+	_xp_bar_label.add_theme_constant_override("outline_size", 3)
+	_main_hud.add_child(_xp_bar_label)
 
 
 # 게임 진행 중이고(플레이어 존재), 타이틀/엔딩이 아니며, 가리는 UI가 하나도 안 열려 있을 때만 표시
@@ -113,11 +161,25 @@ func _on_progress_changed(_a = null, _b = null) -> void:
 	_refresh_objective()
 
 
-# 레벨(=quest_level)과 현재 메인 목표 문구를 GameState 계산값으로 갱신
+# 레벨(경험치로 오르는 player_level)과 현재 메인 목표 문구를 GameState 계산값으로 갱신.
+# 스토리 진행도(progress)는 목표 문구 쪽이 이미 담고 있어 따로 표시하지 않는다
 func _refresh_objective() -> void:
-	_lv_label.text = "Lv. %d" % GameState.get_flag("quest_level")
+	_lv_label.text = "Lv. %d" % GameState.get_player_level()
+	_refresh_xp_bar()
 	_objective_label.text = GameState.get_objective_text()
 	_update_objective_panel_width()
+
+
+# 다음 레벨까지의 진행 정도를 Lv 라벨 오른쪽 빈 자리에 얇은 바로 보여준다.
+# 체력/마나바와 같은 방식(바 + 그 위에 겹친 숫자 라벨)이라 읽는 방법이 일관된다
+func _refresh_xp_bar() -> void:
+	if _xp_bar == null:
+		return
+	var xp: int = GameState.get_player_xp()
+	var needed: int = GameState.get_xp_to_next()
+	_xp_bar.max_value = needed
+	_xp_bar.value = xp
+	_xp_bar_label.text = "%d/%d" % [xp, needed]
 
 
 # objective 텍스트의 실제 필요 폭에 맞춰 패널 폭을 재계산.

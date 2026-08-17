@@ -1,29 +1,33 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://ui/quest_log.gd" id="1_qlog"]
-[ext_resource type="Texture2D" path="res://assets/GUI/MedievalUiMega/medieval.png" id="2_medieval"]
+[ext_resource type="Texture2D" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Background boxes/BGbox_07A.png" id="2_ivybox"]
+[ext_resource type="Texture2D" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Title banners/BannerMedium_04A.png" id="3_titlebanner"]
+[ext_resource type="Texture2D" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Title banners/BannerSmall_06A.png" id="4_tabpill"]
+[ext_resource type="Texture2D" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Buttons/Button_01A_Normal.png" id="5_btn_normal"]
+[ext_resource type="Texture2D" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Buttons/Button_01A_Selected.png" id="6_btn_selected"]
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_panel_wood"]
-atlas = ExtResource("2_medieval")
-region = Rect2(516, 207, 119, 50)
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_tab"]
+texture = ExtResource("4_tabpill")
+texture_margin_left = 18.0
+texture_margin_top = 12.0
+texture_margin_right = 18.0
+texture_margin_bottom = 12.0
+axis_stretch_horizontal = 1
 
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_panel"]
-texture = SubResource("AtlasTexture_panel_wood")
-texture_margin_left = 20.0
-texture_margin_top = 15.0
-texture_margin_right = 20.0
-texture_margin_bottom = 15.0
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_close_normal"]
+texture = ExtResource("5_btn_normal")
+texture_margin_left = 10.0
+texture_margin_top = 10.0
+texture_margin_right = 10.0
+texture_margin_bottom = 10.0
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_button_wood"]
-atlas = ExtResource("2_medieval")
-region = Rect2(656, 206, 63, 51)
-
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_button_normal"]
-texture = SubResource("AtlasTexture_button_wood")
-texture_margin_left = 14.0
-texture_margin_top = 14.0
-texture_margin_right = 14.0
-texture_margin_bottom = 14.0
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_close_hover"]
+texture = ExtResource("6_btn_selected")
+texture_margin_left = 10.0
+texture_margin_top = 10.0
+texture_margin_right = 10.0
+texture_margin_bottom = 10.0
 
 [node name="QuestLog" type="Control"]
 visible = false
@@ -45,7 +49,7 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0, 0, 0, 0.55)
 
-[node name="Panel" type="Panel" parent="."]
+[node name="Panel" type="NinePatchRect" parent="."]
 texture_filter = 1
 layout_mode = 1
 anchors_preset = 8
@@ -53,48 +57,129 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -230.0
-offset_top = -190.0
-offset_right = 230.0
-offset_bottom = 190.0
+offset_left = -320.0
+offset_top = -225.0
+offset_right = 320.0
+offset_bottom = 225.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_styles/panel = SubResource("StyleBoxTexture_panel")
+texture = ExtResource("2_ivybox")
+patch_margin_left = 28
+patch_margin_top = 28
+patch_margin_right = 28
+patch_margin_bottom = 28
+axis_stretch_horizontal = 1
+axis_stretch_vertical = 1
 
-[node name="VBox" type="VBoxContainer" parent="Panel"]
+[node name="TitleBanner" type="NinePatchRect" parent="Panel"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_top = 0.0
+anchor_right = 0.5
+anchor_bottom = 0.0
+offset_left = -145.0
+offset_top = -32.0
+offset_right = 145.0
+offset_bottom = 32.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("3_titlebanner")
+patch_margin_left = 20
+patch_margin_top = 20
+patch_margin_right = 20
+patch_margin_bottom = 26
+axis_stretch_horizontal = 1
+
+[node name="TitleLabel" type="Label" parent="Panel/TitleBanner"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 30.0
-offset_top = 24.0
-offset_right = -30.0
-offset_bottom = -24.0
+offset_top = -4.0
+offset_bottom = -8.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 14
-
-[node name="TitleLabel" type="Label" parent="Panel/VBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
-theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(0.28, 0.12, 0.1, 1)
+theme_override_font_sizes/font_size = 22
 horizontal_alignment = 1
-text = "퀘스트 일지"
+vertical_alignment = 1
+text = "퀘스트"
 
-[node name="QuestList" type="VBoxContainer" parent="Panel/VBox"]
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_constants/separation = 10
+[node name="Tabs" type="HBoxContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -200.0
+offset_top = 46.0
+offset_right = 200.0
+offset_bottom = 88.0
+grow_horizontal = 2
+alignment = 1
+theme_override_constants/separation = 16
 
-[node name="EmptyLabel" type="Label" parent="Panel/VBox/QuestList"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.4, 0.32, 0.24, 1)
-text = "진행 중인 퀘스트가 없습니다."
-
-[node name="CloseButton" type="Button" parent="Panel/VBox"]
-custom_minimum_size = Vector2(0, 42)
-layout_mode = 2
+[node name="MainTabButton" type="Button" parent="Panel/Tabs"]
+custom_minimum_size = Vector2(186, 42)
 texture_filter = 1
-theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
-theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+layout_mode = 2
+theme_override_colors/font_color = Color(0.97, 0.93, 0.85, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 0.9, 1)
+theme_override_font_sizes/font_size = 15
+theme_override_styles/normal = SubResource("StyleBoxTexture_tab")
+theme_override_styles/hover = SubResource("StyleBoxTexture_tab")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_tab")
+text = "메인 퀘스트"
+
+[node name="SubTabButton" type="Button" parent="Panel/Tabs"]
+custom_minimum_size = Vector2(186, 42)
+texture_filter = 1
+layout_mode = 2
+theme_override_colors/font_color = Color(0.97, 0.93, 0.85, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 0.9, 1)
+theme_override_font_sizes/font_size = 15
+theme_override_styles/normal = SubResource("StyleBoxTexture_tab")
+theme_override_styles/hover = SubResource("StyleBoxTexture_tab")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_tab")
+text = "서브 퀘스트"
+
+[node name="Scroll" type="ScrollContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 42.0
+offset_top = 102.0
+offset_right = -54.0
+offset_bottom = -78.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_scroll_mode = 0
+
+[node name="EntryList" type="VBoxContainer" parent="Panel/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="CloseButton" type="Button" parent="Panel"]
+custom_minimum_size = Vector2(170, 44)
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -85.0
+offset_top = -66.0
+offset_right = 85.0
+offset_bottom = -22.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_colors/font_color = Color(0.3, 0.14, 0.1, 1)
+theme_override_font_sizes/font_size = 16
+theme_override_styles/normal = SubResource("StyleBoxTexture_close_normal")
+theme_override_styles/hover = SubResource("StyleBoxTexture_close_hover")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_close_normal")
 text = "닫기"

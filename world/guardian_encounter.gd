@@ -3,9 +3,9 @@ extends Area2D
 const DIALOGUE_START_ID := "guardian_intro_1"
 const RETURN_SCENE_PATH := "res://world/village.tscn"
 const RETURN_SPAWN_POINT := "VillageSpawnFromCave"
-const REQUIRED_QUEST_LEVEL := 2 # 이 이상이어야 실제 수호자 이벤트가 시작됨 (숲/동굴 서브퀘 완료 개수)
+const REQUIRED_PROGRESS := 2 # 이 이상이어야 실제 수호자 이벤트가 시작됨 (숲/동굴 서브퀘 완료 개수)
 
-# quest_level이 부족할 때 대신 보여주는 짧은 안내 (선택지 없이 닫기만)
+# progress(진행도)가 부족할 때 대신 보여주는 짧은 안내 (선택지 없이 닫기만)
 const NOT_READY_DIALOGUE: Array = [
 	{"id": "not_ready", "speaker": "", "narration": "아직 준비가 안 된 것 같다.", "is_decisive": false, "options": []},
 ]
@@ -19,14 +19,14 @@ func _ready() -> void:
 
 
 # 플레이어가 처음 도달했을 때만(1회 제한) 수호자 조우를 시작.
-# quest_level이 아직 부족하면 전투/대화 없이 짧은 안내만 띄우고 그냥 지나가게 함(재시도 가능)
+# progress(진행도)가 아직 부족하면 전투/대화 없이 짧은 안내만 띄우고 그냥 지나가게 함(재시도 가능)
 func _on_body_entered(body: Node2D) -> void:
 	if _triggered or GameState.get_flag("guardian_event_done"):
 		return
 	if not body.is_in_group("player"):
 		return
 
-	if GameState.get_flag("quest_level") < REQUIRED_QUEST_LEVEL:
+	if GameState.get_flag("progress") < REQUIRED_PROGRESS:
 		_show_not_ready_message()
 		return
 
@@ -35,7 +35,7 @@ func _on_body_entered(body: Node2D) -> void:
 	_start_encounter()
 
 
-# quest_level이 부족할 때 보여주는 안내 메시지 (guardian_event_done을 세우지 않으므로 나중에 다시 시도 가능)
+# progress(진행도)가 부족할 때 보여주는 안내 메시지 (guardian_event_done을 세우지 않으므로 나중에 다시 시도 가능)
 func _show_not_ready_message() -> void:
 	var dialogue_box := get_tree().get_first_node_in_group("dialogue_box") as DialogueBox
 	if dialogue_box == null:

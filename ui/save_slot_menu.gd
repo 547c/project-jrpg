@@ -77,7 +77,7 @@ func _refresh_slots() -> void:
 			btn.disabled = (_mode == "load") # 불러오기 모드에선 빈 슬롯 선택 불가
 		else:
 			btn.text = "슬롯 %d    Lv. %d    HP: %d/%d\n%s" % [
-				slot_num, summary["quest_level"], summary["player_hp"], summary["player_max_hp"], summary["objective_text"],
+				slot_num, summary["progress"], summary["player_hp"], summary["player_max_hp"], summary["objective_text"],
 			]
 			btn.disabled = false
 

@@ -6,10 +6,17 @@ signal flag_changed(flag_name: String, value)
 # 퀘스트 상태(수락/진행/완료)가 바뀔 때 방출 (HUD/퀘스트로그가 구독해 갱신)
 signal quest_changed(quest_id: String)
 
-# 서브퀘스트 완료로 quest_level이 오를 때 방출 (LevelUpPopup이 구독해 "퀘스트 완료 + 레벨업"을
-# 하나의 안내창으로 함께 보여줌). 현재 구조상 퀘스트 완료는 항상 레벨업을 동반하므로 별도 시그널로
-# 나누지 않고 퀘스트 제목까지 한 번에 담아 방출한다
-signal quest_completed_with_level_up(quest_title: String, hp_gain: int, mana_gain: int)
+# 서브퀘스트를 완료했을 때 방출 (LevelUpPopup이 구독해 안내창을 띄움).
+# 경험치 도입 전에는 "퀘스트 완료 = 레벨업"이라 하나의 시그널이었지만, 이제 레벨업은 경험치 누적으로
+# 따로 일어나므로 둘을 분리했다 — 퀘스트를 깨도 레벨이 안 오를 수 있고, 몬스터만 잡아도 레벨이 오른다
+signal quest_completed_notice(quest_title: String, xp_gained: int)
+
+# 경험치가 쌓여 레벨이 올랐을 때 방출 (한 번에 여러 레벨이 오르면 레벨마다 한 번씩).
+# gain 값들은 그 레벨업으로 실제로 늘어난 양이라 안내창이 그대로 보여주면 된다
+signal player_leveled_up(new_level: int, hp_gain: int, mana_gain: int, skill_point_gain: int)
+
+# 경험치가 변할 때 방출 (HUD의 XP 진행바가 구독해 갱신). 레벨업으로 xp가 깎이는 경우에도 방출된다
+signal xp_changed(current_xp: int, xp_to_next: int)
 
 # 골드가 바뀔 때 방출 (HUD 카드가 구독해 실시간 갱신)
 signal gold_changed(new_gold: int)
@@ -122,7 +129,15 @@ const DEFAULT_FLAGS: Dictionary = {
 	"ruins_boss_defeated": false,          # 유적 보스(폭주한 근원체)를 처치했는가 (2부 결정적 선택의 조건)
 	"truth_revealed": false,               # 2부 결정적 플래그: 진실을 세상에 알렸는가 (false면 비밀로 묻음)
 	"part2_complete": false,               # 2부를 완료했는가 (카밀과의 결정적 선택을 마쳤을 때 true)
-	"quest_level": 0,                      # 완료한 서브퀘스트 개수
+	# 완료한 서브퀘스트 개수. 스토리 진행 게이트(수호자 조우, 목표 단계 등)의 기준이며
+	# 캐릭터의 강함과는 무관하다 — 강함은 아래 player_level이 담당한다
+	"progress": 0,
+	# 경험치로 오르는 캐릭터 레벨. 1에서 시작하고 상한이 없다.
+	# player_xp는 "총 누적치"가 아니라 "현재 레벨 안에서 쌓인 양"이라, 레벨업할 때마다 필요치만큼
+	# 빼고 남은 만큼이 다음 레벨로 이월된다 — 이렇게 두면 HUD의 진행바가 xp/필요치 그대로가 되고,
+	# 한 번에 여러 레벨이 오르는 경우(보스 처치 등)도 같은 계산으로 자연스럽게 처리된다
+	"player_level": 1,
+	"player_xp": 0,
 	# 카드 잠금해제에 쓰는 자원. 레벨업(_apply_level_up)마다 SKILL_POINTS_PER_LEVEL만큼 들어온다.
 	# 어떤 카드를 풀었는지는 개수가 아니라 목록이라 flags에 담기 어색해서 unlocked_cards로 따로 뺐다
 	"skill_points": 0,
@@ -166,6 +181,10 @@ const DEFAULT_QUESTS: Dictionary = {
 		"complete": false,
 	},
 }
+
+# 지금은 쓰지 않지만 옛 세이브 파일에는 들어 있는 키들. restore_flags가 이 키들은 flags에 그대로
+# 넣지 않고, 아래 마이그레이션 코드가 새 필드로 변환해 준다
+const LEGACY_FLAG_KEYS: Array[String] = ["quest_level"]
 
 # 퀘스트 완료 시 함께 세워줄 기존 호환 플래그 매핑 (guardian 게이팅 등 옛 코드가 계속 동작하도록)
 const QUEST_COMPLETE_FLAGS: Dictionary = {
@@ -232,6 +251,11 @@ func reset_progress() -> void:
 func restore_flags(data: Dictionary) -> void:
 	reset_progress()
 	for key in data.keys():
+		# 아래 마이그레이션이 따로 처리하는 옛 키는 그대로 넣지 않는다. 넣으면 두 가지가 곤란해진다:
+		# 지금은 없는 키라 set_flag가 기본값 false와 숫자를 비교하다 타입 오류를 내고,
+		# 통과하더라도 쓰이지 않는 옛 키가 flags에 남아 다음 저장에까지 계속 따라다닌다
+		if key in LEGACY_FLAG_KEYS:
+			continue
 		var value = data[key]
 		if DEFAULT_FLAGS.has(key):
 			var default_value = DEFAULT_FLAGS[key]
@@ -245,6 +269,15 @@ func restore_flags(data: Dictionary) -> void:
 	# 그때의 player_max_hp는 순수 레벨업 누적치(= 기본값)였으므로 그대로 기본값으로 삼는다
 	if not data.has("player_base_max_hp"):
 		set_flag("player_base_max_hp", get_flag("player_max_hp"))
+
+	# 구버전 세이브 호환: 경험치 도입 전에는 진행도가 "quest_level"이라는 이름이었고 그 값이 곧
+	# 레벨이기도 했다. 이제 둘은 별개(progress = 스토리 진행도, player_level = 경험치 레벨)이므로,
+	# 옛 값은 진행도로 옮기고 레벨은 그 진행도만큼 이미 올랐던 것으로 환산해 준다
+	# (예전엔 퀘스트 하나 = 레벨 하나였으므로 1 + 완료 개수가 그때의 실질 레벨과 같다)
+	if data.has("quest_level") and not data.has("progress"):
+		var legacy: int = int(data["quest_level"])
+		set_flag("progress", legacy)
+		set_flag("player_level", 1 + legacy)
 
 	# 불러온 장비 상태에 맞춰 최대 체력을 다시 계산 (저장된 값과 어긋나 있어도 여기서 바로잡힌다)
 	refresh_equipment_bonuses()
@@ -701,19 +734,23 @@ func increment_mummies_defeated() -> void:
 	increment_quest_progress("desert_mummies")
 
 
-# 퀘스트를 수락(active=true)하고 quest_changed를 방출. 이미 활성/없는 퀘스트면 무시
+# 퀘스트를 수락(active=true)하고 quest_changed를 방출. 이미 활성/없는 퀘스트면 무시.
+# 진행도·레벨 조건을 만족하지 못하면 수락되지 않는다 — 대화 쪽에서 이미 걸러내지만, 여기서도 막아야
+# 다른 경로로 들어와도 조건이 새지 않는다 (조건은 QUEST_REQUIREMENTS 한 곳에만 정의돼 있다)
 func start_quest(quest_id: String) -> void:
 	if not quests.has(quest_id):
 		return
 	var quest: Dictionary = quests[quest_id]
 	if quest["active"]:
 		return
+	if not can_start_quest(quest_id):
+		return
 	quest["active"] = true
 	quest_changed.emit(quest_id)
 
 
 # 활성이고 미완료인 퀘스트만 진행도 +1. target 도달 시 complete 처리 +
-# 호환 플래그(forest/cave_quest_complete)와 quest_level도 갱신
+# 호환 플래그(forest/cave_quest_complete)와 progress도 갱신
 func increment_quest_progress(quest_id: String) -> void:
 	if not quests.has(quest_id):
 		return
@@ -723,12 +760,7 @@ func increment_quest_progress(quest_id: String) -> void:
 
 	quest["current"] = min(quest["current"] + 1, quest["target"])
 	if quest["current"] >= quest["target"]:
-		quest["complete"] = true
-		if QUEST_COMPLETE_FLAGS.has(quest_id):
-			set_flag(QUEST_COMPLETE_FLAGS[quest_id], true)
-		set_flag("quest_level", get_flag("quest_level") + 1)
-		_apply_level_up(quest["title"])
-		_apply_quest_completion_affinity(quest_id) # 퀘스트를 준 NPC와의 호감도 보너스
+		_finish_quest(quest_id, quest)
 
 	quest_changed.emit(quest_id)
 
@@ -744,18 +776,73 @@ func complete_quest(quest_id: String) -> void:
 		return
 	quest["active"] = true
 	quest["current"] = quest["target"]
+	_finish_quest(quest_id, quest)
+	quest_changed.emit(quest_id)
+
+
+# 퀘스트 완료 시 공통으로 일어나는 일 (increment 경로와 즉시완료 경로가 같은 처리를 타도록 한 곳에 모음):
+# 완료 표시 → 호환 플래그 → 진행도 +1 → 완료 보너스 경험치 → 호감도 → 안내 시그널.
+#
+# 레벨업은 여기서 직접 하지 않는다 — 보너스 경험치를 add_xp()에 넘기면 그 안에서 필요치를 넘겼을 때만
+# 레벨이 오른다. 그래서 "퀘스트를 깼는데 레벨은 안 오르는" 경우도, "한 번에 두 레벨 오르는" 경우도
+# 자연스럽게 표현된다 (경험치 도입 전에는 퀘스트 완료가 곧 레벨업이었다)
+func _finish_quest(quest_id: String, quest: Dictionary) -> void:
 	quest["complete"] = true
 	if QUEST_COMPLETE_FLAGS.has(quest_id):
 		set_flag(QUEST_COMPLETE_FLAGS[quest_id], true)
-	set_flag("quest_level", get_flag("quest_level") + 1)
-	_apply_level_up(quest["title"])
+	set_flag("progress", get_flag("progress") + 1)
+
+	var bonus_xp: int = QUEST_COMPLETION_XP.get(quest_id, 0)
+	if bonus_xp > 0:
+		add_xp(bonus_xp)
+
 	_apply_quest_completion_affinity(quest_id)
-	quest_changed.emit(quest_id)
+	quest_completed_notice.emit(quest["title"], bonus_xp)
 
 
 # 해당 퀘스트가 완료 상태인지 여부
 func is_quest_complete(quest_id: String) -> bool:
 	return quests.has(quest_id) and quests[quest_id]["complete"]
+
+
+# 퀘스트 완료 시 한 번 주는 보너스 경험치. 뒤로 갈수록 커져서, 다음 퀘스트의 레벨 조건을 향해
+# 크게 한 걸음 나아가게 한다 (몬스터를 잡아 모으는 경험치를 보조하는 역할)
+const QUEST_COMPLETION_XP: Dictionary = {
+	"forest_orcs": 30,
+	"cave_skeletons": 50,
+	"desert_mummies": 80,
+	"ruins_key": 150,
+}
+
+# 퀘스트 수락 조건: 진행도(선행 퀘스트를 몇 개 깼는가)와 레벨(얼마나 강한가)을 함께 본다.
+# 진행도만으로는 "순서"만 강제되고 강함은 안 보게 되므로, 레벨 조건을 함께 걸어 경험치를 모아야
+# 다음 단계로 넘어가도록 했다. 표에 없는 퀘스트(숲 오크 = 시작 퀘스트)는 조건 없이 수락 가능하다.
+# prev_quest는 안내 문구에 쓸 "직전 퀘스트" (어느 걸 먼저 깨야 하는지 이름으로 알려주기 위함)
+const QUEST_REQUIREMENTS: Dictionary = {
+	"cave_skeletons": {"progress": 1, "level": 5, "prev_quest": "forest_orcs"},
+	"desert_mummies": {"progress": 2, "level": 10, "prev_quest": "cave_skeletons"},
+	"ruins_key": {"progress": 3, "level": 15, "prev_quest": "desert_mummies"},
+}
+
+
+# 이 퀘스트를 지금 수락할 수 있는지 (진행도와 레벨을 모두 만족해야 함).
+# 조건표에 없는 퀘스트는 항상 true
+func can_start_quest(quest_id: String) -> bool:
+	if not QUEST_REQUIREMENTS.has(quest_id):
+		return true
+	var req: Dictionary = QUEST_REQUIREMENTS[quest_id]
+	return get_flag("progress") >= int(req["progress"]) and get_player_level() >= int(req["level"])
+
+
+# 조건 미달 시 대화창에 띄울 안내 문구 ("숲의 오크 소탕 완료 및 레벨 5 이상 필요").
+# 조건이 없거나 이미 만족했으면 빈 문자열
+func get_quest_requirement_text(quest_id: String) -> String:
+	if not QUEST_REQUIREMENTS.has(quest_id) or can_start_quest(quest_id):
+		return ""
+	var req: Dictionary = QUEST_REQUIREMENTS[quest_id]
+	var prev_id: String = req.get("prev_quest", "")
+	var prev_title: String = quests[prev_id]["title"] if quests.has(prev_id) else "이전 퀘스트"
+	return "%s 완료 및 레벨 %d 이상 필요" % [prev_title, int(req["level"])]
 
 
 # 퀘스트 완료 시 그 퀘스트를 의뢰한 NPC의 호감도를 올린다 (숲 오크→로한, 동굴 스켈레톤→유서프, 사막 미라/유적 열쇠→나딤)
@@ -773,16 +860,65 @@ func _apply_quest_completion_affinity(quest_id: String) -> void:
 		change_affinity(bonus["npc_id"], bonus["amount"])
 
 
-# 레벨업(quest_level 상승) 시 늘어나는 최대 체력/마나 폭
+# ── 경험치 / 레벨 ──────────────────────────────────────────────────────────
+
+# 레벨업 1회당 늘어나는 최대 체력/마나 폭
 const LEVEL_UP_HP_GAIN := 8
 const LEVEL_UP_MANA_GAIN := 10
 # 레벨업 1회당 지급되는 스킬포인트 (티어2 카드 하나 = 3점이라, 레벨업 한 번에 티어2 하나를 풀 수 있다)
 const SKILL_POINTS_PER_LEVEL := 3
 
+# 레벨 N에서 N+1로 가는 데 필요한 경험치 = XP_BASE + (N-1) * XP_STEP.
+# 레벨1→2는 40, 2→3은 60, 3→4는 80 … 으로 매 레벨 20씩 무거워진다 (상한 없음)
+const XP_BASE := 40
+const XP_STEP := 20
 
-# quest_level이 오를 때마다 호출됨. 최대 체력/마나를 늘리고 같은 폭만큼 현재치도 회복시킨 뒤(최대치 초과 방지)
-# quest_completed_with_level_up을 방출해 LevelUpPopup이 "퀘스트 완료 + 레벨업"을 한 번에 안내하게 함
-func _apply_level_up(quest_title: String) -> void:
+
+# level에서 다음 레벨로 가는 데 필요한 경험치. level이 1 미만이면 1레벨 기준으로 계산한다
+func xp_to_next_level(level: int) -> int:
+	return XP_BASE + (max(1, level) - 1) * XP_STEP
+
+
+func get_player_level() -> int:
+	return get_flag("player_level")
+
+
+func get_player_xp() -> int:
+	return get_flag("player_xp")
+
+
+# 현재 레벨에서 다음 레벨까지 필요한 경험치 (HUD 진행바가 분모로 쓴다)
+func get_xp_to_next() -> int:
+	return xp_to_next_level(get_player_level())
+
+
+# 경험치를 amount만큼 주고, 필요치를 넘을 때마다 레벨을 올린다.
+#
+# xp는 "현재 레벨 안에서 쌓인 양"이라 레벨업할 때마다 그 레벨의 필요치를 빼고 남은 만큼이 다음
+# 레벨로 이월된다. while 루프인 이유는 한 번에 여러 레벨이 오를 수 있기 때문이다 —
+# 유적 보스(100 XP)처럼 큰 덩어리를 받거나 낮은 레벨에서 여러 마리를 한꺼번에 잡는 경우가 그렇다.
+#
+# 실제로 오른 레벨 수를 반환한다 (호출부가 "레벨업했는지"를 알고 싶을 때 쓰라고)
+func add_xp(amount: int) -> int:
+	if amount <= 0:
+		return 0
+
+	set_flag("player_xp", get_player_xp() + amount)
+
+	var levels_gained := 0
+	while get_player_xp() >= get_xp_to_next():
+		set_flag("player_xp", get_player_xp() - get_xp_to_next())
+		set_flag("player_level", get_player_level() + 1)
+		_apply_level_up()
+		levels_gained += 1
+
+	xp_changed.emit(get_player_xp(), get_xp_to_next())
+	return levels_gained
+
+
+# 레벨이 하나 오를 때마다 호출됨. 최대 체력/마나를 늘리고 같은 폭만큼 현재치도 회복시킨 뒤
+# (최대치 초과 방지) player_leveled_up을 방출해 LevelUpPopup이 안내하게 함
+func _apply_level_up() -> void:
 	# 레벨업은 "기본" 최대 체력만 올리고, 실제 player_max_hp는 방패 보너스를 얹어 다시 계산한다.
 	# (player_max_hp를 직접 올리면 방패를 낀 채 레벨업할 때 보너스가 기본값에 눌러붙어 중복 적용된다)
 	set_flag("player_base_max_hp", get_flag("player_base_max_hp") + LEVEL_UP_HP_GAIN)
@@ -791,7 +927,7 @@ func _apply_level_up(quest_title: String) -> void:
 	set_flag("player_max_mana", get_flag("player_max_mana") + LEVEL_UP_MANA_GAIN)
 	set_flag("player_mana", min(get_flag("player_max_mana"), get_flag("player_mana") + LEVEL_UP_MANA_GAIN))
 	add_skill_points(SKILL_POINTS_PER_LEVEL)
-	quest_completed_with_level_up.emit(quest_title, LEVEL_UP_HP_GAIN, LEVEL_UP_MANA_GAIN)
+	player_leveled_up.emit(get_player_level(), LEVEL_UP_HP_GAIN, LEVEL_UP_MANA_GAIN, SKILL_POINTS_PER_LEVEL)
 
 
 # 해당 퀘스트가 수락되어 활성 상태인지 여부
@@ -820,8 +956,8 @@ func restore_quests(data: Dictionary) -> void:
 		quest_changed.emit(quest_id)
 
 
-# Stage 4→5 전환에 쓰는 quest_level 임계값 (현재 퀘스트 2개 기준, guardian 게이트와 동일)
-const OBJECTIVE_QUEST_LEVEL_TARGET := 2
+# Stage 4→5 전환에 쓰는 progress(진행도) 임계값 (현재 퀘스트 2개 기준, guardian 게이트와 동일)
+const OBJECTIVE_PROGRESS_TARGET := 2
 
 # 별도 flag로 저장하지 않고, 기존 진행 flag들로 현재 메인 목표 단계(1~8)를 매번 계산해서 반환.
 # objective 상태가 실제 진행 상황과 항상 일치하게 유지된다.
@@ -837,7 +973,7 @@ func get_current_objective_stage() -> int:
 	if not get_flag("met_mia_decisive"):
 		return 3
 
-	if get_flag("quest_level") < OBJECTIVE_QUEST_LEVEL_TARGET:
+	if get_flag("progress") < OBJECTIVE_PROGRESS_TARGET:
 		return 4
 
 	if not get_flag("guardian_event_done"):
@@ -862,7 +998,7 @@ func get_objective_text() -> String:
 		3:
 			return "술집에서 미아를 만나 결정적 정보를 얻으세요"
 		4:
-			return "숲과 동굴의 몬스터를 처치해 힘을 기르세요 (레벨 %d/%d)" % [get_flag("quest_level"), OBJECTIVE_QUEST_LEVEL_TARGET]
+			return "숲과 동굴의 몬스터를 처치해 힘을 기르세요 (레벨 %d/%d)" % [get_flag("progress"), OBJECTIVE_PROGRESS_TARGET]
 		5:
 			return "동굴 깊은 곳의 수호자를 찾아가세요"
 		6:

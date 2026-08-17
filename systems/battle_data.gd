@@ -18,6 +18,8 @@ const SKILLS: Dictionary = {
 
 # 몬스터 종류별 전투 데이터. damage_min/damage_max: 몬스터 반격 한 번의 피해 범위 (매 반격마다 무작위).
 # gold_min/gold_max: 처치 시 드롭하는 골드 범위 (스켈레톤이 오크보다 강한 만큼 보상도 더 많음).
+# xp: 처치 시 주는 경험치 (골드와 같은 기준으로 강한 몬스터일수록 크다. 골드가 범위인 것과 달리
+# 경험치는 고정값이라 "몇 마리를 잡으면 레벨이 오른다"를 플레이어가 계산할 수 있다).
 # portrait_region: 전투 카드 초상화용으로 Idle 시트의 첫 프레임에서 머리만 잘라낸 영역
 # (변종마다 그림은 달라도 캔버스 비율은 같은 팩 컨벤션이라, 어떤 변종이 뽑히든 같은 좌표를 재사용한다).
 # 스탯은 변종과 무관하게 타입 하나로 통일 — 변종은 pick_variant()가 다루는 순수 시각 정보
@@ -25,6 +27,7 @@ const MONSTERS: Dictionary = {
 	"ORC": {
 		"name": "오크",
 		"max_hp": 30,
+		"xp": 8,
 		"damage_min": 5,
 		"damage_max": 5,
 		"gold_min": 5,
@@ -35,6 +38,7 @@ const MONSTERS: Dictionary = {
 	"SKELETON": {
 		"name": "스켈레톤",
 		"max_hp": 40,
+		"xp": 15,
 		"damage_min": 6,
 		"damage_max": 7,
 		"gold_min": 8,
@@ -47,6 +51,7 @@ const MONSTERS: Dictionary = {
 	"MUMMY": {
 		"name": "미라",
 		"max_hp": 45,
+		"xp": 25,
 		"damage_min": 7,
 		"damage_max": 8,
 		"gold_min": 12,
@@ -60,6 +65,7 @@ const MONSTERS: Dictionary = {
 	"RUINS_BOSS": {
 		"name": "폭주한 근원체",
 		"max_hp": 80,
+		"xp": 100,
 		"damage_min": 10,
 		"damage_max": 14,
 		"gold_min": 30,

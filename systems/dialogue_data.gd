@@ -719,7 +719,7 @@ const YUSUF_DIALOGUE: Array = [
 			{"label": "[동굴 이야기를 묻는다]", "next_id": "yusuf_cave_hint"},
 			{"label": "[당신은 누구세요?]", "next_id": "yusuf_who"},
 			{"label": "[뭘 팔고 있어요?]", "next_id": "yusuf_wares"},
-			{"label": "[스켈레톤 처치를 돕겠다고 한다]", "next_id": "yusuf_quest_accept", "next_id_if_blocked": "yusuf_quest_not_ready", "min_quest_level": 1, "start_quest": "cave_skeletons", "show_if_quest_inactive": "cave_skeletons"},
+			{"label": "[스켈레톤 처치를 돕겠다고 한다]", "next_id": "yusuf_quest_accept", "start_quest": "cave_skeletons", "show_if_quest_inactive": "cave_skeletons"},
 			{"label": "[스켈레톤은 어떻게 되어가요?]", "next_id": "yusuf_quest_status", "show_if_quest_active": "cave_skeletons"},
 			{"label": "[다른 사람들에 대해 묻는다]", "next_id": "yusuf_gossip", "show_if_flag": "met_elara"},
 			{
