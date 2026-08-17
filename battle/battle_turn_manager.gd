@@ -19,6 +19,9 @@ signal weapon_switched(weapon: WeaponState.WeaponType)
 # 몬스터 한 마리가 플레이어를 때린 결과. 다인전에서는 살아있는 마리 수만큼 순차로 발생한다
 # (예전 단일 전투의 enemy_turn_resolved를 마리별로 쪼갠 것 — attacker_index가 누가 때렸는지 알려준다)
 signal enemy_attack_resolved(attacker_index: int, damage_taken: int, dodged: bool, counter_damage: int)
+# 마나가 바닥나 공격 대신 숨을 고른 몬스터. mana_gained/hp_gained는 실제로 회복된 양
+# (hp_gained가 0이면 이번엔 체력 회복이 안 붙은 것)
+signal monster_recovered(index: int, mana_gained: int, hp_gained: int)
 signal monster_defeated(index: int) # 마리 하나가 쓰러짐 (전투는 아직 안 끝났을 수 있음)
 signal player_defeated
 signal enemy_defeated # 살아있는 몬스터가 하나도 남지 않음 = 전투 승리
@@ -37,16 +40,6 @@ var monster_data: Dictionary = {} # 그 종류의 스탯 표 (마리별 값은 M
 
 var turn_number: int = 0
 var battle_over: bool = false
-
-
-# [임시 — 다음 단계에서 제거] 기존 VFX 컷신 5종(삼중나선/신속/유성낙하/시공균열/천벌)이 아직
-# 단일 몬스터 가정으로 이 값을 읽는다. 자동 타겟(살아있는 첫 마리)의 HP를 돌려주므로 그 컷신들은
-# 지금도 "첫 번째 몬스터를 때린다"는 전제로 정확히 동작한다. 진짜 타겟팅 UI가 붙는 다음 단계에서
-# 컷신들이 대상을 인자로 받게 바뀌면 이 프로퍼티는 지워야 한다
-var monster_hp: int:
-	get:
-		var target := get_auto_target()
-		return target.hp if target != null else 0
 
 # 방어/피하기 카드가 만드는 "다음 적 턴 한정" 임시 상태. 적 턴을 해결하는 즉시 소모되고 0/false로 돌아간다.
 # (스펙에 세부 규칙이 없어 아래처럼 설계했다 — 근거는 _resolve_enemy_turn() 주석 참고)
@@ -359,7 +352,15 @@ func _resolve_enemy_turn() -> void:
 		# 죽은 플레이어를 계속 때리는 연출이 이어지지 않게
 		if GameState.get_flag("player_hp") <= 0:
 			break
-		_resolve_single_attack(monster)
+
+		# 마나가 남아 있으면 공격, 바닥났으면 그 턴은 숨고르기(회복).
+		# 판단은 마리마다 따로 하므로 다인전에서는 "둘은 때리고 하나는 회복하는" 턴도 나온다
+		if monster.can_attack():
+			monster.spend_attack_mana()
+			_resolve_single_attack(monster)
+		else:
+			var gained := monster.recover()
+			monster_recovered.emit(monster.index, gained["mana"], gained["hp"])
 
 	# 임시 상태는 이번 적 턴에서만 유효 — 결과와 무관하게 소모하고 초기화한다
 	# (피하기/반격은 위에서 이미 첫 공격에 소모됐을 수 있고, 방어는 남은 풀이 여기서 버려진다)

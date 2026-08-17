@@ -22,6 +22,28 @@ var max_hp: int = 0
 var hp: int = 0
 var resistance: EnemyResistance # 마리마다 독립적으로 굴린다 (한 마리가 물리 저항이어도 옆은 아닐 수 있음)
 
+# ── 몬스터 마나 (연출용 "가짜" 자원) ──────────────────────────────────────
+# 플레이어 마나처럼 카드 비용을 치르는 진짜 자원이 아니라, "적도 자원을 쓰며 싸운다"는 그림을
+# 만들기 위한 장치다. 공격할 때마다 줄고 바닥나면 그 턴은 회복에 쓰므로, 결과적으로 적이 매 턴
+# 똑같이 때리기만 하지 않고 공격/숨고르기를 오가게 된다 — 플레이어에겐 "적이 쉬는 턴"이 곧
+# 반격을 몰아칠 기회가 되어 턴마다 판단할 거리가 생긴다.
+#
+# 밸런스에 직접 손대지 않는다는 점이 중요하다: 피해량은 여전히 monster_data의 damage_min/max가
+# 정하고, 마나는 "이번 턴에 때리는가 마는가"만 가른다
+const MANA_MAX := 100
+const ATTACK_COST_MIN := 25
+const ATTACK_COST_MAX := 40
+# 이 값 미만이면 공격 대신 회복 턴. 공격 최소 비용과 같은 값이라 "다음 공격을 낼 수 없으면 쉰다"가 된다
+const LOW_MANA_THRESHOLD := 25
+const RECOVER_MANA_MIN := 40
+const RECOVER_MANA_MAX := 60
+# 회복 턴에 체력까지 함께 회복할 확률과 그 폭(최대 체력 대비)
+const RECOVER_HP_CHANCE := 0.3
+const RECOVER_HP_FRACTION_MIN := 0.05
+const RECOVER_HP_FRACTION_MAX := 0.10
+
+var mana: int = MANA_MAX
+
 # 화면에 보여줄 이름. 같은 종류가 여러 마리면 "오크 2"처럼 번호를 붙여 구분한다 —
 # 여러 마리가 각자 공격/피격 메시지를 띄우는데 전부 "오크"면 누가 뭘 했는지 읽을 수 없다.
 # 번호를 붙일지는 그룹 전체를 봐야 정해지므로 생성자가 아니라 매니저가 채운다
@@ -55,3 +77,43 @@ func take_damage(amount: int) -> int:
 	var before := hp
 	hp = max(0, hp - amount)
 	return before - hp
+
+
+# 체력을 회복하고 실제로 회복된 양을 반환 (최대치에서 멈춘다).
+# take_damage와 같은 이유로 "실제 변화량"을 돌려준다 — 화면에 띄울 숫자와 HP바 변화가 어긋나지 않게
+func heal(amount: int) -> int:
+	if amount <= 0:
+		return 0
+	var before := hp
+	hp = min(max_hp, hp + amount)
+	return hp - before
+
+
+# ── 마나 (공격/회복 판단) ──────────────────────────────────────────────────
+
+# 이번 턴에 공격할 수 있는지. 마나가 모자라면 공격 대신 회복 턴이 된다
+func can_attack() -> bool:
+	return mana >= LOW_MANA_THRESHOLD
+
+
+# 공격 비용을 치르고 실제 소모량을 반환 (0 밑으로는 내려가지 않는다)
+func spend_attack_mana() -> int:
+	var cost := randi_range(ATTACK_COST_MIN, ATTACK_COST_MAX)
+	var before := mana
+	mana = max(0, mana - cost)
+	return before - mana
+
+
+# 회복 턴 처리: 마나를 회복하고, 확률에 걸리면 체력도 조금 회복한다.
+# 실제로 회복된 양을 {"mana": int, "hp": int}로 돌려줘 호출부가 그대로 화면에 쓸 수 있게 한다
+# (hp가 0이면 이번 회복엔 체력이 안 붙은 것)
+func recover() -> Dictionary:
+	var mana_before := mana
+	mana = min(MANA_MAX, mana + randi_range(RECOVER_MANA_MIN, RECOVER_MANA_MAX))
+
+	var healed := 0
+	if randf() < RECOVER_HP_CHANCE:
+		var fraction := randf_range(RECOVER_HP_FRACTION_MIN, RECOVER_HP_FRACTION_MAX)
+		healed = heal(int(round(max_hp * fraction)))
+
+	return {"mana": mana - mana_before, "hp": healed}

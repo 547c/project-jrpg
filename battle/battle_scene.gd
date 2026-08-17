@@ -140,6 +140,24 @@ const VFX_CONFIG := {
 	# 색은 회백(신성한 흰빛)에서 0번 행으로 바꿨다 — 이 행은 줄기 중심이 노랗고 가장자리만 붉어
 	# "낙뢰"에 가장 가깝다 (4번 주황 행은 전체가 탁한 주황이라 번개 느낌이 덜했다)
 	"light_pillar": {"path": "res://assets/vfx/Free/Part 15/701.png", "row": VFX_ROW_RED, "frames": 14, "fps": 30.0},
+	# ── 몬스터 공격 이펙트 (종류별로 하나씩) ────────────────────────────────
+	# 카드처럼 정교하게 고르진 않았고, 아직 아무 카드도 안 쓰는 시트 중에서 각 몬스터의 인상에
+	# 맞는 모양을 하나씩 골랐다. 색 행은 그 몬스터의 톤에 맞춰 고른다.
+	# 휘어진 초승달이 발톱 자국처럼 갈라지는 모양 — 오크의 우악스러운 근접 공격
+	"enemy_orc": {"path": "res://assets/vfx/Free/Part 1/06.png", "row": VFX_ROW_CRIMSON, "frames": 15, "fps": 30.0},
+	# 사방으로 뻗어나가는 뾰족한 균열 — 스켈레톤의 마르고 날카로운 인상. 뼈 색(회백)을 쓴다
+	"enemy_skeleton": {"path": "res://assets/vfx/Free/Part 4/195.png", "row": VFX_ROW_GREY, "frames": 14, "fps": 32.0},
+	# 갈고리처럼 감겼다 풀리는 곡선 다발 — 미라의 붕대가 휘감기는 느낌. 사막 톤의 주황을 쓴다
+	"enemy_mummy": {"path": "res://assets/vfx/Free/Part 6/295.png", "row": VFX_ROW_ORANGE, "frames": 9, "fps": 26.0},
+}
+
+# 몬스터 종류별 공격 이펙트. 표에 없는 종류는 오크 것을 쓴다(_enemy_attack_vfx_key).
+# 유적 보스는 스프라이트를 미라에서 빌려 쓰므로 이펙트도 미라 것을 그대로 물려받는다
+const MONSTER_ATTACK_VFX := {
+	"ORC": "enemy_orc",
+	"SKELETON": "enemy_skeleton",
+	"MUMMY": "enemy_mummy",
+	"RUINS_BOSS": "enemy_mummy",
 }
 
 # key -> 400 Sounds pack 경로. 물리/방어는 Weapons(금속·타격), 마법/마나는 복고풍 신스(폭발감/충전감),
@@ -172,6 +190,11 @@ const VFX_SFX := {
 	# 번개 전용 사운드가 팩에 없어 마법 계열 타격음을 그대로 재사용 — 대신 화면 히트 플래시로
 	# "전기가 튀는" 느낌을 시각적으로 보강한다
 	"magic_lightning": "res://assets/sfx/400 Sounds pack/Retro/explosion_quick.wav",
+	# 몬스터 공격음: 카드(검/마법)와 계열을 다르게 해 "적이 때렸다"가 소리만으로 구분되게 한다 —
+	# 플레이어 카드는 전부 무기/폭발 계열이라, 몬스터는 타격/뼈 계열(Combat and Gore)에서 골랐다
+	"enemy_orc": "res://assets/sfx/400 Sounds pack/Combat and Gore/punch_2.wav",
+	"enemy_skeleton": "res://assets/sfx/400 Sounds pack/Combat and Gore/bone_snap.wav",
+	"enemy_mummy": "res://assets/sfx/400 Sounds pack/Combat and Gore/crunch_quick.wav",
 }
 
 # 카드 이름 -> VFX 키 강제 지정. DAMAGE처럼 같은 효과·색을 공유하는 카드들도 이 표에 있으면
@@ -498,6 +521,41 @@ const MONSTER_CARD_MARGIN := 24.0 # 카드 열과 몬스터 스프라이트 사�
 # 쓰러진 몬스터의 HUD 카드에 씌우는 색조 (지우지 않고 흐리게 남겨 자리 번호가 계속 맞게)
 const DEFEATED_CARD_MODULATE := Color(0.45, 0.45, 0.5, 0.75)
 
+# ── 몬스터 마나바 (HUD 카드 안, HP바 바로 아래) ──────────────────────────────
+# HP바처럼 정교할 필요는 없고 "줄었다/찼다"만 읽히면 되므로, .tscn을 고치는 대신 코드로 만들어
+# 붙인다 (0번 카드에 붙여두면 나머지 카드는 duplicate()로 그대로 물려받는다).
+# 색은 HP(빨강)와 확실히 갈리는 보랏빛 파랑 — 플레이어 마나바(하늘색)와도 톤이 달라 헷갈리지 않는다
+const MONSTER_MANA_BAR_RECT := Rect2(80, 27, 145, 9)
+const MONSTER_MANA_BAR_BG := Color(0.08, 0.07, 0.13, 0.85)
+const MONSTER_MANA_BAR_FILL := Color(0.45, 0.38, 0.9, 1.0)
+
+# ── 피격 시 화면 가장자리 붉은 물듦 ─────────────────────────────────────────
+# 화면 전체를 덮는 HitFlash와 달리 가장자리만 물들여야 해서, 가운데가 투명하고 바깥으로 갈수록
+# 붉어지는 방사형 그라디언트를 코드로 만들어 쓴다 (셰이더 없이 GradientTexture2D의 radial 채우기).
+# 중앙이 비어 있어 전투 장면을 가리지 않으면서 "맞았다"는 감각만 준다
+const EDGE_FLASH_COLOR := Color(0.75, 0.05, 0.06)
+# "가장자리가 살짝 물드는" 정도를 노린 값. 처음엔 0.55/0.42로 잡았는데 실제로 찍어 보니 붉은 기가
+# 화면 절반까지 올라와 카드 UI까지 덮여서, 세기를 낮추고 투명한 중앙을 넓혔다
+const EDGE_FLASH_ALPHA := 0.34
+const EDGE_FLASH_IN_DURATION := 0.06
+const EDGE_FLASH_OUT_DURATION := 0.34
+const EDGE_FLASH_INNER_STOP := 0.6 # 이 반지름까지는 완전히 투명 (가운데를 비워두는 범위)
+
+# ── 몬스터 행동 연출 ────────────────────────────────────────────────────────
+const ENEMY_ATTACK_VFX_SCALE := 0.9 # 카드 이펙트보다 살짝 작게 — 적 공격이 화면을 다 덮지 않도록
+const ENEMY_RECOVER_VFX_SCALE := 1.0
+const ENEMY_RECOVER_HOLD := 0.55 # 회복 연출을 보여주는 시간
+
+# 몬스터 돌진: 기존 _lunge(제자리에서 26px 툭)로는 "제자리에서 화면만 흔들린다"는 인상이 그대로라,
+# 섬광 카드의 돌진과 같은 방식(실제 이동 + 잔상)으로 플레이어 코앞까지 달려들었다가 돌아가게 한다.
+# 정지 지점 계산은 _flash_slash_dash_target과 같은 "두 스프라이트 테두리 사이 간격" 방식을 쓴다
+const ENEMY_CHARGE_GAP := 18.0
+const ENEMY_CHARGE_IN_DURATION := 0.16
+# 복귀는 던져두고(await 없이) 다음 연출로 넘어간다. 이 값이 아래 피격 연출의 대기 시간(최소 0.3초)보다
+# 짧아야, 다음 몬스터가 움직이기 전에 이미 제자리로 돌아가 있다
+const ENEMY_CHARGE_BACK_DURATION := 0.22
+const ENEMY_CHARGE_TINT := Color(1.0, 0.55, 0.55, 1.0) # 잔상 색 (붉게 물든 적의 궤적)
+
 # ── 타겟 선택 표시 ───────────────────────────────────────────────────────────
 # 발밑 원(선택 가능 표시)과 머리 위 화살표. 전용 아이콘 에셋이 없어 그림자(_setup_shadow)와 같은
 # 방식으로 폴리곤을 직접 만들어 쓴다 — 에셋이 생기면 _build_target_marker()만 갈아끼우면 된다
@@ -586,6 +644,7 @@ const HOVER_SCALE := 1.15
 const HOVER_RISE := 14.0 # 확대와 함께 위로 떠오르는 픽셀 수
 const HOVER_DURATION := 0.12
 
+@onready var _view: CanvasLayer = $View
 @onready var _actors: Node2D = $View/Actors
 @onready var _hit_flash: ColorRect = $View/HitFlash
 # 화이트아웃(_hit_flash)이 걷히는 동안 그 위에 겹쳐 스치는 두 번째 오버레이.
@@ -624,19 +683,21 @@ var _monster_type: String = ""
 var _monster_data: Dictionary = {} # 종류 단위 스탯 표 (마리 수와 무관 — 그룹 전체가 같은 종류)
 var _variants: Array = [] # 마리별 시각 변종 (SceneManager가 그대로 전달, 0번 = 필드에서 부딪힌 개체)
 
-# [임시 — 다음 단계에서 제거] VFX 컷신 5종이 아직 단일 몬스터 가정으로 이 값을 읽는다 (프레임 크기
-# 계산용). 0번 몬스터의 변종을 가리키므로 그 컷신들은 "첫 번째 몬스터를 때린다"는 전제로 정확히 동작한다
+# 0번 몬스터의 변종. 마리별 값이 필요한 곳은 전부 _variants[index]나 _monster_frame_size()를 쓰고,
+# 이 별칭은 "마리와 무관한 기본값"이 필요한 자리(범위를 벗어난 조회의 대비값)에서만 남아 있다
 var _variant: Dictionary = {}
 
 # 마리별 화면 요소. 각 배열의 index는 MonsterState.index와 1:1로 대응한다.
-# 0번은 .tscn에 원래 있던 노드를 그대로 쓰고(그래야 _monster_sprite/_monster_hp_bar를 직접 참조하는
-# 기존 컷신들이 손대지 않은 채로 계속 동작한다), 1번부터는 그 노드를 duplicate()해서 만든다
+# 0번은 .tscn에 원래 있던 노드를 그대로 쓰고, 1번부터는 그 노드를 duplicate()해서 만든다
 var _monster_sprites: Array[AnimatedSprite2D] = []
 var _monster_shadows: Array[Polygon2D] = []
 var _resist_badges: Array[Sprite2D] = []
 var _monster_card_panels: Array[Control] = []
 var _monster_hp_bars: Array[ProgressBar] = []
 var _monster_hp_labels: Array[Label] = []
+var _monster_mana_bars: Array[ProgressBar] = []
+# 피격 시 화면 가장자리를 붉게 물들이는 오버레이 (코드로 만들어 붙인다 — _build_edge_flash 참고)
+var _edge_flash: TextureRect
 # 마리별 idle 프레임 안에서 실제 그림이 시작되는 y (저항 배지를 머리 위에 붙일 때 쓰는 보정값)
 var _monster_art_tops: Array[float] = []
 # 매니저가 "쓰러졌다"고 알려준 뒤 아직 사망 연출을 재생하지 않은 자리 번호들.
@@ -716,6 +777,7 @@ var _outcome: String = "" # "" / "victory" / "defeat"
 func _ready() -> void:
 	add_to_group("battle_box")
 	_build_battle_ui_resources()
+	_build_edge_flash()
 
 	for i in range(HAND_BUTTON_COUNT):
 		var wrapper := _hand_row.get_node("Card%d" % (i + 1)) as Control
@@ -889,6 +951,7 @@ func start_with(monster_type: String, variants: Array) -> void:
 	_manager.turn_started.connect(_on_turn_started)
 	_manager.card_played.connect(_on_card_played)
 	_manager.enemy_attack_resolved.connect(_on_enemy_attack_resolved)
+	_manager.monster_recovered.connect(_on_monster_recovered)
 	_manager.monster_defeated.connect(_on_monster_defeated)
 	_manager.player_defeated.connect(_on_player_defeated)
 	_manager.enemy_defeated.connect(_on_enemy_defeated)
@@ -896,6 +959,7 @@ func start_with(monster_type: String, variants: Array) -> void:
 	for i in range(_monster_hp_bars.size()):
 		_monster_hp_bars[i].max_value = _monster_data["max_hp"]
 		_monster_hp_bars[i].value = _monster_data["max_hp"]
+	_refresh_monster_mana_bars()
 	_player_hp_bar.max_value = GameState.get_flag("player_max_hp")
 	_player_hp_bar.value = GameState.get_flag("player_hp")
 
@@ -996,10 +1060,22 @@ func _on_card_played(_card: Card, damage_dealt: int) -> void:
 # 나중에 이 목록을 순서대로 재생한다 (시그널은 매니저 안에서 동기적으로 전부 끝난 뒤에야 제어가 돌아온다)
 func _on_enemy_attack_resolved(attacker_index: int, damage_taken: int, dodged: bool, counter_damage: int) -> void:
 	_enemy_attacks.append({
+		"action": "attack",
 		"attacker": attacker_index,
 		"damage": damage_taken,
 		"dodged": dodged,
 		"counter": counter_damage,
+	})
+
+
+# 마나가 바닥나 숨을 고른 몬스터. 공격과 같은 버퍼에 순서대로 쌓아, 적 턴 연출이 실제 진행 순서대로
+# 재생되게 한다 (2마리는 때리고 1마리는 회복하는 턴도 그대로 순서를 지킨다)
+func _on_monster_recovered(index: int, mana_gained: int, hp_gained: int) -> void:
+	_enemy_attacks.append({
+		"action": "recover",
+		"attacker": index,
+		"mana": mana_gained,
+		"hp": hp_gained,
 	})
 
 
@@ -1285,9 +1361,8 @@ func _play_card_flow(card: Card, target_index: int = -1) -> void:
 # 이펙트/사운드는 여기서 카드별로 직접 부르지 않고 _vfx_key_for_card()로 종류를 정한 뒤
 # _play_card_vfx()에서 이펙트+사운드를 함께 재생한다 — 화면 흔들림만 DAMAGE에서 따로 켠다
 # target_index는 이 카드가 때릴 몬스터의 자리 번호 (피해 카드가 아니면 쓰이지 않는다).
-# 아래 전용 컷신 5종은 아직 0번 몬스터를 하드코딩으로 참조하므로 이 값을 넘겨받지 않는다 —
-# 지금은 자동 타겟이 항상 "살아있는 첫 마리"라 0번이 살아있는 동안에는 결과가 일치하고,
-# 컷신들이 대상을 인자로 받도록 고치는 건 타겟팅 UI를 붙이는 다음 단계의 일이다
+# 전용 컷신 5종도 이 값을 그대로 넘겨받아, 순간이동/낙하 지점 같은 위치 계산과 팝업/HP바를
+# 전부 "플레이어가 고른 그 몬스터" 기준으로 잡는다
 func _animate_card(card: Card, hp_before: int, mana_before: int, monster_hp_before: int, target_index: int = 0) -> void:
 	var target_sprite := _monster_sprite_at(target_index)
 	match card.effect:
@@ -1295,35 +1370,35 @@ func _animate_card(card: Card, hp_before: int, mana_before: int, monster_hp_befo
 			if card.card_name == "삼중나선":
 				# 삼중나선은 팝업/HP바를 스스로 3단계로 나눠 보여주는 완전히 독립된 컷신이라,
 				# 아래 공통 꼬리(단일 팝업+HP바 트윈)를 타지 않고 여기서 바로 끝낸다
-				await _play_triple_helix_cutscene(card, monster_hp_before)
+				await _play_triple_helix_cutscene(card, monster_hp_before, target_index)
 				return
 			if card.card_name == "신속":
 				# 신속도 같은 이유(스스로 5단계로 나눠 표시)로 공통 꼬리를 타지 않는다
-				await _play_swift_cutscene(card, monster_hp_before)
+				await _play_swift_cutscene(card, monster_hp_before, target_index)
 				return
 			if card.card_name == "유성낙하":
 				# 단발 강타지만 팝업/HP바를 착지 순간에 맞춰 스스로 띄우므로 공통 꼬리를 타지 않는다
-				await _play_meteor_cutscene(card, monster_hp_before)
+				await _play_meteor_cutscene(card, monster_hp_before, target_index)
 				return
 			if card.card_name == "시공균열":
 				# 해제 순간에 맞춰 스스로 팝업/HP바를 띄우므로 공통 꼬리를 타지 않는다
-				await _play_time_rift_cutscene(card, monster_hp_before)
+				await _play_time_rift_cutscene(card, monster_hp_before, target_index)
 				return
 			if card.card_name == "천벌":
 				# 빛기둥 착탄에 맞춰 스스로 팝업/HP바를 띄우므로 공통 꼬리를 타지 않는다
-				await _play_judgment_cutscene(card, monster_hp_before)
+				await _play_judgment_cutscene(card, monster_hp_before, target_index)
 				return
 			if card.card_name == "파이어볼":
 				# 원거리 마법이라 캐릭터는 제자리에 선 채, 앞쪽 허공에 불꽃을 짧게 응축했다가 터뜨린다
-				await _play_charge_stage("charge_fire", FIREBALL_CHARGE_SFX, 1.0, FIREBALL_CHARGE_SCALE, FIREBALL_CHARGE_DURATION)
+				await _play_charge_stage("charge_fire", FIREBALL_CHARGE_SFX, 1.0, FIREBALL_CHARGE_SCALE, FIREBALL_CHARGE_DURATION, target_sprite.position)
 				_shake_actors()
 				_flash_hit(target_sprite)
 				_play_card_vfx(card, target_sprite)
 			elif card.card_name == "익스플로전":
 				# 2단 차징: 낮은 톤으로 한 번, 더 크고 높은 톤으로 한 번 더 모은 뒤 발사한다
-				await _play_charge_stage("charge_heavy_1", EXPLOSION_CHARGE1_SFX, EXPLOSION_CHARGE1_PITCH, EXPLOSION_CHARGE1_SCALE, EXPLOSION_CHARGE1_DURATION)
-				await _play_charge_stage("charge_heavy_2", EXPLOSION_CHARGE2_SFX, EXPLOSION_CHARGE2_PITCH, EXPLOSION_CHARGE2_SCALE, EXPLOSION_CHARGE2_DURATION)
-				await _launch_projectile(_cast_charge_origin(), target_sprite.position, "charge_heavy_2", 0.9, EXPLOSION_TRAVEL_DURATION)
+				await _play_charge_stage("charge_heavy_1", EXPLOSION_CHARGE1_SFX, EXPLOSION_CHARGE1_PITCH, EXPLOSION_CHARGE1_SCALE, EXPLOSION_CHARGE1_DURATION, target_sprite.position)
+				await _play_charge_stage("charge_heavy_2", EXPLOSION_CHARGE2_SFX, EXPLOSION_CHARGE2_PITCH, EXPLOSION_CHARGE2_SCALE, EXPLOSION_CHARGE2_DURATION, target_sprite.position)
+				await _launch_projectile(_cast_charge_origin(target_sprite.position), target_sprite.position, "charge_heavy_2", 0.9, EXPLOSION_TRAVEL_DURATION)
 				_shake_actors(EXPLOSION_SHAKE_AMOUNT, EXPLOSION_SHAKE_STEPS)
 				_flash_hit(target_sprite)
 				SFXPlayer.play(EXPLOSION_IMPACT_SFX) # 큰 폭발음 위에 저역 "쿵"을 겹친다
@@ -1351,7 +1426,7 @@ func _animate_card(card: Card, hp_before: int, mana_before: int, monster_hp_befo
 				# 곧바로 원위치로 돌아온다 — 베기 전에 노랗게 짧게 번쩍이는 "차징"도 함께 넣는다
 				await _flash_charge(_player_sprite)
 				var dash_start := _player_sprite.position
-				var dash_target := _flash_slash_dash_target(dash_start, target_sprite.position)
+				var dash_target := _flash_slash_dash_target(dash_start, target_sprite.position, target_index)
 				# 잔상은 돌진과 같은 시간 동안 나란히 재생돼야 "지나간 궤적"처럼 보이므로
 				# await 없이 던져서 돌진과 병렬로 돈다
 				_spawn_dash_afterimages(_player_sprite, dash_start, dash_target, FLASH_SLASH_CHARGE_TINT)
@@ -1453,12 +1528,14 @@ func _vfx_key_for_card(card: Card) -> String:
 
 
 # 반격이 실제로 적을 때리는 순간의 연출. 이때는 카드가 손을 떠난 뒤(적 턴)라 카드 객체가 없으므로,
-# 카드 기반인 _play_card_vfx() 대신 물리 타격 이펙트를 몬스터 위에 직접 재생한다
-func _play_counter_vfx() -> void:
+# 카드 기반인 _play_card_vfx() 대신 물리 타격 이펙트를 직접 재생한다.
+# 반격은 "때린 그 몬스터"를 되받아치므로(BattleTurnManager._resolve_single_attack), 위치는
+# 호출부가 공격자 좌표를 넘겨준다 — 다인전에서 엉뚱한 몬스터 위에 반격 이펙트가 터지지 않게
+func _play_counter_vfx(pos: Vector2) -> void:
 	if not _vfx_frames.has("physical"):
 		return
 	SFXPlayer.play(VFX_SFX["physical"])
-	_spawn_vfx_sprite("physical", _monster_sprite.position)
+	_spawn_vfx_sprite("physical", pos)
 
 
 # target 위치에 카드에 맞는 이펙트를 한 번 재생하고, 어울리는 타격음을 SFXPlayer로 함께 튼다.
@@ -1497,19 +1574,21 @@ func _spawn_vfx_sprite(key: String, pos: Vector2, scale_mult: float = 1.0, stret
 	return sprite
 
 
-# 플레이어가 원거리 마법을 "모으는" 지점 — 몬스터를 향한 앞쪽 허공(가슴~손 높이).
-# 캐릭터 위에 겹쳐 띄우면 자기 몸에 이펙트가 터지는 것처럼 보여서 앞으로 밀어냈다
-func _cast_charge_origin() -> Vector2:
-	var offset := _monster_sprite.position - _player_sprite.position
+# 플레이어가 원거리 마법을 "모으는" 지점 — 겨냥한 대상을 향한 앞쪽 허공(가슴~손 높이).
+# 캐릭터 위에 겹쳐 띄우면 자기 몸에 이펙트가 터지는 것처럼 보여서 앞으로 밀어냈다.
+# 대상 좌표를 인자로 받는 이유: 다인전에서 어느 몬스터를 노리느냐에 따라 마법을 모으는 방향이
+# 달라져야 "그쪽을 겨누고 있다"는 그림이 된다
+func _cast_charge_origin(target_pos: Vector2) -> Vector2:
+	var offset := target_pos - _player_sprite.position
 	var direction := offset.normalized() if offset.length() > 0.001 else Vector2.RIGHT
 	return _player_sprite.position + direction * CAST_CHARGE_FORWARD + Vector2(0, -CAST_CHARGE_RISE)
 
 
-# 차징 한 단계: 앞쪽 허공에 응축 이펙트를 띄우고 차징음을 울린 뒤, 그 단계가 끝날 때까지 기다린다
-func _play_charge_stage(key: String, sfx_path: String, pitch: float, scale_mult: float, duration: float) -> void:
+# 차징 한 단계: 겨냥한 대상 쪽 허공에 응축 이펙트를 띄우고 차징음을 울린 뒤, 그 단계가 끝날 때까지 기다린다
+func _play_charge_stage(key: String, sfx_path: String, pitch: float, scale_mult: float, duration: float, target_pos: Vector2) -> void:
 	if sfx_path != "":
 		SFXPlayer.play(sfx_path, SFXPlayer.DEFAULT_VOLUME_DB, pitch)
-	_spawn_vfx_sprite(key, _cast_charge_origin(), scale_mult)
+	_spawn_vfx_sprite(key, _cast_charge_origin(target_pos), scale_mult)
 	await _wait(duration)
 
 
@@ -1593,8 +1672,48 @@ func _end_turn_flow() -> void:
 # 여기서는 기록된 결과(_enemy_attacks)에 맞춰 보여주기만 한다.
 # 다인전에서는 살아있는 마리 수만큼 항목이 쌓여 있으므로, 공격한 순서대로 한 마리씩 재생한다
 func _animate_enemy_turn() -> void:
-	for attack in _enemy_attacks:
-		await _animate_single_enemy_attack(attack)
+	for action in _enemy_attacks:
+		if action.get("action", "attack") == "recover":
+			await _animate_monster_recover(action)
+		else:
+			await _animate_single_enemy_attack(action)
+		_refresh_monster_mana_bars()
+
+
+# 마나가 바닥난 몬스터가 숨을 고르는 연출: 제자리에서 마나 소용돌이가 감돌고, 체력까지 회복했다면
+# 치유 이펙트를 덧씌운다. 공격이 아니므로 화면 흔들림도 가장자리 물듦도 없다 —
+# "이 턴엔 안 때린다"가 조용한 연출로 바로 읽히게
+func _animate_monster_recover(action: Dictionary) -> void:
+	var index: int = action["attacker"]
+	var sprite := _monster_sprite_at(index)
+	var name_ := _monster_display_name(index)
+	var mana_gained: int = action["mana"]
+	var hp_gained: int = action["hp"]
+
+	SFXPlayer.play(VFX_SFX["mana"])
+	_spawn_vfx_sprite("mana", sprite.position, ENEMY_RECOVER_VFX_SCALE)
+	_show_popup(sprite.position, "+%d MP" % mana_gained, MANA_COLOR)
+
+	if hp_gained > 0:
+		# 체력까지 회복한 경우에만 치유 이펙트를 겹친다 (30% 확률이라 매번 나오지는 않는다)
+		await _wait(0.18)
+		_spawn_vfx_sprite("heal", sprite.position, ENEMY_RECOVER_VFX_SCALE)
+		_show_popup(sprite.position + Vector2(0, -26), "+%d" % hp_gained, HEAL_COLOR)
+		_refresh_monster_hp_bars()
+		_message.text = "%s%s 마력을 회복했다! (체력도 %d 회복)" % [name_, _subject_particle(name_), hp_gained]
+	else:
+		_message.text = "%s%s 마력을 회복했다!" % [name_, _subject_particle(name_)]
+
+	await _wait(ENEMY_RECOVER_HOLD)
+
+
+# 마리별 마나바를 현재 값으로 맞춘다 (HP바와 달리 트윈 없이 바로 반영 — 보조 정보라 조용히 따라가면 된다)
+func _refresh_monster_mana_bars() -> void:
+	if _manager == null:
+		return
+	for monster in _manager.monsters:
+		if monster.index < _monster_mana_bars.size():
+			_monster_mana_bars[monster.index].value = monster.mana
 
 
 # 몬스터 한 마리의 공격 연출
@@ -1603,8 +1722,43 @@ func _animate_single_enemy_attack(attack: Dictionary) -> void:
 	var attacker_sprite := _monster_sprite_at(attacker_index)
 	var attacker_name := _monster_display_name(attacker_index)
 
-	await _lunge(attacker_sprite, _player_sprite.position)
+	# 달려들었다가 → 결과 연출 → 제자리로. 회피/방어/반격으로 막힌 경우에도 "달려들긴 했다"는
+	# 그림이 남아야 해서, 결과와 무관하게 돌진과 복귀는 항상 일어난다
+	var charge_origin := await _enemy_charge(attacker_sprite, attacker_index)
+	await _animate_enemy_attack_result(attack, attacker_sprite, attacker_name)
+	_enemy_return(attacker_sprite, charge_origin)
 
+
+# 몬스터가 플레이어 코앞까지 달려든다. 잔상은 이동과 나란히 재생돼야 궤적처럼 보이므로 await 없이 던진다.
+# 출발 위치를 돌려줘 호출부가 나중에 정확히 그 자리로 되돌릴 수 있게 한다
+func _enemy_charge(sprite: AnimatedSprite2D, index: int) -> Vector2:
+	var start := sprite.position
+	var to_player := _player_sprite.position - start
+	var distance := to_player.length()
+	if distance < 1.0:
+		return start
+
+	var direction := to_player / distance
+	var player_half_width := PLAYER_BODY_WIDTH * PLAYER_SCALE * 0.5
+	var stop_distance: float = clamp(distance - _monster_half_width(index) - player_half_width - ENEMY_CHARGE_GAP, 0.0, distance)
+	var target := start + direction * stop_distance
+
+	_spawn_dash_afterimages(sprite, start, target, ENEMY_CHARGE_TINT)
+	var tween := create_tween()
+	tween.tween_property(sprite, "position", target, ENEMY_CHARGE_IN_DURATION)
+	await tween.finished
+	return start
+
+
+# 돌진했던 몬스터를 원래 자리로 되돌린다 (await 없이 던져둔다 — 위 상수 주석 참고)
+func _enemy_return(sprite: AnimatedSprite2D, origin: Vector2) -> void:
+	var tween := create_tween()
+	tween.tween_property(sprite, "position", origin, ENEMY_CHARGE_BACK_DURATION)
+
+
+# 돌진이 닿은 뒤의 결과 연출 (반격/회피/완전방어/피격 중 하나).
+# 돌진·복귀와 분리해 둬서, 어떤 결과로 갈라지든 앞뒤 동작은 한 곳에서만 관리된다
+func _animate_enemy_attack_result(attack: Dictionary, attacker_sprite: AnimatedSprite2D, attacker_name: String) -> void:
 	# 반격: 공격을 받아넘긴 뒤 곧바로 그 몬스터를 때린다. 피해 적용은 매니저가 이미 끝냈으므로
 	# 여기서는 적 HP바/숫자를 그 결과에 맞춰 따라가게만 한다 (플레이어는 피해를 안 받는다)
 	var counter: int = attack["counter"]
@@ -1613,7 +1767,7 @@ func _animate_single_enemy_attack(attack: Dictionary) -> void:
 		await _wait(0.2)
 		_shake_actors()
 		_flash_hit(attacker_sprite)
-		_play_counter_vfx()
+		_play_counter_vfx(attacker_sprite.position)
 		_show_popup(attacker_sprite.position, "-%d" % counter, DAMAGE_COLOR)
 		_refresh_monster_hp_bars()
 		_message.text = "%s의 공격을 받아넘겼다! %d 피해로 되돌려줬다!" % [attacker_name, counter]
@@ -1633,12 +1787,27 @@ func _animate_single_enemy_attack(attack: Dictionary) -> void:
 		await _wait(0.3)
 		return
 
+	# 실제로 얻어맞은 경우에만 풀세트 연출: 흔들림 + 몬스터 종류별 타격 이펙트 + 가장자리 붉은 물듦.
+	# 이펙트를 플레이어 위에 띄우는 이유는 "적이 나를 때렸다"의 결과가 내 몸에서 터져야 읽히기 때문
 	_shake_actors()
 	_flash_hit(_player_sprite)
+	_play_enemy_attack_vfx(_player_sprite.position)
+	_play_edge_flash()
 	_show_popup(_player_sprite.position, "-%d" % damage, DAMAGE_COLOR)
 	_animate_hp_bar(_player_hp_bar, GameState.get_flag("player_hp"))
 	_message.text = "%s의 공격! %d 피해!" % [attacker_name, damage]
 	await _wait(0.35)
+
+
+# 이번 전투 몬스터 종류에 배정된 공격 이펙트를 pos에 재생한다 (사운드도 함께).
+# 종류가 표에 없으면 오크 것으로 떨어뜨려, 새 몬스터를 추가해도 이펙트가 비어 보이지 않게 한다
+func _play_enemy_attack_vfx(pos: Vector2) -> void:
+	var key: String = MONSTER_ATTACK_VFX.get(_monster_type, "enemy_orc")
+	if not _vfx_frames.has(key):
+		return
+	if VFX_SFX.has(key):
+		SFXPlayer.play(VFX_SFX[key])
+	_spawn_vfx_sprite(key, pos, ENEMY_ATTACK_VFX_SCALE)
 
 
 # 메시지에 쓸 몬스터 이름 (여러 마리면 "오크 2"처럼 번호가 붙은 이름)
@@ -1685,12 +1854,10 @@ func _refresh_all() -> void:
 	_refresh_status_icons()
 	_update_mana_bar()
 	_update_player_hp_text()
-	# 마리별 HP바를 매니저의 실제 값으로 다시 맞춘다. 텍스트만이 아니라 바까지 여기서 되돌리는 이유:
-	# 아직 단일 몬스터 가정으로 남아있는 VFX 컷신 5종이 0번 카드의 바(_monster_hp_bar)를 직접
-	# 건드리는데, 자동 타겟이 0번이 아닐 때는 그 값이 엉뚱한 마리의 HP다. 카드 연출이 끝날 때마다
-	# 여기서 전부 제자리로 돌려놓으면 잘못된 수치가 화면에 남아있지 않는다
-	# (컷신 자체를 대상별로 고치는 건 타겟팅 UI를 붙이는 다음 단계의 일)
+	# 마리별 HP바를 매니저의 실제 값으로 다시 맞춘다. 컷신들이 중간 단계 수치(3연타의 1/3씩 등)를
+	# 직접 그려 넣기 때문에, 연출이 끝난 뒤 한 번은 실제 소유자 값으로 되돌려 놔야 어긋남이 남지 않는다
 	_refresh_monster_hp_bars()
+	_refresh_monster_mana_bars()
 	_refresh_flee_button()
 
 
@@ -2184,8 +2351,7 @@ func _on_close_pressed() -> void:
 # 카드에 쓸 초상화(얼굴만 크롭한 AtlasTexture)도 함께 준비한다
 # 마리 수만큼 스프라이트/그림자/저항배지/HUD 카드를 준비한다. 0번은 .tscn에 원래 있던 노드를 그대로
 # 재사용하고, 1번부터는 그 노드를 duplicate()해서 형제로 붙인다 — 이렇게 하면 .tscn을 건드리지 않고도
-# 마리 수가 늘어나고, _monster_sprite/_monster_hp_bar를 직접 참조하는 기존 VFX 컷신 5종이 0번 몬스터를
-# 가리킨 채 그대로 동작한다 (컷신의 다중 대상 대응은 다음 단계)
+# 마리 수가 늘어난다
 func _setup_sprites() -> void:
 	_player_sprite.sprite_frames = _build_frames(load(PLAYER_SPRITE_PATH) as Texture2D, PLAYER_FRAME_SIZE)
 	_player_sprite.scale = Vector2.ONE * PLAYER_SCALE
@@ -2228,6 +2394,7 @@ func _setup_sprites() -> void:
 		(card.get_node("Portrait") as TextureRect).texture = _build_portrait(idle_sheet, _monster_data["portrait_region"])
 		(card.get_node("GoldLabel") as Label).text = "%d~%d" % [_monster_data["gold_min"], _monster_data["gold_max"]]
 		card.modulate = Color.WHITE
+		_ensure_mana_bar(card)
 
 		_monster_sprites.append(sprite)
 		_monster_shadows.append(shadow)
@@ -2235,6 +2402,7 @@ func _setup_sprites() -> void:
 		_monster_card_panels.append(card)
 		_monster_hp_bars.append(card.get_node("HPBar") as ProgressBar)
 		_monster_hp_labels.append(card.get_node("HPBarLabel") as Label)
+		_monster_mana_bars.append(card.get_node("ManaBar") as ProgressBar)
 		_monster_art_tops.append(_measure_art_top_offset(idle_sheet, idle_frame_size))
 
 
@@ -2244,6 +2412,72 @@ func _clone_sibling(source: Node) -> Node:
 	var clone := source.duplicate()
 	source.get_parent().add_child(clone)
 	return clone
+
+
+# HUD 카드에 몬스터 마나바가 없으면 만들어 붙인다. 이미 있으면(복제로 딸려온 경우) 그대로 둔다 —
+# 0번 카드에 붙인 뒤 duplicate()하면 사본에도 이미 들어 있기 때문에 중복 생성을 막아야 한다
+func _ensure_mana_bar(card: Control) -> void:
+	if card.has_node("ManaBar"):
+		return
+
+	var bg := StyleBoxFlat.new()
+	bg.bg_color = MONSTER_MANA_BAR_BG
+	bg.set_corner_radius_all(2)
+	var fill := StyleBoxFlat.new()
+	fill.bg_color = MONSTER_MANA_BAR_FILL
+	fill.set_corner_radius_all(2)
+
+	var bar := ProgressBar.new()
+	bar.name = "ManaBar"
+	bar.show_percentage = false
+	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bar.add_theme_stylebox_override("background", bg)
+	bar.add_theme_stylebox_override("fill", fill)
+	bar.position = MONSTER_MANA_BAR_RECT.position
+	bar.size = MONSTER_MANA_BAR_RECT.size
+	bar.max_value = MonsterState.MANA_MAX
+	bar.value = MonsterState.MANA_MAX
+	card.add_child(bar)
+
+
+# 화면 가장자리만 붉게 물드는 오버레이를 만들어 View에 붙인다 (가운데는 투명).
+# HitFlash처럼 알파만 트윈하면 되도록 TextureRect 하나로 만들어 두고 재사용한다
+func _build_edge_flash() -> void:
+	var gradient := Gradient.new()
+	gradient.offsets = PackedFloat32Array([0.0, EDGE_FLASH_INNER_STOP, 1.0])
+	gradient.colors = PackedColorArray([
+		Color(EDGE_FLASH_COLOR.r, EDGE_FLASH_COLOR.g, EDGE_FLASH_COLOR.b, 0.0),
+		Color(EDGE_FLASH_COLOR.r, EDGE_FLASH_COLOR.g, EDGE_FLASH_COLOR.b, 0.0),
+		EDGE_FLASH_COLOR,
+	])
+
+	var texture := GradientTexture2D.new()
+	texture.gradient = gradient
+	texture.fill = GradientTexture2D.FILL_RADIAL
+	texture.fill_from = Vector2(0.5, 0.5)
+	texture.fill_to = Vector2(1.0, 0.5) # 중심에서 오른쪽 끝까지가 반지름 1.0
+	texture.width = 256
+	texture.height = 256
+
+	_edge_flash = TextureRect.new()
+	_edge_flash.name = "EdgeFlash"
+	_edge_flash.texture = texture
+	_edge_flash.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_edge_flash.stretch_mode = TextureRect.STRETCH_SCALE
+	_edge_flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_edge_flash.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_edge_flash.modulate = Color(1, 1, 1, 0)
+	_edge_flash.z_index = 20 # 배우/이펙트 위, 손패 UI 아래
+	_view.add_child(_edge_flash)
+
+
+# 가장자리를 붉게 확 물들였다가 서서히 걷는다 (플레이어가 실제로 피해를 입은 순간에만 호출)
+func _play_edge_flash() -> void:
+	if _edge_flash == null:
+		return
+	var tween := create_tween()
+	tween.tween_property(_edge_flash, "modulate:a", EDGE_FLASH_ALPHA, EDGE_FLASH_IN_DURATION)
+	tween.tween_property(_edge_flash, "modulate:a", 0.0, EDGE_FLASH_OUT_DURATION)
 
 
 # 64px 프레임이 가로로 FRAME_COUNT개 나열된 Idle 시트를 SpriteFrames로 변환 (플레이어 전용, 애니메이션 이름 "default")
@@ -2371,6 +2605,53 @@ func _monster_sprite_at(index: int) -> AnimatedSprite2D:
 	return _monster_sprites[index]
 
 
+# ── 마리별 조회 헬퍼 ────────────────────────────────────────────────────────
+# 컷신들이 "0번 몬스터"를 직접 참조하는 대신 이 함수들로 대상을 짚는다. 전부 범위를 벗어나도
+# 0번 값으로 떨어지므로, 호출부가 매번 null/범위 검사를 하지 않아도 된다
+
+# index 몬스터의 idle 프레임 크기 (원본 픽셀). 변종마다 32/64로 달라서 정렬 계산에 반드시 필요하다
+func _monster_frame_size(index: int) -> float:
+	if index < 0 or index >= _variants.size():
+		return _variant.get("idle_frame_size", BattleData.MOB_IDLE_FRAME_SIZE)
+	return _variants[index].get("idle_frame_size", BattleData.MOB_IDLE_FRAME_SIZE)
+
+
+# index 몬스터의 화면상 반폭 (정렬/거리 계산의 기준)
+func _monster_half_width(index: int) -> float:
+	return _monster_frame_size(index) * MONSTER_SCALE * 0.5
+
+
+# index 몬스터의 발 위치까지의 세로 오프셋 (스프라이트 중심 기준)
+func _monster_foot_offset(index: int) -> float:
+	return _monster_frame_size(index) * MONSTER_SCALE * 0.5 - 4.0
+
+
+# index 몬스터의 현재 체력 / 최대 체력 (매니저가 들고 있는 실제 값)
+func _monster_hp_of(index: int) -> int:
+	if _manager == null:
+		return 0
+	var monster := _manager.get_monster(index)
+	return monster.hp if monster != null else 0
+
+
+func _monster_max_hp_of(index: int) -> int:
+	if _manager != null:
+		var monster := _manager.get_monster(index)
+		if monster != null:
+			return monster.max_hp
+	return _monster_data["max_hp"]
+
+
+# index 몬스터의 HP바를 hp까지 트윈하고 숫자도 함께 맞춘다.
+# 여러 번 나눠 때리는 컷신(삼중나선/신속)이 중간 단계 수치를 보여줄 때 쓰므로, 매니저의 실제 값이
+# 아니라 "지금 보여줄 값"을 받는다 — 최종 동기화는 컷신 끝에서 _update_monster_hp_text()가 한다
+func _set_monster_hp_display(index: int, hp: int) -> void:
+	if index < 0 or index >= _monster_hp_bars.size():
+		return
+	_animate_hp_bar(_monster_hp_bars[index], hp)
+	_monster_hp_labels[index].text = "HP: %d/%d" % [hp, _monster_max_hp_of(index)]
+
+
 # 몬스터가 쓰러졌을 때, 사라지기 전에 Death 애니메이션을 한 번(루프 없이) 재생하고 끝날 때까지 기다림.
 # Death 캔버스는 변종마다 크기가 달라도 캐릭터의 실제 픽셀 크기는 Idle과 비슷해서, scale은 그대로 두면
 # 된다. 대신 AnimatedSprite2D가 기본 centered라 캔버스가 더 큰 변종일수록 발이 아래로 밀려 캐릭터가
@@ -2458,18 +2739,18 @@ func _spawn_dash_afterimages(sprite: AnimatedSprite2D, start: Vector2, end: Vect
 
 
 # 섬광 전용: start에서 monster_pos 방향으로, 두 스프라이트 테두리가 FLASH_SLASH_HIT_GAP만큼
-# 떨어지는 지점을 계산한다. 몬스터 폭은 변종마다 프레임 크기가 달라 _variant에서 직접 읽는다
-# (_layout_actors()의 몬스터 발 위치 계산과 같은 방식)
-func _flash_slash_dash_target(start: Vector2, monster_pos: Vector2) -> Vector2:
+# 떨어지는 지점을 계산한다. 몬스터 폭은 변종마다 프레임 크기가 달라 대상의 변종에서 직접 읽는다
+# (_layout_monsters()의 몬스터 발 위치 계산과 같은 방식).
+# target_index는 그 폭을 어느 몬스터 기준으로 잴지 정한다 — 다인전에서 옆 몬스터의 크기로 재면
+# 캐릭터가 대상에 파묻히거나 멀찍이 떨어져 선다
+func _flash_slash_dash_target(start: Vector2, monster_pos: Vector2, target_index: int = 0) -> Vector2:
 	var offset := monster_pos - start
 	var distance := offset.length()
 	if distance < 1.0:
 		return start
 	var direction := offset / distance
-	var idle_frame_size: float = _variant.get("idle_frame_size", BattleData.MOB_IDLE_FRAME_SIZE)
-	var monster_half_width := idle_frame_size * MONSTER_SCALE * 0.5
 	var player_half_width := PLAYER_BODY_WIDTH * PLAYER_SCALE * 0.5
-	var stop_distance: float = clamp(distance - monster_half_width - player_half_width - FLASH_SLASH_HIT_GAP, 0.0, distance)
+	var stop_distance: float = clamp(distance - _monster_half_width(target_index) - player_half_width - FLASH_SLASH_HIT_GAP, 0.0, distance)
 	return start + direction * stop_distance
 
 
@@ -2484,24 +2765,23 @@ func _screen_flash(color: Color, duration: float) -> void:
 # 몬스터 앞/뒤로 순간이동 → 화면이 걷히며 이미 새 위치에서 베는 이펙트 재생 → 흔들림 → 피해 일부
 # 표시. 3세트가 끝나면 원래 자리로 짧게 돌아온다.
 #
-# 데미지 표시는 card.value가 아니라 (호출부가 넘겨준) monster_hp_before와 _manager.monster_hp의
+# 데미지 표시는 card.value가 아니라 (호출부가 넘겨준) monster_hp_before와 대상의 현재 HP의
 # 실제 차이를 3등분한다 — 마지막 한 방으로 몬스터를 잡으면 실제로 깎인 체력이 카드 수치보다 작을
 # 수 있는데(HP가 음수로 안 내려가게 클램프되므로), card.value를 그대로 쓰면 표시된 피해 합이
 # HP바가 실제로 줄어든 양과 안 맞아 숫자가 어긋나 보인다
-func _play_triple_helix_cutscene(card: Card, monster_hp_before: int) -> void:
+func _play_triple_helix_cutscene(card: Card, monster_hp_before: int, target_index: int) -> void:
+	var target_sprite := _monster_sprite_at(target_index)
 	var start_pos := _player_sprite.position
-	var monster_pos := _monster_sprite.position
+	var monster_pos := target_sprite.position
 	var offset := monster_pos - start_pos
 	var distance := offset.length()
 	var direction := offset / distance if distance > 1.0 else Vector2.RIGHT
-	var idle_frame_size: float = _variant.get("idle_frame_size", BattleData.MOB_IDLE_FRAME_SIZE)
-	var monster_half_width := idle_frame_size * MONSTER_SCALE * 0.5
 
-	var front_pos := _flash_slash_dash_target(start_pos, monster_pos) # 몬스터 코앞
-	var back_pos := monster_pos + direction * (monster_half_width + TRIPLE_HELIX_HIT_GAP) # 몬스터 등 뒤
+	var front_pos := _flash_slash_dash_target(start_pos, monster_pos, target_index) # 몬스터 코앞
+	var back_pos := monster_pos + direction * (_monster_half_width(target_index) + TRIPLE_HELIX_HIT_GAP) # 몬스터 등 뒤
 	var hit_positions := [front_pos, back_pos, front_pos] # 앞→뒤→앞으로 번갈아 "휙휙" 도는 느낌
 
-	var total_damage := monster_hp_before - _manager.monster_hp
+	var total_damage := monster_hp_before - _monster_hp_of(target_index)
 	var hit_damages := _split_damage(total_damage, 3)
 
 	var hp_step := monster_hp_before
@@ -2521,15 +2801,14 @@ func _play_triple_helix_cutscene(card: Card, monster_hp_before: int) -> void:
 		flash_out.tween_property(_hit_flash, "color:a", 0.0, TRIPLE_HELIX_FLASH_OUT_DURATION)
 
 		_shake_actors()
-		_flash_hit(_monster_sprite)
-		_spawn_vfx_sprite("physical", _monster_sprite.position)
+		_flash_hit(target_sprite)
+		_spawn_vfx_sprite("physical", target_sprite.position)
 		SFXPlayer.play(TRIPLE_HELIX_HIT_SFX[i])
 
 		hp_step -= hit_damages[i]
 		if hit_damages[i] > 0: # 신속과 같은 이유 — 몫이 0인 타격에 "-0"을 띄우지 않는다
-			_show_popup(_monster_sprite.position, "-%d" % hit_damages[i], DAMAGE_COLOR)
-		_animate_hp_bar(_monster_hp_bar, hp_step)
-		_monster_hp_bar_label.text = "HP: %d/%d" % [hp_step, _monster_data["max_hp"]]
+			_show_popup(target_sprite.position, "-%d" % hit_damages[i], DAMAGE_COLOR)
+		_set_monster_hp_display(target_index, hp_step)
 
 		await flash_out.finished
 		await _wait(TRIPLE_HELIX_SET_GAP)
@@ -2564,17 +2843,16 @@ func _split_damage(total: int, parts: int) -> Array[int]:
 # 피해 표시는 삼중나선과 같은 이유로 card.value가 아니라 "실제로 깎인 체력"(monster_hp_before와
 # 매니저 값의 차이)을 나눈다 — 마지막 일격이 몬스터를 잡으면 HP가 0에서 멈춰 실제 감소량이
 # 카드 수치보다 작아지는데, 그때도 팝업 숫자의 합과 HP바가 어긋나지 않게 하려는 것
-func _play_swift_cutscene(card: Card, monster_hp_before: int) -> void:
+func _play_swift_cutscene(card: Card, monster_hp_before: int, target_index: int) -> void:
+	var target_sprite := _monster_sprite_at(target_index)
 	var start_pos := _player_sprite.position
-	var monster_pos := _monster_sprite.position
+	var monster_pos := target_sprite.position
 	var offset := monster_pos - start_pos
 	var distance := offset.length()
 	var direction := offset / distance if distance > 1.0 else Vector2.RIGHT
-	var idle_frame_size: float = _variant.get("idle_frame_size", BattleData.MOB_IDLE_FRAME_SIZE)
-	var monster_half_width := idle_frame_size * MONSTER_SCALE * 0.5
-	var back_pos := monster_pos + direction * (monster_half_width + SWIFT_HIT_GAP) # 몬스터를 지나친 등 뒤
+	var back_pos := monster_pos + direction * (_monster_half_width(target_index) + SWIFT_HIT_GAP) # 몬스터를 지나친 등 뒤
 
-	var total_damage := monster_hp_before - _manager.monster_hp
+	var total_damage := monster_hp_before - _monster_hp_of(target_index)
 	var hit_damages := _split_damage(total_damage, SWIFT_HIT_COUNT)
 	var hp_step := monster_hp_before
 	_message.text = "%s!" % card.card_name
@@ -2606,8 +2884,8 @@ func _play_swift_cutscene(card: Card, monster_hp_before: int) -> void:
 
 	for i in range(SWIFT_HIT_COUNT):
 		_shake_actors(SWIFT_HIT_SHAKE, SWIFT_HIT_SHAKE_STEPS)
-		_flash_hit(_monster_sprite)
-		_spawn_vfx_sprite("physical", _monster_sprite.position + SWIFT_HIT_OFFSETS[i % SWIFT_HIT_OFFSETS.size()])
+		_flash_hit(target_sprite)
+		_spawn_vfx_sprite("physical", target_sprite.position + SWIFT_HIT_OFFSETS[i % SWIFT_HIT_OFFSETS.size()])
 		# 타격마다 음을 조금씩 올려 연타가 몰아치는 느낌을 준다
 		SFXPlayer.play(SWIFT_HIT_SFX[i % SWIFT_HIT_SFX.size()], SFXPlayer.DEFAULT_VOLUME_DB, 0.95 + 0.05 * i)
 
@@ -2616,9 +2894,8 @@ func _play_swift_cutscene(card: Card, monster_hp_before: int) -> void:
 		# 그때 "-0"을 띄우면 버그처럼 보이므로 숫자만 생략한다 — 타격 이펙트/흔들림은 그대로 둬서
 		# 연타 연출 자체는 끊기지 않게 한다
 		if hit_damages[i] > 0:
-			_show_popup(_monster_sprite.position, "-%d" % hit_damages[i], DAMAGE_COLOR)
-		_animate_hp_bar(_monster_hp_bar, hp_step)
-		_monster_hp_bar_label.text = "HP: %d/%d" % [hp_step, _monster_data["max_hp"]]
+			_show_popup(target_sprite.position, "-%d" % hit_damages[i], DAMAGE_COLOR)
+		_set_monster_hp_display(target_index, hp_step)
 
 		await _wait(SWIFT_HIT_INTERVAL)
 
@@ -2642,8 +2919,9 @@ func _play_swift_cutscene(card: Card, monster_hp_before: int) -> void:
 #
 # 표시 데미지는 다른 컷신들과 같은 이유로 card.value가 아니라 실제로 깎인 체력을 쓴다
 # (마무리 일격이면 HP가 0에서 멈춰 실제 감소량이 카드 수치보다 작아지기 때문)
-func _play_time_rift_cutscene(card: Card, monster_hp_before: int) -> void:
-	var total_damage := monster_hp_before - _manager.monster_hp
+func _play_time_rift_cutscene(card: Card, monster_hp_before: int, target_index: int) -> void:
+	var target_sprite := _monster_sprite_at(target_index)
+	var total_damage := monster_hp_before - _monster_hp_of(target_index)
 	_message.text = "%s!" % card.card_name
 
 	# 1) 차갑고 탁한 블루그레이가 서서히 화면을 덮는다
@@ -2656,7 +2934,7 @@ func _play_time_rift_cutscene(card: Card, monster_hp_before: int) -> void:
 	# 동안 균열이 자라다가 멈추는 그림이 된다
 	var cracks: Array[AnimatedSprite2D] = []
 	for offset in TIME_RIFT_CRACK_OFFSETS:
-		var crack := _spawn_vfx_sprite("time_crack", _monster_sprite.position + offset, TIME_RIFT_CRACK_SCALE)
+		var crack := _spawn_vfx_sprite("time_crack", target_sprite.position + offset, TIME_RIFT_CRACK_SCALE)
 		if crack != null:
 			cracks.append(crack)
 	SFXPlayer.play(TIME_RIFT_FREEZE_SFX, SFXPlayer.DEFAULT_VOLUME_DB, TIME_RIFT_FREEZE_SFX_PITCH)
@@ -2688,14 +2966,14 @@ func _play_time_rift_cutscene(card: Card, monster_hp_before: int) -> void:
 
 	# 5) 강한 흔들림 + 유리 깨지는 타격음
 	_shake_actors(TIME_RIFT_SHAKE, TIME_RIFT_SHAKE_STEPS)
-	_flash_hit(_monster_sprite)
+	_flash_hit(target_sprite)
 	for sfx in TIME_RIFT_RELEASE_SFX:
 		SFXPlayer.play(sfx)
 
 	# 6) 여러 지점에서 동시에 터지는 것이라 데미지는 나누지 않고 한 번에
 	if total_damage > 0:
-		_show_popup(_monster_sprite.position, "-%d" % total_damage, DAMAGE_COLOR)
-	_animate_hp_bar(_monster_hp_bar, _manager.monster_hp)
+		_show_popup(target_sprite.position, "-%d" % total_damage, DAMAGE_COLOR)
+	_set_monster_hp_display(target_index, _monster_hp_of(target_index))
 	_update_monster_hp_text()
 	await _wait(TIME_RIFT_IMPACT_HOLD)
 
@@ -2784,13 +3062,14 @@ func _spawn_feather_particles(pos: Vector2) -> void:
 # 전혀 움직이지 않는다 — 파이어볼/익스플로전처럼 제자리에서 시전하고, 하늘에서 빛기둥만 떨어진다.
 #
 # 표시 데미지는 다른 컷신들과 같은 이유로 card.value가 아니라 실제로 깎인 체력을 쓴다
-func _play_judgment_cutscene(card: Card, monster_hp_before: int) -> void:
-	var monster_pos := _monster_sprite.position
-	var total_damage := monster_hp_before - _manager.monster_hp
+func _play_judgment_cutscene(card: Card, monster_hp_before: int, target_index: int) -> void:
+	var target_sprite := _monster_sprite_at(target_index)
+	var monster_pos := target_sprite.position
+	var total_damage := monster_hp_before - _monster_hp_of(target_index)
 	_message.text = "%s!" % card.card_name
 
 	# 1) 몬스터 발밑에 금빛 심판의 원이 나타나 진폭을 키워가며 맥동한다
-	var foot_offset: float = _variant.get("idle_frame_size", BattleData.MOB_IDLE_FRAME_SIZE) * MONSTER_SCALE * 0.5 - 4.0
+	var foot_offset := _monster_foot_offset(target_index)
 	_spawn_impact_marker(
 		monster_pos + Vector2(0, foot_offset),
 		JUDGMENT_MARKER_COLOR, JUDGMENT_MARKER_RX, JUDGMENT_MARKER_RY,
@@ -2823,7 +3102,7 @@ func _play_judgment_cutscene(card: Card, monster_hp_before: int) -> void:
 
 	_clear_impact_marker() # 빛기둥이 떨어졌으니 예고 마커는 치운다
 	_shake_actors(JUDGMENT_SHAKE, JUDGMENT_SHAKE_STEPS)
-	_flash_hit(_monster_sprite)
+	_flash_hit(target_sprite)
 	for sfx in JUDGMENT_IMPACT_SFX:
 		SFXPlayer.play(sfx)
 
@@ -2837,7 +3116,7 @@ func _play_judgment_cutscene(card: Card, monster_hp_before: int) -> void:
 	# 6) 단발 심판이라 데미지는 한 번에
 	if total_damage > 0:
 		_show_popup(monster_pos, "-%d" % total_damage, DAMAGE_COLOR)
-	_animate_hp_bar(_monster_hp_bar, _manager.monster_hp)
+	_set_monster_hp_display(target_index, _monster_hp_of(target_index))
 	_update_monster_hp_text()
 	await _wait(JUDGMENT_IMPACT_HOLD)
 
@@ -2896,13 +3175,14 @@ func _clear_impact_marker() -> void:
 #
 # 표시 데미지는 다른 컷신들과 같은 이유로 card.value가 아니라 실제로 깎인 체력을 쓴다 —
 # 마무리 일격으로 몬스터를 잡으면 HP가 0에서 멈춰 실제 감소량이 카드 수치보다 작아지기 때문
-func _play_meteor_cutscene(card: Card, monster_hp_before: int) -> void:
+func _play_meteor_cutscene(card: Card, monster_hp_before: int, target_index: int) -> void:
+	var target_sprite := _monster_sprite_at(target_index)
 	var start_pos := _player_sprite.position
-	var monster_pos := _monster_sprite.position
-	var landing_pos := _flash_slash_dash_target(start_pos, monster_pos) # 몬스터 코앞에 내려꽂힌다
+	var monster_pos := target_sprite.position
+	var landing_pos := _flash_slash_dash_target(start_pos, monster_pos, target_index) # 몬스터 코앞에 내려꽂힌다
 	var air_pos := Vector2(landing_pos.x, landing_pos.y - METEOR_DROP_HEIGHT)
 
-	var total_damage := monster_hp_before - _manager.monster_hp
+	var total_damage := monster_hp_before - _monster_hp_of(target_index)
 	_message.text = "%s!" % card.card_name
 
 	# 1) 위로 튀어올라 화면 밖으로 빠져나간다 (가속하며 솟구치도록 EASE_IN)
@@ -2918,7 +3198,7 @@ func _play_meteor_cutscene(card: Card, monster_hp_before: int) -> void:
 	_player_shadow.visible = false
 
 	# 3) 정적. 몬스터 발밑에 낙하 지점 마커를 띄워 "여기로 떨어진다"를 예고한다
-	var foot_offset: float = _variant.get("idle_frame_size", BattleData.MOB_IDLE_FRAME_SIZE) * MONSTER_SCALE * 0.5 - 4.0
+	var foot_offset := _monster_foot_offset(target_index)
 	_spawn_impact_marker(monster_pos + Vector2(0, foot_offset), METEOR_MARKER_COLOR, METEOR_MARKER_RX, METEOR_MARKER_RY, METEOR_MARKER_PULSE)
 	await _wait(METEOR_HANG_DURATION)
 
@@ -2944,16 +3224,16 @@ func _play_meteor_cutscene(card: Card, monster_hp_before: int) -> void:
 	_clear_impact_marker()
 	_player_shadow.visible = true
 	_shake_actors(METEOR_IMPACT_SHAKE, METEOR_IMPACT_SHAKE_STEPS)
-	_flash_hit(_monster_sprite)
+	_flash_hit(target_sprite)
 	for sfx in METEOR_IMPACT_SFX:
 		SFXPlayer.play(sfx)
-	_spawn_vfx_sprite("explosion_big", _monster_sprite.position, METEOR_VFX_SCALE) # 지면이 부서지는 충격파
-	_spawn_vfx_sprite("physical", _monster_sprite.position)                        # 그 위에 얹는 타격 자국
+	_spawn_vfx_sprite("explosion_big", target_sprite.position, METEOR_VFX_SCALE) # 지면이 부서지는 충격파
+	_spawn_vfx_sprite("physical", target_sprite.position)                        # 그 위에 얹는 타격 자국
 
 	# 7) 단발 강타라 데미지는 한 번에. 0이면(완전 무효화 등) 숫자를 띄우지 않는다
 	if total_damage > 0:
-		_show_popup(_monster_sprite.position, "-%d" % total_damage, DAMAGE_COLOR)
-	_animate_hp_bar(_monster_hp_bar, _manager.monster_hp)
+		_show_popup(target_sprite.position, "-%d" % total_damage, DAMAGE_COLOR)
+	_set_monster_hp_display(target_index, _monster_hp_of(target_index))
 	_update_monster_hp_text()
 	await _wait(METEOR_IMPACT_HOLD)
 
