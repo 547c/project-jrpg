@@ -22,6 +22,10 @@ var max_hp: int = 0
 var hp: int = 0
 var resistance: EnemyResistance # 마리마다 독립적으로 굴린다 (한 마리가 물리 저항이어도 옆은 아닐 수 있음)
 
+# 이 몬스터에게 걸린 버프/디버프. 플레이어 쪽(BattleTurnManager.player_status)과 같은 클래스를 쓴다 —
+# "누구에게 걸렸는가"만 다르고 규칙은 같아서, 마리마다 하나씩 들고 있으면 그걸로 끝난다
+var status: StatusEffects
+
 # ── 몬스터 마나 (연출용 "가짜" 자원) ──────────────────────────────────────
 # 플레이어 마나처럼 카드 비용을 치르는 진짜 자원이 아니라, "적도 자원을 쓰며 싸운다"는 그림을
 # 만들기 위한 장치다. 공격할 때마다 줄고 바닥나면 그 턴은 회복에 쓰므로, 결과적으로 적이 매 턴
@@ -61,6 +65,7 @@ func _init(index_: int, monster_type_: String, variant_: Dictionary) -> void:
 	max_hp = monster_data["max_hp"]
 	hp = max_hp
 	resistance = EnemyResistance.new()
+	status = StatusEffects.new()
 	display_name = monster_data["name"]
 
 

@@ -36,6 +36,10 @@ enum EffectType {
 	DODGE,         # 회피 (성공/실패라 수치가 필요 없음)
 	COUNTER,       # 다음 적 공격을 완전 무효화하고, 그 즉시 적에게 value만큼 반격
 	RESTORE_BOTH,  # 체력과 마나를 동시에 회복 (체력=value, 마나=secondary_value)
+	# 아래 둘은 버프/디버프 계열 — value=퍼센트, secondary_value=지속 라운드로 읽는다
+	# (effect마다 value의 의미가 달라지는 기존 규칙을 그대로 따른 것)
+	BUFF_ATTACK_SELF,    # 자신의 주는 피해 증가 (대상 불필요)
+	DEBUFF_ATTACK_ENEMY, # 대상 몬스터의 주는 피해 감소
 }
 
 # 화면에 표시할 카드 이름
@@ -52,11 +56,13 @@ enum EffectType {
 # 효과의 크기. effect에 따라 해석이 달라진다:
 # DAMAGE=피해량 / HEAL_HP=회복할 체력 / RESTORE_MANA=회복할 마나 /
 # DEFEND=감소시킬 피해량 / DODGE=사용하지 않음(0) / COUNTER=반격 피해량 /
-# RESTORE_BOTH=회복할 체력
+# RESTORE_BOTH=회복할 체력 /
+# BUFF_ATTACK_SELF·DEBUFF_ATTACK_ENEMY=효과 크기(퍼센트, 20이면 20%)
 @export var value: int = 0
 
-# value 하나로는 모자란 효과에서 쓰는 두 번째 수치. 지금은 RESTORE_BOTH(회복할 마나)만 사용하고,
-# 다른 효과에서는 읽지 않는다.
+# value 하나로는 모자란 효과에서 쓰는 두 번째 수치.
+# RESTORE_BOTH=회복할 마나 / 버프·디버프 계열=지속 라운드 수.
+# 그 외 효과에서는 읽지 않는다.
 # (효과 목록을 배열로 바꿔 "여러 효과를 가진 카드"를 일반적으로 표현하는 방법도 있었지만, 그건
 #  카드 한 장 = 효과 하나라는 기존 구조와 그걸 전제로 쓰인 UI/연출 분기를 전부 갈아엎어야 한다.
 #  두 자원을 같이 회복하는 카드 하나 때문에 그러기보다, value의 의미가 effect마다 다르다는 기존
@@ -130,6 +136,10 @@ func _effect_text() -> String:
 			return "이번 턴 완전 회피"
 		EffectType.COUNTER:
 			return "피해 무효 + 반격 %d" % value
+		EffectType.BUFF_ATTACK_SELF:
+			return "공격력 +%d%% (%d라운드)" % [value, secondary_value]
+		EffectType.DEBUFF_ATTACK_ENEMY:
+			return "대상 공격력 -%d%% (%d라운드)" % [value, secondary_value]
 		EffectType.RESTORE_BOTH:
 			# "완전 회복" 카드는 최대치보다 확실히 큰 값을 넣고 clamp에 맡기는데(불사조의 축복=999),
 			# 그 숫자를 그대로 보여주면 "체력 999 회복"이라는 이상한 문구가 나온다 — 임계값을 넘으면

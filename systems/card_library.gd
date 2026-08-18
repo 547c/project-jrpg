@@ -29,6 +29,9 @@ const CARD_PATHS: Dictionary = {
 	"triple_helix": CARDS_DIR + "triple_helix.tres",
 	"explosion": CARDS_DIR + "explosion.tres",
 	"counter_slash": CARDS_DIR + "counter_slash.tres",
+	# ── 버프/디버프 카드 (상태이상 인프라의 첫 사례) ──
+	"battle_spirit": CARDS_DIR + "battle_spirit.tres",
+	"threaten": CARDS_DIR + "threaten.tres",
 	# ── 스킬포인트로 잠금해제하는 티어1 카드 (기본 제공 6종과 달리 처음엔 잠겨 있다.
 	# 티어1이라 UNLOCK_COST_BY_TIER상 비용은 1점으로 가장 싸다) ──
 	"stab": CARDS_DIR + "stab.tres",

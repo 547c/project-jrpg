@@ -42,7 +42,9 @@ const DECK_LIST: Array = [
 	{"id": "meteor_drop", "count": 1},        # [티어3, 잠김] 물리 공격 (체력 4 소모 — 가장 무거운 단발기)
 	{"id": "time_rift", "count": 1},          # [티어3, 잠김] 마법 공격 (마나 12)
 	{"id": "judgment", "count": 1},           # [티어3, 잠김] 마법 공격 (마나 14 — 덱에서 가장 비쌈)
-	{"id": "phoenix_blessing", "count": 1},   # [티어3, 잠김] 완전 회복 (코스트 0, 대신 양쪽 과열 75%)
+	{"id": "phoenix_blessing", "count": 1},
+	{"id": "battle_spirit", "count": 2},    # [티어2, 잠김] 자기 공격력 버프 (마나 3)
+	{"id": "threaten", "count": 2},         # [티어1, 잠김] 대상 공격력 디버프 (마나 2)   # [티어3, 잠김] 완전 회복 (코스트 0, 대신 양쪽 과열 75%)
 ]
 
 

@@ -23,6 +23,10 @@ signal enemy_attack_resolved(attacker_index: int, damage_taken: int, dodged: boo
 # (hp_gained가 0이면 이번엔 체력 회복이 안 붙은 것)
 signal monster_recovered(index: int, mana_gained: int, hp_gained: int)
 signal monster_defeated(index: int) # 마리 하나가 쓰러짐 (전투는 아직 안 끝났을 수 있음)
+# 버프/디버프가 새로 걸렸을 때 (target_index가 -1이면 플레이어 자신)
+signal status_applied(target_index: int, kind: int, magnitude: int, rounds: int)
+# 한 라운드가 끝나 상태이상이 풀렸을 때 (연출/로그가 "효과가 사라졌다"를 알릴 수 있게)
+signal status_expired(target_index: int, kind: int)
 signal player_defeated
 signal enemy_defeated # 살아있는 몬스터가 하나도 남지 않음 = 전투 승리
 
@@ -31,6 +35,10 @@ const HAND_SIZE := 5
 var deck: Deck
 var hand: Hand
 var weapon: WeaponState
+
+# 플레이어에게 걸린 버프/디버프. 전투가 끝나면 사라지는 값이라 GameState가 아니라 여기에 둔다 —
+# 몬스터 HP를 매니저가 들고 있는 것과 같은 기준이다 (세이브에 남을 이유가 없는 전투 한정 상태)
+var player_status := StatusEffects.new()
 
 # 이번 전투에 등장한 몬스터들 (1~3마리, 전부 같은 종류). 자리 순서가 곧 MonsterState.index다
 var monsters: Array[MonsterState] = []
@@ -272,6 +280,15 @@ func _apply_card_effect_to_target(card: Card, target_index: int) -> int:
 	match card.effect:
 		Card.EffectType.DAMAGE:
 			return _damage_monster(card, target_index)
+		Card.EffectType.BUFF_ATTACK_SELF:
+			# 자기 자신에게 거는 버프라 대상 자리 번호와 무관하게 항상 플레이어(-1)에게 건다
+			apply_status(-1, StatusEffects.Kind.ATTACK_UP, card.value, card.secondary_value)
+		Card.EffectType.DEBUFF_ATTACK_ENEMY:
+			var debuff_target := get_monster(target_index)
+			if debuff_target == null or not debuff_target.is_alive():
+				debuff_target = get_auto_target()
+			if debuff_target != null:
+				apply_status(debuff_target.index, StatusEffects.Kind.ATTACK_DOWN, card.value, card.secondary_value)
 		Card.EffectType.HEAL_HP:
 			var max_hp: int = GameState.get_flag("player_max_hp")
 			if max_hp > 0:
@@ -311,14 +328,86 @@ func _damage_monster(card: Card, target_index: int) -> int:
 	if target == null:
 		return 0
 
-	var raw_damage: int = card.value + _equipment_damage_bonus(card)
-	var final_damage: int = target.resistance.calculate_damage(card, raw_damage)
+	var final_damage := calculate_card_damage(card, target)
 	var applied := target.take_damage(final_damage)
 
 	if not target.is_alive():
 		monster_defeated.emit(target.index)
 
 	return applied
+
+
+# 카드 한 장이 target에게 실제로 입힐 피해를 계산한다. 계산 순서를 이 한 함수에 모아둬,
+# 나중에 배율이 더 늘어나도 "어디에 끼워 넣어야 하는지"를 여기서만 보면 되게 했다.
+#
+# [순서와 그 이유] 공격하는 쪽의 값을 먼저 다 만들고, 그 다음 방어하는 쪽의 배율을 건다:
+#
+#   1. 기본 위력 + 장비 보너스        (공격자, 덧셈)
+#   2. × 플레이어 공격력 버프          (공격자, 곱셈)
+#   3. × 속성 저항 감쇄               (방어자, 곱셈 — 저항 약화 디버프가 이 감쇄를 완화한다)
+#   4. × 몬스터 방어력 약화            (방어자, 곱셈)
+#
+# 2번을 저항(3번)보다 "먼저" 두는 게 핵심 판단이다. 장비 보너스가 이미 저항 앞에 더해져 있어서
+# (저항이 걸린 턴에는 보너스분도 함께 반감된다), 공격력 버프만 저항 뒤에 두면 같은 "공격을 세게
+# 하는 수단"인데 저항을 받는 것과 안 받는 것으로 규칙이 갈린다. "때리는 힘을 모두 합친 한 방을
+# 상대가 얼마나 흘려내는가"로 통일하는 편이 설명하기도 쉽고 기존 장비 규칙과도 어긋나지 않는다.
+#
+# 3번과 4번은 둘 다 방어자 쪽 곱셈이라 순서를 바꿔도 결과가 같다(곱셈의 교환법칙). 그래도
+# "저항 → 방어력" 순으로 적어둔 건 읽는 사람이 기존 규칙(저항)을 먼저 만나게 하려는 것뿐이다.
+#
+# 반올림은 마지막에 한 번만 한다 — 단계마다 반올림하면 버프 20%가 붙었는데 피해가 그대로인
+# 자투리 오차가 생긴다
+func calculate_card_damage(card: Card, target: MonsterState) -> int:
+	var raw: float = float(card.value + _equipment_damage_bonus(card))
+
+	# 공격자 측 배율
+	raw *= player_status.get_increase_multiplier(StatusEffects.Kind.ATTACK_UP)
+
+	# 방어자 측 배율 — 저항 감쇄는 저항 약화 디버프만큼 완화된다
+	var resist_reduction := target.status.get_magnitude(StatusEffects.Kind.RESIST_DOWN)
+	var after_resist := target.resistance.calculate_damage(card, int(round(raw)), resist_reduction)
+	var after_defense := after_resist * (1.0 + target.status.get_magnitude(StatusEffects.Kind.DEFENSE_DOWN) / 100.0)
+
+	return int(round(after_defense))
+
+
+# 몬스터가 이번에 때릴 피해량. monster_data의 범위에서 뽑은 뒤 공격력 디버프를 곱한다.
+# 최소 0에서 막아 디버프가 100%를 넘어도 회복이 되지 않게 한다
+func calculate_monster_attack_damage(attacker: MonsterState) -> int:
+	var rolled := randi_range(attacker.monster_data["damage_min"], attacker.monster_data["damage_max"])
+	var multiplier := attacker.status.get_decrease_multiplier(StatusEffects.Kind.ATTACK_DOWN)
+	return maxi(0, int(round(rolled * multiplier)))
+
+
+# ── 버프/디버프 ────────────────────────────────────────────────────────────
+
+# target_index가 -1이면 플레이어 자신, 아니면 그 자리 몬스터에게 상태이상을 건다.
+# 대상별로 갈라지는 유일한 지점이라, 새 상태이상 종류가 늘어도 이 함수는 그대로 쓸 수 있다
+func apply_status(target_index: int, kind: StatusEffects.Kind, magnitude: int, rounds: int) -> void:
+	var container := _status_container_for(target_index)
+	if container == null:
+		return
+	container.apply(kind, magnitude, rounds)
+	status_applied.emit(target_index, int(kind), magnitude, rounds)
+
+
+func _status_container_for(target_index: int) -> StatusEffects:
+	if target_index < 0:
+		return player_status
+	var monster := get_monster(target_index)
+	return monster.status if monster != null else null
+
+
+# 한 라운드가 끝났을 때(적 전원의 턴이 한 바퀴 돈 뒤) 모든 대상의 상태이상을 1라운드씩 줄인다.
+# 플레이어와 몬스터를 같은 자리에서 처리해, 한쪽만 깎이거나 두 번 깎이는 어긋남이 생기지 않게 했다.
+# 쓰러진 몬스터도 그대로 돌린다 — 어차피 다시 살아나지 않으므로 결과에 영향이 없고,
+# 살아있는지 확인하는 분기를 넣는 쪽이 오히려 규칙을 복잡하게 만든다
+func _tick_status_rounds() -> void:
+	for kind in player_status.tick_round():
+		status_expired.emit(-1, int(kind))
+	for monster in monsters:
+		for kind in monster.status.tick_round():
+			status_expired.emit(monster.index, int(kind))
 
 
 # 장비의 피해 보너스. "카드 색깔이 지금 장착한 무기와 일치할 때"만 그 무기의 등급 보너스가 붙는다
@@ -424,11 +513,15 @@ func _resolve_enemy_turn() -> void:
 	_pending_dodge = false
 	_pending_counter = 0
 
+	# 여기가 한 라운드의 끝이다 ("적 전원의 턴이 한 바퀴 돌았다"). 마리 수와 무관하게 한 번만
+	# 깎이므로, 다인전이라고 버프가 더 빨리 닳지 않는다
+	_tick_status_rounds()
+
 
 # 몬스터 한 마리의 공격을 해결한다. 피하기/반격은 여기서 소모되므로, 뒤이어 공격하는 몬스터는
 # 그 보호를 받지 못한다 (위 _resolve_enemy_turn 주석의 "뻥튀기 방지" 규칙)
 func _resolve_single_attack(attacker: MonsterState) -> void:
-	var raw_damage: int = randi_range(attacker.monster_data["damage_min"], attacker.monster_data["damage_max"])
+	var raw_damage := calculate_monster_attack_damage(attacker)
 
 	var countering := _pending_counter > 0
 	var dodging := _pending_dodge

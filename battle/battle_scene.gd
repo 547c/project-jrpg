@@ -506,6 +506,18 @@ const RESIST_BADGE_MODULATE := {
 }
 const RESIST_BADGE_GAP := 14.0 # 몬스터 그림 꼭대기 위로 이만큼 띄운다 (실측 간격 약 8px)
 
+# ── 버프/디버프 배지 ────────────────────────────────────────────────────────
+# 전용 아이콘 에셋이 없어 짧은 텍스트("공격력↑ 20%")로 대신한다 — 저항 배지처럼 대상 위에 띄우되,
+# 정교한 아이콘 디자인은 나중에 다듬을 자리다 (StatusEffects.KIND_LABEL만 갈아끼우면 된다).
+# 걸린 게 없으면 아예 숨긴다 (저항 배지와 달리 "없음" 상태를 계속 보여줄 이유가 없다)
+# 몬스터 배지는 발밑 "아래"에 둔다. 몬스터 줄이 화면 위쪽(y의 19%)에 붙어 있어서 머리 위로 올리면
+# 화면 가장자리와 우상단 HUD 카드에 끼여 읽기 어려웠다 — 아래쪽은 플레이어 줄까지 비어 있어 넉넉하다
+const STATUS_BADGE_GAP := 6.0
+const PLAYER_STATUS_BADGE_GAP := 62.0 # 플레이어는 머리 위 (위쪽에 가리는 UI가 없다)
+const STATUS_BADGE_FONT_SIZE := 11
+const BUFF_COLOR := Color(0.55, 0.95, 0.55, 1)
+const DEBUFF_COLOR := Color(1.0, 0.6, 0.45, 1)
+
 # ── 다인전 배치 ──────────────────────────────────────────────────────────────
 # 몬스터 줄의 세로 위치(뷰포트 높이 대비). 단일 전투 때 쓰던 값을 그대로 유지해, 1마리 전투의
 # 구도가 다인전 도입 전과 똑같이 보이게 한다
@@ -692,6 +704,9 @@ var _variant: Dictionary = {}
 var _monster_sprites: Array[AnimatedSprite2D] = []
 var _monster_shadows: Array[Polygon2D] = []
 var _resist_badges: Array[Sprite2D] = []
+# 마리별 버프/디버프 텍스트 배지 (_build_status_badges가 코드로 만들어 붙인다)
+var _status_badges: Array[Label] = []
+var _player_status_badge: Label
 var _monster_card_panels: Array[Control] = []
 var _monster_hp_bars: Array[ProgressBar] = []
 var _monster_hp_labels: Array[Label] = []
@@ -1137,12 +1152,23 @@ func _is_interactive() -> bool:
 # 살아있는 몬스터가 하나뿐이면 고를 여지가 없으므로 선택 UI를 건너뛴다 — 1:1 전투의 조작감이
 # 다인전 도입 전과 완전히 똑같이 유지된다
 func _needs_target(card: Card) -> bool:
-	if card.effect != Card.EffectType.DAMAGE:
+	if not _targets_an_enemy(card):
 		return false
 	# 광역기는 대상이 "살아있는 전원"으로 이미 정해져 있어 고를 것이 없다
 	if card.is_aoe:
 		return false
 	return _manager != null and _manager.alive_monsters().size() > 1
+
+
+# 이 카드가 "적 하나"를 겨냥하는 종류인지. 대상 선택이 필요한지를 가르는 기준이며,
+# 자기 자신에게 거는 효과(회복/방어/피하기/반격/자기버프)는 여기서 전부 걸러진다.
+# 새 효과 타입을 추가할 때 이 목록에 넣을지만 정하면 타겟팅 UI가 알아서 따라온다
+func _targets_an_enemy(card: Card) -> bool:
+	match card.effect:
+		Card.EffectType.DAMAGE, Card.EffectType.DEBUFF_ATTACK_ENEMY:
+			return true
+		_:
+			return false
 
 
 # ── 타겟 선택 ──────────────────────────────────────────────────────────────
@@ -1523,6 +1549,23 @@ func _animate_card(card: Card, hp_before: int, mana_before: int, monster_hp_befo
 			_animate_hp_bar(_player_hp_bar, GameState.get_flag("player_hp"))
 			_message.text = "%s — 체력 %d, 마나 %d 회복!" % [card.card_name, healed, mana_restored]
 			await _wait(0.4)
+		Card.EffectType.BUFF_ATTACK_SELF:
+			# 자기 자신에게 거는 버프 — 플레이어 위에 이펙트를 띄우고 배지를 갱신한다
+			SFXPlayer.play(VFX_SFX["mana"])
+			_spawn_vfx_sprite("mana", _player_sprite.position)
+			_show_popup(_player_sprite.position, "공격력 +%d%%" % card.value, BUFF_COLOR)
+			_refresh_status_badges()
+			_message.text = "%s — %d라운드 동안 공격력 +%d%%!" % [card.card_name, card.secondary_value, card.value]
+			await _wait(0.45)
+		Card.EffectType.DEBUFF_ATTACK_ENEMY:
+			SFXPlayer.play(VFX_SFX["defend"])
+			_spawn_vfx_sprite("defend", target_sprite.position)
+			_flash_hit(target_sprite)
+			_show_popup(target_sprite.position, "공격력 -%d%%" % card.value, DEBUFF_COLOR)
+			_refresh_status_badges()
+			_message.text = "%s! %s의 공격력 -%d%% (%d라운드)" % [
+				card.card_name, _monster_display_name(target_index), card.value, card.secondary_value]
+			await _wait(0.45)
 
 
 # card.effect(+물리/마법 구분)에 맞는 VFX/SFX 키를 고른다. _card_style_key()와 판단 기준은 같지만
@@ -2193,6 +2236,64 @@ func _refresh_status_icons() -> void:
 		badge.modulate = RESIST_BADGE_MODULATE.get(resistance, Color.WHITE)
 		badge.visible = badge.texture != null
 
+	_refresh_status_badges()
+
+
+# 버프/디버프 배지 하나를 만들어 Actors에 붙인다 (Actors 자식이라 화면 흔들림도 함께 따라간다)
+func _make_status_badge() -> Label:
+	var label := Label.new()
+	label.z_index = 12
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.add_theme_font_size_override("font_size", STATUS_BADGE_FONT_SIZE)
+	label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
+	label.add_theme_constant_override("outline_size", 4)
+	label.visible = false
+	_actors.add_child(label)
+	return label
+
+
+# 플레이어/몬스터에 걸린 상태이상을 각자 위에 짧은 텍스트로 표시한다.
+# 걸린 게 없거나 쓰러진 대상은 숨긴다 — 화면에 남아 "아직 걸려 있다"고 오해하게 두지 않으려는 것
+func _refresh_status_badges() -> void:
+	if _manager == null:
+		return
+
+	if _player_status_badge == null:
+		_player_status_badge = _make_status_badge()
+	_apply_status_badge(_player_status_badge, _manager.player_status, _player_sprite.position, true)
+
+	for monster in _manager.monsters:
+		if monster.index >= _status_badges.size():
+			continue
+		var badge := _status_badges[monster.index]
+		if not monster.is_alive():
+			badge.visible = false
+			continue
+		var sprite := _monster_sprite_at(monster.index)
+		var foot := sprite.position + Vector2(0, _monster_foot_offset(monster.index))
+		_apply_status_badge(badge, monster.status, foot, false)
+
+
+# 배지 하나에 상태이상 요약을 채운다. 여러 개가 걸려 있으면 줄바꿈으로 쌓아 보여준다
+func _apply_status_badge(badge: Label, status: StatusEffects, anchor: Vector2, is_player: bool) -> void:
+	if status == null or status.is_empty():
+		badge.visible = false
+		return
+
+	var lines := status.describe_all()
+	badge.text = "
+".join(lines)
+	# 버프만 걸렸으면 초록, 하나라도 디버프가 있으면 주황 (지금은 종류가 둘뿐이라 이 정도로 충분하다)
+	badge.add_theme_color_override("font_color", BUFF_COLOR if status.has(StatusEffects.Kind.ATTACK_UP) else DEBUFF_COLOR)
+	badge.visible = true
+
+	# 라벨은 좌상단 기준이라 폭/높이만큼 밀어 중앙 정렬한다.
+	# 플레이어는 머리 위(anchor=발 기준이 아니라 몸 중심), 몬스터는 발밑 아래에 띄운다
+	badge.reset_size()
+	var size := badge.size
+	var top := anchor.y - PLAYER_STATUS_BADGE_GAP - size.y if is_player else anchor.y + STATUS_BADGE_GAP
+	badge.position = Vector2(anchor.x - size.x * 0.5, top)
+
 
 # 게이지(0~100, GAUGE_STEP=25 단위)를 프레임 인덱스로 변환. 시트의 프레임 순서는 왼쪽(0번)이 꽉 찬
 # 상태고 오른쪽(4번)으로 갈수록 비므로, 게이지가 높을수록(=꽉 찰수록) 더 낮은 인덱스를 골라야 한다
@@ -2391,6 +2492,10 @@ func _setup_sprites() -> void:
 
 	_monster_sprites.clear()
 	_monster_shadows.clear()
+	for badge in _status_badges:
+		if is_instance_valid(badge):
+			badge.queue_free()
+	_status_badges.clear()
 	_resist_badges.clear()
 	_monster_card_panels.clear()
 	_monster_hp_bars.clear()
@@ -2434,6 +2539,7 @@ func _setup_sprites() -> void:
 		_monster_hp_labels.append(card.get_node("HPBarLabel") as Label)
 		_monster_mana_bars.append(card.get_node("ManaBar") as ProgressBar)
 		_monster_art_tops.append(_measure_art_top_offset(idle_sheet, idle_frame_size))
+		_status_badges.append(_make_status_badge())
 
 
 # 노드를 복제해 같은 부모에 붙인다 (같은 씬 트리 위치 = 같은 z 순서/좌표계를 공유하도록).

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="Card" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://battle/card.gd" id="1_card"]
+
+[resource]
+script = ExtResource("1_card")
+card_name = "위협"
+color = 2
+tier = 0
+effect = 8
+value = 20
+secondary_value = 1
+mana_cost = 2
+hp_cost = 0
+is_aoe = false
+flavor_text = "살기를 드러내 상대의 기세를 꺾는다. 움츠러든 팔은 예전만큼 무겁지 않다."

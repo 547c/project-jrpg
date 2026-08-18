@@ -49,7 +49,18 @@ func resists(card_color: Card.CardColor) -> bool:
 # 일치하면 RESIST_DAMAGE_MULTIPLIER를 곱해 반올림한 값을, 아니면(무저항 카드/저항 없음/색깔
 # 불일치) raw_damage를 그대로 반환한다. raw_damage를 인자로 받는 이유는 이 함수가 card.value를
 # 직접 가정하지 않게 해서, 나중에 무기 보너스 등 다른 배율이 먼저 적용된 값도 그대로 넘길 수 있게 하기 위함
-func calculate_damage(card: Card, raw_damage: int) -> int:
-	if resists(card.color):
-		return int(round(raw_damage * RESIST_DAMAGE_MULTIPLIER))
-	return raw_damage
+# resist_reduction_percent는 이 몬스터에게 걸린 "저항 약화" 디버프(StatusEffects.Kind.RESIST_DOWN)의
+# 세기다. 저항 자체를 끄는 게 아니라 감쇄 폭을 완화한다:
+#   원래 감쇄 = 1 - RESIST_DAMAGE_MULTIPLIER (기본 50%)
+#   실제 감쇄 = 원래 감쇄 * (1 - 약화율)
+# 예) 기본 50% 감쇄에 저항 약화 50%가 걸리면 감쇄가 25%로 줄어 배율이 0.75가 된다.
+# 이 방식이면 약화율 100%에서 감쇄가 0(=저항 무시)이 되어 상한이 자연스럽게 맞고,
+# 저항 배율 상수를 나중에 바꿔도 "약화율의 의미"가 그대로 유지된다
+func calculate_damage(card: Card, raw_damage: int, resist_reduction_percent: int = 0) -> int:
+	if not resists(card.color):
+		return raw_damage
+
+	var base_cut := 1.0 - RESIST_DAMAGE_MULTIPLIER
+	var weakened := clampf(resist_reduction_percent / 100.0, 0.0, 1.0)
+	var multiplier := 1.0 - base_cut * (1.0 - weakened)
+	return int(round(raw_damage * multiplier))

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="Card" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://battle/card.gd" id="1_card"]
+
+[resource]
+script = ExtResource("1_card")
+card_name = "투기"
+color = 2
+tier = 1
+effect = 7
+value = 20
+secondary_value = 2
+mana_cost = 3
+hp_cost = 0
+is_aoe = false
+flavor_text = "숨을 고르며 투지를 끌어올린다. 다음 일격이 한층 매서워진다."
