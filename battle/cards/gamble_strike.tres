@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="Card" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://battle/card.gd" id="1_card"]
+
+[resource]
+script = ExtResource("1_card")
+card_name = "도박의 일격"
+color = 0
+tier = 2
+effect = 0
+value = 10
+secondary_value = 0
+mana_cost = 4
+hp_cost = 0
+damage_trait = "gamble"
+icon_key = "question"
+status_package = ""
+is_aoe = false
+flavor_text = "겨누지 않고 휘두른다. 맞으면 한 번에 끝나고, 빗나가면 아무것도 남지 않는다."

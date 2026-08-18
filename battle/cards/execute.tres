@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="Card" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://battle/card.gd" id="1_card"]
+
+[resource]
+script = ExtResource("1_card")
+card_name = "처형"
+color = 0
+tier = 1
+effect = 0
+value = 6
+secondary_value = 0
+mana_cost = 3
+hp_cost = 0
+damage_trait = "execute"
+icon_key = "skull"
+status_package = ""
+is_aoe = false
+flavor_text = "숨이 얕아진 것을 확인하고서야 칼끝을 겨눈다. 쓰러지기 직전의 상대에게는 자비가 없다."

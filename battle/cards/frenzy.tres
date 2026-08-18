@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="Card" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://battle/card.gd" id="1_card"]
+
+[resource]
+script = ExtResource("1_card")
+card_name = "광란"
+color = 2
+tier = 2
+effect = 7
+value = 30
+secondary_value = 3
+mana_cost = 0
+hp_cost = 3
+status_package = ""
+icon_key = "rage_flame"
+is_aoe = false
+flavor_text = "검붉은 열기가 시야를 좁힌다. 제 몸을 태워 얻은 힘은 잠시뿐이지만, 그동안은 무엇도 막지 못한다."

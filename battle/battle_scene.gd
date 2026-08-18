@@ -209,6 +209,16 @@ const CARD_NAME_VFX_OVERRIDE := {
 	"번개창": "magic_lightning",
 }
 
+# 도박의 일격 전용 연출 수치. 성공은 이 덱에서 가장 큰 단발 한 방(30)이라 흔들림/이펙트를 과장하고,
+# 실패는 같은 이펙트를 작고 흐리게 띄워 "나가긴 했는데 헛쳤다"로 읽히게 한다 (아무것도 안 나오면
+# 카드가 씹힌 것처럼 보인다)
+const GAMBLE_HIT_VFX_SCALE := 1.6
+const GAMBLE_HIT_SHAKE_AMOUNT := 9.0
+const GAMBLE_HIT_SHAKE_STEPS := 8
+const GAMBLE_HIT_FLASH_TINT := Color(1.0, 0.85, 0.45, 1)
+const GAMBLE_WHIFF_VFX_SCALE := 0.55
+const GAMBLE_WHIFF_VFX_ALPHA := 0.45
+
 # 번개창 전용: 화면 전체가 짧게 번쩍이는 히트 플래시 색 (섬광의 HitFlash 로직을 그대로 재사용하고
 # 색과 재생 시점만 다르게 준다)
 const LIGHTNING_FLASH_TINT := Color(1.0, 0.98, 0.72, 1)
@@ -491,6 +501,9 @@ const RAVEN_ICON_SIZE := 32
 # 카드 효과별 스킬 아이콘 좌표는 CardLibrary가 갖고 있다 — 스펠북 컬렉션 목록도 같은 아이콘을
 # 써야 해서 전투 씬이 아니라 카드 카탈로그 쪽으로 옮겼다
 const SKILL_ICON_REGION := CardLibrary.SKILL_ICON_REGION
+# 카드가 icon_key로 직접 고른 아이콘의 좌표표. 효과별 기본 아이콘(SKILL_ICON_REGION)보다 우선한다 —
+# 같은 DAMAGE라도 흡혈/처형/도박의 일격이 손패에서 서로 구분돼야 해서 생긴 축이다
+const CARD_ICON_REGION := CardLibrary.CARD_ICON_REGION
 const RESIST_ICON_REGION := {
 	EnemyResistance.ResistanceType.PHYSICAL: Rect2(320, 1696, RAVEN_ICON_SIZE, RAVEN_ICON_SIZE), # fb859 — 빨강 저항 방패
 	EnemyResistance.ResistanceType.MAGIC: Rect2(224, 1696, RAVEN_ICON_SIZE, RAVEN_ICON_SIZE),     # fb856 — 하늘색 저항 방패
@@ -760,6 +773,7 @@ var _card_base_positions: Array[Vector2] = []
 var _sword_gauge_frames: Array[Texture2D] = []
 var _staff_gauge_frames: Array[Texture2D] = []
 var _skill_icon_textures: Dictionary = {}
+var _card_icon_textures: Dictionary = {} # icon_key -> AtlasTexture (효과별 기본값보다 우선)
 var _resist_icon_textures: Dictionary = {}
 var _card_front_textures: Dictionary = {} # "grey"/"red"/"blue"/"green" -> AtlasTexture
 var _card_icon_frame_textures: Dictionary = {}
@@ -845,6 +859,8 @@ func _build_battle_ui_resources() -> void:
 	var raven_sheet := load(RAVEN_SHEET_PATH) as Texture2D
 	for effect in SKILL_ICON_REGION:
 		_skill_icon_textures[effect] = _atlas(raven_sheet, SKILL_ICON_REGION[effect])
+	for icon_key in CARD_ICON_REGION:
+		_card_icon_textures[icon_key] = _atlas(raven_sheet, CARD_ICON_REGION[icon_key])
 	for resistance in RESIST_ICON_REGION:
 		_resist_icon_textures[resistance] = _atlas(raven_sheet, RESIST_ICON_REGION[resistance])
 
@@ -1167,6 +1183,9 @@ func _targets_an_enemy(card: Card) -> bool:
 	match card.effect:
 		Card.EffectType.DAMAGE, Card.EffectType.DEBUFF_ATTACK_ENEMY:
 			return true
+		Card.EffectType.STATUS_PACKAGE:
+			# 묶음이 적을 겨냥하는지 자기 자신인지는 묶음 표가 안다 (자기버프 묶음이 생겨도 여기 그대로)
+			return StatusEffects.package_targets_enemy(card.status_package)
 		_:
 			return false
 
@@ -1469,6 +1488,22 @@ func _animate_card(card: Card, hp_before: int, mana_before: int, monster_hp_befo
 				await _wait(0.1)
 				_flash_hit(target_sprite)
 				_play_card_vfx(card, target_sprite)
+			elif card.card_name == "도박의 일격":
+				# 성공/실패 어느 쪽이든 크게 휘두르는 동작은 똑같이 나간다 — 결과는 이미 정해져 있지만
+				# 플레이어는 착지하는 순간에야 알게 되고, 그 한 박자가 이 카드의 재미다.
+				# 갈린 뒤의 차이는 "얼마나 요란한가"로만 준다: 성공은 화면 흔들림 + 확대된 이펙트,
+				# 실패는 흔들림 없이 작고 흐린 이펙트에 빗나갔다는 팝업만
+				await _lunge(_player_sprite, target_sprite.position)
+				if _is_whiff(card):
+					var whiff_vfx := _play_card_vfx(card, target_sprite, GAMBLE_WHIFF_VFX_SCALE)
+					if whiff_vfx != null:
+						whiff_vfx.modulate.a = GAMBLE_WHIFF_VFX_ALPHA
+					_show_popup(target_sprite.position, DamageTraits.get_whiff_text(card.damage_trait), DODGE_COLOR)
+				else:
+					_shake_actors(GAMBLE_HIT_SHAKE_AMOUNT, GAMBLE_HIT_SHAKE_STEPS)
+					_flash_hit(target_sprite)
+					_play_card_vfx(card, target_sprite, GAMBLE_HIT_VFX_SCALE)
+					_screen_flash(GAMBLE_HIT_FLASH_TINT, HIT_FLASH_DURATION)
 			elif card.card_name == "섬광":
 				# 섬광은 그냥 살짝 찌르는(_lunge) 대신, 몬스터 코앞까지 실제로 달려가서 때리고
 				# 곧바로 원위치로 돌아온다 — 베기 전에 노랗게 짧게 번쩍이는 "차징"도 함께 넣는다
@@ -1500,6 +1535,8 @@ func _animate_card(card: Card, hp_before: int, mana_before: int, monster_hp_befo
 			_show_damage_popups_on_targets()
 			_refresh_monster_hp_bars()
 			_message.text = _damage_result_message(card)
+			# 흡혈/마력흡수처럼 "때린 결과로 무언가를 가져오는" 카드는 여기서 플레이어 쪽 변화도 보여준다
+			_play_damage_trait_feedback()
 			await _wait(0.35)
 		Card.EffectType.HEAL_HP:
 			var healed: int = GameState.get_flag("player_hp") - hp_before
@@ -1566,6 +1603,42 @@ func _animate_card(card: Card, hp_before: int, mana_before: int, monster_hp_befo
 			_message.text = "%s! %s의 공격력 -%d%% (%d라운드)" % [
 				card.card_name, _monster_display_name(target_index), card.value, card.secondary_value]
 			await _wait(0.45)
+		Card.EffectType.FREE_NEXT_CARD:
+			# 대상이 없고 수치도 없는 카드라, 플레이어 위에 잔상 이펙트(dodge)를 한 번 띄우는 것으로
+			# "빨라졌다"만 전한다 — 실제 이득은 다음 카드의 비용 배지가 사라지는 것으로 곧바로 보인다
+			_play_card_vfx(card, _player_sprite)
+			_show_popup(_player_sprite.position, "코스트 0", BUFF_COLOR)
+			_message.text = "%s — 다음에 내는 카드 1장의 코스트가 0이 된다." % card.card_name
+			await _wait(0.4)
+		Card.EffectType.STATUS_PACKAGE:
+			await _play_status_package_effect(card)
+
+
+# 상태이상 묶음 카드의 연출. 대상이 하나든 전원이든 _card_targets를 그대로 훑으므로
+# 광역 묶음(봉인)과 단일 묶음(무력화)이 같은 경로를 쓴다
+func _play_status_package_effect(card: Card) -> void:
+	var summary := StatusEffects.describe_package(card.status_package)
+	var to_self := not StatusEffects.package_targets_enemy(card.status_package)
+
+	SFXPlayer.play(VFX_SFX["defend"])
+	if to_self:
+		_spawn_vfx_sprite("mana", _player_sprite.position)
+		_show_popup(_player_sprite.position, summary, BUFF_COLOR)
+	else:
+		for index in _card_targets:
+			var sprite := _monster_sprite_at(index)
+			_spawn_vfx_sprite("defend", sprite.position)
+			_flash_hit(sprite)
+			_show_popup(sprite.position, summary, DEBUFF_COLOR)
+		_shake_actors()
+
+	_refresh_status_badges()
+	if _card_targets.size() > 1 and not to_self:
+		_message.text = "%s! %d마리에게 %s (%d라운드)" % [
+			card.card_name, _card_targets.size(), summary, card.secondary_value]
+	else:
+		_message.text = "%s! %s (%d라운드)" % [card.card_name, summary, card.secondary_value]
+	await _wait(0.5)
 
 
 # card.effect(+물리/마법 구분)에 맞는 VFX/SFX 키를 고른다. _card_style_key()와 판단 기준은 같지만
@@ -1584,6 +1657,9 @@ func _vfx_key_for_card(card: Card) -> String:
 		Card.EffectType.DEFEND:
 			return "defend"
 		Card.EffectType.DODGE:
+			return "dodge"
+		Card.EffectType.FREE_NEXT_CARD:
+			# 회피와 같은 잔상 스트릭 — 둘 다 "빨라진다"는 인상이라 그림을 나눌 이유가 없다
 			return "dodge"
 		Card.EffectType.COUNTER:
 			return "counter" # 낼 때는 "받아넘길 준비" — 실제 반격 타격은 적 턴에 따로 재생한다
@@ -1608,15 +1684,17 @@ func _play_counter_vfx(pos: Vector2) -> void:
 # 이펙트 스프라이트는 재생이 끝나면(animation_finished) 스스로 사라진다.
 # scale_mult로 기본 배율(VFX_DISPLAY_SCALE)보다 더 크게/작게 띄울 수 있다 — 익스플로전처럼
 # 같은 재생 경로를 쓰되 "훨씬 크게" 보여야 하는 카드용
-func _play_card_vfx(card: Card, target: Node2D, scale_mult: float = 1.0) -> void:
+# 만든 이펙트 스프라이트를 돌려준다 — 대부분의 호출부는 무시하지만, 도박의 일격 실패처럼
+# 재생 직후 밝기를 낮춰야 하는 연출은 이 핸들이 필요하다 (_spawn_vfx_sprite과 같은 규약)
+func _play_card_vfx(card: Card, target: Node2D, scale_mult: float = 1.0) -> AnimatedSprite2D:
 	var key := _vfx_key_for_card(card)
 	if key == "" or not _vfx_frames.has(key):
-		return
+		return null
 
 	if VFX_SFX.has(key):
 		SFXPlayer.play(VFX_SFX[key])
 
-	_spawn_vfx_sprite(key, target.position, scale_mult)
+	return _spawn_vfx_sprite(key, target.position, scale_mult)
 
 
 # VFX_CONFIG의 key에 해당하는 이펙트 스프라이트 하나를 pos에 재생한다 (사운드는 호출부 책임).
@@ -1969,16 +2047,16 @@ func _populate_card_slot(i: int, cards: Array) -> void:
 	if not playable:
 		if not _manager.weapon.can_use_card(card):
 			desc += "\n[과열]"
-		elif not GameState.can_afford_mana(card.get_mana_cost()):
+		elif not GameState.can_afford_mana(_manager.get_effective_mana_cost(card)):
 			desc += "\n[마나부족]"
-		elif not _manager.can_afford_hp(card.get_hp_cost()):
+		elif not _manager.can_afford_hp(_manager.get_effective_hp_cost(card)):
 			desc += "\n[체력부족]"
 
 	_set_card_parts_visible(i, true)
 	frame.texture = _card_front_textures[style_key]
 	_card_icon_frames[i].texture = _card_icon_frame_textures[style_key]
 	_card_name_banners[i].texture = _card_name_banner_textures[style_key]
-	icon.texture = _skill_icon_textures.get(card.effect)
+	icon.texture = _skill_icon_for(card)
 	name_label.text = card.card_name
 	desc_label.text = desc
 	# flavor_text는 수치 설명(desc_label)과 별개로 손으로 쓴 짧은 분위기 문구다. 비워둔 카드도
@@ -1989,15 +2067,19 @@ func _populate_card_slot(i: int, cards: Array) -> void:
 
 	# 비용은 설명 문장에 끼워 넣지 않고 아래 두 모서리의 마름모 배지로 뺀다 — 참고 이미지의
 	# 모서리 배지와 같은 방식이고, 좁은 설명칸도 아낀다. 왼쪽=마나(파랑), 오른쪽=체력(빨강)이고
-	# 해당 비용이 0인 카드는 그 배지만 통째로 숨겨서, 배지가 보이면 곧 비용이 있다는 뜻이 된다
-	var mana_cost := card.get_mana_cost()
+	# 해당 비용이 0인 카드는 그 배지만 통째로 숨겨서, 배지가 보이면 곧 비용이 있다는 뜻이 된다.
+	#
+	# 가속이 걸려 있으면 "지금 실제로 드는 비용"(0)을 기준으로 하므로 배지가 통째로 사라진다 —
+	# 다음 한 장이 공짜라는 사실이 손패 다섯 장에서 한눈에 보이고, 3이 적힌 배지를 보고 냈는데
+	# 마나가 안 줄어드는 어긋남도 생기지 않는다
+	var mana_cost := _manager.get_effective_mana_cost(card)
 	_card_mana_badges[i].visible = mana_cost > 0
 	_card_mana_labels[i].visible = mana_cost > 0
 	if mana_cost > 0:
 		_card_mana_badges[i].texture = _card_mana_badge_texture
 		_card_mana_labels[i].text = str(mana_cost)
 
-	var hp_cost := card.get_hp_cost()
+	var hp_cost := _manager.get_effective_hp_cost(card)
 	_card_hp_badges[i].visible = hp_cost > 0
 	_card_hp_labels[i].visible = hp_cost > 0
 	if hp_cost > 0:
@@ -2030,6 +2112,15 @@ func _set_card_parts_visible(i: int, shown: bool) -> void:
 		_card_mana_labels[i].visible = false
 		_card_hp_badges[i].visible = false
 		_card_hp_labels[i].visible = false
+
+
+# 손패 카드에 그릴 아이콘. 카드가 icon_key로 직접 고른 그림이 있으면 그걸, 없으면 효과별 기본값을 쓴다.
+# 고르는 규칙 자체는 CardLibrary가 갖고 있고(스펠북 목록도 같은 아이콘을 써야 하므로) 여기서는
+# 미리 잘라둔 AtlasTexture 중에서 꺼내기만 한다
+func _skill_icon_for(card: Card) -> AtlasTexture:
+	if card.icon_key != "" and _card_icon_textures.has(card.icon_key):
+		return _card_icon_textures[card.icon_key]
+	return _skill_icon_textures.get(card.effect)
 
 
 func _card_style_key(card: Card) -> String:
@@ -2813,6 +2904,33 @@ func _show_damage_popups_on_targets() -> void:
 	_update_monster_hp_text()
 
 
+# 이번 카드가 "빗나간" 것인지 — 빗나갈 수 있는 성질을 가진 카드인데 피해가 하나도 안 들어간 경우.
+# 성질 표에 문구가 있는 카드만 해당되므로, 보통 피해 카드가 저항으로 0이 나오는 경우와는 섞이지 않는다
+func _is_whiff(card: Card) -> bool:
+	if DamageTraits.get_whiff_text(card.damage_trait) == "":
+		return false
+	return _total_damage_dealt() <= 0
+
+
+# 흡혈/마력흡수가 실제로 가져온 것을 플레이어 쪽에 보여준다. 매니저가 남긴 값은 이미 "실제로 오간 양"
+# (대상이 가진 만큼만, 플레이어 최대치에서 잘린 뒤)이라 그대로 띄우면 자원 표시와 어긋나지 않는다.
+# 아무것도 안 가져온 카드는 조용히 지나간다 — 성질이 없는 카드도 이 함수를 그냥 통과한다
+func _play_damage_trait_feedback() -> void:
+	var result: Dictionary = _manager.last_trait_result
+	var stolen: int = int(result.get("mana_stolen", 0))
+	var leeched: int = int(result.get("hp_leeched", 0))
+
+	if stolen > 0:
+		_spawn_vfx_sprite("mana", _player_sprite.position)
+		_show_popup(_player_sprite.position, "+%d MP" % stolen, MANA_COLOR)
+		_message.text += "  (마나 %d 흡수)" % stolen
+	if leeched > 0:
+		_spawn_vfx_sprite("heal", _player_sprite.position)
+		_show_popup(_player_sprite.position, "+%d" % leeched, HEAL_COLOR)
+		_animate_hp_bar(_player_hp_bar, GameState.get_flag("player_hp"))
+		_message.text += "  (체력 %d 회복)" % leeched
+
+
 # 이번 카드가 대상들에게 입힌 피해의 합 (메시지에 쓸 총계)
 func _total_damage_dealt() -> int:
 	var total := 0
@@ -2825,6 +2943,10 @@ func _total_damage_dealt() -> int:
 # 한 마리 숫자와 헷갈리지 않게 한다
 func _damage_result_message(card: Card) -> String:
 	var total := _total_damage_dealt()
+	# 도박의 일격처럼 "빗나갈 수 있는" 카드는 0 피해가 실패를 뜻하므로 숫자 대신 그 사실을 적는다.
+	# "도박의 일격! 0 피해!"는 카드가 씹힌 것처럼 읽힌다
+	if _is_whiff(card):
+		return "%s — %s" % [card.card_name, DamageTraits.get_whiff_text(card.damage_trait)]
 	if _card_targets.size() > 1:
 		return "%s! %d마리에게 총 %d 피해!" % [card.card_name, _card_targets.size(), total]
 	return "%s! %d 피해!" % [card.card_name, total]

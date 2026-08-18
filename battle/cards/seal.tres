@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="Card" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://battle/card.gd" id="1_card"]
+
+[resource]
+script = ExtResource("1_card")
+card_name = "봉인"
+color = 2
+tier = 2
+effect = 9
+value = 0
+secondary_value = 3
+mana_cost = 12
+hp_cost = 0
+status_package = "seal"
+icon_key = "chains"
+is_aoe = true
+flavor_text = "낡은 인장이 대기를 옭아맨다. 힘도 저항도 봉인 안에서는 반쯤 잠든다."

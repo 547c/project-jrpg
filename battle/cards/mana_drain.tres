@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="Card" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://battle/card.gd" id="1_card"]
+
+[resource]
+script = ExtResource("1_card")
+card_name = "마력흡수"
+color = 1
+tier = 1
+effect = 0
+value = 5
+secondary_value = 0
+mana_cost = 3
+hp_cost = 0
+damage_trait = "drain_mana"
+icon_key = "mana_up"
+status_package = ""
+is_aoe = false
+flavor_text = "상대가 끌어모으던 힘의 실마리를 붙잡아 그대로 제 쪽으로 당긴다."

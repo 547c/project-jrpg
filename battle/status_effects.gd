@@ -33,6 +33,65 @@ const KIND_LABEL := {
 	Kind.RESIST_DOWN: "저항↓",
 }
 
+# ── 상태이상 묶음 (한 카드가 여러 종류를 동시에 거는 경우) ──────────────────
+# 카드 하나가 상태이상 하나만 거는 게 기본이지만(BUFF_ATTACK_SELF 등), "공격력도 깎고 방어력도
+# 깎는" 식의 복합 카드가 생기면서 그걸 담을 자리가 필요해졌다.
+#
+# [왜 이 방식인가] 기존 구조는 "카드 하나 = 효과 하나 + value/secondary_value"라, 종류마다 수치가
+# 따로인 복합 효과를 그대로는 담을 수 없다. 선택지는 셋이었다:
+#   (a) Card에 배열 필드를 추가한다 → .tres에 딕셔너리 배열을 적어야 해서 편집이 번거롭고,
+#       "카드 하나 = 효과 하나"라는 전제를 읽는 모든 코드가 영향을 받는다.
+#   (b) 조합마다 전용 EffectType을 만든다 → RESTORE_BOTH(체력+마나)가 쓰는 기존 방식이지만,
+#       조합이 늘 때마다 enum과 적용 코드가 같이 늘고 수치가 코드에 박힌다.
+#   (c) 묶음에 이름을 붙여 표로 빼고, 카드는 그 이름만 가리킨다 → 지금 방식.
+# (c)를 택한 이유는 새 조합을 추가할 때 이 표에 한 줄과 .tres 한 장만 늘면 되고, EffectType이나
+# 적용 코드는 그대로이기 때문이다. 지속 라운드는 카드의 secondary_value를 그대로 쓰므로
+# (버프/디버프 카드의 기존 규칙과 동일) 표에는 "무엇을 얼마나"만 적는다.
+#
+# target: 이 묶음이 누구에게 걸리는지 ("enemy" = 대상 몬스터, "self" = 플레이어 자신).
+# 타겟 선택 UI가 필요한지를 이 값으로 판단하므로, 자기버프 묶음이 생겨도 UI 쪽은 손댈 필요가 없다
+const PACKAGES: Dictionary = {
+	"weaken": {
+		"target": "enemy",
+		"effects": [
+			{"kind": Kind.ATTACK_DOWN, "magnitude": 20},
+			{"kind": Kind.DEFENSE_DOWN, "magnitude": 15},
+		],
+	},
+	# 저항 약화가 하나뿐인 이유: 이 게임의 저항은 매 턴 물리/마법 중 "하나만" 활성화되는 모델이라
+	# (EnemyResistance.current), 물리저항과 마법저항이 따로 쌓이는 수치가 아니다. 그래서
+	# RESIST_DOWN 50% 하나가 곧 "물리든 마법이든 걸린 저항을 50% 완화한다"가 되어,
+	# 종류를 둘로 쪼개도 동작이 달라지지 않는다
+	"seal": {
+		"target": "enemy",
+		"effects": [
+			{"kind": Kind.ATTACK_DOWN, "magnitude": 25},
+			{"kind": Kind.RESIST_DOWN, "magnitude": 50},
+		],
+	},
+}
+
+
+static func get_package(package_id: String) -> Dictionary:
+	return PACKAGES.get(package_id, {})
+
+
+static func package_targets_enemy(package_id: String) -> bool:
+	var package := get_package(package_id)
+	return package.get("target", "enemy") == "enemy"
+
+
+# 묶음을 "공격력 -25%, 저항 -50%" 같은 한 줄 설명으로 (카드 설명문에 쓴다)
+static func describe_package(package_id: String) -> String:
+	var package := get_package(package_id)
+	if package.is_empty():
+		return ""
+	var parts: Array[String] = []
+	for entry in package["effects"]:
+		parts.append("%s %d%%" % [KIND_LABEL[entry["kind"]], int(entry["magnitude"])])
+	return ", ".join(parts)
+
+
 # 종류 -> {"magnitude": int(퍼센트), "rounds": int(남은 라운드)}
 # 같은 종류를 여러 개 겹쳐 들 수 없게 딕셔너리로 둔다 — 이 자료구조 자체가 "중첩 없음" 규칙이다
 var _effects: Dictionary = {}
@@ -55,6 +114,19 @@ func apply(kind: Kind, magnitude: int, rounds: int) -> void:
 		return
 
 	_effects[kind] = {"magnitude": magnitude, "rounds": rounds}
+
+
+# 묶음에 든 상태이상을 한꺼번에 건다 (라운드는 전부 동일). 개별 apply()를 반복할 뿐이라
+# 중첩 금지·최댓값 갱신 같은 규칙이 자동으로 그대로 적용된다
+func apply_package(package_id: String, rounds: int) -> Array:
+	var package := get_package(package_id)
+	if package.is_empty():
+		return []
+	var applied: Array = []
+	for entry in package["effects"]:
+		apply(entry["kind"], int(entry["magnitude"]), rounds)
+		applied.append(entry["kind"])
+	return applied
 
 
 func has(kind: Kind) -> bool:

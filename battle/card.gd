@@ -40,6 +40,12 @@ enum EffectType {
 	# (effect마다 value의 의미가 달라지는 기존 규칙을 그대로 따른 것)
 	BUFF_ATTACK_SELF,    # 자신의 주는 피해 증가 (대상 불필요)
 	DEBUFF_ATTACK_ENEMY, # 대상 몬스터의 주는 피해 감소
+	# 여러 상태이상을 한꺼번에 거는 카드. 무엇을 얼마나 거는지는 status_package가 가리키는
+	# StatusEffects.PACKAGES 항목에 있고, 지속 라운드만 secondary_value로 정한다
+	STATUS_PACKAGE,
+	# 다음에 내는 카드 1장의 마나/체력 비용을 0으로 만든다 (이번 턴 한정, 1회성).
+	# 수치가 필요 없어 value/secondary_value를 쓰지 않는다 — "얼마나"가 아니라 "한 장"이 전부다
+	FREE_NEXT_CARD,
 }
 
 # 화면에 표시할 카드 이름
@@ -90,6 +96,21 @@ enum EffectType {
 # (회복은 최대치에서 clamp되므로, 최대치보다 확실히 큰 값을 넣는 게 곧 완전 회복이다)
 const FULL_RESTORE_VALUE := 999
 
+# effect가 DAMAGE일 때 그 위에 얹히는 부가 성질의 이름 (DamageTraits.TRAITS의 키. 빈 값이면 순수 피해).
+# 흡혈/처형처럼 "때리는 건 같고 한 가지 규칙만 더 붙는" 카드를 위한 것이며, 수치는 전부 그 표에 있다.
+# 왜 이런 카드들에 새 EffectType을 주지 않았는지는 damage_traits.gd 첫머리 주석 참고
+@export var damage_trait: String = ""
+
+# 이 카드가 쓸 아이콘의 이름 (CardLibrary.CARD_ICON_REGION의 키. 비워두면 효과별 기본 아이콘).
+# 아이콘은 원래 효과 종류로만 갈렸는데, 같은 DAMAGE라도 흡혈과 처형은 손패에서 서로 구분돼야 해서
+# 카드가 직접 고를 수 있게 열어뒀다. 실제 시트 좌표는 카탈로그(CardLibrary)에 있고 여기엔 이름만 둔다
+@export var icon_key: String = ""
+
+# effect가 STATUS_PACKAGE일 때 적용할 묶음의 이름 (StatusEffects.PACKAGES의 키).
+# 수치는 그 표에 있고 여기서는 어느 묶음인지만 가리킨다 — 카드 이름 대신 별도 필드를 쓰는 이유는
+# CardLibrary가 카드 id를 따로 두는 것과 같다: 표시용 이름을 키로 삼으면 이름을 다듬는 순간 깨진다
+@export var status_package: String = ""
+
 # 광역기 여부. true면 대상 하나가 아니라 "살아있는 몬스터 전원"에게 같은 효과가 적용된다.
 #
 # 효과 종류(EffectType)와 독립된 축이라 별도 필드로 뒀다 — 지금은 피해 카드 둘(익스플로전/시공균열)만
@@ -125,7 +146,12 @@ func _effect_text() -> String:
 	match effect:
 		EffectType.DAMAGE:
 			var kind := "마법" if color == CardColor.MAGIC else "물리"
-			return "%s 피해 %d" % [kind, value]
+			var base := "%s 피해 %d" % [kind, value]
+			# 부가 성질이 붙은 카드는 그 규칙까지 적어야 카드만 보고 판단할 수 있다
+			var trait_text := DamageTraits.describe(damage_trait)
+			if trait_text != "":
+				return "%s + %s" % [base, trait_text]
+			return base
 		EffectType.HEAL_HP:
 			return "체력 %d 회복" % value
 		EffectType.RESTORE_MANA:
@@ -140,6 +166,13 @@ func _effect_text() -> String:
 			return "공격력 +%d%% (%d라운드)" % [value, secondary_value]
 		EffectType.DEBUFF_ATTACK_ENEMY:
 			return "대상 공격력 -%d%% (%d라운드)" % [value, secondary_value]
+		EffectType.FREE_NEXT_CARD:
+			return "다음 카드 1장 코스트 0"
+		EffectType.STATUS_PACKAGE:
+			var summary := StatusEffects.describe_package(status_package)
+			if summary == "":
+				return ""
+			return "%s (%d라운드)" % [summary, secondary_value]
 		EffectType.RESTORE_BOTH:
 			# "완전 회복" 카드는 최대치보다 확실히 큰 값을 넣고 clamp에 맡기는데(불사조의 축복=999),
 			# 그 숫자를 그대로 보여주면 "체력 999 회복"이라는 이상한 문구가 나온다 — 임계값을 넘으면

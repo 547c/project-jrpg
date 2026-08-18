@@ -4,14 +4,15 @@
 
 [resource]
 script = ExtResource("1_card")
-card_name = "투기"
+card_name = "무력화"
 color = 2
 tier = 1
-effect = 7
-value = 20
+effect = 9
+value = 0
 secondary_value = 2
-mana_cost = 3
+mana_cost = 4
 hp_cost = 0
-icon_key = "attack_up"
+status_package = "weaken"
+icon_key = "defense_down"
 is_aoe = false
-flavor_text = "숨을 고르며 투지를 끌어올린다. 다음 일격이 한층 매서워진다."
+flavor_text = "급소를 노려 자세를 무너뜨린다. 팔은 무거워지고 빈틈은 벌어진다."

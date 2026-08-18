@@ -109,6 +109,18 @@ func spend_attack_mana() -> int:
 	return before - mana
 
 
+# 마나를 빼앗기고 실제로 빠진 양을 반환 (가진 것보다 많이 뺏기지 않는다).
+# take_damage/heal과 같은 규약 — "실제 변화량"을 돌려줘, 훔친 쪽이 그 값만큼만 얻게 한다.
+# 이 마나는 연출용 자원이지만 공격/회복 판단(can_attack)에 그대로 쓰이므로, 빼앗기면 그 몬스터가
+# 숨고르기 턴으로 밀려난다 — 마력흡수가 피해 말고도 적 템포를 끊는 카드가 되는 지점
+func drain_mana(amount: int) -> int:
+	if amount <= 0:
+		return 0
+	var before := mana
+	mana = max(0, mana - amount)
+	return before - mana
+
+
 # 회복 턴 처리: 마나를 회복하고, 확률에 걸리면 체력도 조금 회복한다.
 # 실제로 회복된 양을 {"mana": int, "hp": int}로 돌려줘 호출부가 그대로 화면에 쓸 수 있게 한다
 # (hp가 0이면 이번 회복엔 체력이 안 붙은 것)

@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="Card" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://battle/card.gd" id="1_card"]
+
+[resource]
+script = ExtResource("1_card")
+card_name = "가속"
+color = 2
+tier = 1
+effect = 10
+value = 0
+secondary_value = 0
+mana_cost = 2
+hp_cost = 0
+damage_trait = ""
+icon_key = "swift_boots"
+status_package = ""
+is_aoe = false
+flavor_text = "한 박자를 앞당긴다. 다음 한 수는 대가를 치르기 전에 이미 나가 있다."

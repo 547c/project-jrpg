@@ -12,5 +12,6 @@ value = 20
 secondary_value = 1
 mana_cost = 2
 hp_cost = 0
+icon_key = "attack_down"
 is_aoe = false
 flavor_text = "살기를 드러내 상대의 기세를 꺾는다. 움츠러든 팔은 예전만큼 무겁지 않다."

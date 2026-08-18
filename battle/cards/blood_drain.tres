@@ -4,14 +4,16 @@
 
 [resource]
 script = ExtResource("1_card")
-card_name = "투기"
-color = 2
+card_name = "흡혈"
+color = 0
 tier = 1
-effect = 7
-value = 20
-secondary_value = 2
+effect = 0
+value = 8
+secondary_value = 0
 mana_cost = 3
 hp_cost = 0
-icon_key = "attack_up"
+damage_trait = "drain_hp"
+icon_key = "fangs"
+status_package = ""
 is_aoe = false
-flavor_text = "숨을 고르며 투지를 끌어올린다. 다음 일격이 한층 매서워진다."
+flavor_text = "벤 자리에서 흘러나온 것이 칼날을 타고 거꾸로 올라온다."

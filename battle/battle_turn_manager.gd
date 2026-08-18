@@ -54,6 +54,19 @@ var battle_over: bool = false
 # 몬스터마다 제 숫자를 띄우면 된다 (0 피해에 "-0"을 띄우지 않는 기존 규칙도 그대로 유지된다)
 var last_hit_damage: Dictionary = {}
 
+# 방금 낸 카드의 부가 성질(DamageTraits)이 실제로 만들어낸 결과 — {"mana_stolen": int, "hp_leeched": int}.
+# 대상마다 누적되므로 광역 흡혈 카드가 생겨도 합계가 그대로 나온다. last_hit_damage와 같은 이유로
+# "약속한 값"이 아니라 "실제로 오간 값"만 담는다 (플레이어 최대치에서 잘린 분은 빠져 있다)
+var last_trait_result: Dictionary = {}
+
+# 도박형 성질의 배율은 카드 한 번 사용당 한 번만 굴려야 해서, 굴린 값을 여기 담아 대상 계산에 재사용한다.
+# 성질이 없거나 카드 사용 밖에서는 1.0 (배율 없음)
+var _rolled_damage_multiplier: float = 1.0
+
+# 가속(FREE_NEXT_CARD)이 켜둔 "다음 한 장 공짜" 표식. 다음에 내는 카드가 무엇이든 그 한 장에서
+# 소모되고, 남아 있어도 턴이 넘어가면 사라진다 (_start_turn에서 초기화)
+var _free_next_card: bool = false
+
 # 방어/피하기 카드가 만드는 "다음 적 턴 한정" 임시 상태. 적 턴을 해결하는 즉시 소모되고 0/false로 돌아간다.
 # (스펙에 세부 규칙이 없어 아래처럼 설계했다 — 근거는 _resolve_enemy_turn() 주석 참고)
 var _pending_defense: int = 0
@@ -110,6 +123,8 @@ func _start_turn() -> void:
 		if monster.is_alive():
 			monster.resistance.roll_new_turn()
 	weapon.reset_turn()
+	# 가속은 "이번 턴" 한정이라 턴이 바뀌면 쓰지 않은 표식은 사라진다 (과열 게이지 리셋과 같은 자리)
+	_free_next_card = false
 	hand.draw_new_hand(deck, HAND_SIZE)
 	turn_started.emit(turn_number)
 
@@ -156,9 +171,26 @@ func can_play_card(card: Card) -> bool:
 		return false
 	if not weapon.can_use_card(card):
 		return false
-	if not GameState.can_afford_mana(card.get_mana_cost()):
+	# 가속이 걸려 있으면 비용이 0이므로, 원래는 못 낼 카드도 낼 수 있어야 한다 (UI 회색 처리도 같은 기준)
+	if not GameState.can_afford_mana(get_effective_mana_cost(card)):
 		return false
-	return can_afford_hp(card.get_hp_cost())
+	return can_afford_hp(get_effective_hp_cost(card))
+
+
+# 지금 이 카드를 내는 데 실제로 들 비용. 가속(FREE_NEXT_CARD)이 걸려 있으면 카드 종류와 무관하게 0이다.
+# 판정(can_play_card)과 실제 지불(play_card)과 화면 표시(전투 씬의 비용 배지)가 전부 이 함수를 거쳐야
+# 셋이 어긋나지 않는다 — 배지에는 3이 적혀 있는데 실제로는 0이 나가는 식의 어긋남이 생기지 않게
+func get_effective_mana_cost(card: Card) -> int:
+	return 0 if _free_next_card else card.get_mana_cost()
+
+
+func get_effective_hp_cost(card: Card) -> int:
+	return 0 if _free_next_card else card.get_hp_cost()
+
+
+# 다음 카드 한 장이 공짜인 상태인지 (전투 씬이 비용 배지를 0으로 바꿔 보여줄 때 쓴다)
+func is_next_card_free() -> bool:
+	return _free_next_card
 
 
 # 체력 비용을 치를 수 있는지. "남은 체력 > 비용"이라 비용을 내고도 최소 1은 남는다 —
@@ -185,8 +217,14 @@ func play_card(card: Card, target_index: int = -1) -> bool:
 	if not can_play_card(card):
 		return false
 
-	GameState.spend_mana(card.get_mana_cost()) # 비용이 0이면 그대로 통과
-	var hp_cost := card.get_hp_cost()
+	var mana_cost := get_effective_mana_cost(card)
+	var hp_cost := get_effective_hp_cost(card)
+	# 표식은 카드 종류를 가리지 않고 여기서 소모된다 — 원래 비용이 0인 카드(베기 등)에 걸렸다면
+	# 아무 이득 없이 그냥 사라진다. 효과 적용(_apply_card_effect)보다 먼저 꺼야 가속을 연달아 낼 때
+	# 두 번째 가속이 스스로 켠 표식을 그 자리에서 다시 소모해버리는 일이 없다
+	_free_next_card = false
+
+	GameState.spend_mana(mana_cost) # 비용이 0이면 그대로 통과
 	if hp_cost > 0:
 		GameState.damage_player(hp_cost)
 	weapon.register_card_use(card)
@@ -235,6 +273,10 @@ func switch_weapon(to: WeaponState.WeaponType) -> bool:
 # 마리별 실제 피해는 last_hit_damage에 자리 번호별로 남겨, 연출이 몬스터마다 제 숫자를 띄우게 한다
 func _apply_card_effect(card: Card, target_index: int) -> int:
 	last_hit_damage.clear()
+	last_trait_result = {"mana_stolen": 0, "hp_leeched": 0}
+	# 무작위 배율은 대상과 무관하므로 여기서 딱 한 번 굴려 아래 계산 전체가 같은 결과를 쓰게 한다
+	# (대상 계산 안에서 굴리면 광역 도박 카드가 마리마다 따로 굴려진다 — damage_traits.gd 주석 참고)
+	_rolled_damage_multiplier = DamageTraits.roll_random_multiplier(card.damage_trait)
 
 	var targets := resolve_target_indices(card, target_index)
 	if targets.is_empty():
@@ -289,6 +331,8 @@ func _apply_card_effect_to_target(card: Card, target_index: int) -> int:
 				debuff_target = get_auto_target()
 			if debuff_target != null:
 				apply_status(debuff_target.index, StatusEffects.Kind.ATTACK_DOWN, card.value, card.secondary_value)
+		Card.EffectType.STATUS_PACKAGE:
+			apply_status_package(card, target_index)
 		Card.EffectType.HEAL_HP:
 			var max_hp: int = GameState.get_flag("player_max_hp")
 			if max_hp > 0:
@@ -301,6 +345,10 @@ func _apply_card_effect_to_target(card: Card, target_index: int) -> int:
 			_pending_defense += card.value
 		Card.EffectType.DODGE:
 			_pending_dodge = true
+		Card.EffectType.FREE_NEXT_CARD:
+			# 이미 켜져 있어도 그냥 다시 켤 뿐이다 (겹쳐서 두 장이 공짜가 되지는 않는다) —
+			# 자료구조가 bool인 것 자체가 "중첩 없음" 규칙이라, 상태이상의 중첩 금지와 같은 방식이다
+			_free_next_card = true
 		Card.EffectType.COUNTER:
 			# 방어와 같은 이유로 합산한다 — 두 장 냈는데 한 장이 조용히 사라지면 손해이기 때문
 			_pending_counter += card.value
@@ -331,10 +379,45 @@ func _damage_monster(card: Card, target_index: int) -> int:
 	var final_damage := calculate_card_damage(card, target)
 	var applied := target.take_damage(final_damage)
 
+	_apply_damage_trait(card, target, applied)
+
 	if not target.is_alive():
 		monster_defeated.emit(target.index)
 
 	return applied
+
+
+# 피해를 넣은 "뒤에" 일어나는 부가 성질(흡혈/마력흡수)을 처리한다. 피해 계산을 건드리는 성질
+# (처형/도박)은 calculate_card_damage 안에서 이미 끝나 있고, 여기는 "때린 결과로 무언가를 가져오는"
+# 쪽만 담당한다 — 그래서 실제 피해량(applied)이 필요하고, 순서가 반드시 take_damage 다음이어야 한다.
+#
+# 실제로 오간 양만 last_trait_result에 쌓는다: 대상 마나가 모자라면 있는 만큼만 넘어오고, 플레이어
+# 최대치를 넘는 분은 버려지므로, 연출이 그 값을 그대로 띄우면 화면과 실제 자원이 어긋나지 않는다
+func _apply_damage_trait(card: Card, target: MonsterState, applied: int) -> void:
+	var trait_id := card.damage_trait
+	if trait_id == "":
+		return
+
+	var steal := DamageTraits.steal_mana_amount(trait_id)
+	if steal > 0:
+		# 대상에게서 실제로 빠진 만큼만 플레이어에게 넘긴다 (없는 마나를 만들어내지 않게)
+		var taken := target.drain_mana(steal)
+		if taken > 0:
+			var max_mana: int = GameState.get_flag("player_max_mana")
+			var before: int = GameState.get_flag("player_mana")
+			if max_mana > 0:
+				GameState.restore_mana_partial(float(taken) / max_mana)
+			var gained: int = GameState.get_flag("player_mana") - before
+			last_trait_result["mana_stolen"] = int(last_trait_result["mana_stolen"]) + gained
+
+	var leech := DamageTraits.leech_amount(trait_id, applied)
+	if leech > 0:
+		var max_hp: int = GameState.get_flag("player_max_hp")
+		var hp_before: int = GameState.get_flag("player_hp")
+		if max_hp > 0:
+			GameState.heal_player_partial(float(leech) / max_hp)
+		var healed: int = GameState.get_flag("player_hp") - hp_before
+		last_trait_result["hp_leeched"] = int(last_trait_result["hp_leeched"]) + healed
 
 
 # 카드 한 장이 target에게 실제로 입힐 피해를 계산한다. 계산 순서를 이 한 함수에 모아둬,
@@ -346,6 +429,7 @@ func _damage_monster(card: Card, target_index: int) -> int:
 #   2. × 플레이어 공격력 버프          (공격자, 곱셈)
 #   3. × 속성 저항 감쇄               (방어자, 곱셈 — 저항 약화 디버프가 이 감쇄를 완화한다)
 #   4. × 몬스터 방어력 약화            (방어자, 곱셈)
+#   5. × 카드 부가 성질 배율            (카드, 곱셈 — 처형의 조건부 배율과 도박의 무작위 배율)
 #
 # 2번을 저항(3번)보다 "먼저" 두는 게 핵심 판단이다. 장비 보너스가 이미 저항 앞에 더해져 있어서
 # (저항이 걸린 턴에는 보너스분도 함께 반감된다), 공격력 버프만 저항 뒤에 두면 같은 "공격을 세게
@@ -354,6 +438,10 @@ func _damage_monster(card: Card, target_index: int) -> int:
 #
 # 3번과 4번은 둘 다 방어자 쪽 곱셈이라 순서를 바꿔도 결과가 같다(곱셈의 교환법칙). 그래도
 # "저항 → 방어력" 순으로 적어둔 건 읽는 사람이 기존 규칙(저항)을 먼저 만나게 하려는 것뿐이다.
+#
+# 5번을 맨 끝에 두는 건 카드가 약속한 문구가 "최종 데미지 2배"이기 때문이다 — 저항이 걸린 턴이든
+# 아니든 "그 상황에서 나올 피해의 2배"가 되어야 설명 그대로 읽힌다. 앞쪽(2번 자리)에 두면 저항이
+# 그 배율까지 반감시켜서, 저항 턴에만 처형이 조용히 약해진다.
 #
 # 반올림은 마지막에 한 번만 한다 — 단계마다 반올림하면 버프 20%가 붙었는데 피해가 그대로인
 # 자투리 오차가 생긴다
@@ -368,7 +456,10 @@ func calculate_card_damage(card: Card, target: MonsterState) -> int:
 	var after_resist := target.resistance.calculate_damage(card, int(round(raw)), resist_reduction)
 	var after_defense := after_resist * (1.0 + target.status.get_magnitude(StatusEffects.Kind.DEFENSE_DOWN) / 100.0)
 
-	return int(round(after_defense))
+	# 카드 부가 성질 배율. 조건부(처형)는 대상 상태만 보므로 여기서 그때그때 구해도 값이 흔들리지 않고,
+	# 무작위(도박)는 카드 사용 시점에 이미 한 번 굴려둔 값을 그대로 쓴다
+	var trait_multiplier := DamageTraits.conditional_multiplier(card.damage_trait, target.hp, target.max_hp)
+	return int(round(after_defense * trait_multiplier * _rolled_damage_multiplier))
 
 
 # 몬스터가 이번에 때릴 피해량. monster_data의 범위에서 뽑은 뒤 공격력 디버프를 곱한다.
@@ -389,6 +480,31 @@ func apply_status(target_index: int, kind: StatusEffects.Kind, magnitude: int, r
 		return
 	container.apply(kind, magnitude, rounds)
 	status_applied.emit(target_index, int(kind), magnitude, rounds)
+
+
+# 묶음(StatusEffects.PACKAGES) 하나를 대상에게 통째로 건다.
+# 대상이 적인 묶음이면 지목된 몬스터(광역기면 호출부가 자리마다 한 번씩 부른다), 자기 묶음이면
+# 플레이어에게 건다 — 대상을 고르는 규칙이 여기 한 곳에만 있어서, 새 묶음을 추가해도 이 함수는 그대로다
+func apply_status_package(card: Card, target_index: int) -> void:
+	var package_id := card.status_package
+	if StatusEffects.get_package(package_id).is_empty():
+		return
+
+	var container_index := -1
+	if StatusEffects.package_targets_enemy(package_id):
+		var target := get_monster(target_index)
+		if target == null or not target.is_alive():
+			target = get_auto_target()
+		if target == null:
+			return
+		container_index = target.index
+
+	var container := _status_container_for(container_index)
+	if container == null:
+		return
+
+	for kind in container.apply_package(package_id, card.secondary_value):
+		status_applied.emit(container_index, int(kind), container.get_magnitude(kind), card.secondary_value)
 
 
 func _status_container_for(target_index: int) -> StatusEffects:
