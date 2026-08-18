@@ -767,7 +767,11 @@ var _shake_tween: Tween
 # 유성낙하의 낙하 지점 예고 마커와 그 맥동 트윈 (착지 순간 함께 정리한다)
 var _impact_marker: Polygon2D
 var _impact_marker_tween: Tween
-var _last_card_damage: int = 0
+# 방금 낸 카드가 실제로 겨냥한 자리 번호들 (광역이면 시전 시점에 살아있던 전원, 아니면 한 자리).
+# 시전 "전에" 확정해 두는 이유는, 맞고 쓰러진 몬스터도 연출 대상에는 남아 있어야 하기 때문이다
+var _card_targets: Array[int] = []
+# 그 대상들의 시전 직전 체력 (자리 번호 -> 체력). 마리별 실제 감소량을 내는 데 쓴다
+var _hp_before_by_index: Dictionary = {}
 # 이번 적 턴에 벌어진 공격들을 순서대로 담아둔다 (다인전에서는 살아있는 마리 수만큼 쌓인다).
 # 각 항목: {"attacker": int, "damage": int, "dodged": bool, "counter": int}
 var _enemy_attacks: Array[Dictionary] = []
@@ -1052,8 +1056,10 @@ func _subject_particle(word: String) -> String:
 	return "이" if (last - 0xAC00) % 28 != 0 else "가"
 
 
-func _on_card_played(_card: Card, damage_dealt: int) -> void:
-	_last_card_damage = damage_dealt
+# 카드 사용 결과는 여기서 따로 담아두지 않는다 — 연출이 마리별로 "시전 전 체력 - 지금 체력"을
+# 직접 계산하기 때문(_damage_dealt_to). 광역기는 마리마다 숫자가 달라 총합 하나로는 표현할 수 없다
+func _on_card_played(_card: Card, _damage_dealt: int) -> void:
+	pass
 
 
 # 적 턴에는 살아있는 마리 수만큼 이 콜백이 순서대로 날아온다 — 연출은 _animate_enemy_turn()이
@@ -1132,6 +1138,9 @@ func _is_interactive() -> bool:
 # 다인전 도입 전과 완전히 똑같이 유지된다
 func _needs_target(card: Card) -> bool:
 	if card.effect != Card.EffectType.DAMAGE:
+		return false
+	# 광역기는 대상이 "살아있는 전원"으로 이미 정해져 있어 고를 것이 없다
+	if card.is_aoe:
 		return false
 	return _manager != null and _manager.alive_monsters().size() > 1
 
@@ -1324,8 +1333,15 @@ func _play_card_flow(card: Card, target_index: int = -1) -> void:
 		target = _manager.get_auto_target()
 	var resolved_index := target.index if target != null else 0
 	var monster_hp_before: int = target.hp if target != null else 0
-	_last_card_damage = 0
 	target_index = resolved_index
+
+	# 이 카드가 실제로 때릴 대상들(광역이면 전원)과 그 시점의 체력을 기록해 둔다.
+	# 대상 판정은 매니저와 같은 함수를 써서 "때린 대상"과 "이펙트가 뜨는 대상"이 갈라지지 않게 하고,
+	# 체력은 연출이 마리별 실제 감소량을 계산하는 데 쓴다 (오버킬이어도 팝업 합계가 HP바와 맞는다)
+	_card_targets = _manager.resolve_target_indices(card, target_index)
+	_hp_before_by_index.clear()
+	for index in _card_targets:
+		_hp_before_by_index[index] = _monster_hp_of(index)
 
 	if not _manager.play_card(card, target_index):
 		_mode = Mode.ACTION
@@ -1356,8 +1372,8 @@ func _play_card_flow(card: Card, target_index: int = -1) -> void:
 	_set_inputs_enabled(true)
 
 
-# 카드 종류별 연출. 데미지는 매니저가 계산한 최종 피해(_last_card_damage)를 그대로 표시하고,
-# 회복량은 GameState 값의 전후 차이로 실제 적용된 만큼만 보여준다.
+# 카드 종류별 연출. 피해는 대상별로 "시전 전 체력 - 지금 체력"을 계산해 표시하고
+# (오버킬이어도 숫자가 HP바와 어긋나지 않는다), 회복량은 GameState 값의 전후 차이로 보여준다.
 # 이펙트/사운드는 여기서 카드별로 직접 부르지 않고 _vfx_key_for_card()로 종류를 정한 뒤
 # _play_card_vfx()에서 이펙트+사운드를 함께 재생한다 — 화면 흔들림만 DAMAGE에서 따로 켠다
 # target_index는 이 카드가 때릴 몬스터의 자리 번호 (피해 카드가 아니면 쓰이지 않는다).
@@ -1395,14 +1411,20 @@ func _animate_card(card: Card, hp_before: int, mana_before: int, monster_hp_befo
 				_flash_hit(target_sprite)
 				_play_card_vfx(card, target_sprite)
 			elif card.card_name == "익스플로전":
-				# 2단 차징: 낮은 톤으로 한 번, 더 크고 높은 톤으로 한 번 더 모은 뒤 발사한다
-				await _play_charge_stage("charge_heavy_1", EXPLOSION_CHARGE1_SFX, EXPLOSION_CHARGE1_PITCH, EXPLOSION_CHARGE1_SCALE, EXPLOSION_CHARGE1_DURATION, target_sprite.position)
-				await _play_charge_stage("charge_heavy_2", EXPLOSION_CHARGE2_SFX, EXPLOSION_CHARGE2_PITCH, EXPLOSION_CHARGE2_SCALE, EXPLOSION_CHARGE2_DURATION, target_sprite.position)
-				await _launch_projectile(_cast_charge_origin(target_sprite.position), target_sprite.position, "charge_heavy_2", 0.9, EXPLOSION_TRAVEL_DURATION)
+				# 2단 차징: 낮은 톤으로 한 번, 더 크고 높은 톤으로 한 번 더 모은 뒤 발사한다.
+				# 광역기라 조준/탄착의 기준점은 대상들의 한가운데다 — 한 마리뿐이면 그 몬스터 위치와
+				# 같아지므로 1:1 전투의 그림은 예전과 완전히 동일하다
+				var blast_center := _targets_center()
+				await _play_charge_stage("charge_heavy_1", EXPLOSION_CHARGE1_SFX, EXPLOSION_CHARGE1_PITCH, EXPLOSION_CHARGE1_SCALE, EXPLOSION_CHARGE1_DURATION, blast_center)
+				await _play_charge_stage("charge_heavy_2", EXPLOSION_CHARGE2_SFX, EXPLOSION_CHARGE2_PITCH, EXPLOSION_CHARGE2_SCALE, EXPLOSION_CHARGE2_DURATION, blast_center)
+				await _launch_projectile(_cast_charge_origin(blast_center), blast_center, "charge_heavy_2", 0.9, EXPLOSION_TRAVEL_DURATION)
+				# 흔들림과 폭발음은 화면 전체에 한 번만 (마리 수만큼 겹치면 소리가 뭉개진다)
 				_shake_actors(EXPLOSION_SHAKE_AMOUNT, EXPLOSION_SHAKE_STEPS)
-				_flash_hit(target_sprite)
 				SFXPlayer.play(EXPLOSION_IMPACT_SFX) # 큰 폭발음 위에 저역 "쿵"을 겹친다
-				_play_card_vfx(card, target_sprite, EXPLOSION_VFX_SCALE_MULT)
+				for index in _card_targets:
+					var hit_sprite := _monster_sprite_at(index)
+					_flash_hit(hit_sprite)
+					_play_card_vfx(card, hit_sprite, EXPLOSION_VFX_SCALE_MULT)
 				await _wait(0.18) # 폭발이 부풀어오르는 동안 숫자를 잠깐 참았다가 띄운다
 			elif card.card_name == "번개창":
 				# 하늘에서 그대로 내리꽂히는 그림이라 파이어볼/익스플로전처럼 캐릭터는 움직이지 않는다.
@@ -1448,9 +1470,10 @@ func _animate_card(card: Card, hp_before: int, mana_before: int, monster_hp_befo
 				_shake_actors()
 				_flash_hit(target_sprite)
 				_play_card_vfx(card, target_sprite)
-			_show_popup(target_sprite.position, "-%d" % _last_card_damage, DAMAGE_COLOR)
+			# 대상이 하나든 전원이든 같은 경로로 마리별 숫자를 띄운다 (광역기 공통 처리)
+			_show_damage_popups_on_targets()
 			_refresh_monster_hp_bars()
-			_message.text = "%s! %d 피해!" % [card.card_name, _last_card_damage]
+			_message.text = _damage_result_message(card)
 			await _wait(0.35)
 		Card.EffectType.HEAL_HP:
 			var healed: int = GameState.get_flag("player_hp") - hp_before
@@ -2652,6 +2675,55 @@ func _monster_max_hp_of(index: int) -> int:
 # index 몬스터의 HP바를 hp까지 트윈하고 숫자도 함께 맞춘다.
 # 여러 번 나눠 때리는 컷신(삼중나선/신속)이 중간 단계 수치를 보여줄 때 쓰므로, 매니저의 실제 값이
 # 아니라 "지금 보여줄 값"을 받는다 — 최종 동기화는 컷신 끝에서 _update_monster_hp_text()가 한다
+# index 몬스터가 이번 카드로 실제로 잃은 체력. 시전 직전 기록해 둔 값과 지금 값의 차이라
+# 오버킬이어도(카드 수치보다 적게 깎임) 화면에 뜨는 숫자가 HP바 감소폭과 정확히 일치한다
+# 이번 카드가 겨냥한 대상들의 한가운데 좌표. 광역 연출이 "무리 전체를 덮는" 기준점으로 쓴다
+# (대상이 하나면 그 몬스터 위치와 같아져, 1:1 전투에서는 기존 연출과 완전히 동일해진다)
+func _targets_center() -> Vector2:
+	if _card_targets.is_empty():
+		return _monster_sprite.position
+	var sum := Vector2.ZERO
+	for index in _card_targets:
+		sum += _monster_sprite_at(index).position
+	return sum / float(_card_targets.size())
+
+
+func _damage_dealt_to(index: int) -> int:
+	if not _hp_before_by_index.has(index):
+		return 0
+	return int(_hp_before_by_index[index]) - _monster_hp_of(index)
+
+
+# 이번 카드가 겨냥한 대상들 위에 각자의 피해 숫자를 띄우고 HP바를 갱신한다.
+# 광역기면 여러 마리 위에 동시에 뜨고, 단일 대상이면 한 마리 위에만 뜬다 —
+# 호출부가 광역인지 아닌지 몰라도 되도록 이 한 함수로 합쳤다.
+# 피해가 0인 대상은 숫자를 생략한다 (기존 "-0" 방지 규칙과 동일)
+func _show_damage_popups_on_targets() -> void:
+	for index in _card_targets:
+		var dealt := _damage_dealt_to(index)
+		if dealt > 0:
+			_show_popup(_monster_sprite_at(index).position, "-%d" % dealt, DAMAGE_COLOR)
+		_set_monster_hp_display(index, _monster_hp_of(index))
+	_update_monster_hp_text()
+
+
+# 이번 카드가 대상들에게 입힌 피해의 합 (메시지에 쓸 총계)
+func _total_damage_dealt() -> int:
+	var total := 0
+	for index in _card_targets:
+		total += _damage_dealt_to(index)
+	return total
+
+
+# 피해 결과 메시지. 여러 마리를 때린 광역기면 "N마리에게 총 M 피해"로 적어
+# 한 마리 숫자와 헷갈리지 않게 한다
+func _damage_result_message(card: Card) -> String:
+	var total := _total_damage_dealt()
+	if _card_targets.size() > 1:
+		return "%s! %d마리에게 총 %d 피해!" % [card.card_name, _card_targets.size(), total]
+	return "%s! %d 피해!" % [card.card_name, total]
+
+
 func _set_monster_hp_display(index: int, hp: int) -> void:
 	if index < 0 or index >= _monster_hp_bars.size():
 		return
@@ -2926,9 +2998,7 @@ func _play_swift_cutscene(card: Card, monster_hp_before: int, target_index: int)
 #
 # 표시 데미지는 다른 컷신들과 같은 이유로 card.value가 아니라 실제로 깎인 체력을 쓴다
 # (마무리 일격이면 HP가 0에서 멈춰 실제 감소량이 카드 수치보다 작아지기 때문)
-func _play_time_rift_cutscene(card: Card, monster_hp_before: int, target_index: int) -> void:
-	var target_sprite := _monster_sprite_at(target_index)
-	var total_damage := monster_hp_before - _monster_hp_of(target_index)
+func _play_time_rift_cutscene(card: Card, _monster_hp_before: int, _target_index: int) -> void:
 	_message.text = "%s!" % card.card_name
 
 	# 1) 차갑고 탁한 블루그레이가 서서히 화면을 덮는다
@@ -2939,11 +3009,15 @@ func _play_time_rift_cutscene(card: Card, monster_hp_before: int, target_index: 
 	# 2) 그와 동시에 몬스터 주위에 균열을 띄우고, 완성된 프레임에서 얼린다.
 	# 재생 속도가 18fps라 TIME_RIFT_FREEZE_FRAME(2번)까지 오는 데 약 0.11초 — 오버레이가 덮이는
 	# 동안 균열이 자라다가 멈추는 그림이 된다
+	# 광역기라 대상 하나하나를 균열로 감싼다 (한 마리면 예전과 같은 그림)
 	var cracks: Array[AnimatedSprite2D] = []
-	for offset in TIME_RIFT_CRACK_OFFSETS:
-		var crack := _spawn_vfx_sprite("time_crack", target_sprite.position + offset, TIME_RIFT_CRACK_SCALE)
-		if crack != null:
-			cracks.append(crack)
+	for index in _card_targets:
+		var crack_origin := _monster_sprite_at(index).position
+		for offset in TIME_RIFT_CRACK_OFFSETS:
+			var crack := _spawn_vfx_sprite("time_crack", crack_origin + offset, TIME_RIFT_CRACK_SCALE)
+			if crack != null:
+				cracks.append(crack)
+	# 얼리는 소리는 대상 수와 무관하게 한 번만 (마리마다 겹쳐 울리면 탁해진다)
 	SFXPlayer.play(TIME_RIFT_FREEZE_SFX, SFXPlayer.DEFAULT_VOLUME_DB, TIME_RIFT_FREEZE_SFX_PITCH)
 
 	for crack in cracks:
@@ -2971,17 +3045,15 @@ func _play_time_rift_cutscene(card: Card, monster_hp_before: int, target_index: 
 	var release_out := create_tween()
 	release_out.tween_property(_hit_flash, "color:a", 0.0, TIME_RIFT_RELEASE_OUT_DURATION)
 
-	# 5) 강한 흔들림 + 유리 깨지는 타격음
+	# 5) 강한 흔들림 + 유리 깨지는 타격음 (화면 단위 연출이라 대상 수와 무관하게 한 번)
 	_shake_actors(TIME_RIFT_SHAKE, TIME_RIFT_SHAKE_STEPS)
-	_flash_hit(target_sprite)
+	for index in _card_targets:
+		_flash_hit(_monster_sprite_at(index))
 	for sfx in TIME_RIFT_RELEASE_SFX:
 		SFXPlayer.play(sfx)
 
-	# 6) 여러 지점에서 동시에 터지는 것이라 데미지는 나누지 않고 한 번에
-	if total_damage > 0:
-		_show_popup(target_sprite.position, "-%d" % total_damage, DAMAGE_COLOR)
-	_set_monster_hp_display(target_index, _monster_hp_of(target_index))
-	_update_monster_hp_text()
+	# 6) 갇혀 있던 타격이 한꺼번에 풀려나는 것이라 마리별로 나누지 않고 각자 한 번에 터뜨린다
+	_show_damage_popups_on_targets()
 	await _wait(TIME_RIFT_IMPACT_HOLD)
 
 	# 7) 오버레이를 확실히 원상복귀시킨다.
@@ -2991,7 +3063,7 @@ func _play_time_rift_cutscene(card: Card, monster_hp_before: int, target_index: 
 	# 어차피 알파를 직접 0으로 되돌리므로 트윈 완료를 기다릴 이유도 없다
 	_hit_flash.color = Color(TIME_RIFT_FREEZE_COLOR.r, TIME_RIFT_FREEZE_COLOR.g, TIME_RIFT_FREEZE_COLOR.b, 0.0)
 
-	_message.text = "%s! %d 피해!" % [card.card_name, total_damage]
+	_message.text = _damage_result_message(card)
 	await _wait(0.25)
 
 

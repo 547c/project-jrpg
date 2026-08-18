@@ -84,6 +84,16 @@ enum EffectType {
 # (회복은 최대치에서 clamp되므로, 최대치보다 확실히 큰 값을 넣는 게 곧 완전 회복이다)
 const FULL_RESTORE_VALUE := 999
 
+# 광역기 여부. true면 대상 하나가 아니라 "살아있는 몬스터 전원"에게 같은 효과가 적용된다.
+#
+# 효과 종류(EffectType)와 독립된 축이라 별도 필드로 뒀다 — 지금은 피해 카드 둘(익스플로전/시공균열)만
+# 쓰지만, 나중에 디버프/버프 효과 타입이 생기면 그 카드도 이 필드 하나만 켜면 광역판이 된다.
+# 적용을 반복하는 쪽(BattleTurnManager)이 효과 종류를 모른 채 "대상 목록"만 돌리도록 짜여 있어서,
+# 새 효과 타입을 추가할 때 광역 처리를 다시 만들 필요가 없다.
+#
+# 대상이 전원으로 고정되므로 광역기는 타겟 선택 UI를 띄우지 않는다 (battle_scene._needs_target)
+@export var is_aoe: bool = false
+
 # 사용 시 소모할 체력. 마나 대신 체력을 대가로 치르는 카드(예: 마나 회복)에 쓴다.
 # 체력이 이 값 이하면 카드 자체를 낼 수 없다 — 카드를 쓰다가 죽는 일은 없다
 # (판정은 BattleTurnManager.can_play_card가 담당)
@@ -97,6 +107,15 @@ const FULL_RESTORE_VALUE := 999
 # 마나/체력 비용은 일부러 넣지 않는다. 전투 카드에서는 모서리 마름모 배지가, 스펠북에서는 별도
 # 비용 줄이 따로 보여주므로 여기까지 넣으면 같은 수치가 두 번 나온다
 func get_effect_description() -> String:
+	var text := _effect_text()
+	# 광역기는 효과 종류와 상관없이 같은 꼬리표를 붙인다 — 나중에 디버프 광역 카드가 생겨도
+	# 여기 한 곳만 지나가므로 표기가 저절로 일관된다
+	if is_aoe and text != "":
+		return "%s (광역)" % text
+	return text
+
+
+func _effect_text() -> String:
 	match effect:
 		EffectType.DAMAGE:
 			var kind := "마법" if color == CardColor.MAGIC else "물리"

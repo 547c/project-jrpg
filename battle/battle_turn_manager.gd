@@ -41,6 +41,11 @@ var monster_data: Dictionary = {} # 그 종류의 스탯 표 (마리별 값은 M
 var turn_number: int = 0
 var battle_over: bool = false
 
+# 방금 낸 카드가 마리별로 입힌 실제 피해 (자리 번호 -> 피해량). 피해가 0인 대상은 담지 않는다.
+# 광역기는 여러 자리가 채워지고 단일 대상 카드는 한 자리만 채워지므로, 연출은 이걸 그대로 훑어
+# 몬스터마다 제 숫자를 띄우면 된다 (0 피해에 "-0"을 띄우지 않는 기존 규칙도 그대로 유지된다)
+var last_hit_damage: Dictionary = {}
+
 # 방어/피하기 카드가 만드는 "다음 적 턴 한정" 임시 상태. 적 턴을 해결하는 즉시 소모되고 0/false로 돌아간다.
 # (스펙에 세부 규칙이 없어 아래처럼 설계했다 — 근거는 _resolve_enemy_turn() 주석 참고)
 var _pending_defense: int = 0
@@ -212,7 +217,58 @@ func switch_weapon(to: WeaponState.WeaponType) -> bool:
 # Card.value는 "회복할 체력/마나"라는 절대값이므로, value/최대치로 환산해 넘긴다.
 # (헬퍼 안에서 max * fraction = value로 되돌아가 결과적으로 정확히 value만큼 회복되고,
 #  최대치 초과 clamp 같은 기존 규칙도 그대로 적용받는다 — 양쪽 계약을 다 지키는 방법)
+# 카드 효과를 "대상 목록 전체"에 적용하고, 대상들에게 실제로 들어간 피해의 합을 반환한다.
+#
+# [광역 처리를 여기 한 곳에 두는 이유] 대상을 정하는 일(resolve_target_indices)과 대상 하나에
+# 효과를 넣는 일(_apply_card_effect_to_target)을 분리해 두면, 이 반복 경로는 효과 종류를 전혀
+# 몰라도 된다. 그래서 나중에 디버프/버프 효과 타입이 추가돼도 _apply_card_effect_to_target의
+# match에 한 갈래만 늘리면 광역판이 저절로 따라온다 — 광역 반복 코드를 다시 쓸 필요가 없다.
+#
+# 마리별 실제 피해는 last_hit_damage에 자리 번호별로 남겨, 연출이 몬스터마다 제 숫자를 띄우게 한다
 func _apply_card_effect(card: Card, target_index: int) -> int:
+	last_hit_damage.clear()
+
+	var targets := resolve_target_indices(card, target_index)
+	if targets.is_empty():
+		# 때릴 대상이 없어도(전멸 직후 등) 자기 자신에게 거는 효과는 그대로 적용돼야 한다
+		return _apply_card_effect_to_target(card, -1)
+
+	var total := 0
+	for index in targets:
+		var dealt := _apply_card_effect_to_target(card, index)
+		if dealt > 0:
+			last_hit_damage[index] = dealt
+		total += dealt
+	return total
+
+
+# 이 카드가 이번에 영향을 줄 몬스터들의 자리 번호.
+# 광역기면 살아있는 전원, 아니면 지목된 대상 하나(지목이 없거나 이미 죽었으면 자동 타겟).
+# 연출 쪽도 같은 규칙으로 대상을 잡아야 하므로 public으로 열어둔다 — 규칙이 두 벌로 갈라지면
+# "때린 대상"과 "이펙트가 뜨는 대상"이 어긋난다
+func resolve_target_indices(card: Card, target_index: int) -> Array[int]:
+	var indices: Array[int] = []
+
+	if card.is_aoe:
+		for monster in alive_monsters():
+			indices.append(monster.index)
+		return indices
+
+	var target := get_monster(target_index)
+	if target == null or not target.is_alive():
+		target = get_auto_target()
+	if target != null:
+		indices.append(target.index)
+	return indices
+
+
+# 대상 하나에 카드 효과를 적용한다 (피해 카드가 아니면 대상과 무관한 자기 효과라 index를 무시).
+# 반환값은 그 대상에게 실제로 들어간 피해량 (피해 카드가 아니면 0).
+#
+# [주의] 자기 자신에게 거는 효과(회복/방어/피하기/반격)는 광역기여도 한 번만 걸려야 한다.
+# 지금은 그런 카드에 is_aoe를 켠 것이 없어 문제가 없지만, 나중에 켜게 되면 여기서
+# "대상이 필요한 효과"만 반복되도록 갈라줘야 한다
+func _apply_card_effect_to_target(card: Card, target_index: int) -> int:
 	match card.effect:
 		Card.EffectType.DAMAGE:
 			return _damage_monster(card, target_index)

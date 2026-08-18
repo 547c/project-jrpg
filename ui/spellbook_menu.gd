@@ -442,7 +442,9 @@ func _fill_entry(i: int, card_id: String, is_deck: bool, deck_full: bool) -> voi
 		_entry_counts[i].text = str(count)
 		_entry_counts[i].add_theme_color_override("font_color", COLOR_DECK_COUNT if count > 0 else COLOR_DECK_ZERO)
 		_entry_minus[i].disabled = count <= 0
-		_entry_plus[i].disabled = deck_full
+		# 전체 15장 한도와 별개로, 카드 하나가 개별 상한(MAX_COPIES_PER_CARD)에 닿으면 그 카드의
+		# +버튼만 막는다 — 덱에 아직 여유가 있어도 "이 카드"는 더 못 넣는다는 걸 그 자리에서 보여준다
+		_entry_plus[i].disabled = deck_full or count >= GameState.MAX_COPIES_PER_CARD
 		# 덱 탭에는 잠긴 카드가 아예 안 뜨므로 항상 또렷하게
 		_entry_buttons[i].modulate = UNLOCKED_MODULATE
 		return

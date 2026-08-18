@@ -71,6 +71,9 @@ var unlocked_cards: Array = CardLibrary.DEFAULT_UNLOCKED.duplicate()
 # 비어 있으면 "아직 한 번도 덱을 건드리지 않았다"는 뜻이고, 그때는 StarterDeck.build()가
 # 기존처럼 보유 카드 전부로 덱을 자동 구성한다 (덱 구성 기능 이전 세이브와의 하위 호환)
 const MAX_BATTLE_DECK_SIZE := 15
+# 같은 카드를 몇 장까지 넣을 수 있는지 (전체 15장 한도와는 별개의 개별 상한).
+# 강한 카드 한 종류로 덱을 도배하는 걸 막아 손패 다양성을 유지하려는 것
+const MAX_COPIES_PER_CARD := 2
 var battle_deck: Array = []
 
 # --- 엔딩 도감(영구 기록) ---
@@ -103,16 +106,16 @@ const DEFAULT_FLAGS: Dictionary = {
 	"visited_cave": false,                 # 동굴을 방문했는가
 	"seen_opening": false,                 # 오프닝 인트로를 이미 봤는가 (재부팅 시 반복 방지)
 	"guardian_event_done": false,          # 동굴 수호자 조우 이벤트를 이미 겪었는가
-	"player_hp": 16,                       # 플레이어 현재 체력
+	"player_hp": 25,                       # 플레이어 현재 체력
 	# 최대 체력은 두 값으로 나뉜다:
 	# - player_base_max_hp: 레벨업으로만 오르는 "기본" 최대 체력 (_apply_level_up이 올림)
 	# - player_max_hp: 실제로 쓰이는 최대 체력 = 기본 + 방패 보너스 (파생값이라 직접 쓰지 말 것)
 	# 방패 보너스를 player_max_hp에 직접 더하면 장착/해제와 레벨업이 얽혀 값이 어긋나므로,
 	# 항상 refresh_equipment_bonuses()가 기본값으로부터 다시 계산해 넣는다
-	"player_base_max_hp": 16,              # 레벨업 누적분만 담은 기본 최대 체력
-	"player_max_hp": 16,                   # 플레이어 최대 체력 (기본 + 방패 보너스, 자동 계산됨)
-	"player_mana": 18,                     # 플레이어 현재 마나 (스킬 사용 자원)
-	"player_max_mana": 18,                 # 플레이어 최대 마나 (현재는 회복 수단 없음 — 추후 상점 예정)
+	"player_base_max_hp": 25,              # 레벨업 누적분만 담은 기본 최대 체력
+	"player_max_hp": 25,                   # 플레이어 최대 체력 (기본 + 방패 보너스, 자동 계산됨)
+	"player_mana": 20,                     # 플레이어 현재 마나 (스킬 사용 자원)
+	"player_max_mana": 20,                 # 플레이어 최대 마나 (현재는 회복 수단 없음 — 추후 상점 예정)
 	"orcs_defeated": 0,                    # 숲 오크(Orc Crew) 처치 카운트
 	"forest_quest_complete": false,        # 오크 3마리 처치 시 true
 	"skeletons_defeated": 0,               # 동굴 스켈레톤(Skeleton Crew) 처치 카운트
@@ -619,9 +622,12 @@ func get_deck_remaining() -> int:
 	return MAX_BATTLE_DECK_SIZE - battle_deck.size()
 
 
-# 덱에 카드를 한 장 넣는다. 한도를 넘거나 아직 잠금해제하지 않은 카드면 실패(false)
+# 덱에 카드를 한 장 넣는다. 전체 한도(15장)를 넘거나, 그 카드가 이미 개별 상한(MAX_COPIES_PER_CARD)만큼
+# 들어있거나, 아직 잠금해제하지 않은 카드면 실패(false)
 func add_card_to_deck(card_id: String) -> bool:
 	if battle_deck.size() >= MAX_BATTLE_DECK_SIZE:
+		return false
+	if get_deck_card_count(card_id) >= MAX_COPIES_PER_CARD:
 		return false
 	if not is_card_unlocked(card_id):
 		return false
@@ -648,7 +654,8 @@ func clear_battle_deck() -> void:
 
 
 # 저장 데이터(문자열 배열)로부터 덱 구성을 복원. 모르는 카드 id나 잠금해제되지 않은 카드는 버리고,
-# 한도를 넘는 분량도 잘라낸다 — 세이브가 손상됐거나 카드가 삭제된 뒤에도 전투가 깨지지 않게 하려는 것.
+# 전체 한도와 카드별 상한(MAX_COPIES_PER_CARD)을 넘는 분량도 잘라낸다 — 세이브가 손상됐거나
+# 카드별 상한 도입 전(구버전)에 저장된 3장 이상짜리 덱을 불러와도 전투가 깨지지 않게 하려는 것.
 # (unlocked_cards가 먼저 복원돼 있어야 하므로 SaveManager에서 그 뒤에 부른다)
 func restore_battle_deck(data: Array) -> void:
 	battle_deck.clear()
@@ -656,8 +663,11 @@ func restore_battle_deck(data: Array) -> void:
 		if battle_deck.size() >= MAX_BATTLE_DECK_SIZE:
 			break
 		var id := String(card_id)
-		if CardLibrary.CARD_PATHS.has(id) and is_card_unlocked(id):
-			battle_deck.append(id)
+		if not CardLibrary.CARD_PATHS.has(id) or not is_card_unlocked(id):
+			continue
+		if get_deck_card_count(id) >= MAX_COPIES_PER_CARD:
+			continue
+		battle_deck.append(id)
 	battle_deck_changed.emit()
 
 
@@ -863,15 +873,17 @@ func _apply_quest_completion_affinity(quest_id: String) -> void:
 # ── 경험치 / 레벨 ──────────────────────────────────────────────────────────
 
 # 레벨업 1회당 늘어나는 최대 체력/마나 폭
-const LEVEL_UP_HP_GAIN := 8
-const LEVEL_UP_MANA_GAIN := 10
+const LEVEL_UP_HP_GAIN := 3
+const LEVEL_UP_MANA_GAIN := 3
 # 레벨업 1회당 지급되는 스킬포인트 (티어2 카드 하나 = 3점이라, 레벨업 한 번에 티어2 하나를 풀 수 있다)
 const SKILL_POINTS_PER_LEVEL := 3
 
 # 레벨 N에서 N+1로 가는 데 필요한 경험치 = XP_BASE + (N-1) * XP_STEP.
-# 레벨1→2는 40, 2→3은 60, 3→4는 80 … 으로 매 레벨 20씩 무거워진다 (상한 없음)
-const XP_BASE := 40
-const XP_STEP := 20
+# 레벨1→2는 10, 2→3은 15, 3→4는 20 … 으로 매 레벨 5씩 무거워진다 (상한 없음).
+# 처음엔 40/20으로 시작했는데 오크(8 XP)만으로 레벨5까지 35마리가 필요할 만큼 무거워서,
+# 초반 레벨업 체감을 빠르게 하려고 완만한 값으로 낮췄다
+const XP_BASE := 10
+const XP_STEP := 5
 
 
 # level에서 다음 레벨로 가는 데 필요한 경험치. level이 1 미만이면 1레벨 기준으로 계산한다
