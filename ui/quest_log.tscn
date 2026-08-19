@@ -1,11 +1,11 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene format=3 uid="uid://dju44bhl6kc1a"]
 
-[ext_resource type="Script" path="res://ui/quest_log.gd" id="1_qlog"]
-[ext_resource type="Texture2D" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Background boxes/BGbox_07A.png" id="2_ivybox"]
-[ext_resource type="Texture2D" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Title banners/BannerMedium_04A.png" id="3_titlebanner"]
-[ext_resource type="Texture2D" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Title banners/BannerSmall_06A.png" id="4_tabpill"]
-[ext_resource type="Texture2D" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Buttons/Button_01A_Normal.png" id="5_btn_normal"]
-[ext_resource type="Texture2D" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Buttons/Button_01A_Selected.png" id="6_btn_selected"]
+[ext_resource type="Script" uid="uid://bl36lywnef7qh" path="res://ui/quest_log.gd" id="1_qlog"]
+[ext_resource type="Texture2D" uid="uid://bs4pkhhwoyatk" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Background boxes/BGbox_07A.png" id="2_ivybox"]
+[ext_resource type="Texture2D" uid="uid://cnm0pd5r6yymi" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Title banners/BannerMedium_04A.png" id="3_titlebanner"]
+[ext_resource type="Texture2D" uid="uid://b6kot438bmwkt" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Title banners/BannerSmall_06A.png" id="4_tabpill"]
+[ext_resource type="Texture2D" uid="uid://cdhpmr3m6p22s" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Buttons/Button_01A_Normal.png" id="5_btn_normal"]
+[ext_resource type="Texture2D" uid="uid://lq4axisgc6ih" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Buttons/Button_01A_Selected.png" id="6_btn_selected"]
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_tab"]
 texture = ExtResource("4_tabpill")
@@ -29,7 +29,7 @@ texture_margin_top = 10.0
 texture_margin_right = 10.0
 texture_margin_bottom = 10.0
 
-[node name="QuestLog" type="Control"]
+[node name="QuestLog" type="Control" unique_id=518093852]
 visible = false
 layout_mode = 3
 anchors_preset = 15
@@ -39,7 +39,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_qlog")
 
-[node name="Dim" type="ColorRect" parent="."]
+[node name="Dim" type="ColorRect" parent="." unique_id=1204493756]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -49,7 +49,7 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0, 0, 0, 0.55)
 
-[node name="Panel" type="NinePatchRect" parent="."]
+[node name="Panel" type="NinePatchRect" parent="." unique_id=127400419]
 texture_filter = 1
 layout_mode = 1
 anchors_preset = 8
@@ -71,14 +71,12 @@ patch_margin_bottom = 28
 axis_stretch_horizontal = 1
 axis_stretch_vertical = 1
 
-[node name="TitleBanner" type="NinePatchRect" parent="Panel"]
+[node name="TitleBanner" type="NinePatchRect" parent="Panel" unique_id=1683990063]
 texture_filter = 1
 layout_mode = 1
 anchors_preset = 5
 anchor_left = 0.5
-anchor_top = 0.0
 anchor_right = 0.5
-anchor_bottom = 0.0
 offset_left = -145.0
 offset_top = -32.0
 offset_right = 145.0
@@ -92,22 +90,21 @@ patch_margin_right = 20
 patch_margin_bottom = 26
 axis_stretch_horizontal = 1
 
-[node name="TitleLabel" type="Label" parent="Panel/TitleBanner"]
+[node name="TitleLabel" type="Label" parent="Panel/TitleBanner" unique_id=207241698]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = -4.0
-offset_bottom = -8.0
+offset_bottom = -4.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_colors/font_color = Color(0.28, 0.12, 0.1, 1)
 theme_override_font_sizes/font_size = 22
+text = "퀘스트"
 horizontal_alignment = 1
 vertical_alignment = 1
-text = "퀘스트"
 
-[node name="Tabs" type="HBoxContainer" parent="Panel"]
+[node name="Tabs" type="HBoxContainer" parent="Panel" unique_id=1398086518]
 layout_mode = 1
 anchors_preset = 5
 anchor_left = 0.5
@@ -117,34 +114,34 @@ offset_top = 46.0
 offset_right = 200.0
 offset_bottom = 88.0
 grow_horizontal = 2
-alignment = 1
 theme_override_constants/separation = 16
+alignment = 1
 
-[node name="MainTabButton" type="Button" parent="Panel/Tabs"]
-custom_minimum_size = Vector2(186, 42)
+[node name="MainTabButton" type="Button" parent="Panel/Tabs" unique_id=764138914]
 texture_filter = 1
+custom_minimum_size = Vector2(186, 42)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.97, 0.93, 0.85, 1)
 theme_override_colors/font_hover_color = Color(1, 1, 0.9, 1)
 theme_override_font_sizes/font_size = 15
 theme_override_styles/normal = SubResource("StyleBoxTexture_tab")
-theme_override_styles/hover = SubResource("StyleBoxTexture_tab")
 theme_override_styles/pressed = SubResource("StyleBoxTexture_tab")
+theme_override_styles/hover = SubResource("StyleBoxTexture_tab")
 text = "메인 퀘스트"
 
-[node name="SubTabButton" type="Button" parent="Panel/Tabs"]
-custom_minimum_size = Vector2(186, 42)
+[node name="SubTabButton" type="Button" parent="Panel/Tabs" unique_id=1398714858]
 texture_filter = 1
+custom_minimum_size = Vector2(186, 42)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.97, 0.93, 0.85, 1)
 theme_override_colors/font_hover_color = Color(1, 1, 0.9, 1)
 theme_override_font_sizes/font_size = 15
 theme_override_styles/normal = SubResource("StyleBoxTexture_tab")
-theme_override_styles/hover = SubResource("StyleBoxTexture_tab")
 theme_override_styles/pressed = SubResource("StyleBoxTexture_tab")
+theme_override_styles/hover = SubResource("StyleBoxTexture_tab")
 text = "서브 퀘스트"
 
-[node name="Scroll" type="ScrollContainer" parent="Panel"]
+[node name="Scroll" type="ScrollContainer" parent="Panel" unique_id=746428148]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -157,14 +154,14 @@ grow_horizontal = 2
 grow_vertical = 2
 horizontal_scroll_mode = 0
 
-[node name="EntryList" type="VBoxContainer" parent="Panel/Scroll"]
+[node name="EntryList" type="VBoxContainer" parent="Panel/Scroll" unique_id=1540646807]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 6
 
-[node name="CloseButton" type="Button" parent="Panel"]
-custom_minimum_size = Vector2(170, 44)
+[node name="CloseButton" type="Button" parent="Panel" unique_id=898045934]
 texture_filter = 1
+custom_minimum_size = Vector2(170, 44)
 layout_mode = 1
 anchors_preset = 7
 anchor_left = 0.5
@@ -180,6 +177,6 @@ grow_vertical = 0
 theme_override_colors/font_color = Color(0.3, 0.14, 0.1, 1)
 theme_override_font_sizes/font_size = 16
 theme_override_styles/normal = SubResource("StyleBoxTexture_close_normal")
-theme_override_styles/hover = SubResource("StyleBoxTexture_close_hover")
 theme_override_styles/pressed = SubResource("StyleBoxTexture_close_normal")
+theme_override_styles/hover = SubResource("StyleBoxTexture_close_hover")
 text = "닫기"
