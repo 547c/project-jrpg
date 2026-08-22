@@ -21,10 +21,18 @@ const MAX_OPTIONS := 12
 const MIN_PANEL_HEIGHT := 130.0
 const MAX_PANEL_HEIGHT := 300.0
 
-# 옵션 버튼 글자색: 일반(갈색) / 잠김(빨강, 호감도 부족) / 이미 봄(회색). 우선순위 잠김 > 봄 > 일반
+# 옵션 버튼 글자색: 일반(갈색) / 잠김(빨강, 호감도 부족) / 이미 봄(회색) / 기능(진한 남색).
+# 우선순위 잠김 > 기능 > 봄 > 일반
 const COLOR_NORMAL := Color(0.22, 0.09, 0.03, 1)
 const COLOR_LOCKED := Color(0.68, 0.14, 0.11, 1)
 const COLOR_SEEN := Color(0.5, 0.43, 0.36, 1)
+const COLOR_ACTION := Color(0.12, 0.24, 0.5, 1)
+
+# 고르면 대화가 진행되는 대신 별도 화면이 열리는 "기능 옵션"의 표식.
+# 옵션 데이터에 이 키 중 하나라도 있으면 자동으로 강조되므로, 새 기능 옵션을 만들 때
+# 여기 한 줄만 늘리면 되고 대화 데이터나 강조 코드를 따로 손댈 필요가 없다
+const ACTION_KEYS: Array[String] = ["open_shop", "open_weapon_shop", "open_bounty_board"]
+const ACTION_PREFIX := "\u25c6 "
 
 # 잠긴(호감도 부족) 옵션을 눌렀을 때 대사 자리에 잠깐 보여주는 안내
 const LOCKED_HINT := "아직은... 좀 더 가까워져야 들을 수 있을 것 같다."
@@ -293,13 +301,14 @@ func _populate_options(options: Array, default_next_id: String = "") -> void:
 
 	if visible_options.is_empty():
 		var fallback: Dictionary = {"label": "[계속]", "next_id": default_next_id} if default_next_id != "" else {"label": "닫기", "next_id": ""}
-		_all_entries.append({"option": fallback, "locked": false, "seen": false})
+		_all_entries.append({"option": fallback, "locked": false, "seen": false, "action": false})
 	else:
 		for option in visible_options:
 			_all_entries.append({
 				"option": option,
 				"locked": not _is_affinity_met(option),
 				"seen": GameState.has_seen_node(option.get("next_id", "")),
+				"action": is_action_option(option),
 			})
 		_all_entries = _sort_seen_to_bottom(_all_entries)
 		if _all_entries.size() > MAX_OPTIONS:
@@ -331,7 +340,7 @@ func _render_page() -> void:
 		if entry_index < _all_entries.size():
 			var entry: Dictionary = _all_entries[entry_index]
 			var option: Dictionary = entry["option"]
-			button.text = option.get("label", "")
+			button.text = _option_label(entry)
 			button.add_theme_color_override("font_color", _option_color(entry))
 			button.pressed.connect(_on_button_pressed.bind(option))
 			button.show()
@@ -374,13 +383,32 @@ func _sort_seen_to_bottom(entries: Array) -> Array:
 	return unseen + seen
 
 
-# 잠김(빨강) > 봄(회색) > 일반(갈색) 우선순위로 글자색을 고른다
+# 고르면 화면이 열리는 옵션인지. 대화 데이터의 action 태그만 보고 판단하므로 NPC별 하드코딩이 없다
+static func is_action_option(option: Dictionary) -> bool:
+	for key in ACTION_KEYS:
+		if option.get(key, false):
+			return true
+	return false
+
+
+# 잠김(빨강) > 기능(남색) > 봄(회색) > 일반(갈색) 우선순위로 글자색을 고른다
 func _option_color(entry: Dictionary) -> Color:
 	if entry["locked"]:
 		return COLOR_LOCKED
+	if entry.get("action", false):
+		return COLOR_ACTION
 	if entry["seen"]:
 		return COLOR_SEEN
 	return COLOR_NORMAL
+
+
+# 기능 옵션에만 마름모 접두사를 붙인다. 데이터를 고치지 않고 그릴 때만 얹으므로,
+# 같은 옵션을 다른 곳에서 읽어도 라벨 원문은 그대로다
+func _option_label(entry: Dictionary) -> String:
+	var label: String = entry["option"].get("label", "")
+	if entry.get("action", false):
+		return ACTION_PREFIX + label
+	return label
 
 
 # 버튼 클릭 처리: 타이핑 중이면 텍스트만 즉시 완성. 다 표시된 상태면, 호감도가 부족한 옵션은
@@ -411,6 +439,10 @@ func _on_option_pressed(option: Dictionary) -> void:
 
 	if option.get("open_weapon_shop", false):
 		WeaponShopMenu.open()
+		return
+
+	if option.get("open_bounty_board", false):
+		BountyBoardMenu.open()
 		return
 
 	var give_gift: Dictionary = option.get("give_gift", {})

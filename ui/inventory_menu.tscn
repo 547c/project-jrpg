@@ -1,7 +1,52 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene format=3 uid="uid://chl2rwr4x4hit"]
 
-[ext_resource type="Script" path="res://ui/inventory_menu.gd" id="1_inv"]
-[ext_resource type="Texture2D" path="res://assets/GUI/MedievalUiMega/medieval.png" id="2_medieval"]
+[ext_resource type="Script" uid="uid://ogq5iqj0q1n" path="res://ui/inventory_menu.gd" id="1_inv"]
+[ext_resource type="Texture2D" uid="uid://dpmq55mb3nsww" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Background boxes/BGbox_06A.png" id="2_box"]
+[ext_resource type="Texture2D" uid="uid://db8jvwk44deor" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Buttons/Button_05A_Normal.png" id="3_btn_normal"]
+[ext_resource type="Texture2D" uid="uid://bva8geabtpsh" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Buttons/Button_05A_Selected.png" id="4_btn_hover"]
+[ext_resource type="Texture2D" uid="uid://bw26f0kg6ac2h" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Buttons/Button_05A_Pressed.png" id="5_btn_pressed"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_panel"]
+texture = ExtResource("2_box")
+texture_margin_left = 30.0
+texture_margin_top = 30.0
+texture_margin_right = 30.0
+texture_margin_bottom = 30.0
+axis_stretch_horizontal = 1
+axis_stretch_vertical = 1
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_button_normal"]
+texture = ExtResource("3_btn_normal")
+content_margin_left = 18.0
+content_margin_top = 12.0
+content_margin_right = 18.0
+content_margin_bottom = 12.0
+texture_margin_left = 18.0
+texture_margin_top = 14.0
+texture_margin_right = 50.0
+texture_margin_bottom = 14.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_button_pressed"]
+texture = ExtResource("5_btn_pressed")
+content_margin_left = 18.0
+content_margin_top = 12.0
+content_margin_right = 18.0
+content_margin_bottom = 12.0
+texture_margin_left = 18.0
+texture_margin_top = 16.0
+texture_margin_right = 50.0
+texture_margin_bottom = 12.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_button_hover"]
+texture = ExtResource("4_btn_hover")
+content_margin_left = 18.0
+content_margin_top = 12.0
+content_margin_right = 18.0
+content_margin_bottom = 12.0
+texture_margin_left = 18.0
+texture_margin_top = 14.0
+texture_margin_right = 50.0
+texture_margin_bottom = 14.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tooltip"]
 bg_color = Color(0.1, 0.07, 0.05, 0.92)
@@ -15,22 +60,7 @@ corner_radius_top_right = 3
 corner_radius_bottom_right = 3
 corner_radius_bottom_left = 3
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_inventory_bg"]
-atlas = ExtResource("2_medieval")
-region = Rect2(647, 629, 98, 85)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_button_wood"]
-atlas = ExtResource("2_medieval")
-region = Rect2(656, 206, 63, 51)
-
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_button_normal"]
-texture = SubResource("AtlasTexture_button_wood")
-texture_margin_left = 14.0
-texture_margin_top = 14.0
-texture_margin_right = 14.0
-texture_margin_bottom = 14.0
-
-[node name="InventoryMenu" type="Control"]
+[node name="InventoryMenu" type="Control" unique_id=2044552444]
 visible = false
 layout_mode = 3
 anchors_preset = 15
@@ -40,7 +70,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_inv")
 
-[node name="Dim" type="ColorRect" parent="."]
+[node name="Dim" type="ColorRect" parent="." unique_id=1281950278]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -50,66 +80,88 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0, 0, 0, 0.55)
 
-[node name="Panel" type="Control" parent="."]
+[node name="Panel" type="Control" parent="." unique_id=361237097]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -147.0
-offset_top = -166.0
-offset_right = 147.0
-offset_bottom = 167.0
+offset_left = -190.0
+offset_top = -220.0
+offset_right = 190.0
+offset_bottom = 220.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Background" type="TextureRect" parent="Panel"]
+[node name="Background" type="Panel" parent="Panel" unique_id=1047457164]
 texture_filter = 1
 layout_mode = 0
-offset_right = 294.0
-offset_bottom = 255.0
+offset_right = 380.0
+offset_bottom = 440.0
 mouse_filter = 2
-texture = SubResource("AtlasTexture_inventory_bg")
-expand_mode = 1
-stretch_mode = 0
+theme_override_styles/panel = SubResource("StyleBoxTexture_panel")
 
-[node name="Slots" type="Control" parent="Panel"]
+[node name="TitleLabel" type="Label" parent="Panel" unique_id=1860777791]
 layout_mode = 0
-offset_right = 294.0
-offset_bottom = 255.0
+offset_left = 40.0
+offset_top = 29.0
+offset_right = 340.0
+offset_bottom = 55.0
+theme_override_colors/font_color = Color(0.94, 0.95, 1, 1)
+theme_override_colors/font_outline_color = Color(0.1, 0.12, 0.2, 0.8)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 19
+text = "인벤토리"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Slots" type="Control" parent="Panel" unique_id=1138533862]
+anchors_preset = 0
+offset_right = 380.0
+offset_bottom = 440.0
 mouse_filter = 2
 
-[node name="EquipButton" type="Button" parent="Panel"]
+[node name="EquipButton" type="Button" parent="Panel" unique_id=1391230557]
 visible = false
-custom_minimum_size = Vector2(0, 32)
-layout_mode = 0
-offset_top = 261.0
-offset_right = 294.0
-offset_bottom = 293.0
 texture_filter = 1
-theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+custom_minimum_size = Vector2(150, 44)
+layout_mode = 0
+offset_left = 115.0
+offset_top = 300.0
+offset_right = 265.0
+offset_bottom = 344.0
+theme_override_colors/font_color = Color(0.93, 0.96, 1, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 16
 theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_button_pressed")
+theme_override_styles/hover = SubResource("StyleBoxTexture_button_hover")
 text = "장착"
 
-[node name="CloseButton" type="Button" parent="Panel"]
-custom_minimum_size = Vector2(0, 40)
-layout_mode = 0
-offset_top = 299.0
-offset_right = 294.0
-offset_bottom = 339.0
+[node name="CloseButton" type="Button" parent="Panel" unique_id=338178323]
 texture_filter = 1
-theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+custom_minimum_size = Vector2(150, 44)
+layout_mode = 0
+offset_left = 115.0
+offset_top = 356.0
+offset_right = 265.0
+offset_bottom = 400.0
+theme_override_colors/font_color = Color(0.93, 0.96, 1, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 16
 theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_button_pressed")
+theme_override_styles/hover = SubResource("StyleBoxTexture_button_hover")
 text = "닫기"
 
-[node name="Tooltip" type="PanelContainer" parent="."]
+[node name="Tooltip" type="PanelContainer" parent="." unique_id=220884726]
 visible = false
 layout_mode = 0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_tooltip")
 
-[node name="Margin" type="MarginContainer" parent="Tooltip"]
+[node name="Margin" type="MarginContainer" parent="Tooltip" unique_id=25450288]
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/margin_left = 8
@@ -117,9 +169,7 @@ theme_override_constants/margin_top = 5
 theme_override_constants/margin_right = 8
 theme_override_constants/margin_bottom = 5
 
-[node name="TooltipLabel" type="Label" parent="Tooltip/Margin"]
+[node name="TooltipLabel" type="Label" parent="Tooltip/Margin" unique_id=2061720896]
 layout_mode = 2
-mouse_filter = 2
 theme_override_colors/font_color = Color(0.95, 0.92, 0.85, 1)
 theme_override_font_sizes/font_size = 13
-text = ""

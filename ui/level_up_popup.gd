@@ -34,6 +34,7 @@ func _ready() -> void:
 	_confirm_button.pressed.connect(_on_confirm)
 	GameState.quest_completed_notice.connect(_on_quest_completed)
 	GameState.player_leveled_up.connect(_on_player_leveled_up)
+	GameState.sub_quest_completed.connect(_on_sub_quest_completed)
 
 
 # 큐에 밀린 안내가 있고 지금 띄워도 되는 상황이면 하나 꺼내 보여준다
@@ -59,6 +60,12 @@ func _on_quest_completed(quest_title: String, xp_gained: int) -> void:
 	if xp_gained > 0:
 		body += "\n경험치 +%d" % xp_gained
 	_queue("퀘스트 완료!", body)
+
+
+# 의뢰 완료 안내. 보상 내역은 GameState가 이미 문장으로 만들어 보내므로 그대로 띄운다
+func _on_sub_quest_completed(title: String, reward_text: String) -> void:
+	_queue("의뢰 완료!", "%s
+%s" % [title, reward_text])
 
 
 # 레벨업 안내 (한 번에 여러 레벨이 오르면 레벨마다 한 번씩 들어와 순서대로 쌓인다)

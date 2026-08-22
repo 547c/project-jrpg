@@ -1,12 +1,12 @@
-[gd_scene load_steps=14 format=3]
+[gd_scene format=3 uid="uid://c4hkx5cn6f2e"]
 
-[ext_resource type="Script" path="res://ui/pause_menu.gd" id="1_pause"]
-[ext_resource type="Texture2D" path="res://assets/GUI/MedievalUiMega/medieval.png" id="2_medieval"]
-[ext_resource type="Texture2D" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Background boxes/BGbox_02B.png" id="3_box"]
-[ext_resource type="Texture2D" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Title banners/BannerSmall_02B.png" id="4_banner"]
-[ext_resource type="Texture2D" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Buttons/Button_05A_Normal.png" id="5_btn_normal"]
-[ext_resource type="Texture2D" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Buttons/Button_05A_Selected.png" id="6_btn_hover"]
-[ext_resource type="Texture2D" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Buttons/Button_05A_Pressed.png" id="7_btn_pressed"]
+[ext_resource type="Script" uid="uid://cdtwutwdlr0cf" path="res://ui/pause_menu.gd" id="1_pause"]
+[ext_resource type="Texture2D" uid="uid://fq726ml3dqoh" path="res://assets/GUI/MedievalUiMega/medieval.png" id="2_medieval"]
+[ext_resource type="Texture2D" uid="uid://bfceoylmq7phu" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Background boxes/BGbox_02B.png" id="3_box"]
+[ext_resource type="Texture2D" uid="uid://b1yl2ofcq2bd0" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Title banners/BannerSmall_02B.png" id="4_banner"]
+[ext_resource type="Texture2D" uid="uid://db8jvwk44deor" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Buttons/Button_05A_Normal.png" id="5_btn_normal"]
+[ext_resource type="Texture2D" uid="uid://bva8geabtpsh" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Buttons/Button_05A_Selected.png" id="6_btn_hover"]
+[ext_resource type="Texture2D" uid="uid://bw26f0kg6ac2h" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Buttons/Button_05A_Pressed.png" id="7_btn_pressed"]
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_panel"]
 texture = ExtResource("3_box")
@@ -18,24 +18,21 @@ axis_stretch_horizontal = 1
 axis_stretch_vertical = 1
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_title"]
+content_margin_top = 6.0
+content_margin_bottom = 13.0
 texture = ExtResource("4_banner")
 texture_margin_left = 28.0
 texture_margin_top = 14.0
 texture_margin_right = 28.0
 texture_margin_bottom = 14.0
-content_margin_top = 6.0
-content_margin_bottom = 13.0
 axis_stretch_horizontal = 1
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_button_normal"]
 texture = ExtResource("5_btn_normal")
-texture_margin_left = 18.0
-texture_margin_top = 14.0
-texture_margin_right = 50.0
-texture_margin_bottom = 14.0
-
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_button_hover"]
-texture = ExtResource("6_btn_hover")
+content_margin_left = 18.0
+content_margin_top = 14.0
+content_margin_right = 18.0
+content_margin_bottom = 14.0
 texture_margin_left = 18.0
 texture_margin_top = 14.0
 texture_margin_right = 50.0
@@ -43,6 +40,21 @@ texture_margin_bottom = 14.0
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_button_pressed"]
 texture = ExtResource("7_btn_pressed")
+content_margin_left = 18.0
+content_margin_top = 14.0
+content_margin_right = 18.0
+content_margin_bottom = 14.0
+texture_margin_left = 18.0
+texture_margin_top = 14.0
+texture_margin_right = 50.0
+texture_margin_bottom = 14.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_button_hover"]
+texture = ExtResource("6_btn_hover")
+content_margin_left = 18.0
+content_margin_top = 14.0
+content_margin_right = 18.0
+content_margin_bottom = 14.0
 texture_margin_left = 18.0
 texture_margin_top = 14.0
 texture_margin_right = 50.0
@@ -50,14 +62,13 @@ texture_margin_bottom = 14.0
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_sound_on"]
 atlas = ExtResource("2_medieval")
-region = Rect2(802, 466, 13, 12)
+region = Rect2(992, 608, 16, 16)
 
-[node name="PauseMenu" type="CanvasLayer"]
+[node name="PauseMenu" type="CanvasLayer" unique_id=783007884]
 layer = 100
 script = ExtResource("1_pause")
 
-[node name="Root" type="Control" parent="." groups=["pause_menu"]]
-visible = false
+[node name="Root" type="Control" parent="." unique_id=680755879 groups=["pause_menu"]]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -65,7 +76,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Dim" type="ColorRect" parent="Root"]
+[node name="Dim" type="ColorRect" parent="Root" unique_id=2087965282]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -75,7 +86,7 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0, 0, 0, 0.6)
 
-[node name="Panel" type="Panel" parent="Root"]
+[node name="Panel" type="Panel" parent="Root" unique_id=1530419133]
 texture_filter = 1
 layout_mode = 1
 anchors_preset = 8
@@ -91,7 +102,7 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxTexture_panel")
 
-[node name="VBox" type="VBoxContainer" parent="Root/Panel"]
+[node name="VBox" type="VBoxContainer" parent="Root/Panel" unique_id=1208595662]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -104,7 +115,7 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 14
 
-[node name="TitleLabel" type="Label" parent="Root/Panel/VBox"]
+[node name="TitleLabel" type="Label" parent="Root/Panel/VBox" unique_id=454590157]
 texture_filter = 1
 custom_minimum_size = Vector2(240, 48)
 layout_mode = 2
@@ -116,73 +127,72 @@ text = "일시정지"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="ContinueButton" type="Button" parent="Root/Panel/VBox"]
+[node name="ContinueButton" type="Button" parent="Root/Panel/VBox" unique_id=812854980]
+texture_filter = 1
 custom_minimum_size = Vector2(0, 42)
 layout_mode = 2
-texture_filter = 1
 theme_override_colors/font_color = Color(0.93, 0.96, 1, 1)
-theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_colors/font_pressed_color = Color(0.8, 0.86, 0.95, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 16
 theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
-theme_override_styles/hover = SubResource("StyleBoxTexture_button_hover")
 theme_override_styles/pressed = SubResource("StyleBoxTexture_button_pressed")
+theme_override_styles/hover = SubResource("StyleBoxTexture_button_hover")
 text = "계속하기"
 
-[node name="SaveButton" type="Button" parent="Root/Panel/VBox"]
+[node name="SaveButton" type="Button" parent="Root/Panel/VBox" unique_id=150234154]
+texture_filter = 1
 custom_minimum_size = Vector2(0, 42)
 layout_mode = 2
-texture_filter = 1
 theme_override_colors/font_color = Color(0.93, 0.96, 1, 1)
-theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_colors/font_pressed_color = Color(0.8, 0.86, 0.95, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 16
 theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
-theme_override_styles/hover = SubResource("StyleBoxTexture_button_hover")
 theme_override_styles/pressed = SubResource("StyleBoxTexture_button_pressed")
+theme_override_styles/hover = SubResource("StyleBoxTexture_button_hover")
 text = "저장하기"
 
-[node name="LoadButton" type="Button" parent="Root/Panel/VBox"]
+[node name="LoadButton" type="Button" parent="Root/Panel/VBox" unique_id=508274469]
+texture_filter = 1
 custom_minimum_size = Vector2(0, 42)
 layout_mode = 2
-texture_filter = 1
 theme_override_colors/font_color = Color(0.93, 0.96, 1, 1)
-theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_colors/font_pressed_color = Color(0.8, 0.86, 0.95, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 16
 theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
-theme_override_styles/hover = SubResource("StyleBoxTexture_button_hover")
 theme_override_styles/pressed = SubResource("StyleBoxTexture_button_pressed")
+theme_override_styles/hover = SubResource("StyleBoxTexture_button_hover")
 text = "불러오기"
 
-[node name="TitleButton" type="Button" parent="Root/Panel/VBox"]
+[node name="TitleButton" type="Button" parent="Root/Panel/VBox" unique_id=2089883133]
+texture_filter = 1
 custom_minimum_size = Vector2(0, 42)
 layout_mode = 2
-texture_filter = 1
 theme_override_colors/font_color = Color(0.93, 0.96, 1, 1)
-theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_colors/font_pressed_color = Color(0.8, 0.86, 0.95, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 16
 theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
-theme_override_styles/hover = SubResource("StyleBoxTexture_button_hover")
 theme_override_styles/pressed = SubResource("StyleBoxTexture_button_pressed")
+theme_override_styles/hover = SubResource("StyleBoxTexture_button_hover")
 text = "타이틀로"
 
-[node name="MusicButton" type="Button" parent="Root/Panel/VBox"]
+[node name="MusicButton" type="Button" parent="Root/Panel/VBox" unique_id=176210565]
+texture_filter = 1
 custom_minimum_size = Vector2(0, 42)
 layout_mode = 2
-texture_filter = 1
 theme_override_colors/font_color = Color(0.93, 0.96, 1, 1)
-theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_colors/font_pressed_color = Color(0.8, 0.86, 0.95, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 16
 theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
-theme_override_styles/hover = SubResource("StyleBoxTexture_button_hover")
 theme_override_styles/pressed = SubResource("StyleBoxTexture_button_pressed")
-text = "  음악 끄기"
-alignment = 1
+theme_override_styles/hover = SubResource("StyleBoxTexture_button_hover")
+text = "음악 끄기"
 
-[node name="Icon" type="TextureRect" parent="Root/Panel/VBox/MusicButton"]
+[node name="Icon" type="TextureRect" parent="Root/Panel/VBox/MusicButton" unique_id=1582967973]
 texture_filter = 1
 layout_mode = 1
 anchors_preset = 4
@@ -192,14 +202,14 @@ offset_left = 22.0
 offset_top = -9.0
 offset_right = 40.0
 offset_bottom = 9.0
+grow_vertical = 2
 mouse_filter = 2
 texture = SubResource("AtlasTexture_sound_on")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Toast" type="Label" parent="Root/Panel/VBox"]
+[node name="Toast" type="Label" parent="Root/Panel/VBox" unique_id=1399062844]
 visible = false
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.9, 0.55, 1)
 horizontal_alignment = 1
-text = ""

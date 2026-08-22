@@ -1,32 +1,92 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=17 format=3]
 
 [ext_resource type="Script" path="res://ui/cutscene_box.gd" id="1_box"]
 [ext_resource type="Texture2D" path="res://assets/GUI/MedievalUiMega/medieval.png" id="2_medieval"]
+[ext_resource type="Texture2D" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Background boxes/BGbox_08A.png" id="3_box"]
+[ext_resource type="Texture2D" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Buttons/Button_01B_Normal.png" id="4_yes_normal"]
+[ext_resource type="Texture2D" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Buttons/Button_01B_Selected.png" id="5_yes_hover"]
+[ext_resource type="Texture2D" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Buttons/Button_01B_Pressed.png" id="6_yes_pressed"]
+[ext_resource type="Texture2D" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Buttons/Button_04A_Normal.png" id="7_btn_normal"]
+[ext_resource type="Texture2D" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Buttons/Button_04A_Selected.png" id="8_btn_hover"]
+[ext_resource type="Texture2D" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Buttons/Button_04A_Pressed.png" id="9_btn_pressed"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_scroll"]
 atlas = ExtResource("2_medieval")
 region = Rect2(454, 803, 150, 89)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_panel_wood"]
-atlas = ExtResource("2_medieval")
-region = Rect2(516, 207, 119, 50)
-
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_panel"]
-texture = SubResource("AtlasTexture_panel_wood")
-texture_margin_left = 20.0
-texture_margin_top = 15.0
-texture_margin_right = 20.0
-texture_margin_bottom = 15.0
+texture = ExtResource("3_box")
+texture_margin_left = 28.0
+texture_margin_top = 28.0
+texture_margin_right = 28.0
+texture_margin_bottom = 28.0
+axis_stretch_horizontal = 1
+axis_stretch_vertical = 1
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_button_wood"]
-atlas = ExtResource("2_medieval")
-region = Rect2(656, 206, 63, 51)
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_yes_normal"]
+texture = ExtResource("4_yes_normal")
+content_margin_left = 20.0
+content_margin_top = 10.0
+content_margin_right = 20.0
+content_margin_bottom = 10.0
+texture_margin_left = 20.0
+texture_margin_top = 16.0
+texture_margin_right = 20.0
+texture_margin_bottom = 12.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_yes_hover"]
+texture = ExtResource("5_yes_hover")
+content_margin_left = 20.0
+content_margin_top = 10.0
+content_margin_right = 20.0
+content_margin_bottom = 10.0
+texture_margin_left = 20.0
+texture_margin_top = 16.0
+texture_margin_right = 20.0
+texture_margin_bottom = 12.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_yes_pressed"]
+texture = ExtResource("6_yes_pressed")
+content_margin_left = 20.0
+content_margin_top = 10.0
+content_margin_right = 20.0
+content_margin_bottom = 10.0
+texture_margin_left = 20.0
+texture_margin_top = 18.0
+texture_margin_right = 20.0
+texture_margin_bottom = 10.0
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_button_normal"]
-texture = SubResource("AtlasTexture_button_wood")
-texture_margin_left = 14.0
+texture = ExtResource("7_btn_normal")
+content_margin_left = 18.0
+content_margin_top = 14.0
+content_margin_right = 18.0
+content_margin_bottom = 14.0
+texture_margin_left = 18.0
 texture_margin_top = 14.0
-texture_margin_right = 14.0
+texture_margin_right = 50.0
+texture_margin_bottom = 14.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_button_hover"]
+texture = ExtResource("8_btn_hover")
+content_margin_left = 18.0
+content_margin_top = 14.0
+content_margin_right = 18.0
+content_margin_bottom = 14.0
+texture_margin_left = 18.0
+texture_margin_top = 14.0
+texture_margin_right = 50.0
+texture_margin_bottom = 14.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_button_pressed"]
+texture = ExtResource("9_btn_pressed")
+content_margin_left = 18.0
+content_margin_top = 14.0
+content_margin_right = 18.0
+content_margin_bottom = 14.0
+texture_margin_left = 18.0
+texture_margin_top = 14.0
+texture_margin_right = 50.0
 texture_margin_bottom = 14.0
 
 [node name="CutsceneBox" type="Control"]
@@ -96,8 +156,12 @@ offset_top = 20.0
 offset_right = -20.0
 offset_bottom = 60.0
 grow_horizontal = 0
-theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_colors/font_color = Color(0.17, 0.13, 0.12, 1)
+theme_override_colors/font_hover_color = Color(0.1, 0.08, 0.07, 1)
+theme_override_font_sizes/font_size = 15
 theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+theme_override_styles/hover = SubResource("StyleBoxTexture_button_hover")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_button_pressed")
 text = "스킵"
 
 [node name="ConfirmPopup" type="Control" parent="."]
@@ -124,10 +188,10 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -220.0
-offset_top = -110.0
-offset_right = 220.0
-offset_bottom = 110.0
+offset_left = -240.0
+offset_top = -120.0
+offset_right = 240.0
+offset_bottom = 120.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxTexture_panel")
@@ -136,10 +200,10 @@ theme_override_styles/panel = SubResource("StyleBoxTexture_panel")
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 26.0
-offset_top = 20.0
-offset_right = -26.0
-offset_bottom = -20.0
+offset_left = 40.0
+offset_top = 34.0
+offset_right = -40.0
+offset_bottom = -32.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 16
@@ -147,7 +211,8 @@ theme_override_constants/separation = 16
 [node name="MessageLabel" type="Label" parent="ConfirmPopup/Panel/VBox"]
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_colors/font_color = Color(0.2, 0.16, 0.14, 1)
+theme_override_font_sizes/font_size = 16
 horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 3
@@ -160,15 +225,23 @@ alignment = 1
 theme_override_constants/separation = 20
 
 [node name="YesButton" type="Button" parent="ConfirmPopup/Panel/VBox/ButtonRow"]
-custom_minimum_size = Vector2(120, 44)
+custom_minimum_size = Vector2(130, 48)
 texture_filter = 1
-theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
-theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+theme_override_colors/font_color = Color(1, 0.95, 0.9, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 0.96, 1)
+theme_override_font_sizes/font_size = 16
+theme_override_styles/normal = SubResource("StyleBoxTexture_yes_normal")
+theme_override_styles/hover = SubResource("StyleBoxTexture_yes_hover")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_yes_pressed")
 text = "예"
 
 [node name="NoButton" type="Button" parent="ConfirmPopup/Panel/VBox/ButtonRow"]
-custom_minimum_size = Vector2(120, 44)
+custom_minimum_size = Vector2(130, 48)
 texture_filter = 1
-theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_colors/font_color = Color(0.17, 0.13, 0.12, 1)
+theme_override_colors/font_hover_color = Color(0.1, 0.08, 0.07, 1)
+theme_override_font_sizes/font_size = 16
 theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+theme_override_styles/hover = SubResource("StyleBoxTexture_button_hover")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_button_pressed")
 text = "아니요"

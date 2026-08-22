@@ -8,18 +8,35 @@ extends CanvasLayer
 # HUD 전체를 가려야 하는 상황을 나타내는 UI 그룹들 (cutscene_box: 오프닝 컷신 재생 중)
 const BLOCKING_GROUPS := ["dialogue_box", "battle_box", "pause_menu", "game_over", "quest_log", "cutscene_box", "level_up", "inventory_menu", "spellbook_menu"]
 
-# objective 패널 폭 자동 조절: 텍스트 실제 폭 + 라벨 좌우 inset(18+18)만큼 여유를 두고, 이 범위로 clamp
-const OBJECTIVE_PANEL_MIN_WIDTH := 180.0
+# objective 패널 폭 자동 조절: 텍스트 실제 폭 + 라벨 좌우 inset(28+28)만큼 여유를 두고, 이 범위로 clamp.
+# 패널이 Franuka 명판(BannerMedium_05A)으로 바뀌면서 좌우 끝에 20px짜리 금속 브래킷이 생겼다 —
+# 라벨을 그만큼 안쪽으로 밀어야 글자가 브래킷에 물리지 않으므로 inset과 최소 폭을 함께 키웠다
+const OBJECTIVE_PANEL_MIN_WIDTH := 210.0
 const OBJECTIVE_PANEL_MAX_WIDTH := 560.0
-const OBJECTIVE_LABEL_PADDING := 36.0
+const OBJECTIVE_LABEL_PADDING := 56.0
 const OBJECTIVE_PANEL_RIGHT_OFFSET := -12.0 # 화면 오른쪽 가장자리에서의 고정 여백 (이 값은 절대 안 바뀜)
 
-# 경험치 진행바 자리. Lv 라벨(x 12~100, y 89~100)과 같은 줄의 남는 오른쪽 공간을 쓴다 —
-# 위로는 스탯 카드가 y 87에서 끝나고 아래로는 퀘스트 버튼이 y 100에서 시작해, 이 줄만 비어 있다.
-# 색은 체력(빨강)/마나(파랑)와 겹치지 않는 황록색으로 골라 한눈에 구분되게 했다
-const XP_BAR_RECT := Rect2(106, 90, 137, 9)
-const XP_BAR_BG := Color(0.1, 0.1, 0.07, 0.85)
-const XP_BAR_FILL := Color(0.65, 0.82, 0.25, 1.0)
+# 경험치 진행바 자리. Lv 라벨(x 14~102, y 104~124)과 같은 줄의 남는 오른쪽 공간을 쓴다 —
+# 위로는 스탯 카드가 y 100에서 끝나고 아래로는 버튼 줄이 y 130에서 시작해, 이 줄만 비어 있다.
+#
+# 높이 32는 임의값이 아니라 Slider01_Box 텍스처의 원본 높이다. 이 텍스처는 세로로 늘릴 수 있는
+# 균일한 중앙 행이 없어서(위아래가 통째로 테두리 장식), 원본 높이 그대로 써야 프레임이 안 뭉개진다.
+# 실제로 보이는 홈은 그 안의 y 8~27 구간이라, 숫자 라벨은 GROOVE 상수로 그 자리에 맞춘다
+const XP_BAR_RECT := Rect2(104, 96, 178, 32)
+const XP_BAR_GROOVE_TOP := 8.0
+const XP_BAR_GROOVE_HEIGHT := 20.0
+
+# 체력/마나바와 같은 프레임을 쓰고 채움색만 초록으로 구분한다 (빨강=체력, 청록=마나, 초록=경험치).
+# 프레임/채움을 .tscn이 아니라 여기서 만드는 이유는 바 자체를 코드로 만들기 때문 — 규칙이
+# 한 곳에 모여 있어야 나중에 위치를 옮길 때 씬과 코드가 어긋나지 않는다
+const BAR_BOX_PATH := "res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Sliders & Bars/Slider01_Box.png"
+const XP_BAR_FILL_PATH := "res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Sliders & Bars/Slider01_Bar04.png"
+# 9-slice 여백: 좌우 10은 텍스처 양 끝 마감을 지키는 최소값이고, 상하는 원본 높이 그대로 쓰므로
+# 실제로 늘어나지 않는다 (체력/마나바의 .tscn 설정과 같은 값)
+const BAR_PATCH_LEFT := 10.0
+const BAR_PATCH_TOP := 8.0
+const BAR_PATCH_RIGHT := 10.0
+const BAR_PATCH_BOTTOM := 6.0
 
 @onready var _main_hud: Control = $MainHud
 @onready var _hp_bar: ProgressBar = $MainHud/StatCard/HPBar
@@ -87,17 +104,14 @@ func _update_compass_hint() -> void:
 # 건드리기보다, 만드는 규칙을 코드에 한 곳으로 모아두는 쪽이 나중에 위치를 조정하기 쉽다.
 # 자리: Lv 라벨이 x 12~100을 쓰고 그 줄의 오른쪽(스탯 카드 폭 243까지)이 비어 있어 거기에 넣는다
 func _build_xp_bar() -> void:
-	var bg := StyleBoxFlat.new()
-	bg.bg_color = XP_BAR_BG
-	bg.set_corner_radius_all(2)
-	var fill := StyleBoxFlat.new()
-	fill.bg_color = XP_BAR_FILL
-	fill.set_corner_radius_all(2)
+	var bg := _make_bar_stylebox(BAR_BOX_PATH)
+	var fill := _make_bar_stylebox(XP_BAR_FILL_PATH)
 
 	_xp_bar = ProgressBar.new()
 	_xp_bar.name = "XpBar"
 	_xp_bar.show_percentage = false
 	_xp_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_xp_bar.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	_xp_bar.add_theme_stylebox_override("background", bg)
 	_xp_bar.add_theme_stylebox_override("fill", fill)
 	_xp_bar.position = XP_BAR_RECT.position
@@ -107,8 +121,9 @@ func _build_xp_bar() -> void:
 	_xp_bar_label = Label.new()
 	_xp_bar_label.name = "XpBarLabel"
 	_xp_bar_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_xp_bar_label.position = XP_BAR_RECT.position
-	_xp_bar_label.size = XP_BAR_RECT.size
+	# 바 전체가 아니라 "실제로 보이는 홈"에 맞춰 얹는다 (텍스처 위쪽 8px는 투명 여백이다)
+	_xp_bar_label.position = XP_BAR_RECT.position + Vector2(0, XP_BAR_GROOVE_TOP)
+	_xp_bar_label.size = Vector2(XP_BAR_RECT.size.x, XP_BAR_GROOVE_HEIGHT)
 	_xp_bar_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_xp_bar_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_xp_bar_label.add_theme_font_size_override("font_size", 9)
@@ -116,6 +131,17 @@ func _build_xp_bar() -> void:
 	_xp_bar_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.75))
 	_xp_bar_label.add_theme_constant_override("outline_size", 3)
 	_main_hud.add_child(_xp_bar_label)
+
+
+# 체력/마나바와 똑같은 9-slice 규칙으로 바 스타일박스 하나를 만든다
+func _make_bar_stylebox(texture_path: String) -> StyleBoxTexture:
+	var style := StyleBoxTexture.new()
+	style.texture = load(texture_path) as Texture2D
+	style.texture_margin_left = BAR_PATCH_LEFT
+	style.texture_margin_top = BAR_PATCH_TOP
+	style.texture_margin_right = BAR_PATCH_RIGHT
+	style.texture_margin_bottom = BAR_PATCH_BOTTOM
+	return style
 
 
 # 게임 진행 중이고(플레이어 존재), 타이틀/엔딩이 아니며, 가리는 UI가 하나도 안 열려 있을 때만 표시

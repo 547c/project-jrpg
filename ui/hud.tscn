@@ -2,12 +2,101 @@
 
 [ext_resource type="Script" uid="uid://h24uu154qys7" path="res://ui/hud.gd" id="1_hud"]
 [ext_resource type="Texture2D" uid="uid://fq726ml3dqoh" path="res://assets/GUI/MedievalUiMega/medieval.png" id="2_medieval"]
-[ext_resource type="PackedScene" path="res://ui/quest_log.tscn" id="3_qlog"]
-[ext_resource type="Texture2D" path="res://assets/graphics/Pixel Crawler - Free Pack/Entities/Characters/Body_A/Animations/Idle_Base/Idle_Down-Sheet.png" id="4_playersheet"]
+[ext_resource type="PackedScene" uid="uid://dju44bhl6kc1a" path="res://ui/quest_log.tscn" id="3_qlog"]
+[ext_resource type="Texture2D" uid="uid://786qtn7r4ods" path="res://assets/graphics/Pixel Crawler - Free Pack/Entities/Characters/Body_A/Animations/Idle_Base/Idle_Down-Sheet.png" id="4_playersheet"]
 [ext_resource type="PackedScene" path="res://ui/inventory_menu.tscn" id="5_invmenu"]
-[ext_resource type="Script" path="res://ui/compass.gd" id="6_compass"]
+[ext_resource type="Script" uid="uid://7hngcmqnt0uq" path="res://ui/compass.gd" id="6_compass"]
 [ext_resource type="PackedScene" path="res://ui/spellbook_menu.tscn" id="7_spellbook"]
-[ext_resource type="Texture2D" path="res://assets/GUI/card_template.png" id="8_cardsheet"]
+[ext_resource type="Texture2D" uid="uid://d18rjmnex0plr" path="res://assets/GUI/card_template.png" id="8_cardsheet"]
+[ext_resource type="Texture2D" uid="uid://dw6dwr1jow2d8" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Title banners/BannerMedium_05A.png" id="9_objective"]
+[ext_resource type="Texture2D" uid="uid://e8og03pnui22" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Sliders & Bars/Slider01_Box.png" id="10_barbox"]
+[ext_resource type="Texture2D" uid="uid://j2hl530i2swy" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Sliders & Bars/Slider01_Bar02.png" id="11_hpfill"]
+[ext_resource type="Texture2D" uid="uid://drqvu51xlakgq" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Sliders & Bars/Slider01_Bar01.png" id="12_mpfill"]
+[ext_resource type="Texture2D" uid="uid://kypo61yb0xne" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Buttons/Button_02D_Normal.png" id="13_btn_normal"]
+[ext_resource type="Texture2D" uid="uid://benc4a2uuam0" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Buttons/Button_02D_Selected.png" id="14_btn_hover"]
+[ext_resource type="Texture2D" uid="uid://ewrkhk5uyvma" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Buttons/Button_02D_Pressed.png" id="15_btn_pressed"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_statcard"]
+bg_color = Color(0.1, 0.075, 0.09, 0.86)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.32, 0.2, 0.25, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_portrait"]
+atlas = ExtResource("4_playersheet")
+region = Rect2(23, 16, 18, 17)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_bar_bg"]
+texture = ExtResource("10_barbox")
+texture_margin_left = 10.0
+texture_margin_top = 8.0
+texture_margin_right = 10.0
+texture_margin_bottom = 6.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_hp_fill"]
+texture = ExtResource("11_hpfill")
+texture_margin_left = 10.0
+texture_margin_top = 8.0
+texture_margin_right = 10.0
+texture_margin_bottom = 6.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_mana_fill"]
+texture = ExtResource("12_mpfill")
+texture_margin_left = 10.0
+texture_margin_top = 8.0
+texture_margin_right = 10.0
+texture_margin_bottom = 6.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_gold_icon"]
+bg_color = Color(0.94, 0.71, 0.25, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.47, 0.29, 0.11, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_button_normal"]
+texture = ExtResource("13_btn_normal")
+content_margin_left = 12.0
+content_margin_top = 10.0
+content_margin_right = 12.0
+content_margin_bottom = 10.0
+texture_margin_left = 12.0
+texture_margin_top = 16.0
+texture_margin_right = 14.0
+texture_margin_bottom = 12.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_button_pressed"]
+texture = ExtResource("15_btn_pressed")
+content_margin_left = 12.0
+content_margin_top = 10.0
+content_margin_right = 12.0
+content_margin_bottom = 10.0
+texture_margin_left = 12.0
+texture_margin_top = 18.0
+texture_margin_right = 14.0
+texture_margin_bottom = 10.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_button_hover"]
+texture = ExtResource("14_btn_hover")
+content_margin_left = 12.0
+content_margin_top = 10.0
+content_margin_right = 12.0
+content_margin_bottom = 10.0
+texture_margin_left = 12.0
+texture_margin_top = 16.0
+texture_margin_right = 14.0
+texture_margin_bottom = 12.0
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_backpack"]
 atlas = ExtResource("2_medieval")
@@ -17,51 +106,13 @@ region = Rect2(209, 818, 62, 77)
 atlas = ExtResource("8_cardsheet")
 region = Rect2(563, 547, 27, 27)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_panel_wood"]
-atlas = ExtResource("2_medieval")
-region = Rect2(516, 207, 119, 50)
-
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_panel"]
-texture = SubResource("AtlasTexture_panel_wood")
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_objective"]
+texture = ExtResource("9_objective")
 texture_margin_left = 20.0
-texture_margin_top = 15.0
+texture_margin_top = 24.0
 texture_margin_right = 20.0
-texture_margin_bottom = 15.0
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_stat_card"]
-atlas = ExtResource("2_medieval")
-region = Rect2(1, 67, 77, 25)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_portrait"]
-atlas = ExtResource("4_playersheet")
-region = Rect2(23, 16, 18, 17)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bar_bg"]
-bg_color = Color(0, 0, 0, 0)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hp_fill"]
-bg_color = Color(0.82, 0.32, 0.28, 1)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mana_fill"]
-bg_color = Color(0.35, 0.55, 0.75, 1)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_gold_icon"]
-bg_color = Color(0.85, 0.7, 0.25, 1)
-corner_radius_top_left = 7
-corner_radius_top_right = 7
-corner_radius_bottom_left = 7
-corner_radius_bottom_right = 7
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_button_wood"]
-atlas = ExtResource("2_medieval")
-region = Rect2(656, 206, 63, 51)
-
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_button_normal"]
-texture = SubResource("AtlasTexture_button_wood")
-texture_margin_left = 14.0
-texture_margin_top = 14.0
-texture_margin_right = 14.0
-texture_margin_bottom = 14.0
+texture_margin_bottom = 32.0
+axis_stretch_horizontal = 1
 
 [node name="HUD" type="CanvasLayer" unique_id=836659726]
 layer = 5
@@ -77,176 +128,192 @@ grow_vertical = 2
 mouse_filter = 2
 
 [node name="StatCard" type="Control" parent="MainHud" unique_id=1145772357]
-layout_mode = 0
+anchors_preset = 0
 offset_left = 12.0
 offset_top = 12.0
-offset_right = 243.0
-offset_bottom = 87.0
+offset_right = 282.0
+offset_bottom = 100.0
 mouse_filter = 2
 
-[node name="Background" type="TextureRect" parent="MainHud/StatCard"]
-texture_filter = 1
+[node name="Background" type="Panel" parent="MainHud/StatCard" unique_id=322771811]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 mouse_filter = 2
-texture = SubResource("AtlasTexture_stat_card")
-expand_mode = 1
-stretch_mode = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_statcard")
 
-[node name="Portrait" type="TextureRect" parent="MainHud/StatCard"]
+[node name="Portrait" type="TextureRect" parent="MainHud/StatCard" unique_id=235105345]
 texture_filter = 1
 layout_mode = 0
-offset_left = 4.0
-offset_top = 4.0
-offset_right = 71.0
-offset_bottom = 71.0
+offset_left = 7.0
+offset_top = 7.0
+offset_right = 73.0
+offset_bottom = 73.0
 mouse_filter = 2
 texture = SubResource("AtlasTexture_portrait")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="HPBar" type="ProgressBar" parent="MainHud/StatCard"]
+[node name="HPBar" type="ProgressBar" parent="MainHud/StatCard" unique_id=1298932139]
+texture_filter = 1
 layout_mode = 0
-offset_left = 80.0
-offset_top = 6.0
-offset_right = 225.0
-offset_bottom = 24.0
-theme_override_styles/background = SubResource("StyleBoxFlat_bar_bg")
-theme_override_styles/fill = SubResource("StyleBoxFlat_hp_fill")
-max_value = 16.0
-value = 16.0
+offset_left = 78.0
+offset_top = 2.0
+offset_right = 262.0
+offset_bottom = 34.0
+mouse_filter = 2
+theme_override_styles/background = SubResource("StyleBoxTexture_bar_bg")
+theme_override_styles/fill = SubResource("StyleBoxTexture_hp_fill")
+max_value = 25.0
+value = 25.0
 show_percentage = false
 
-[node name="HPBarLabel" type="Label" parent="MainHud/StatCard"]
+[node name="HPBarLabel" type="Label" parent="MainHud/StatCard" unique_id=522446275]
 layout_mode = 0
-offset_left = 80.0
-offset_top = 6.0
-offset_right = 225.0
-offset_bottom = 24.0
-mouse_filter = 2
+offset_left = 78.0
+offset_top = 10.0
+offset_right = 262.0
+offset_bottom = 30.0
 theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_constants/outline_size = 3
 theme_override_colors/font_outline_color = Color(0, 0, 0, 0.75)
+theme_override_constants/outline_size = 3
 theme_override_font_sizes/font_size = 11
-horizontal_alignment = 1
-vertical_alignment = 1
 text = "HP: 25/25"
-
-[node name="ManaBar" type="ProgressBar" parent="MainHud/StatCard"]
-layout_mode = 0
-offset_left = 80.0
-offset_top = 28.0
-offset_right = 225.0
-offset_bottom = 42.0
-theme_override_styles/background = SubResource("StyleBoxFlat_bar_bg")
-theme_override_styles/fill = SubResource("StyleBoxFlat_mana_fill")
-max_value = 18.0
-value = 18.0
-show_percentage = false
-
-[node name="ManaBarLabel" type="Label" parent="MainHud/StatCard"]
-layout_mode = 0
-offset_left = 80.0
-offset_top = 28.0
-offset_right = 225.0
-offset_bottom = 42.0
-mouse_filter = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_constants/outline_size = 3
-theme_override_colors/font_outline_color = Color(0, 0, 0, 0.75)
-theme_override_font_sizes/font_size = 11
 horizontal_alignment = 1
 vertical_alignment = 1
-text = "Mana: 20/20"
 
-[node name="GoldIcon" type="Panel" parent="MainHud/StatCard"]
+[node name="ManaBar" type="ProgressBar" parent="MainHud/StatCard" unique_id=1071117467]
+texture_filter = 1
 layout_mode = 0
-offset_left = 80.0
-offset_top = 50.0
-offset_right = 94.0
-offset_bottom = 64.0
+offset_left = 78.0
+offset_top = 28.0
+offset_right = 262.0
+offset_bottom = 60.0
+mouse_filter = 2
+theme_override_styles/background = SubResource("StyleBoxTexture_bar_bg")
+theme_override_styles/fill = SubResource("StyleBoxTexture_mana_fill")
+max_value = 20.0
+value = 20.0
+show_percentage = false
+
+[node name="ManaBarLabel" type="Label" parent="MainHud/StatCard" unique_id=707926650]
+layout_mode = 0
+offset_left = 78.0
+offset_top = 36.0
+offset_right = 262.0
+offset_bottom = 56.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.75)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 11
+text = "Mana: 20/20"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="GoldIcon" type="Panel" parent="MainHud/StatCard" unique_id=905462071]
+layout_mode = 0
+offset_left = 82.0
+offset_top = 63.0
+offset_right = 98.0
+offset_bottom = 79.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_gold_icon")
 
-[node name="GoldLabel" type="Label" parent="MainHud/StatCard"]
+[node name="GoldLabel" type="Label" parent="MainHud/StatCard" unique_id=330601061]
 layout_mode = 0
-offset_left = 98.0
-offset_top = 47.0
-offset_right = 196.0
-offset_bottom = 70.0
-theme_override_colors/font_color = Color(0.95, 0.9, 0.6, 1)
+offset_left = 104.0
+offset_top = 62.0
+offset_right = 228.0
+offset_bottom = 82.0
+theme_override_colors/font_color = Color(0.96, 0.85, 0.5, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.7)
+theme_override_constants/outline_size = 3
 theme_override_font_sizes/font_size = 14
-vertical_alignment = 1
 text = "0"
+vertical_alignment = 1
 
 [node name="LvLabel" type="Label" parent="MainHud" unique_id=2101952983]
 layout_mode = 0
-offset_left = 12.0
-offset_top = 89.0
-offset_right = 100.0
-offset_bottom = 100.0
+offset_left = 14.0
+offset_top = 99.0
+offset_right = 102.0
+offset_bottom = 119.0
 theme_override_colors/font_color = Color(0.95, 0.92, 0.85, 1)
-theme_override_font_sizes/font_size = 12
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.7)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 13
 text = "Lv. 0"
+vertical_alignment = 1
 
 [node name="QuestButton" type="Button" parent="MainHud" unique_id=197298112]
 texture_filter = 1
 layout_mode = 0
-offset_left = 12.0
-offset_top = 100.0
-offset_right = 140.0
-offset_bottom = 142.0
-theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+offset_left = 6.0
+offset_top = 111.0
+offset_right = 138.0
+offset_bottom = 163.0
+theme_override_colors/font_color = Color(1, 0.95, 0.88, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 0.95, 1)
+theme_override_font_sizes/font_size = 15
 theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_button_pressed")
+theme_override_styles/hover = SubResource("StyleBoxTexture_button_hover")
 text = "퀘스트"
 
-[node name="InventoryButton" type="Button" parent="MainHud"]
+[node name="InventoryButton" type="Button" parent="MainHud" unique_id=1759267180]
 texture_filter = 1
 layout_mode = 0
-offset_left = 148.0
-offset_top = 100.0
-offset_right = 190.0
-offset_bottom = 142.0
+offset_left = 130.0
+offset_top = 111.0
+offset_right = 182.0
+offset_bottom = 163.0
 theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
-text = ""
+theme_override_styles/pressed = SubResource("StyleBoxTexture_button_pressed")
+theme_override_styles/hover = SubResource("StyleBoxTexture_button_hover")
 
-[node name="Icon" type="TextureRect" parent="MainHud/InventoryButton"]
+[node name="Icon" type="TextureRect" parent="MainHud/InventoryButton" unique_id=330689541]
 texture_filter = 1
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 6.0
-offset_top = 6.0
-offset_right = -6.0
-offset_bottom = -6.0
+offset_left = 13.0
+offset_top = 17.0
+offset_right = -15.0
+offset_bottom = -13.0
+grow_horizontal = 2
+grow_vertical = 2
 mouse_filter = 2
 texture = SubResource("AtlasTexture_backpack")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="SpellbookButton" type="Button" parent="MainHud"]
+[node name="SpellbookButton" type="Button" parent="MainHud" unique_id=1353451820]
 texture_filter = 1
 layout_mode = 0
-offset_left = 198.0
-offset_top = 100.0
-offset_right = 240.0
-offset_bottom = 142.0
+offset_left = 173.0
+offset_top = 111.0
+offset_right = 225.0
+offset_bottom = 163.0
 theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
-text = ""
+theme_override_styles/pressed = SubResource("StyleBoxTexture_button_pressed")
+theme_override_styles/hover = SubResource("StyleBoxTexture_button_hover")
 
-[node name="Icon" type="TextureRect" parent="MainHud/SpellbookButton"]
+[node name="Icon" type="TextureRect" parent="MainHud/SpellbookButton" unique_id=2023161702]
 texture_filter = 1
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 6.0
-offset_top = 6.0
-offset_right = -6.0
-offset_bottom = -6.0
+offset_left = 13.0
+offset_top = 17.0
+offset_right = -15.0
+offset_bottom = -13.0
+grow_horizontal = 2
+grow_vertical = 2
 mouse_filter = 2
 texture = SubResource("AtlasTexture_spellbook_icon")
 expand_mode = 1
@@ -267,36 +334,37 @@ layout_mode = 0
 anchor_left = 1.0
 anchor_right = 1.0
 offset_left = -412.0
-offset_top = 12.0
+offset_top = 8.0
 offset_right = -12.0
-offset_bottom = 54.0
+offset_bottom = 72.0
 grow_horizontal = 0
-theme_override_styles/panel = SubResource("StyleBoxTexture_panel")
+theme_override_styles/panel = SubResource("StyleBoxTexture_objective")
 
 [node name="ObjectiveLabel" type="Label" parent="ObjectiveHud/ObjectivePanel" unique_id=1018031829]
 layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 18.0
-offset_top = 4.0
-offset_right = -18.0
-offset_bottom = -4.0
+offset_left = 28.0
+offset_top = 16.0
+offset_right = -28.0
+offset_bottom = -24.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_colors/font_color = Color(0.28, 0.18, 0.22, 1)
 theme_override_font_sizes/font_size = 12
 text = "목표"
 horizontal_alignment = 2
 vertical_alignment = 1
 
-[node name="CompassHint" type="Label" parent="ObjectiveHud"]
-layout_mode = 0
+[node name="CompassHint" type="Label" parent="ObjectiveHud" unique_id=137184605]
+layout_mode = 1
+anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -180.0
-offset_top = 58.0
-offset_right = -12.0
-offset_bottom = 76.0
+offset_left = -183.0
+offset_top = 59.0
+offset_right = -15.0
+offset_bottom = 77.0
 grow_horizontal = 0
 theme_override_colors/font_color = Color(0.9, 0.87, 0.78, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 0.7)
@@ -316,11 +384,11 @@ grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("6_compass")
 
-[node name="Arrow" type="Polygon2D" parent="Compass"]
+[node name="Arrow" type="Polygon2D" parent="Compass" unique_id=874575211]
 color = Color(0.96, 0.85, 0.35, 1)
 polygon = PackedVector2Array(17, 0, -7, -11, -1, 0, -7, 11)
 
-[node name="ArrowOutline" type="Line2D" parent="Compass/Arrow"]
+[node name="ArrowOutline" type="Line2D" parent="Compass/Arrow" unique_id=968129480]
 points = PackedVector2Array(17, 0, -7, -11, -1, 0, -7, 11, 17, 0)
 width = 2.0
 default_color = Color(0.25, 0.15, 0.05, 0.9)
@@ -328,6 +396,6 @@ joint_mode = 2
 
 [node name="QuestLog" parent="." unique_id=1347969478 instance=ExtResource("3_qlog")]
 
-[node name="InventoryMenu" parent="." instance=ExtResource("5_invmenu")]
+[node name="InventoryMenu" parent="." unique_id=291364865 instance=ExtResource("5_invmenu")]
 
-[node name="SpellbookMenu" parent="." instance=ExtResource("7_spellbook")]
+[node name="SpellbookMenu" parent="." unique_id=845142246 instance=ExtResource("7_spellbook")]

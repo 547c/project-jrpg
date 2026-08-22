@@ -1,28 +1,62 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://ui/ending_record_menu.gd" id="1_record"]
-[ext_resource type="Texture2D" path="res://assets/GUI/MedievalUiMega/medieval.png" id="2_medieval"]
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_panel_wood"]
-atlas = ExtResource("2_medieval")
-region = Rect2(516, 207, 119, 50)
+[ext_resource type="Texture2D" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Background boxes/BGbox_04B.png" id="2_box"]
+[ext_resource type="Texture2D" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Title banners/BannerMedium_02A.png" id="3_banner"]
+[ext_resource type="Texture2D" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Buttons/Button_04A_Normal.png" id="4_btn_normal"]
+[ext_resource type="Texture2D" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Buttons/Button_04A_Selected.png" id="5_btn_hover"]
+[ext_resource type="Texture2D" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Buttons/Button_04A_Pressed.png" id="6_btn_pressed"]
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_panel"]
-texture = SubResource("AtlasTexture_panel_wood")
-texture_margin_left = 20.0
-texture_margin_top = 15.0
-texture_margin_right = 20.0
-texture_margin_bottom = 15.0
+texture = ExtResource("2_box")
+texture_margin_left = 42.0
+texture_margin_top = 42.0
+texture_margin_right = 42.0
+texture_margin_bottom = 42.0
+axis_stretch_horizontal = 1
+axis_stretch_vertical = 1
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_button_wood"]
-atlas = ExtResource("2_medieval")
-region = Rect2(656, 206, 63, 51)
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_title"]
+texture = ExtResource("3_banner")
+texture_margin_left = 28.0
+texture_margin_top = 30.0
+texture_margin_right = 28.0
+texture_margin_bottom = 30.0
+content_margin_top = 16.0
+content_margin_bottom = 27.0
+axis_stretch_horizontal = 1
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_button_normal"]
-texture = SubResource("AtlasTexture_button_wood")
-texture_margin_left = 14.0
+texture = ExtResource("4_btn_normal")
+content_margin_left = 18.0
+content_margin_top = 14.0
+content_margin_right = 18.0
+content_margin_bottom = 14.0
+texture_margin_left = 18.0
 texture_margin_top = 14.0
-texture_margin_right = 14.0
+texture_margin_right = 50.0
+texture_margin_bottom = 14.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_button_hover"]
+texture = ExtResource("5_btn_hover")
+content_margin_left = 18.0
+content_margin_top = 14.0
+content_margin_right = 18.0
+content_margin_bottom = 14.0
+texture_margin_left = 18.0
+texture_margin_top = 14.0
+texture_margin_right = 50.0
+texture_margin_bottom = 14.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_button_pressed"]
+texture = ExtResource("6_btn_pressed")
+content_margin_left = 18.0
+content_margin_top = 14.0
+content_margin_right = 18.0
+content_margin_bottom = 14.0
+texture_margin_left = 18.0
+texture_margin_top = 14.0
+texture_margin_right = 50.0
 texture_margin_bottom = 14.0
 
 [node name="EndingRecordMenu" type="CanvasLayer"]
@@ -55,10 +89,10 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -300.0
-offset_top = -250.0
-offset_right = 300.0
-offset_bottom = 250.0
+offset_left = -310.0
+offset_top = -260.0
+offset_right = 310.0
+offset_bottom = 260.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxTexture_panel")
@@ -68,24 +102,29 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 28.0
-offset_top = 22.0
-offset_right = -28.0
-offset_bottom = -22.0
+offset_left = 52.0
+offset_top = 44.0
+offset_right = -52.0
+offset_bottom = -44.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 10
 
 [node name="TitleLabel" type="Label" parent="Root/Panel/VBox"]
+texture_filter = 1
+custom_minimum_size = Vector2(320, 72)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
-theme_override_font_sizes/font_size = 24
-horizontal_alignment = 1
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(0.3, 0.17, 0.17, 1)
+theme_override_font_sizes/font_size = 21
+theme_override_styles/normal = SubResource("StyleBoxTexture_title")
 text = "엔딩 기록"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="ProgressLabel" type="Label" parent="Root/Panel/VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.36, 0.24, 0.15, 1)
+theme_override_colors/font_color = Color(0.4, 0.25, 0.2, 1)
 theme_override_font_sizes/font_size = 14
 horizontal_alignment = 1
 text = "0 / 3"
@@ -93,12 +132,17 @@ text = "0 / 3"
 [node name="List" type="VBoxContainer" parent="Root/Panel/VBox"]
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_constants/separation = 14
+theme_override_constants/separation = 4
 
 [node name="CloseButton" type="Button" parent="Root/Panel/VBox"]
-custom_minimum_size = Vector2(0, 42)
+custom_minimum_size = Vector2(180, 48)
 layout_mode = 2
+size_flags_horizontal = 4
 texture_filter = 1
-theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_colors/font_color = Color(0.17, 0.13, 0.12, 1)
+theme_override_colors/font_hover_color = Color(0.1, 0.08, 0.07, 1)
+theme_override_font_sizes/font_size = 16
 theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+theme_override_styles/hover = SubResource("StyleBoxTexture_button_hover")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_button_pressed")
 text = "닫기"

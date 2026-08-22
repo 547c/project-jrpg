@@ -11,6 +11,12 @@ signal quest_changed(quest_id: String)
 # 따로 일어나므로 둘을 분리했다 — 퀘스트를 깨도 레벨이 안 오를 수 있고, 몬스터만 잡아도 레벨이 오른다
 signal quest_completed_notice(quest_title: String, xp_gained: int)
 
+# 의뢰(서브 퀘스트) 상태가 바뀔 때 (수락/진행/완료/의뢰판 갱신). 퀘스트로그·의뢰판이 구독해 다시 그린다
+signal sub_quest_changed
+
+# 의뢰를 완료해 보상을 지급한 직후. 안내창이 메인 퀘스트 완료와 같은 방식으로 큐에 담아 띄운다
+signal sub_quest_completed(title: String, reward_text: String)
+
 # 경험치가 쌓여 레벨이 올랐을 때 방출 (한 번에 여러 레벨이 오르면 레벨마다 한 번씩).
 # gain 값들은 그 레벨업으로 실제로 늘어난 양이라 안내창이 그대로 보여주면 된다
 signal player_leveled_up(new_level: int, hp_gain: int, mana_gain: int, skill_point_gain: int)
@@ -200,6 +206,12 @@ const QUEST_COMPLETE_FLAGS: Dictionary = {
 # 현재 퀘스트 상태 (DEFAULT_QUESTS의 깊은 복사로 시작)
 var quests: Dictionary = DEFAULT_QUESTS.duplicate(true)
 
+# 의뢰판에 걸려 있는 의뢰 3개 (수락 전 목록). 세이브에 담아 다시 열었을 때 같은 목록이 보이게 한다
+var bounty_board: Array = []
+
+# 지금 진행 중인 의뢰 하나 (비어 있으면 없음). 동시에 하나만 받을 수 있다는 규칙이 이 자료구조 자체다
+var active_sub_quest: Dictionary = {}
+
 
 # 플래그 값을 설정하고, 이전 값과 다를 때만 flag_changed 시그널을 방출
 func set_flag(flag_name: String, value) -> void:
@@ -232,6 +244,7 @@ func reset_progress() -> void:
 		set_flag(flag_name, DEFAULT_FLAGS[flag_name])
 
 	reset_quests()
+	reset_sub_quests()
 
 	gold = 0
 	gold_changed.emit(gold)
@@ -948,6 +961,111 @@ func is_quest_active(quest_id: String) -> bool:
 
 
 # 모든 퀘스트를 기본값으로 되돌리고 각 quest_changed를 방출 (새 게임/리셋용)
+# ── 의뢰 (서브 퀘스트) ─────────────────────────────────────────────────────
+
+func reset_sub_quests() -> void:
+	bounty_board = []
+	active_sub_quest = {}
+	sub_quest_changed.emit()
+
+
+func has_active_sub_quest() -> bool:
+	return not active_sub_quest.is_empty()
+
+
+# 의뢰판을 처음 열 때만 채운다 — 열 때마다 새로 뽑으면 5골드짜리 새로고침이 의미가 없어진다
+func ensure_bounty_board() -> void:
+	if bounty_board.is_empty():
+		bounty_board = SubQuestData.generate_board()
+		sub_quest_changed.emit()
+
+
+func refresh_bounty_board() -> bool:
+	if not spend_gold(SubQuestData.REFRESH_COST):
+		return false
+	bounty_board = SubQuestData.generate_board()
+	sub_quest_changed.emit()
+	return true
+
+
+# 의뢰판의 index번째 의뢰를 수락. 이미 진행 중인 의뢰가 있으면 거절한다
+func accept_sub_quest(index: int) -> bool:
+	if has_active_sub_quest():
+		return false
+	if index < 0 or index >= bounty_board.size():
+		return false
+	active_sub_quest = (bounty_board[index] as Dictionary).duplicate(true)
+	bounty_board.remove_at(index)
+	sub_quest_changed.emit()
+	return true
+
+
+# 몬스터 한 마리를 잡을 때마다 호출된다 (전투 씬의 마리별 보상 루프). 목표에 없는 종류면 아무 일도 안 함.
+# 목표를 다 채우면 반납 절차 없이 그 자리에서 완료 처리한다 (메인 퀘스트와 같은 규칙)
+func add_sub_quest_progress(monster_type: String) -> void:
+	if not has_active_sub_quest():
+		return
+	var targets: Dictionary = active_sub_quest.get("targets", {})
+	if not targets.has(monster_type):
+		return
+
+	var progress: Dictionary = active_sub_quest["progress"]
+	var target := int(targets[monster_type])
+	progress[monster_type] = min(int(progress.get(monster_type, 0)) + 1, target)
+	sub_quest_changed.emit()
+
+	if SubQuestData.is_complete(active_sub_quest):
+		_finish_sub_quest()
+
+
+func _finish_sub_quest() -> void:
+	var quest := active_sub_quest
+	active_sub_quest = {}
+
+	add_gold(int(quest.get("gold", 0)))
+	change_affinity("elara", int(quest.get("affinity", 0)))
+
+	var rewards: Array[String] = [
+		"골드 +%d" % int(quest.get("gold", 0)),
+		"경험치 +%d" % int(quest.get("xp", 0)),
+		"%s 호감도 +%d" % [SubQuestData.GIVER, int(quest.get("affinity", 0))],
+	]
+	for key in ["bonus_item", "bonus_equipment"]:
+		var item_id: String = String(quest.get(key, ""))
+		if item_id != "" and ItemData.ITEMS.has(item_id):
+			add_item(item_id, 1)
+			rewards.append("%s x1" % ItemData.ITEMS[item_id]["name"])
+
+	# 경험치는 마지막에 준다 — add_xp가 레벨업 안내를 따로 큐에 넣으므로,
+	# 의뢰 완료 안내가 레벨업 안내보다 먼저 쌓이도록 순서를 맞춘다
+	sub_quest_completed.emit(SubQuestData.title(quest), "\n".join(rewards))
+	add_xp(int(quest.get("xp", 0)))
+
+	sub_quest_changed.emit()
+
+
+func restore_sub_quests(board: Array, active: Dictionary) -> void:
+	bounty_board = board.duplicate(true)
+	active_sub_quest = active.duplicate(true)
+	_normalize_sub_quest_numbers(active_sub_quest)
+	for quest in bounty_board:
+		_normalize_sub_quest_numbers(quest)
+	sub_quest_changed.emit()
+
+
+# JSON은 숫자를 전부 float로 돌려주므로 목표/진행도를 int로 되돌린다 (안 하면 "3.0마리"로 표시된다)
+func _normalize_sub_quest_numbers(quest: Dictionary) -> void:
+	if quest.is_empty():
+		return
+	for key in ["targets", "progress"]:
+		var table: Dictionary = quest.get(key, {})
+		for monster_type in table.keys():
+			table[monster_type] = int(table[monster_type])
+	for key in ["gold", "xp", "affinity"]:
+		if quest.has(key):
+			quest[key] = int(quest[key])
+
+
 func reset_quests() -> void:
 	quests = DEFAULT_QUESTS.duplicate(true)
 	for quest_id in quests.keys():

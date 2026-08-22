@@ -11,9 +11,13 @@ const TITLE_FONT_SIZE := 18
 const DESC_FONT_SIZE := 13
 const SLOT_SEPARATION := 6
 
-const COLOR_UNLOCKED_TITLE := Color(0.24, 0.11, 0.04, 1) # 나무 패널 위에 얹는 진한 갈색
-const COLOR_UNLOCKED_DESC := Color(0.36, 0.24, 0.15, 1)
-const COLOR_LOCKED := Color(0.45, 0.42, 0.4, 1) # 잠긴 엔딩은 흐릿한 회색
+const COLOR_UNLOCKED_TITLE := Color(0.28, 0.14, 0.12, 1)
+const COLOR_UNLOCKED_DESC := Color(0.42, 0.26, 0.22, 1)
+const COLOR_LOCKED := Color(0.55, 0.44, 0.42, 1)
+
+const DIVIDER_PATH := "res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Dividers/Divider_02.png"
+const DIVIDER_PATCH := 4
+const DIVIDER_HEIGHT := 26
 
 @onready var _root: Control = $Root
 @onready var _progress_label: Label = $Root/Panel/VBox/ProgressLabel
@@ -34,7 +38,10 @@ func _ready() -> void:
 
 # EndingData.ENDINGS 순서대로 슬롯(제목 라벨 + 설명 라벨)을 생성
 func _build_slots() -> void:
-	for _ending in EndingData.ENDINGS:
+	for i in range(EndingData.ENDINGS.size()):
+		if i > 0:
+			_list.add_child(_make_divider())
+
 		var slot := VBoxContainer.new()
 		slot.add_theme_constant_override("separation", 2)
 		_list.add_child(slot)
@@ -50,6 +57,16 @@ func _build_slots() -> void:
 
 		_title_labels.append(title)
 		_desc_labels.append(desc)
+
+
+func _make_divider() -> NinePatchRect:
+	var divider := NinePatchRect.new()
+	divider.texture = load(DIVIDER_PATH) as Texture2D
+	divider.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	divider.patch_margin_left = DIVIDER_PATCH
+	divider.patch_margin_right = DIVIDER_PATCH
+	divider.custom_minimum_size = Vector2(0, DIVIDER_HEIGHT)
+	return divider
 
 
 func open() -> void:

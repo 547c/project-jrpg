@@ -118,6 +118,7 @@ const ELARA_DIALOGUE: Array = [
 			{"label": "[우물에 대해 묻는다]", "next_id": "elara_well"},
 			{"label": "[마을에 대해 묻는다]", "next_id": "elara_village"},
 			{"label": "[그냥 안부를 묻는다]", "next_id": "elara_smalltalk"},
+			{"label": "[의뢰? 뭐 일거리 있나요?]", "next_id": "elara_bounty_intro"},
 			{"label": "[다른 사람들에 대해 묻는다]", "next_id": "elara_gossip", "show_if_flag": "met_rohan"},
 			{"label": "[다녀왔다고 말한다]", "next_id": "elara_ending_check", "show_if_flag": "guardian_event_done"},
 			{
@@ -135,6 +136,16 @@ const ELARA_DIALOGUE: Array = [
 				"label": "[선물을 준다]",
 				"give_gift": {"npc_id": "elara", "amount": 9, "next_id_success": "elara_gift_thanks", "next_id_fail": "elara_gift_none"},
 			},
+		],
+	},
+	{
+		"id": "elara_bounty_intro",
+		"speaker": "엘라라",
+		"text": "마침 잘 왔군. 마을 사람들이 붙여둔 의뢰가 몇 있네. 손이 비었으면 한번 보게나.",
+		"is_decisive": false,
+		"options": [
+			{"label": "[의뢰판을 살펴본다]", "open_bounty_board": true},
+			{"label": "[다음에 볼게요]", "next_id": ""},
 		],
 	},
 	{

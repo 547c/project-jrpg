@@ -2,20 +2,15 @@ extends Control
 
 # 인벤토리 패널. HUD의 가방 버튼이 open()/close()로 토글한다.
 # _root(자기 자신)가 "inventory_menu" 그룹에 속하고 visible로 열림 여부를 나타내 이동 잠금과 연동된다.
-# 배경은 medieval.png의 "INVENTORY" 격자 패널 그림을 그대로 쓴다. 이 그림은 4열x3행(12칸)짜리라
-# (칸 사이 간격이 완전히 균등하지도 않음) GridContainer 자동 배치 대신, 실측한 픽셀 좌표를 3배
-# 확대해 슬롯 12개를 그림의 실제 칸 위치에 정확히 겹치도록 배치한다 — 위치는 _ready()에서 코드로 생성
-# (전투 씬의 데미지 팝업처럼, 반복되는 단순 UI 조각을 코드로 생성하는 기존 패턴을 재사용).
+# 슬롯 12개(칸 테두리 + 클릭 영역 + 아이콘 + 개수)는 _ready()에서 코드로 생성한다.
 
 const SLOT_COUNT := 12
-const SLOT_SIZE := Vector2(42, 42)
-# 배경 그림(98x85, 3배 확대해 294x255로 표시)에서 실측한 슬롯 좌상단 좌표 (좌->우, 위->아래 순서.
-# GameState.inventory.keys() 순서와 그대로 대응)
-const SLOT_POSITIONS: Array[Vector2] = [
-	Vector2(36, 51), Vector2(96, 51), Vector2(156, 51), Vector2(213, 51),
-	Vector2(36, 114), Vector2(96, 114), Vector2(156, 114), Vector2(213, 114),
-	Vector2(36, 177), Vector2(96, 177), Vector2(156, 177), Vector2(213, 177),
-]
+const SLOT_COLUMNS := 4
+# Slot_02_Empty가 32x32라 정수배(2배)로만 키운다 — 어중간한 배율이면 픽셀이 고르지 않게 늘어난다
+const SLOT_SIZE := Vector2(64, 64)
+const SLOT_GAP := 10.0
+const SLOT_ORIGIN := Vector2(47, 70)
+const SLOT_FRAME_PATH := "res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Item slots/Slot_02_Empty.png"
 
 @onready var _slots_container: Control = $Panel/Slots
 @onready var _close_button: Button = $Panel/CloseButton
@@ -44,16 +39,30 @@ func _ready() -> void:
 	_build_slots()
 
 
-# 배경 그림에 이미 칸 테두리가 그려져 있으므로, 슬롯 버튼 자체는 완전히 투명한 클릭 영역으로 만들어
-# SLOT_POSITIONS의 실측 좌표에 정확히 겹쳐 배치한다. 각 슬롯은 아이콘(TextureRect)+개수 라벨(Label)
-# 자식을 갖고 시작은 둘 다 숨김(빈 칸)
+func _slot_position(index: int) -> Vector2:
+	var column := index % SLOT_COLUMNS
+	var row := index / SLOT_COLUMNS
+	return SLOT_ORIGIN + Vector2(column * (SLOT_SIZE.x + SLOT_GAP), row * (SLOT_SIZE.y + SLOT_GAP))
+
+
 func _build_slots() -> void:
 	var slot_style := StyleBoxFlat.new()
 	slot_style.bg_color = Color(0, 0, 0, 0)
+	var frame_texture := load(SLOT_FRAME_PATH) as Texture2D
 
 	for i in range(SLOT_COUNT):
+		var frame := TextureRect.new()
+		frame.texture = frame_texture
+		frame.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		frame.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		frame.stretch_mode = TextureRect.STRETCH_SCALE
+		frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		frame.position = _slot_position(i)
+		frame.size = SLOT_SIZE
+		_slots_container.add_child(frame)
+
 		var slot := Button.new()
-		slot.position = SLOT_POSITIONS[i]
+		slot.position = _slot_position(i)
 		slot.size = SLOT_SIZE
 		slot.flat = true
 		slot.add_theme_stylebox_override("normal", slot_style)
@@ -64,10 +73,10 @@ func _build_slots() -> void:
 
 		var icon := TextureRect.new()
 		icon.set_anchors_preset(Control.PRESET_FULL_RECT)
-		icon.offset_left = 4
-		icon.offset_top = 4
-		icon.offset_right = -4
-		icon.offset_bottom = -4
+		icon.offset_left = 12
+		icon.offset_top = 12
+		icon.offset_right = -12
+		icon.offset_bottom = -12
 		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
@@ -77,10 +86,10 @@ func _build_slots() -> void:
 
 		var count_label := Label.new()
 		count_label.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-		count_label.offset_left = -24
-		count_label.offset_top = -13
-		count_label.offset_right = -2
-		count_label.offset_bottom = -1
+		count_label.offset_left = -30
+		count_label.offset_top = -20
+		count_label.offset_right = -8
+		count_label.offset_bottom = -6
 		count_label.add_theme_font_size_override("font_size", 10)
 		count_label.add_theme_color_override("font_color", Color(1, 1, 1, 1))
 		count_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
@@ -212,7 +221,7 @@ func _on_slot_mouse_entered(index: int) -> void:
 
 	var item: Dictionary = ItemData.ITEMS[item_id]
 	_tooltip_label.text = "%s: %s" % [item["name"], item["description"]]
-	_tooltip.global_position = _slot_icons[index].get_parent().global_position + Vector2(-20.0, -44.0)
+	_tooltip.global_position = _slot_icons[index].get_parent().global_position + Vector2(-16.0, -46.0)
 	_tooltip.visible = true
 
 

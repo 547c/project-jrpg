@@ -2519,6 +2519,7 @@ func _finish_victory() -> void:
 # 몬스터 종류별 처치 카운터를 1 올린다 (퀘스트 진행/보스 플래그). 마리마다 한 번씩 호출된다 —
 # 다인전에서 3마리를 잡으면 퀘스트도 3만큼 나아가야 "여러 마리를 상대한 값"이 되기 때문
 func _increment_defeat_counter() -> void:
+	GameState.add_sub_quest_progress(_monster_type)
 	match _monster_type:
 		"ORC":
 			GameState.increment_orcs_defeated()

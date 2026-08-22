@@ -30,6 +30,7 @@ LevelUpPopup="*res://ui/level_up_popup.tscn"
 ShopMenu="*res://ui/shop_menu.tscn"
 WeaponShopMenu="*res://ui/weapon_shop_menu.tscn"
 SaveSlotMenu="*res://ui/save_slot_menu.tscn"
+BountyBoardMenu="*res://ui/bounty_board_menu.tscn"
 EndingRecordMenu="*res://ui/ending_record_menu.tscn"
 HUD="*res://ui/hud.tscn"
 

@@ -1,0 +1,355 @@
+[gd_scene load_steps=13 format=3]
+
+[ext_resource type="Script" path="res://ui/bounty_board_menu.gd" id="1_bounty"]
+[ext_resource type="Texture2D" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Background boxes/BGbox_07A.png" id="2_ivybox"]
+[ext_resource type="Texture2D" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Title banners/BannerMedium_04A.png" id="3_banner"]
+[ext_resource type="Texture2D" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Buttons/Button_02B_Normal.png" id="4_accept_normal"]
+[ext_resource type="Texture2D" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Buttons/Button_02B_Selected.png" id="5_accept_hover"]
+[ext_resource type="Texture2D" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Buttons/Button_02B_Pressed.png" id="6_accept_pressed"]
+[ext_resource type="Texture2D" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Buttons/Button_04A_Normal.png" id="7_btn_normal"]
+[ext_resource type="Texture2D" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Buttons/Button_04A_Selected.png" id="8_btn_hover"]
+[ext_resource type="Texture2D" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Buttons/Button_04A_Pressed.png" id="9_btn_pressed"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_panel"]
+texture = ExtResource("2_ivybox")
+texture_margin_left = 28.0
+texture_margin_top = 28.0
+texture_margin_right = 28.0
+texture_margin_bottom = 28.0
+axis_stretch_horizontal = 1
+axis_stretch_vertical = 1
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_title"]
+content_margin_top = 18.0
+content_margin_bottom = 26.0
+texture = ExtResource("3_banner")
+texture_margin_left = 20.0
+texture_margin_top = 20.0
+texture_margin_right = 20.0
+texture_margin_bottom = 26.0
+axis_stretch_horizontal = 1
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_slot"]
+content_margin_left = 14.0
+content_margin_top = 10.0
+content_margin_right = 14.0
+content_margin_bottom = 10.0
+bg_color = Color(0.13, 0.1, 0.09, 0.55)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.36, 0.3, 0.2, 0.8)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_accept_normal"]
+content_margin_left = 22.0
+content_margin_top = 12.0
+content_margin_right = 22.0
+content_margin_bottom = 12.0
+texture = ExtResource("4_accept_normal")
+texture_margin_left = 22.0
+texture_margin_top = 12.0
+texture_margin_right = 22.0
+texture_margin_bottom = 12.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_accept_hover"]
+content_margin_left = 22.0
+content_margin_top = 12.0
+content_margin_right = 22.0
+content_margin_bottom = 12.0
+texture = ExtResource("5_accept_hover")
+texture_margin_left = 22.0
+texture_margin_top = 12.0
+texture_margin_right = 22.0
+texture_margin_bottom = 12.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_accept_pressed"]
+content_margin_left = 22.0
+content_margin_top = 12.0
+content_margin_right = 22.0
+content_margin_bottom = 12.0
+texture = ExtResource("6_accept_pressed")
+texture_margin_left = 22.0
+texture_margin_top = 14.0
+texture_margin_right = 22.0
+texture_margin_bottom = 10.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_button_normal"]
+content_margin_left = 18.0
+content_margin_top = 14.0
+content_margin_right = 18.0
+content_margin_bottom = 14.0
+texture = ExtResource("7_btn_normal")
+texture_margin_left = 18.0
+texture_margin_top = 14.0
+texture_margin_right = 50.0
+texture_margin_bottom = 14.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_button_hover"]
+content_margin_left = 18.0
+content_margin_top = 14.0
+content_margin_right = 18.0
+content_margin_bottom = 14.0
+texture = ExtResource("8_btn_hover")
+texture_margin_left = 18.0
+texture_margin_top = 14.0
+texture_margin_right = 50.0
+texture_margin_bottom = 14.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_button_pressed"]
+content_margin_left = 18.0
+content_margin_top = 14.0
+content_margin_right = 18.0
+content_margin_bottom = 14.0
+texture = ExtResource("9_btn_pressed")
+texture_margin_left = 18.0
+texture_margin_top = 14.0
+texture_margin_right = 50.0
+texture_margin_bottom = 14.0
+
+[node name="BountyBoardMenu" type="CanvasLayer"]
+layer = 118
+script = ExtResource("1_bounty")
+
+[node name="Root" type="Control" parent="."]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Dim" type="ColorRect" parent="Root"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.6)
+
+[node name="Panel" type="Panel" parent="Root"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -330.0
+offset_top = -270.0
+offset_right = 330.0
+offset_bottom = 270.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxTexture_panel")
+
+[node name="VBox" type="VBoxContainer" parent="Root/Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 44.0
+offset_top = 34.0
+offset_right = -44.0
+offset_bottom = -32.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
+
+[node name="TitleLabel" type="Label" parent="Root/Panel/VBox"]
+texture_filter = 1
+custom_minimum_size = Vector2(300, 64)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(0.28, 0.12, 0.1, 1)
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("StyleBoxTexture_title")
+text = "의뢰판"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="GoldLabel" type="Label" parent="Root/Panel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.85, 0.5, 1)
+theme_override_font_sizes/font_size = 14
+text = "보유 골드: 0"
+horizontal_alignment = 1
+
+[node name="Slots" type="VBoxContainer" parent="Root/Panel/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+
+[node name="Slot1" type="PanelContainer" parent="Root/Panel/VBox/Slots"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_slot")
+
+[node name="Row" type="HBoxContainer" parent="Root/Panel/VBox/Slots/Slot1"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Texts" type="VBoxContainer" parent="Root/Panel/VBox/Slots/Slot1/Row"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 1
+theme_override_constants/separation = 4
+
+[node name="TitleLabel" type="Label" parent="Root/Panel/VBox/Slots/Slot1/Row/Texts"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.68, 0.88, 0.48, 1)
+theme_override_font_sizes/font_size = 16
+text = "의뢰"
+
+[node name="RewardLabel" type="Label" parent="Root/Panel/VBox/Slots/Slot1/Row/Texts"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.88, 0.84, 1)
+theme_override_font_sizes/font_size = 12
+autowrap_mode = 3
+text = "보상"
+
+[node name="AcceptButton" type="Button" parent="Root/Panel/VBox/Slots/Slot1/Row"]
+custom_minimum_size = Vector2(120, 44)
+layout_mode = 2
+size_flags_vertical = 4
+texture_filter = 1
+theme_override_colors/font_color = Color(1, 0.95, 0.88, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 0.95, 1)
+theme_override_colors/font_disabled_color = Color(0.6, 0.52, 0.5, 1)
+theme_override_font_sizes/font_size = 15
+theme_override_styles/normal = SubResource("StyleBoxTexture_accept_normal")
+theme_override_styles/hover = SubResource("StyleBoxTexture_accept_hover")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_accept_pressed")
+theme_override_styles/disabled = SubResource("StyleBoxTexture_accept_normal")
+text = "수락"
+
+[node name="Slot2" type="PanelContainer" parent="Root/Panel/VBox/Slots"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_slot")
+
+[node name="Row" type="HBoxContainer" parent="Root/Panel/VBox/Slots/Slot2"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Texts" type="VBoxContainer" parent="Root/Panel/VBox/Slots/Slot2/Row"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 1
+theme_override_constants/separation = 4
+
+[node name="TitleLabel" type="Label" parent="Root/Panel/VBox/Slots/Slot2/Row/Texts"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.68, 0.88, 0.48, 1)
+theme_override_font_sizes/font_size = 16
+text = "의뢰"
+
+[node name="RewardLabel" type="Label" parent="Root/Panel/VBox/Slots/Slot2/Row/Texts"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.88, 0.84, 1)
+theme_override_font_sizes/font_size = 12
+autowrap_mode = 3
+text = "보상"
+
+[node name="AcceptButton" type="Button" parent="Root/Panel/VBox/Slots/Slot2/Row"]
+custom_minimum_size = Vector2(120, 44)
+layout_mode = 2
+size_flags_vertical = 4
+texture_filter = 1
+theme_override_colors/font_color = Color(1, 0.95, 0.88, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 0.95, 1)
+theme_override_colors/font_disabled_color = Color(0.6, 0.52, 0.5, 1)
+theme_override_font_sizes/font_size = 15
+theme_override_styles/normal = SubResource("StyleBoxTexture_accept_normal")
+theme_override_styles/hover = SubResource("StyleBoxTexture_accept_hover")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_accept_pressed")
+theme_override_styles/disabled = SubResource("StyleBoxTexture_accept_normal")
+text = "수락"
+
+[node name="Slot3" type="PanelContainer" parent="Root/Panel/VBox/Slots"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_slot")
+
+[node name="Row" type="HBoxContainer" parent="Root/Panel/VBox/Slots/Slot3"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Texts" type="VBoxContainer" parent="Root/Panel/VBox/Slots/Slot3/Row"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 1
+theme_override_constants/separation = 4
+
+[node name="TitleLabel" type="Label" parent="Root/Panel/VBox/Slots/Slot3/Row/Texts"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.68, 0.88, 0.48, 1)
+theme_override_font_sizes/font_size = 16
+text = "의뢰"
+
+[node name="RewardLabel" type="Label" parent="Root/Panel/VBox/Slots/Slot3/Row/Texts"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.88, 0.84, 1)
+theme_override_font_sizes/font_size = 12
+autowrap_mode = 3
+text = "보상"
+
+[node name="AcceptButton" type="Button" parent="Root/Panel/VBox/Slots/Slot3/Row"]
+custom_minimum_size = Vector2(120, 44)
+layout_mode = 2
+size_flags_vertical = 4
+texture_filter = 1
+theme_override_colors/font_color = Color(1, 0.95, 0.88, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 0.95, 1)
+theme_override_colors/font_disabled_color = Color(0.6, 0.52, 0.5, 1)
+theme_override_font_sizes/font_size = 15
+theme_override_styles/normal = SubResource("StyleBoxTexture_accept_normal")
+theme_override_styles/hover = SubResource("StyleBoxTexture_accept_hover")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_accept_pressed")
+theme_override_styles/disabled = SubResource("StyleBoxTexture_accept_normal")
+text = "수락"
+
+[node name="MessageLabel" type="Label" parent="Root/Panel/VBox"]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.88, 0.55, 1)
+theme_override_font_sizes/font_size = 13
+text = ""
+horizontal_alignment = 1
+
+[node name="ButtonRow" type="HBoxContainer" parent="Root/Panel/VBox"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 20
+
+[node name="RefreshButton" type="Button" parent="Root/Panel/VBox/ButtonRow"]
+custom_minimum_size = Vector2(190, 46)
+layout_mode = 2
+texture_filter = 1
+theme_override_colors/font_color = Color(0.17, 0.13, 0.12, 1)
+theme_override_colors/font_hover_color = Color(0.1, 0.08, 0.07, 1)
+theme_override_colors/font_disabled_color = Color(0.48, 0.44, 0.42, 1)
+theme_override_font_sizes/font_size = 15
+theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+theme_override_styles/hover = SubResource("StyleBoxTexture_button_hover")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_button_pressed")
+theme_override_styles/disabled = SubResource("StyleBoxTexture_button_normal")
+text = "새로고침"
+
+[node name="CloseButton" type="Button" parent="Root/Panel/VBox/ButtonRow"]
+custom_minimum_size = Vector2(150, 46)
+layout_mode = 2
+texture_filter = 1
+theme_override_colors/font_color = Color(0.17, 0.13, 0.12, 1)
+theme_override_colors/font_hover_color = Color(0.1, 0.08, 0.07, 1)
+theme_override_font_sizes/font_size = 15
+theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+theme_override_styles/hover = SubResource("StyleBoxTexture_button_hover")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_button_pressed")
+text = "닫기"

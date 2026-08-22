@@ -45,12 +45,13 @@ func _ready() -> void:
 	_close_button.pressed.connect(close)
 	_main_tab_button.pressed.connect(_on_main_tab)
 	_sub_tab_button.pressed.connect(_on_sub_tab)
+	GameState.sub_quest_changed.connect(_on_sub_quest_changed)
 
 
 # 열 때는 항상 메인 탭부터 보여준다 (지난번에 서브 탭을 보고 닫았더라도, 열자마자
 # "곧 추가될 예정"만 보이면 퀘스트를 확인하러 연 목적과 어긋나므로)
 func open() -> void:
-	_tab = Tab.MAIN
+	_tab = Tab.SUB if GameState.has_active_sub_quest() else Tab.MAIN
 	_rebuild()
 	visible = true
 
@@ -71,6 +72,11 @@ func _on_main_tab() -> void:
 func _on_sub_tab() -> void:
 	_tab = Tab.SUB
 	_rebuild()
+
+
+func _on_sub_quest_changed() -> void:
+	if visible and _tab == Tab.SUB:
+		_rebuild()
 
 
 func _rebuild() -> void:
@@ -141,21 +147,22 @@ func _quest_status_lines(quest_id: String, quest: Dictionary) -> Array[String]:
 
 # ── 서브 퀘스트 탭 ──────────────────────────────────────────────────────────
 
-# 카탈로그(SubQuestData)가 비어 있는 동안은 안내만 띄운다. 나중에 의뢰 시스템을 붙여 SUB_QUESTS를
-# 채우면 has_any()가 true가 되어 아래 목록 그리기 쪽으로 넘어간다 — 화면 코드는 그때 그대로 쓴다
+# 의뢰는 한 번에 하나만 받을 수 있어 목록이 아니라 항목 하나(또는 안내)만 그린다
 func _build_sub_tab() -> void:
-	if not SubQuestData.has_any():
-		_add_entry("준비 중", ["의뢰판 시스템과 함께 곧 추가될 예정입니다."] as Array[String], SUBTITLE_LOCKED_COLOR)
+	if not GameState.has_active_sub_quest():
+		_add_entry("진행 중인 의뢰 없음",
+			["엘라라에게 말을 걸어 의뢰판을 확인해보세요."] as Array[String], SUBTITLE_LOCKED_COLOR)
 		return
 
-	for quest_id in SubQuestData.all_ids():
-		var quest := SubQuestData.get_quest(quest_id)
-		var lines: Array[String] = []
-		if quest.has("giver"):
-			lines.append("의뢰인: %s" % quest["giver"])
-		if quest.has("description"):
-			lines.append(String(quest["description"]))
-		_add_entry(String(quest.get("title", quest_id)), lines, SUBTITLE_COLOR)
+	var quest := GameState.active_sub_quest
+	var remaining := SubQuestData.total_target(quest) - SubQuestData.total_progress(quest)
+	var lines: Array[String] = [
+		"의뢰인: %s" % SubQuestData.GIVER,
+		"진행도: %s" % SubQuestData.describe_progress(quest),
+		"남은 처치: %d마리" % remaining,
+		"보상: %s" % SubQuestData.describe_rewards(quest),
+	]
+	_add_entry(SubQuestData.title(quest), lines, SUBTITLE_COLOR)
 
 
 # ── 항목 만들기 ────────────────────────────────────────────────────────────

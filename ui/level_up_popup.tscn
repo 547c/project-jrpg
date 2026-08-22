@@ -1,35 +1,45 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene format=3 uid="uid://mbk7frbq8ps7"]
 
-[ext_resource type="Script" path="res://ui/level_up_popup.gd" id="1_levelup"]
-[ext_resource type="Texture2D" path="res://assets/GUI/MedievalUiMega/medieval.png" id="2_medieval"]
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_panel_wood"]
-atlas = ExtResource("2_medieval")
-region = Rect2(516, 207, 119, 50)
+[ext_resource type="Script" uid="uid://laemx2rda04x" path="res://ui/level_up_popup.gd" id="1_levelup"]
+[ext_resource type="Texture2D" uid="uid://inrk2p8y1n5o" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Background boxes/BGbox_03A.png" id="2_box"]
+[ext_resource type="Texture2D" uid="uid://dfphxk5kvoh1v" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Title banners/BannerMedium_01C.png" id="3_banner"]
+[ext_resource type="Texture2D" uid="uid://cppa7xubrsbms" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Buttons/Button_03C_Normal.png" id="4_btn_normal"]
+[ext_resource type="Texture2D" uid="uid://nc4g2cwfxp3q" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Buttons/Button_03C_Selected.png" id="5_btn_hover"]
+[ext_resource type="Texture2D" uid="uid://dicvb1plhq1eg" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Buttons/Button_03C_Pressed.png" id="6_btn_pressed"]
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_panel"]
-texture = SubResource("AtlasTexture_panel_wood")
-texture_margin_left = 20.0
-texture_margin_top = 15.0
-texture_margin_right = 20.0
-texture_margin_bottom = 15.0
+texture = ExtResource("2_box")
+texture_margin_left = 30.0
+texture_margin_top = 30.0
+texture_margin_right = 30.0
+texture_margin_bottom = 30.0
+axis_stretch_horizontal = 1
+axis_stretch_vertical = 1
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_button_wood"]
-atlas = ExtResource("2_medieval")
-region = Rect2(656, 206, 63, 51)
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_title"]
+content_margin_top = 18.0
+content_margin_bottom = 25.0
+texture = ExtResource("3_banner")
+texture_margin_left = 26.0
+texture_margin_top = 26.0
+texture_margin_right = 26.0
+texture_margin_bottom = 32.0
+axis_stretch_horizontal = 1
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_button_normal"]
-texture = SubResource("AtlasTexture_button_wood")
-texture_margin_left = 14.0
-texture_margin_top = 14.0
-texture_margin_right = 14.0
-texture_margin_bottom = 14.0
+texture = ExtResource("4_btn_normal")
 
-[node name="LevelUpPopup" type="CanvasLayer"]
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_button_pressed"]
+texture = ExtResource("6_btn_pressed")
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_button_hover"]
+texture = ExtResource("5_btn_hover")
+
+[node name="LevelUpPopup" type="CanvasLayer" unique_id=1234921146]
 layer = 115
 script = ExtResource("1_levelup")
 
-[node name="Root" type="Control" parent="."]
+[node name="Root" type="Control" parent="." unique_id=115327340]
 visible = false
 layout_mode = 3
 anchors_preset = 15
@@ -38,7 +48,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Dim" type="ColorRect" parent="Root"]
+[node name="Dim" type="ColorRect" parent="Root" unique_id=1247277118]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -47,7 +57,7 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0, 0, 0, 0.6)
 
-[node name="Panel" type="Panel" parent="Root"]
+[node name="Panel" type="Panel" parent="Root" unique_id=414139436]
 texture_filter = 1
 layout_mode = 1
 anchors_preset = 8
@@ -55,47 +65,55 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -170.0
-offset_top = -110.0
-offset_right = 170.0
-offset_bottom = 110.0
+offset_left = -210.0
+offset_top = -160.0
+offset_right = 210.0
+offset_bottom = 160.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxTexture_panel")
 
-[node name="VBox" type="VBoxContainer" parent="Root/Panel"]
+[node name="VBox" type="VBoxContainer" parent="Root/Panel" unique_id=852766447]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 24.0
-offset_top = 20.0
-offset_right = -24.0
-offset_bottom = -20.0
+offset_left = 40.0
+offset_top = 34.0
+offset_right = -40.0
+offset_bottom = -30.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 12
+theme_override_constants/separation = 14
 
-[node name="TitleLabel" type="Label" parent="Root/Panel/VBox"]
+[node name="TitleLabel" type="Label" parent="Root/Panel/VBox" unique_id=1714304746]
+texture_filter = 1
+custom_minimum_size = Vector2(320, 80)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
-theme_override_font_sizes/font_size = 26
-horizontal_alignment = 1
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(0.98, 0.93, 0.86, 1)
+theme_override_colors/font_outline_color = Color(0.24, 0.16, 0.21, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = SubResource("StyleBoxTexture_title")
 text = "퀘스트 완료!"
+horizontal_alignment = 1
+vertical_alignment = 1
 
-[node name="StatsLabel" type="Label" parent="Root/Panel/VBox"]
+[node name="StatsLabel" type="Label" parent="Root/Panel/VBox" unique_id=987346206]
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_colors/font_color = Color(0.25, 0.15, 0.07, 1)
+theme_override_colors/font_color = Color(0.28, 0.16, 0.13, 1)
+theme_override_font_sizes/font_size = 15
 horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 3
-text = ""
 
-[node name="ConfirmButton" type="Button" parent="Root/Panel/VBox"]
-custom_minimum_size = Vector2(0, 42)
-layout_mode = 2
+[node name="ConfirmButton" type="Button" parent="Root/Panel/VBox" unique_id=1854302904]
 texture_filter = 1
-theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+custom_minimum_size = Vector2(128, 64)
+layout_mode = 2
+size_flags_horizontal = 4
 theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
-text = "확인"
+theme_override_styles/pressed = SubResource("StyleBoxTexture_button_pressed")
+theme_override_styles/hover = SubResource("StyleBoxTexture_button_hover")
