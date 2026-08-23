@@ -2,9 +2,21 @@ extends Node
 
 const PLAYER_SCENE: PackedScene = preload("res://player/player.tscn")
 const CUTSCENE_BOX_SCENE: PackedScene = preload("res://ui/cutscene_box.tscn")
+const CHAPTER_TITLE_CARD_SCENE: PackedScene = preload("res://ui/chapter_title_card.tscn")
 const VILLAGE_SCENE_PATH := "res://world/village.tscn"
 const TITLE_SCREEN_PATH := "res://ui/title_screen.tscn"
 const BATTLE_SCENE_PATH := "res://battle/battle_scene.tscn"
+
+# 파트 1 타이틀 카드 문구 (오프닝 컷신 직후). 파트가 늘어나면 그 전환 지점에서
+# show_chapter_title()에 다른 문구만 넘기면 된다 — 카드 자체는 문구를 모른다
+const PART1_TITLE := "PART 1"
+const PART1_SUBTITLE := "오르시아"
+
+# 타이틀 카드를 올릴 CanvasLayer 번호. 모든 UI(최대 120)보다 위, FadeOverlay(1000)보다는 아래라
+# 카드가 HUD/메뉴를 덮으면서도 페이드에는 정상적으로 덮인다
+const CHAPTER_TITLE_CARD_LAYER := 130
+# 카드와 페이드 둘 다 검은 화면이라 서로 넘어가는 게 보이지 않는다 — 길게 끌 이유가 없어 짧게만
+const CHAPTER_TITLE_FADE_DURATION := 0.12
 
 # 씬 경로별로 GameState에 기록할 방문 플래그를 매핑
 const VISITED_FLAGS: Dictionary = {
@@ -81,9 +93,16 @@ func start_game() -> void:
 	await get_tree().process_frame
 
 	if show_opening:
+		# 컷신 -> 파트 타이틀 카드 -> 마을. 둘 다 화면이 검게 덮인 상태로 끝나므로,
+		# 마을 음악/색조를 올리고 플레이어를 스폰까지 시킨 뒤에 페이드를 걷어낸다
+		# (그래야 플레이어가 제자리로 옮겨지는 순간이 화면에 보이지 않는다)
 		await _play_opening()
+		await show_chapter_title(PART1_TITLE, PART1_SUBTITLE)
 		_play_scene_music(VILLAGE_SCENE_PATH)
 		_apply_scene_tint(VILLAGE_SCENE_PATH)
+		_place_initial_player()
+		await FadeOverlay.fade_in()
+		return
 
 	_place_initial_player()
 
@@ -106,10 +125,29 @@ func return_to_title() -> void:
 	get_tree().current_scene = new_scene
 
 
+# 파트가 바뀌는 지점에서 검은 화면에 "PART N / 부제" 타이틀 카드를 띄우고 끝날 때까지 기다린다.
+# 파트마다 연출은 같고 문구만 다르므로, 문구만 인자로 받아 어느 파트에서든 그대로 부른다.
+# [전제] 부를 때 화면이 이미 페이드로 검게 덮여 있어야 한다 (안 그러면 카드가 툭 튀어나온다).
+# [보장] 끝난 뒤에도 화면은 검게 덮인 채로 남는다 — 호출부가 다음 씬을 올린 뒤 fade_in()으로 걷어내면 된다
+func show_chapter_title(part_text: String, subtitle: String) -> void:
+	var card_layer := CanvasLayer.new()
+	card_layer.layer = CHAPTER_TITLE_CARD_LAYER
+	add_child(card_layer)
+	var card := CHAPTER_TITLE_CARD_SCENE.instantiate() as ChapterTitleCard
+	card_layer.add_child(card)
+
+	# 카드 배경도 검은색이라, 덮고 있던 페이드를 걷어내도 화면은 검은 채로 이어진다
+	await FadeOverlay.fade_in(CHAPTER_TITLE_FADE_DURATION)
+	await card.play(part_text, subtitle)
+	await FadeOverlay.fade_out(CHAPTER_TITLE_FADE_DURATION)
+
+	card_layer.queue_free()
+
+
 # 오프닝 인트로를 (딱 한 번) 전용 CutsceneBox로 화면 전체에 재생하고, 끝날 때까지 기다림.
 # 특정 월드 씬에 속하지 않도록 CanvasLayer와 함께 직접 생성했다가 끝나면 정리한다
 # (village.tscn 등 월드 씬을 건드리지 않기 위함).
-# 컷신이 나타날 때/사라질 때 모두 페이드로 감싸서 툭 끊기지 않게 한다
+# 끝날 때는 페이드를 걷어내지 않고 검게 덮인 채로 둔다 — 곧바로 파트 타이틀 카드가 이어지기 때문
 func _play_opening() -> void:
 	GameState.set_flag("seen_opening", true)
 
@@ -122,11 +160,14 @@ func _play_opening() -> void:
 	cutscene_box.start_cutscene(DialogueData.OPENING_DIALOGUE, "opening_1")
 	await FadeOverlay.fade_in()
 
-	await cutscene_box.cutscene_ended
+	# 페이드가 걷히는 동안에도 스킵 버튼은 눌린다. 그 사이에 끝나버렸다면 cutscene_ended는
+	# 기다리는 쪽 없이 이미 지나간 뒤라, 그냥 await하면 다시는 오지 않을 신호를 검은 화면에서
+	# 영원히 기다리게 된다
+	if not cutscene_box.is_finished():
+		await cutscene_box.cutscene_ended
 
 	await FadeOverlay.fade_out()
 	cutscene_layer.queue_free()
-	await FadeOverlay.fade_in()
 
 
 # 메인 씬이 트리에 들어온 뒤, 현재 씬의 "최초 스폰" 지점으로 플레이어를 이동하고 방문 플래그를 기록

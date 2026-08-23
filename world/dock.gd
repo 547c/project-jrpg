@@ -10,6 +10,10 @@ extends Area2D
 const DESERT_SCENE_PATH := "res://world/desert.tscn"
 const DESERT_SPAWN_POINT := "DesertSpawn"
 
+# 사막 도착 = 2부 시작 지점이라, 씬을 넘기기 전에 파트 타이틀 카드를 끼워 넣는다
+const PART2_TITLE := "PART 2"
+const PART2_SUBTITLE := "잊혀진 진실"
+
 const PROMPT_UNAVAILABLE := "[E] 부두"
 const PROMPT_AVAILABLE := "[E] 배를 타고 떠나기"
 
@@ -94,12 +98,20 @@ func _start_dialogue() -> void:
 		dialogue_box.start_dialogue(UNAVAILABLE_DIALOGUE, "dock_unavailable")
 
 
-# 출항 확인("예")을 끝까지 확인(dock_confirm_yes에서 종료)했을 때만 사막 씬으로 전환.
+# 출항 확인("예")을 끝까지 확인(dock_confirm_yes에서 종료)했을 때만 사막으로 떠난다.
 # 그 외(이용 불가 안내/"아니요")에는 아무 일도 없이 안내만 다시 표시
 func _on_dialogue_ended(last_node_id: String) -> void:
 	if last_node_id == "dock_confirm_yes":
-		SceneManager.change_scene(DESERT_SCENE_PATH, DESERT_SPAWN_POINT)
+		_depart_to_desert()
 		return
 
 	if _player_in_range:
 		_interact_prompt.show()
+
+
+# 부두 화면을 먼저 검게 덮은 뒤(타이틀 카드가 요구하는 전제) 2부 타이틀 카드를 띄우고,
+# 카드가 끝나 화면이 검은 상태 그대로일 때 사막 씬으로 넘긴다
+func _depart_to_desert() -> void:
+	await FadeOverlay.fade_out()
+	await SceneManager.show_chapter_title(PART2_TITLE, PART2_SUBTITLE)
+	SceneManager.change_scene(DESERT_SCENE_PATH, DESERT_SPAWN_POINT)

@@ -20,12 +20,17 @@ var _nodes_by_id: Dictionary = {}
 var _last_shown_node_id: String = ""
 var _typewriter: Typewriter
 var _confirm_open: bool = false # 스킵 확인 팝업이 떠 있는 동안은 클릭/키 입력으로 컷신이 진행되지 않게 막음
+var _finished: bool = false # 이번 재생이 이미 끝났는지 (cutscene_ended를 놓친 쪽이 확인할 수 있게 남겨둠)
 var _current_image_path: String = "" # 지금 배경으로 걸려 있는 이미지 경로 (다음 노드와 비교해 전환 여부 판단)
 var _transitioning: bool = false # 배경 이미지가 페이드로 바뀌는 동안 입력을 막음
 
 
 func _ready() -> void:
 	add_to_group("cutscene_box")
+	# start_cutscene() 전까지는 확실히 숨어 있게 한다. 씬 파일에 저장된 visible 값에 기대면
+	# 편집기에서 눈 아이콘을 켠 채 저장되는 순간 컷신이 시작되기도 전에 화면에 뜨고,
+	# 스킵 버튼까지 눌리게 된다 (실제로 그렇게 저장돼 오프닝이 멈춘 적이 있다)
+	hide()
 	_typewriter = Typewriter.new(_text_label, _bleep_player)
 	_skip_button.pressed.connect(_on_skip_pressed)
 	_confirm_yes_button.pressed.connect(_on_confirm_yes)
@@ -41,9 +46,16 @@ func start_cutscene(node_tree: Array, start_id: String) -> void:
 
 	_current_image_path = ""
 	_confirm_open = false
+	_finished = false
 	_confirm_popup.hide()
 	show()
 	_show_node(start_id)
+
+
+# 이번 재생이 이미 끝났는지. cutscene_ended는 한 번 지나가면 다시 오지 않으므로,
+# 신호를 기다리기 전에 이걸로 "이미 끝난 뒤인지"를 확인할 수 있다
+func is_finished() -> bool:
+	return _finished
 
 
 # 주어진 id의 노드를 표시 (id가 없거나 빈 문자열이면 컷신 종료).
@@ -95,6 +107,7 @@ func _advance() -> void:
 
 
 func _end_cutscene() -> void:
+	_finished = true
 	hide()
 	cutscene_ended.emit(_last_shown_node_id)
 
