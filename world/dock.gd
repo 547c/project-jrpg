@@ -109,9 +109,15 @@ func _on_dialogue_ended(last_node_id: String) -> void:
 		_interact_prompt.show()
 
 
-# 부두 화면을 먼저 검게 덮은 뒤(타이틀 카드가 요구하는 전제) 2부 타이틀 카드를 띄우고,
-# 카드가 끝나 화면이 검은 상태 그대로일 때 사막 씬으로 넘긴다
+# 처음 떠날 때만 부두 화면을 먼저 검게 덮고(타이틀 카드가 요구하는 전제) 2부 타이틀 카드를 띄운 뒤
+# 사막 씬으로 넘긴다. 이미 한 번 떠나본 적이 있으면(왕복 등) 카드 없이 곧장 전환한다 —
+# change_scene()이 알아서 페이드를 감싸므로 여기서 따로 fade_out할 필요가 없다
 func _depart_to_desert() -> void:
+	if GameState.get_flag("boat_used"):
+		SceneManager.change_scene(DESERT_SCENE_PATH, DESERT_SPAWN_POINT)
+		return
+
+	GameState.set_flag("boat_used", true)
 	await FadeOverlay.fade_out()
 	await SceneManager.show_chapter_title(PART2_TITLE, PART2_SUBTITLE)
 	SceneManager.change_scene(DESERT_SCENE_PATH, DESERT_SPAWN_POINT)

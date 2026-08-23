@@ -332,6 +332,12 @@ func _on_body_entered(body: Node2D) -> void:
 	SceneManager.enter_battle(monster_type, variants, encounter_id, return_path, SceneManager.get_player_position())
 
 
+# 지금 필드에 실제로 모습을 드러내고 있는지 (리젠 대기 중이면 false).
+# 동굴의 어둠 오버레이가 "지금 빛나야 할 몬스터"를 고를 때 쓴다
+func is_active_in_world() -> bool:
+	return not _regenerating and _sprite != null and _sprite.visible
+
+
 # 전투 승리 후 복귀 시 SceneManager가 호출. 이 몬스터를 리젠 상태(숨김 → 일정 시간 후 재등장)로 전환
 func enter_regen_state() -> void:
 	if _regenerating:

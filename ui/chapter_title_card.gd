@@ -23,6 +23,12 @@ func _ready() -> void:
 	# player.gd가 이동을 막는 기준으로 삼는 그룹에 등록한다
 	add_to_group("chapter_title_card")
 
+	# play()가 실제 문구를 채우고 보여주기 전까지는 항상 완전히 안 보이는 상태로 시작한다.
+	# 씬 파일에 박힌 에디터 placeholder 텍스트(예: "PART 1")가, 호출부가 화면을 걷어내는
+	# 시점과 play()가 텍스트를 채우는 시점 사이의 짧은 틈에 그대로 노출되는 걸 막기 위함 —
+	# 호출 순서에 기대지 않고 이 노드 스스로 항상 안전한 상태로 시작하게 한다
+	_content.modulate.a = 0.0
+
 
 # 문구를 채우고 등장 -> 유지 -> 퇴장까지 재생. 끝날 때까지 await로 기다릴 수 있다
 func play(part_text: String, subtitle: String) -> void:

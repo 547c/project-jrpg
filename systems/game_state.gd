@@ -106,6 +106,7 @@ const DEFAULT_FLAGS: Dictionary = {
 	"met_kasim": false,                    # 카심(무기 상인)을 만났는가
 	"part1_reported": false,               # 1부 결과를 엘라라에게 보고 완료했는가 (elara_ending_trigger 도달 시 true)
 	"boat_available": false,               # 부두의 배를 이용할 수 있는가 (카밀의 출항 확인 후 true)
+	"boat_used": false,                    # 배를 타고 사막으로 떠난 적이 있는가 (2부 타이틀 카드를 처음 한 번만 보여주는 기준)
 	"ruins_available": false,              # 사막 유적 입구를 이용할 수 있는가 (나딤이 위치를 알려준 뒤 true)
 	"visited_village": false,              # 마을을 방문했는가
 	"visited_forest": false,               # 숲을 방문했는가

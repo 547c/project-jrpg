@@ -2,25 +2,31 @@ extends Control
 
 # 인벤토리 패널. HUD의 가방 버튼이 open()/close()로 토글한다.
 # _root(자기 자신)가 "inventory_menu" 그룹에 속하고 visible로 열림 여부를 나타내 이동 잠금과 연동된다.
-# 슬롯 12개(칸 테두리 + 클릭 영역 + 아이콘 + 개수)는 _ready()에서 코드로 생성한다.
+# 슬롯(칸 테두리 + 클릭 영역 + 아이콘 + 개수)은 _ready()에서 코드로 생성 — 페이지당 칸수이지, 전체
+# 아이템 종류 수의 상한이 아니다. 아이템 종류가 넘치면 무기상점/스펠북과 같은 페이지네이션으로 넘긴다.
 
-const SLOT_COUNT := 12
+const SLOTS_PER_PAGE := 12
 const SLOT_COLUMNS := 4
 # Slot_02_Empty가 32x32라 정수배(2배)로만 키운다 — 어중간한 배율이면 픽셀이 고르지 않게 늘어난다
 const SLOT_SIZE := Vector2(64, 64)
 const SLOT_GAP := 10.0
-const SLOT_ORIGIN := Vector2(47, 70)
+const SLOT_ORIGIN := Vector2(47, 118)
 const SLOT_FRAME_PATH := "res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Item slots/Slot_02_Empty.png"
 
 @onready var _slots_container: Control = $Panel/Slots
 @onready var _close_button: Button = $Panel/CloseButton
 @onready var _equip_button: Button = $Panel/EquipButton
+@onready var _prev_button: Button = $Panel/PageRow/PrevButton
+@onready var _next_button: Button = $Panel/PageRow/NextButton
+@onready var _page_label: Label = $Panel/PageRow/PageLabel
 @onready var _tooltip: PanelContainer = $Tooltip
 @onready var _tooltip_label: Label = $Tooltip/Margin/TooltipLabel
 
 var _slot_icons: Array[TextureRect] = []
 var _slot_counts: Array[Label] = []
 var _slot_item_ids: Array[String] = []
+
+var _page: int = 0
 
 # 장비 슬롯을 클릭해 선택된 아이템 (장착 버튼이 조작할 대상). 소비 아이템 클릭이나 빈 칸 클릭,
 # 메뉴를 닫을 때는 "" 로 비워 버튼을 숨긴다. 인덱스가 아니라 item_id로 들고 있는 이유는,
@@ -35,6 +41,8 @@ func _ready() -> void:
 	_equip_button.visible = false
 	_close_button.pressed.connect(_on_close_button_pressed)
 	_equip_button.pressed.connect(_on_equip_button_pressed)
+	_prev_button.pressed.connect(_on_prev_page)
+	_next_button.pressed.connect(_on_next_page)
 	GameState.inventory_changed.connect(_on_inventory_changed)
 	_build_slots()
 
@@ -50,7 +58,7 @@ func _build_slots() -> void:
 	slot_style.bg_color = Color(0, 0, 0, 0)
 	var frame_texture := load(SLOT_FRAME_PATH) as Texture2D
 
-	for i in range(SLOT_COUNT):
+	for i in range(SLOTS_PER_PAGE):
 		var frame := TextureRect.new()
 		frame.texture = frame_texture
 		frame.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -109,6 +117,7 @@ func _build_slots() -> void:
 
 
 func open() -> void:
+	_page = 0
 	_rebuild()
 	_tooltip.visible = false
 	_clear_equip_selection()
@@ -136,12 +145,21 @@ func _on_inventory_changed(_item_id: String) -> void:
 		_rebuild()
 
 
-# GameState.inventory의 각 항목을 슬롯에 순서대로 채우고, 남는 슬롯은 빈 칸(아이콘/개수 숨김)으로 비움
+func _total_pages() -> int:
+	return max(1, int(ceil(float(GameState.inventory.size()) / SLOTS_PER_PAGE)))
+
+
+# GameState.inventory 중 현재 페이지 몫만 슬롯에 순서대로 채우고, 남는 슬롯은 빈 칸(아이콘/개수 숨김)으로
+# 비운다. 소비 등으로 아이템 종류 수가 줄어 지금 페이지가 더 이상 없어졌으면 마지막 페이지로 당겨온다
 func _rebuild() -> void:
+	_page = clampi(_page, 0, _total_pages() - 1)
+
 	var item_ids := GameState.inventory.keys()
-	for i in range(SLOT_COUNT):
-		if i < item_ids.size():
-			var item_id: String = item_ids[i]
+	var start := _page * SLOTS_PER_PAGE
+	for i in range(SLOTS_PER_PAGE):
+		var item_index := start + i
+		if item_index < item_ids.size():
+			var item_id: String = item_ids[item_index]
 			_slot_item_ids[i] = item_id
 			_slot_icons[i].texture = ItemData.build_icon(item_id)
 			_slot_icons[i].visible = true
@@ -152,6 +170,30 @@ func _rebuild() -> void:
 			_slot_icons[i].texture = null
 			_slot_icons[i].visible = false
 			_slot_counts[i].visible = false
+
+	_page_label.text = "%d/%d" % [_page + 1, _total_pages()]
+	_prev_button.disabled = _page <= 0
+	_next_button.disabled = _page >= _total_pages() - 1
+
+
+func _on_prev_page() -> void:
+	if _page <= 0:
+		return
+	SFXPlayer.play(SFXPlayer.PAGE_TURN_SOUND)
+	_page -= 1
+	_clear_equip_selection()
+	_tooltip.visible = false
+	_rebuild()
+
+
+func _on_next_page() -> void:
+	if _page >= _total_pages() - 1:
+		return
+	SFXPlayer.play(SFXPlayer.PAGE_TURN_SOUND)
+	_page += 1
+	_clear_equip_selection()
+	_tooltip.visible = false
+	_rebuild()
 
 
 # 슬롯 클릭 시: 장비(consumable: false + slot 있음)면 장착 버튼을 띄우고, 아니면 기존대로

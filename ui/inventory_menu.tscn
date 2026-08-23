@@ -5,6 +5,9 @@
 [ext_resource type="Texture2D" uid="uid://db8jvwk44deor" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Buttons/Button_05A_Normal.png" id="3_btn_normal"]
 [ext_resource type="Texture2D" uid="uid://bva8geabtpsh" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Buttons/Button_05A_Selected.png" id="4_btn_hover"]
 [ext_resource type="Texture2D" uid="uid://bw26f0kg6ac2h" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Buttons/Button_05A_Pressed.png" id="5_btn_pressed"]
+[ext_resource type="Texture2D" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Buttons/Button_01D_Normal.png" id="6_step_normal"]
+[ext_resource type="Texture2D" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Buttons/Button_01D_Selected.png" id="7_step_hover"]
+[ext_resource type="Texture2D" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Buttons/Button_01D_Pressed.png" id="8_step_pressed"]
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_panel"]
 texture = ExtResource("2_box")
@@ -48,6 +51,39 @@ texture_margin_top = 14.0
 texture_margin_right = 50.0
 texture_margin_bottom = 14.0
 
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_step_normal"]
+texture = ExtResource("6_step_normal")
+content_margin_left = 12.0
+content_margin_top = 14.0
+content_margin_right = 12.0
+content_margin_bottom = 14.0
+texture_margin_left = 12.0
+texture_margin_top = 14.0
+texture_margin_right = 14.0
+texture_margin_bottom = 16.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_step_hover"]
+texture = ExtResource("7_step_hover")
+content_margin_left = 12.0
+content_margin_top = 14.0
+content_margin_right = 12.0
+content_margin_bottom = 14.0
+texture_margin_left = 12.0
+texture_margin_top = 14.0
+texture_margin_right = 14.0
+texture_margin_bottom = 16.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_step_pressed"]
+texture = ExtResource("8_step_pressed")
+content_margin_left = 12.0
+content_margin_top = 14.0
+content_margin_right = 12.0
+content_margin_bottom = 14.0
+texture_margin_left = 12.0
+texture_margin_top = 14.0
+texture_margin_right = 14.0
+texture_margin_bottom = 16.0
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tooltip"]
 bg_color = Color(0.1, 0.07, 0.05, 0.92)
 border_width_left = 1
@@ -88,9 +124,9 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -190.0
-offset_top = -220.0
+offset_top = -250.0
 offset_right = 190.0
-offset_bottom = 220.0
+offset_bottom = 250.0
 grow_horizontal = 2
 grow_vertical = 2
 
@@ -98,7 +134,7 @@ grow_vertical = 2
 texture_filter = 1
 layout_mode = 0
 offset_right = 380.0
-offset_bottom = 440.0
+offset_bottom = 500.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxTexture_panel")
 
@@ -116,10 +152,51 @@ text = "인벤토리"
 horizontal_alignment = 1
 vertical_alignment = 1
 
+[node name="PageRow" type="HBoxContainer" parent="Panel" unique_id=1004930112]
+layout_mode = 0
+offset_left = 100.0
+offset_top = 62.0
+offset_right = 280.0
+offset_bottom = 106.0
+theme_override_constants/separation = 14
+alignment = 1
+
+[node name="PrevButton" type="Button" parent="Panel/PageRow" unique_id=1004930113]
+custom_minimum_size = Vector2(44, 44)
+layout_mode = 2
+texture_filter = 1
+theme_override_colors/font_color = Color(1, 0.95, 0.88, 1)
+theme_override_font_sizes/font_size = 16
+theme_override_styles/normal = SubResource("StyleBoxTexture_step_normal")
+theme_override_styles/hover = SubResource("StyleBoxTexture_step_hover")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_step_pressed")
+text = "<"
+
+[node name="PageLabel" type="Label" parent="Panel/PageRow" unique_id=1004930114]
+custom_minimum_size = Vector2(48, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.95, 1, 1)
+theme_override_colors/font_outline_color = Color(0.1, 0.12, 0.2, 0.8)
+theme_override_constants/outline_size = 3
+horizontal_alignment = 1
+vertical_alignment = 1
+text = "1/1"
+
+[node name="NextButton" type="Button" parent="Panel/PageRow" unique_id=1004930115]
+custom_minimum_size = Vector2(44, 44)
+layout_mode = 2
+texture_filter = 1
+theme_override_colors/font_color = Color(1, 0.95, 0.88, 1)
+theme_override_font_sizes/font_size = 16
+theme_override_styles/normal = SubResource("StyleBoxTexture_step_normal")
+theme_override_styles/hover = SubResource("StyleBoxTexture_step_hover")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_step_pressed")
+text = ">"
+
 [node name="Slots" type="Control" parent="Panel" unique_id=1138533862]
 anchors_preset = 0
 offset_right = 380.0
-offset_bottom = 440.0
+offset_bottom = 500.0
 mouse_filter = 2
 
 [node name="EquipButton" type="Button" parent="Panel" unique_id=1391230557]
@@ -128,9 +205,9 @@ texture_filter = 1
 custom_minimum_size = Vector2(150, 44)
 layout_mode = 0
 offset_left = 115.0
-offset_top = 300.0
+offset_top = 348.0
 offset_right = 265.0
-offset_bottom = 344.0
+offset_bottom = 392.0
 theme_override_colors/font_color = Color(0.93, 0.96, 1, 1)
 theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 16
@@ -144,9 +221,9 @@ texture_filter = 1
 custom_minimum_size = Vector2(150, 44)
 layout_mode = 0
 offset_left = 115.0
-offset_top = 356.0
+offset_top = 404.0
 offset_right = 265.0
-offset_bottom = 400.0
+offset_bottom = 448.0
 theme_override_colors/font_color = Color(0.93, 0.96, 1, 1)
 theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 16
