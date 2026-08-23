@@ -142,11 +142,11 @@ func _ready() -> void:
 	_page_flip.visible = false
 	_card_ids = CardLibrary.all_ids()
 
-	_close_button.pressed.connect(close)
+	_close_button.pressed.connect(_on_close_button_pressed)
 	_prev_button.pressed.connect(_on_page_step.bind(-1))
 	_next_button.pressed.connect(_on_page_step.bind(1))
 	_confirm_button.pressed.connect(_on_confirm_pressed)
-	_cancel_button.pressed.connect(_close_confirm)
+	_cancel_button.pressed.connect(_on_cancel_button_pressed)
 
 	_build_tabs()
 	_build_entries()
@@ -169,6 +169,16 @@ func close() -> void:
 
 func is_open() -> bool:
 	return visible
+
+
+func _on_close_button_pressed() -> void:
+	SFXPlayer.play(SFXPlayer.UI_CLICK_SOUND)
+	close()
+
+
+func _on_cancel_button_pressed() -> void:
+	SFXPlayer.play(SFXPlayer.UI_CLICK_SOUND)
+	_close_confirm()
 
 
 # ── 구성 ───────────────────────────────────────────────────────────────────
@@ -499,6 +509,7 @@ func _play_page_flip(forward: bool) -> void:
 func _on_tab_pressed(index: int) -> void:
 	if _is_flipping or _current_tab == index:
 		return
+	SFXPlayer.play(SFXPlayer.UI_CLICK_SOUND)
 	_current_tab = index
 	_page = 0
 	_close_confirm()
@@ -513,6 +524,7 @@ func _on_page_step(step: int) -> void:
 	var next_page := clampi(_page + step, 0, total_pages - 1)
 	if next_page == _page:
 		return
+	SFXPlayer.play(SFXPlayer.PAGE_TURN_SOUND)
 	_page = next_page
 	_play_page_flip(step > 0)
 
@@ -531,6 +543,7 @@ func _on_entry_pressed(i: int) -> void:
 	if card == null or cost == CardLibrary.UNKNOWN_COST:
 		return
 
+	SFXPlayer.play(SFXPlayer.UI_CLICK_SOUND)
 	_pending_card_id = card_id
 	var affordable := GameState.can_unlock_card(card_id)
 	if affordable:
@@ -553,6 +566,7 @@ func _on_deck_step(i: int, step: int) -> void:
 	var card_id := _entry_card_ids[i]
 	if card_id == "":
 		return
+	SFXPlayer.play(SFXPlayer.UI_CLICK_SOUND)
 	if step > 0:
 		GameState.add_card_to_deck(card_id)
 	else:
@@ -567,7 +581,8 @@ func _on_confirm_pressed() -> void:
 		return
 	# 성공 여부와 무관하게 다시 그린다 — 실패해도(다른 경로로 포인트가 줄었다든지) 화면이
 	# 실제 상태와 어긋나 있지 않게 하려는 것
-	GameState.unlock_card(card_id)
+	if GameState.unlock_card(card_id):
+		SFXPlayer.play(SFXPlayer.UNLOCK_SOUND)
 	_refresh()
 
 

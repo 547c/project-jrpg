@@ -12,4 +12,5 @@ value = 6
 secondary_value = 3
 mana_cost = 0
 hp_cost = 0
+icon_key = "regen_clover"
 flavor_text = "육체와 마력이 동시에 빠르게 재생된다."

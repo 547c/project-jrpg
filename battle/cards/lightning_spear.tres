@@ -11,4 +11,5 @@ effect = 0
 value = 11
 mana_cost = 6
 hp_cost = 0
+icon_key = "lightning_bolt"
 flavor_text = "하늘의 번개를 압축해 창처럼 내리꽂는다."

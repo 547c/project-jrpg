@@ -17,11 +17,11 @@ const ITEM_ORDER: Array[String] = [
 	"wooden_shield", "bone_shield", "gold_shield",
 ]
 
-# 등급별 가격 (검/지팡이/방패 공통 — 나무 5 / 뼈 10 / 금 15)
+# 등급별 가격 (검/지팡이/방패 공통 — 나무 10 / 뼈 20 / 금 30)
 const PRICE_BY_TIER: Dictionary = {
-	"wood": 5,
-	"bone": 10,
-	"gold": 15,
+	"wood": 10,
+	"bone": 20,
+	"gold": 30,
 }
 
 @onready var _root: Control = $Root
@@ -123,6 +123,7 @@ func _on_quantity_step(row: int, delta: int) -> void:
 	var items := _items_on_page()
 	if row >= items.size():
 		return
+	SFXPlayer.play(SFXPlayer.UI_CLICK_SOUND)
 	var item_id := items[row]
 	var max_q: int = max(MIN_QUANTITY, _max_affordable_quantity(item_id))
 	_quantities[item_id] = clampi(_quantities.get(item_id, MIN_QUANTITY) + delta, MIN_QUANTITY, max_q)
@@ -132,6 +133,7 @@ func _on_quantity_step(row: int, delta: int) -> void:
 func _on_prev_page() -> void:
 	if _page <= 0:
 		return
+	SFXPlayer.play(SFXPlayer.PAGE_TURN_SOUND)
 	_page -= 1
 	_message_label.visible = false
 	_refresh()
@@ -140,6 +142,7 @@ func _on_prev_page() -> void:
 func _on_next_page() -> void:
 	if _page >= _total_pages() - 1:
 		return
+	SFXPlayer.play(SFXPlayer.PAGE_TURN_SOUND)
 	_page += 1
 	_message_label.visible = false
 	_refresh()
@@ -192,6 +195,7 @@ func _on_buy_pressed(row: int) -> void:
 	var items := _items_on_page()
 	if row >= items.size():
 		return
+	SFXPlayer.play(SFXPlayer.UI_CLICK_SOUND)
 	var item_id := items[row]
 	var qty: int = _quantities.get(item_id, MIN_QUANTITY)
 	var total := qty * _price(item_id)
@@ -212,4 +216,5 @@ func _show_message(text: String) -> void:
 
 
 func _on_close_pressed() -> void:
+	SFXPlayer.play(SFXPlayer.UI_CLICK_SOUND)
 	close()

@@ -11,4 +11,5 @@ effect = 0
 value = 3
 mana_cost = 0
 hp_cost = 0
+icon_key = "dagger_stab"
 flavor_text = "빠르고 가벼운 찌르기, 준비 없이 즉각 반응할 수 있다."

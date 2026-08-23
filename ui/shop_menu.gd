@@ -8,9 +8,9 @@ extends CanvasLayer
 const MIN_QUANTITY := 1
 # 아이템별 판매 가격 (새 판매 품목을 추가할 땐 여기에 가격만 추가)
 const PRICES: Dictionary = {
-	"mana_potion": 3,
-	"hp_potion": 3,
-	"gift": 8,
+	"mana_potion": 7,
+	"hp_potion": 7,
+	"gift": 15,
 }
 
 @onready var _root: Control = $Root
@@ -107,6 +107,7 @@ func _max_affordable_quantity(item_id: String) -> int:
 # (골드가 부족해 최대치가 MIN_QUANTITY 미만이 되는 경우엔 그래도 MIN_QUANTITY로 표시하고,
 # 실제 구매 가능 여부는 구매 버튼 비활성화로 따로 안내한다)
 func _on_quantity_step(item_id: String, delta: int) -> void:
+	SFXPlayer.play(SFXPlayer.UI_CLICK_SOUND)
 	var max_q: int = max(MIN_QUANTITY, _max_affordable_quantity(item_id))
 	var new_qty: int = clampi(_quantities[item_id] + delta, MIN_QUANTITY, max_q)
 	_quantities[item_id] = new_qty
@@ -137,6 +138,7 @@ func _update_row(quantity_label: Label, total_label: Label, buy_button: Button, 
 
 # 선택한 수량만큼 한 번에 구매: 골드를 소모(성공 시 인벤토리에 그만큼 추가), 부족하면 안내만 표시
 func _on_buy_pressed(item_id: String) -> void:
+	SFXPlayer.play(SFXPlayer.UI_CLICK_SOUND)
 	var qty: int = _quantities[item_id]
 	var total: int = qty * _price(item_id)
 	if not GameState.spend_gold(total):
@@ -155,4 +157,5 @@ func _show_message(text: String) -> void:
 
 
 func _on_close_pressed() -> void:
+	SFXPlayer.play(SFXPlayer.UI_CLICK_SOUND)
 	close()

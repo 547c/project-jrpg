@@ -31,7 +31,7 @@ var _desc_labels: Array[Label] = []
 
 func _ready() -> void:
 	_root.visible = false
-	_close_button.pressed.connect(close)
+	_close_button.pressed.connect(_on_close_button_pressed)
 	GameState.endings_changed.connect(_on_endings_changed)
 	_build_slots()
 
@@ -80,6 +80,11 @@ func close() -> void:
 
 func is_open() -> bool:
 	return _root.visible
+
+
+func _on_close_button_pressed() -> void:
+	SFXPlayer.play(SFXPlayer.UI_CLICK_SOUND)
+	close()
 
 
 # 도감이 열려 있는 동안 새 엔딩이 기록되면 즉시 반영 (보통은 닫혀 있어 아무 일도 안 함)

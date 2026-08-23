@@ -13,4 +13,5 @@ secondary_value = 999
 on_use_set_gauge = 75
 mana_cost = 0
 hp_cost = 0
+icon_key = "phoenix_heart"
 flavor_text = "불사조의 깃털이 감싸며 상처와 지친 마력을 단숨에 되돌린다. 다만 그 대가로 다음 몇 턴은 무기가 뜨겁게 달아오른다."

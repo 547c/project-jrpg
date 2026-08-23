@@ -11,6 +11,12 @@ const POOL_SIZE := 4
 # 발소리(-14dB)보다는 도드라지되 대화 bleep/음악을 압도하지 않는 선. 필요하면 호출부에서 개별 조정
 const DEFAULT_VOLUME_DB := -6.0
 
+# 메뉴 전반에서 재사용하는 공용 효과음. 여기 한 곳에 모아두면 버튼마다 경로 문자열을 중복해 적지 않는다
+const UI_CLICK_SOUND := "res://assets/sfx/400 Sounds pack/UI/select_2.wav"
+const EQUIP_SOUND := "res://assets/sfx/400 Sounds pack/Items/item_equip.wav"
+const PAGE_TURN_SOUND := "res://assets/sfx/400 Sounds pack/Items/page_turn.wav"
+const UNLOCK_SOUND := "res://assets/sfx/400 Sounds pack/Environment/lock_unlock.wav"
+
 var _players: Array[AudioStreamPlayer] = []
 var _next_index: int = 0
 

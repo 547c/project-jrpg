@@ -42,7 +42,7 @@ var _tab: int = Tab.MAIN
 func _ready() -> void:
 	add_to_group("quest_log")
 	visible = false
-	_close_button.pressed.connect(close)
+	_close_button.pressed.connect(_on_close_button_pressed)
 	_main_tab_button.pressed.connect(_on_main_tab)
 	_sub_tab_button.pressed.connect(_on_sub_tab)
 	GameState.sub_quest_changed.connect(_on_sub_quest_changed)
@@ -64,12 +64,19 @@ func is_open() -> bool:
 	return visible
 
 
+func _on_close_button_pressed() -> void:
+	SFXPlayer.play(SFXPlayer.UI_CLICK_SOUND)
+	close()
+
+
 func _on_main_tab() -> void:
+	SFXPlayer.play(SFXPlayer.UI_CLICK_SOUND)
 	_tab = Tab.MAIN
 	_rebuild()
 
 
 func _on_sub_tab() -> void:
+	SFXPlayer.play(SFXPlayer.UI_CLICK_SOUND)
 	_tab = Tab.SUB
 	_rebuild()
 

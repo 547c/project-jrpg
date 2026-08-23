@@ -11,4 +11,5 @@ effect = 5
 value = 6
 mana_cost = 3
 hp_cost = 0
+icon_key = "mirror_shield"
 flavor_text = "가벼운 몸놀림으로 공격을 흘리며 짧게 반격한다."

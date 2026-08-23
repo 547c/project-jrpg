@@ -12,4 +12,5 @@ value = 10
 secondary_value = 0
 mana_cost = 6
 hp_cost = 0
+icon_key = "flame_burst"
 flavor_text = "타오르는 불꽃 덩어리를 적에게 던진다."

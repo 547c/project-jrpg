@@ -222,6 +222,7 @@ func _update_objective_panel_width() -> void:
 
 # 퀘스트 버튼: 로그가 열려 있으면 닫고, 닫혀 있으면 연다
 func _on_quest_button_pressed() -> void:
+	SFXPlayer.play(SFXPlayer.UI_CLICK_SOUND)
 	if _quest_log.is_open():
 		_quest_log.close()
 	else:
@@ -230,6 +231,7 @@ func _on_quest_button_pressed() -> void:
 
 # 가방 버튼: 인벤토리가 열려 있으면 닫고, 닫혀 있으면 연다
 func _on_inventory_button_pressed() -> void:
+	SFXPlayer.play(SFXPlayer.UI_CLICK_SOUND)
 	if _inventory_menu.is_open():
 		_inventory_menu.close()
 	else:
@@ -238,6 +240,7 @@ func _on_inventory_button_pressed() -> void:
 
 # 책 버튼: 카드 컬렉션 스펠북을 토글한다 (가방 버튼과 같은 방식)
 func _on_spellbook_button_pressed() -> void:
+	SFXPlayer.play(SFXPlayer.UI_CLICK_SOUND)
 	if _spellbook_menu.is_open():
 		_spellbook_menu.close()
 	else:

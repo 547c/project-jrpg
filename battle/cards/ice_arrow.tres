@@ -11,4 +11,5 @@ effect = 0
 value = 4
 mana_cost = 2
 hp_cost = 0
+icon_key = "ice_shard"
 flavor_text = "차가운 냉기를 압축해 쏘아내는 초급 빙결 마법."

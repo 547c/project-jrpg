@@ -130,6 +130,27 @@ const CARD_ICON_REGION: Dictionary = {
 	# 이 팩에 주사위나 카드패 그림이 없어서, "결과를 모른 채 지른다"를 물음표로 대신했다.
 	# 네잎클로버(fb600, 행운)도 후보였지만 그건 "운이 좋아진다"는 버프처럼 읽혀 도박과 어긋난다
 	"question": Rect2(384, 0, RAVEN_ICON_SIZE, RAVEN_ICON_SIZE),        # fb13 — 물음표 (도박의 일격)
+	# 물리 피해 카드들 — 전부 fb742(핏방울) 기본값 공유하던 것을 카드별로 분리
+	"basic_slash": Rect2(448, 1312, RAVEN_ICON_SIZE, RAVEN_ICON_SIZE),   # fb671 — 검 (베기)
+	"flash_sword": Rect2(480, 1312, RAVEN_ICON_SIZE, RAVEN_ICON_SIZE),   # fb672 — 검 + 섬광 (섬광)
+	"cross_slash": Rect2(256, 1440, RAVEN_ICON_SIZE, RAVEN_ICON_SIZE),   # fb729 — 교차 검 (회전베기)
+	"dagger_stab": Rect2(416, 2048, RAVEN_ICON_SIZE, RAVEN_ICON_SIZE),   # fb1038 — 단검 찌르기 (찌르기)
+	"wind_slash": Rect2(384, 1440, RAVEN_ICON_SIZE, RAVEN_ICON_SIZE),    # fb733 — 바람 궤적 (신속)
+	"triple_slash": Rect2(256, 1472, RAVEN_ICON_SIZE, RAVEN_ICON_SIZE),  # fb745 — 세 갈래 베기 자국 (삼중나선)
+	# 마법 피해 카드들 — 전부 fb711(마나 물방울) 기본값 공유하던 것을 카드별로 분리
+	"flame_burst": Rect2(448, 1504, RAVEN_ICON_SIZE, RAVEN_ICON_SIZE),   # fb767 — 불꽃 폭발 (파이어볼)
+	"blast_cloud": Rect2(192, 2048, RAVEN_ICON_SIZE, RAVEN_ICON_SIZE),   # fb1031 — 버섯구름 (익스플로전)
+	"ice_shard": Rect2(160, 2016, RAVEN_ICON_SIZE, RAVEN_ICON_SIZE),     # fb1014 — 얼음 결정 (얼음화살)
+	"lightning_bolt": Rect2(0, 2048, RAVEN_ICON_SIZE, RAVEN_ICON_SIZE),  # fb1025 — 번개 (번개창)
+	"meteor_streak": Rect2(320, 1504, RAVEN_ICON_SIZE, RAVEN_ICON_SIZE), # fb763 — 유성 (유성낙하)
+	"arcane_rift": Rect2(160, 1536, RAVEN_ICON_SIZE, RAVEN_ICON_SIZE),   # fb774 — 보라색 소용돌이 (시공균열)
+	"arcane_spark": Rect2(384, 1536, RAVEN_ICON_SIZE, RAVEN_ICON_SIZE),  # fb781 — 초록 마력 스파크 (마력탄)
+	"holy_cross": Rect2(416, 1312, RAVEN_ICON_SIZE, RAVEN_ICON_SIZE),    # fb670 — 황금 십자가 (천벌)
+	# 방어/회복류 — fb597(방패), fb659(하트) 공유 해소
+	"counter_swords": Rect2(288, 1440, RAVEN_ICON_SIZE, RAVEN_ICON_SIZE), # fb730 — 교차 검 (카운터 슬래쉬)
+	"mirror_shield": Rect2(256, 1312, RAVEN_ICON_SIZE, RAVEN_ICON_SIZE),  # fb665 — 빛나는 방패 (반사방패)
+	"phoenix_heart": Rect2(32, 2080, RAVEN_ICON_SIZE, RAVEN_ICON_SIZE),   # fb1042 — 금빛 하트 (불사조의 축복)
+	"regen_clover": Rect2(352, 1312, RAVEN_ICON_SIZE, RAVEN_ICON_SIZE),   # fb668 — 네잎클로버 (초재생)
 }
 
 

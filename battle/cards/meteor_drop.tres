@@ -12,4 +12,5 @@ value = 18
 secondary_value = 0
 mana_cost = 0
 hp_cost = 4
+icon_key = "meteor_streak"
 flavor_text = "하늘 높이 뛰어올라 온몸의 무게를 실어 내리찍는다."

@@ -12,4 +12,5 @@ value = 18
 secondary_value = 0
 mana_cost = 0
 hp_cost = 2
+icon_key = "wind_slash"
 flavor_text = "눈으로 좇을 수 없는 속도로 파고들어, 숨 한 번에 베어낸다."

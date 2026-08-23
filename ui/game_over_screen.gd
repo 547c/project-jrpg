@@ -31,6 +31,7 @@ func dismiss() -> void:
 
 
 func _on_restart() -> void:
+	SFXPlayer.play(SFXPlayer.UI_CLICK_SOUND)
 	_root.visible = false
 	_restart_to_village()
 
@@ -38,6 +39,7 @@ func _on_restart() -> void:
 # 불러오기는 슬롯 선택 메뉴를 띄운다 (게임오버 화면은 뒤에 유지 → 닫기 시 복귀).
 # 슬롯에서 로드 성공 시 슬롯 메뉴가 이 화면을 dismiss()로 닫는다
 func _on_load() -> void:
+	SFXPlayer.play(SFXPlayer.UI_CLICK_SOUND)
 	SaveSlotMenu.open_load_mode()
 
 

@@ -12,4 +12,5 @@ value = 8
 secondary_value = 0
 mana_cost = 2
 hp_cost = 0
+icon_key = "flash_sword"
 flavor_text = "순간적으로 빛나며 빠르게 이동해 베어내는 검기."

@@ -11,4 +11,5 @@ effect = 0
 value = 9
 mana_cost = 3
 hp_cost = 0
+icon_key = "cross_slash"
 flavor_text = "몸을 팽이처럼 회전시켜 주위를 한 번에 베어낸다."

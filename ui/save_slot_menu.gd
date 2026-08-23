@@ -24,7 +24,7 @@ func _ready() -> void:
 	_confirm_popup.visible = false
 	_toast.visible = false
 
-	_close_button.pressed.connect(close)
+	_close_button.pressed.connect(_on_close_button_pressed)
 	_confirm_yes.pressed.connect(_on_confirm_yes)
 	_confirm_no.pressed.connect(_on_confirm_no)
 
@@ -57,6 +57,13 @@ func close() -> void:
 	_root.visible = false
 
 
+# 닫기 버튼 전용 래퍼 — close()는 로드 성공 시 다른 곳에서도 조용히(소리 없이) 호출되므로,
+# 클릭 소리는 사용자가 버튼을 직접 눌렀을 때만 나야 해서 여기 한 겹을 둔다
+func _on_close_button_pressed() -> void:
+	SFXPlayer.play(SFXPlayer.UI_CLICK_SOUND)
+	close()
+
+
 func _open() -> void:
 	_confirm_popup.visible = false
 	_toast.visible = false
@@ -84,6 +91,7 @@ func _refresh_slots() -> void:
 
 # 슬롯 클릭: 불러오기 모드면 로드, 저장 모드면 (데이터 있으면 확인 팝업, 없으면 바로 저장)
 func _on_slot_pressed(slot_num: int) -> void:
+	SFXPlayer.play(SFXPlayer.UI_CLICK_SOUND)
 	if _mode == "load":
 		_do_load(slot_num)
 	elif SaveManager.has_save(slot_num):
@@ -114,6 +122,7 @@ func _finish_load() -> void:
 
 
 func _on_confirm_yes() -> void:
+	SFXPlayer.play(SFXPlayer.UI_CLICK_SOUND)
 	_confirm_popup.visible = false
 	var slot := _pending_save_slot
 	_pending_save_slot = -1
@@ -122,6 +131,7 @@ func _on_confirm_yes() -> void:
 
 
 func _on_confirm_no() -> void:
+	SFXPlayer.play(SFXPlayer.UI_CLICK_SOUND)
 	_confirm_popup.visible = false
 	_pending_save_slot = -1
 

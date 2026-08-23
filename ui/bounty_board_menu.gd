@@ -21,7 +21,7 @@ func _ready() -> void:
 	add_to_group("bounty_board")
 	_root.visible = false
 	_message_label.visible = false
-	_close_button.pressed.connect(close)
+	_close_button.pressed.connect(_on_close_button_pressed)
 	_refresh_button.pressed.connect(_on_refresh)
 	GameState.gold_changed.connect(_on_gold_changed)
 	GameState.sub_quest_changed.connect(_on_sub_quest_changed)
@@ -51,6 +51,11 @@ func close() -> void:
 
 func is_open() -> bool:
 	return _root.visible
+
+
+func _on_close_button_pressed() -> void:
+	SFXPlayer.play(SFXPlayer.UI_CLICK_SOUND)
+	close()
 
 
 func _on_gold_changed(_new_gold: int) -> void:
@@ -88,6 +93,7 @@ func _refresh() -> void:
 
 
 func _on_refresh() -> void:
+	SFXPlayer.play(SFXPlayer.UI_CLICK_SOUND)
 	if not GameState.refresh_bounty_board():
 		_show_message("골드가 부족해요. (%d골드 필요)" % SubQuestData.REFRESH_COST)
 		return
@@ -95,6 +101,7 @@ func _on_refresh() -> void:
 
 
 func _on_accept(index: int) -> void:
+	SFXPlayer.play(SFXPlayer.UI_CLICK_SOUND)
 	if GameState.has_active_sub_quest():
 		_show_message("이미 진행 중인 의뢰가 있어요. 먼저 마치고 오세요.")
 		return

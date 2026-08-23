@@ -7,11 +7,6 @@ signal dialogue_ended(last_node_id: String)
 
 # 페이지네이션: 옵션 박스에 한 번에 이만큼씩만 세로로 보여주고, 나머지는 ◄/► 페이지로 넘긴다.
 # 물리 버튼은 OPTIONS_PER_PAGE개뿐이고, 옵션이 더 많으면 페이지로 나눠 담는다
-# 대화 옵션 클릭 = 게임 전체에서 가장 잦은 UI 버튼 클릭 지점이라 여기 한 곳만 걸어도 넓게 커버된다.
-# (다른 메뉴들의 버튼도 같은 SFXPlayer.play() 한 줄만 추가하면 되지만, Godot Button엔 "클릭 시 공통
-# 재생" 같은 전역 후킹이 없어 메뉴별로 한 줄씩 붙여야 한다 — 필요해지면 그때 추가하면 됨)
-const UI_CLICK_SOUND := "res://assets/sfx/400 Sounds pack/UI/select_2.wav"
-
 const OPTIONS_PER_PAGE := 3
 # 페이지 방식 덕분에 한 화면 제약이 사라져 상한을 완화 (12개 = 4페이지). 초과분은 방어적으로 잘라낸다
 const MAX_OPTIONS := 12
@@ -308,7 +303,7 @@ func _populate_options(options: Array, default_next_id: String = "") -> void:
 				"option": option,
 				"locked": not _is_affinity_met(option),
 				"seen": GameState.has_seen_node(option.get("next_id", "")),
-				"action": is_action_option(option),
+				"action": is_action_option(option) or _leads_to_action(option),
 			})
 		_all_entries = _sort_seen_to_bottom(_all_entries)
 		if _all_entries.size() > MAX_OPTIONS:
@@ -361,12 +356,14 @@ func _render_page() -> void:
 
 func _on_prev_page() -> void:
 	if _current_page > 0:
+		SFXPlayer.play(SFXPlayer.PAGE_TURN_SOUND)
 		_current_page -= 1
 		_render_page()
 
 
 func _on_next_page() -> void:
 	if _current_page < _page_count() - 1:
+		SFXPlayer.play(SFXPlayer.PAGE_TURN_SOUND)
 		_current_page += 1
 		_render_page()
 
@@ -387,6 +384,38 @@ func _sort_seen_to_bottom(entries: Array) -> Array:
 static func is_action_option(option: Dictionary) -> bool:
 	for key in ACTION_KEYS:
 		if option.get(key, false):
+			return true
+	return false
+
+
+# 이 옵션을 골랐을 때(next_id / next_id_by_affinity) 이어지는 노드 id. give_gift처럼 결과가
+# 런타임 상태에 따라 갈리는 옵션은 대상이 하나로 정해지지 않아 여기서는 다루지 않는다
+func _option_target(option: Dictionary) -> String:
+	var next_by_affinity: Dictionary = option.get("next_id_by_affinity", {})
+	if not next_by_affinity.is_empty():
+		return _resolve_next_id_by_affinity(next_by_affinity)
+	return option.get("next_id", "")
+
+
+# 이 옵션을 고르면(직접이든, 몇 단계를 더 거치든) 결국 기능 옵션에 닿는지.
+# "뭘 파세요?" 같은 안내 옵션도 상점 옵션과 같이 강조해 한눈에 찾게 하려는 것.
+# visiting에 현재 노드를 미리 넣어두고 시작해 잡담 등으로 대화가 다시 이 노드로 돌아오는 순환은
+# 더 이상 따라가지 않는다 — 안 그러면 "결국 아무 데서나 도달 가능"해져 전부 강조돼 버린다
+func _leads_to_action(option: Dictionary) -> bool:
+	var visiting: Dictionary = {_last_shown_node_id: true}
+	return _node_leads_to_action(_option_target(option), visiting)
+
+
+func _node_leads_to_action(node_id: String, visiting: Dictionary) -> bool:
+	if node_id == "" or visiting.has(node_id) or not _nodes_by_id.has(node_id):
+		return false
+	visiting[node_id] = true
+
+	var node: Dictionary = _nodes_by_id[node_id]
+	for option in node.get("options", []):
+		if is_action_option(option):
+			return true
+		if _node_leads_to_action(_option_target(option), visiting):
 			return true
 	return false
 
@@ -431,7 +460,7 @@ func _on_button_pressed(option: Dictionary) -> void:
 # - start_quest: 그 퀘스트의 수락 조건(진행도 + 레벨)을 만족하지 못하면 나머지 효과를 전부 건너뛰고
 #   부족한 조건을 대사 자리에 안내한다 (옵션 자체는 항상 보이되, 선택했을 때만 조건을 검사하는 게이팅)
 func _on_option_pressed(option: Dictionary) -> void:
-	SFXPlayer.play(UI_CLICK_SOUND)
+	SFXPlayer.play(SFXPlayer.UI_CLICK_SOUND)
 
 	if option.get("open_shop", false):
 		ShopMenu.open()

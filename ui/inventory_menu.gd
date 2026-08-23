@@ -33,7 +33,7 @@ func _ready() -> void:
 	visible = false
 	_tooltip.visible = false
 	_equip_button.visible = false
-	_close_button.pressed.connect(close)
+	_close_button.pressed.connect(_on_close_button_pressed)
 	_equip_button.pressed.connect(_on_equip_button_pressed)
 	GameState.inventory_changed.connect(_on_inventory_changed)
 	_build_slots()
@@ -125,6 +125,11 @@ func is_open() -> bool:
 	return visible
 
 
+func _on_close_button_pressed() -> void:
+	SFXPlayer.play(SFXPlayer.UI_CLICK_SOUND)
+	close()
+
+
 # 인벤토리가 바뀔 때(구매/사용 등) 열려 있는 동안에만 즉시 다시 그림
 func _on_inventory_changed(_item_id: String) -> void:
 	if visible:
@@ -159,6 +164,7 @@ func _on_slot_pressed(index: int) -> void:
 		_clear_equip_selection()
 		return
 
+	SFXPlayer.play(SFXPlayer.UI_CLICK_SOUND)
 	if ItemData.is_equipment(item_id):
 		_selected_item_id = item_id
 		_refresh_equip_button()
@@ -199,6 +205,7 @@ func _on_equip_button_pressed() -> void:
 	if _selected_item_id == "" or not ItemData.is_equipment(_selected_item_id):
 		return
 
+	SFXPlayer.play(SFXPlayer.EQUIP_SOUND)
 	var slot := ItemData.get_slot(_selected_item_id)
 	if GameState.get_equipped(slot) == _selected_item_id:
 		GameState.unequip_slot(slot)

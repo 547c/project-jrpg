@@ -1,12 +1,15 @@
 class_name CutsceneBox
 extends Control
 
-# 오프닝처럼 화자 표시 없이 나레이션만 순서대로 보여주는 전용 컷신 UI.
-# DialogueData의 노드(id/narration or text/next_id)를 그대로 재사용하되,
+# 오프닝처럼 화자 표시 없이 나레이션만 순서대로 보여주는 전용 컷신 UI(이미지 슬라이드쇼 방식).
+# DialogueData의 노드(id/narration or text/next_id/image)를 그대로 재사용하되,
 # 선택지는 다루지 않고 next_id를 따라 선형으로만 진행한다.
+# 노드에 "image"가 있고 현재 배경과 다르면 FadeOverlay로 검은 페이드를 감싸 배경을 바꾼다.
+# "image"가 없으면(또는 현재와 같으면) 배경은 그대로 두고 텍스트만 이어서 보여준다.
 signal cutscene_ended(last_node_id: String)
 
-@onready var _text_label: Label = $ScrollPanel/TextLabel
+@onready var _background_image: TextureRect = $BackgroundImage
+@onready var _text_label: Label = $TextPanel/TextLabel
 @onready var _bleep_player: AudioStreamPlayer = $BleepPlayer
 @onready var _skip_button: Button = $SkipButton
 @onready var _confirm_popup: Control = $ConfirmPopup
@@ -17,6 +20,8 @@ var _nodes_by_id: Dictionary = {}
 var _last_shown_node_id: String = ""
 var _typewriter: Typewriter
 var _confirm_open: bool = false # 스킵 확인 팝업이 떠 있는 동안은 클릭/키 입력으로 컷신이 진행되지 않게 막음
+var _current_image_path: String = "" # 지금 배경으로 걸려 있는 이미지 경로 (다음 노드와 비교해 전환 여부 판단)
+var _transitioning: bool = false # 배경 이미지가 페이드로 바뀌는 동안 입력을 막음
 
 
 func _ready() -> void:
@@ -34,13 +39,15 @@ func start_cutscene(node_tree: Array, start_id: String) -> void:
 	for node in node_tree:
 		_nodes_by_id[node["id"]] = node
 
+	_current_image_path = ""
 	_confirm_open = false
 	_confirm_popup.hide()
 	show()
 	_show_node(start_id)
 
 
-# 주어진 id의 노드를 표시 (id가 없거나 빈 문자열이면 컷신 종료)
+# 주어진 id의 노드를 표시 (id가 없거나 빈 문자열이면 컷신 종료).
+# 배경 전환이 필요하면 먼저 끝날 때까지 기다린 뒤 텍스트 타이핑을 시작한다
 func _show_node(node_id: String) -> void:
 	if node_id == "" or not _nodes_by_id.has(node_id):
 		_end_cutscene()
@@ -48,13 +55,36 @@ func _show_node(node_id: String) -> void:
 
 	_last_shown_node_id = node_id
 	var node: Dictionary = _nodes_by_id[node_id]
+	await _apply_image(node)
+
 	var narration: String = node.get("narration", "")
 	_typewriter.start(narration if narration != "" else node.get("text", ""))
 
 
-# 타이핑 중이면 스킵, 다 표시된 상태면 다음 노드로 진행 (확인 팝업이 떠 있으면 아무것도 안 함)
+# node에 새 배경 이미지가 지정돼 있고 현재 배경과 다르면 교체한다.
+# 첫 이미지(컷신 시작 직후)는 페이드 없이 즉시 세팅 — 바깥의 SceneManager 진입 페이드가 이미 가려준다.
+# 그 뒤로 배경이 바뀔 때만 FadeOverlay로 검게 감싸 전환한다
+func _apply_image(node: Dictionary) -> void:
+	var path: String = node.get("image", "")
+	if path == "" or path == _current_image_path:
+		return
+
+	if _current_image_path == "":
+		_background_image.texture = load(path)
+		_current_image_path = path
+		return
+
+	_transitioning = true
+	await FadeOverlay.fade_out()
+	_background_image.texture = load(path)
+	_current_image_path = path
+	await FadeOverlay.fade_in()
+	_transitioning = false
+
+
+# 타이핑 중이면 스킵, 다 표시된 상태면 다음 노드로 진행 (확인 팝업/배경 전환 중엔 아무것도 안 함)
 func _advance() -> void:
-	if _confirm_open:
+	if _confirm_open or _transitioning:
 		return
 	if _typewriter.is_typing:
 		_typewriter.skip()
@@ -69,14 +99,18 @@ func _end_cutscene() -> void:
 	cutscene_ended.emit(_last_shown_node_id)
 
 
-# "스킵" 버튼: 바로 스킵하지 않고 확인 팝업부터 띄움
+# "스킵" 버튼: 바로 스킵하지 않고 확인 팝업부터 띄움 (배경 전환 중엔 무시)
 func _on_skip_pressed() -> void:
+	if _transitioning:
+		return
+	SFXPlayer.play(SFXPlayer.UI_CLICK_SOUND)
 	_confirm_open = true
 	_confirm_popup.show()
 
 
 # "예": 오프닝 전체를 즉시 종료
 func _on_confirm_yes() -> void:
+	SFXPlayer.play(SFXPlayer.UI_CLICK_SOUND)
 	_confirm_open = false
 	_confirm_popup.hide()
 	_end_cutscene()
@@ -84,6 +118,7 @@ func _on_confirm_yes() -> void:
 
 # "아니요": 팝업만 닫고 컷신은 계속 재생
 func _on_confirm_no() -> void:
+	SFXPlayer.play(SFXPlayer.UI_CLICK_SOUND)
 	_confirm_open = false
 	_confirm_popup.hide()
 

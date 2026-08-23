@@ -12,4 +12,5 @@ value = 24
 secondary_value = 0
 mana_cost = 14
 hp_cost = 0
+icon_key = "holy_cross"
 flavor_text = "하늘의 심판을 빌려와 적을 벌한다. 거스를 수 없는 빛이 모든 것을 꿰뚫는다."

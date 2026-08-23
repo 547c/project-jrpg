@@ -79,25 +79,30 @@ func dismiss() -> void:
 
 
 func _on_continue() -> void:
+	SFXPlayer.play(SFXPlayer.UI_CLICK_SOUND)
 	_close()
 
 
 # 저장/불러오기는 슬롯 선택 메뉴를 띄운다 (일시정지 메뉴는 뒤에 그대로 유지 → 닫기 시 복귀)
 func _on_save() -> void:
+	SFXPlayer.play(SFXPlayer.UI_CLICK_SOUND)
 	SaveSlotMenu.open_save_mode()
 
 
 func _on_load() -> void:
+	SFXPlayer.play(SFXPlayer.UI_CLICK_SOUND)
 	SaveSlotMenu.open_load_mode()
 
 
 func _on_title() -> void:
+	SFXPlayer.play(SFXPlayer.UI_CLICK_SOUND)
 	_close()
 	SceneManager.return_to_title()
 
 
 # 음악 켜기/끄기 토글: 누를 때마다 상태를 뒤집고 버튼 텍스트/아이콘을 현재 상태에 맞게 갱신
 func _on_music_toggle() -> void:
+	SFXPlayer.play(SFXPlayer.UI_CLICK_SOUND)
 	MusicManager.toggle_mute()
 	_refresh_music_button()
 
