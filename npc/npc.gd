@@ -1,3 +1,4 @@
+@tool
 class_name NPC
 extends Area2D
 
@@ -34,7 +35,20 @@ var _pulse: InteractPulse
 
 # 감지 영역 시그널을 연결하고, 안내 문구/이름표를 초기 상태로 숨김. 이름표는 dialogue_tree에서
 # dialogue_start_id 노드의 speaker 값을 읽어와 채움 (게이팅된 placeholder도 같은 speaker를 쓰므로 안전)
+#
+# [@tool과 에디터 가드]
+# 서브클래스(elara_npc.gd 등)가 전용 스프라이트를 끼워야 회색 점 대신 실제 그림이 보이는데,
+# 그 할당은 서브클래스의 _ready()가 super._ready()를 호출한 "다음" 줄에서 일어난다 — 즉
+# 서브클래스도 @tool이어야 하고, 이 base _ready()도 에디터에서 안전하게 끝까지 돌아야 한다.
+# 그런데 이 아래 로직(SceneManager 참조, 감지/배회/그림자)은 전부 "게임이 실제로 실행 중"이라는
+# 전제 위에 있다 — SceneManager는 오토로드라 에디터에는 아예 노드로 존재하지 않아 그 자리에서
+# 바로 에러나고, 배회/애니메이션이 에디터에서까지 돌면 편집 중에 NPC가 제멋대로 움직여 보인다.
+# 그래서 에디터에서는 아무것도 하지 않고 바로 리턴 — 스프라이트 표시는 서브클래스가 이 함수
+# 호출 여부와 무관하게 직접 처리한다(_play_idle_or_static() 참고)
 func _ready() -> void:
+	if Engine.is_editor_hint():
+		return
+
 	# 플레이어/나무와 같은 밴드에 서야 Y-Sort 씬(마을)에서 서로 앞뒤가 갈린다.
 	# Y-Sort를 안 쓰는 씬에서도 데코 타일에 덮이지 않게 되어 표시가 더 안정적이다
 	z_index = SceneManager.CHARACTER_BAND_Z_INDEX
@@ -53,6 +67,19 @@ func _ready() -> void:
 	# 발밑 그림자는 한 프레임 미뤄서 붙인다 — 서브클래스(elara_npc.gd 등)가 super._ready() 다음
 	# 줄에서야 sprite_frames를 채우기 때문에, 여기서 바로 재면 아직 잴 그림이 없다
 	_attach_shadow.call_deferred()
+
+
+# 서브클래스가 전용 sprite_frames를 끼운 뒤 이 함수로 idle을 표시한다. 게임 중에는 평소처럼
+# 재생하고, 에디터에서는 애니메이션을 재생하지 않고 idle 첫 프레임만 정지 표시한다 —
+# 트리/식생의 흔들림 셰이더와 같은 이유로, "계속 살아 움직이는 미리보기"까지는 필요 없다
+func _play_idle_or_static() -> void:
+	if not Engine.is_editor_hint():
+		_sprite.play("idle")
+		return
+	if _sprite.sprite_frames != null and _sprite.sprite_frames.has_animation("idle"):
+		_sprite.animation = "idle"
+		_sprite.frame = 0
+	_sprite.stop()
 
 
 # 캐릭터 시트를 재서 발밑 타원 그림자를 만들어 씬의 ShadowLayer에 붙인다
@@ -89,6 +116,8 @@ func _on_body_exited(body: Node2D) -> void:
 
 # 범위 안에서 상호작용 입력이 들어오면 대화를 시작
 func _unhandled_input(event: InputEvent) -> void:
+	if Engine.is_editor_hint():
+		return
 	if _player_in_range and event.is_action_pressed("interact"):
 		_start_dialogue()
 
@@ -96,6 +125,8 @@ func _unhandled_input(event: InputEvent) -> void:
 # 대화 중이 아닐 때만 배회: 가만히 서 있다가(Idle) 잠시 후 반경 내 무작위 목표로 천천히 이동하고,
 # 도착하면 다시 Idle로 돌아간다. 이동 방향의 좌우 성분으로 flip_h를 갱신해 바라보는 방향에 맞게 뒤집는다
 func _process(delta: float) -> void:
+	if Engine.is_editor_hint():
+		return
 	if _in_dialogue:
 		return
 

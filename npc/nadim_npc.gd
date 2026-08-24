@@ -1,3 +1,4 @@
+@tool
 extends NPC
 
 # 나딤(사막 정착지의 지도자/생존자). 2부 초반, 카밀의 배를 타고 사막에 도착한 뒤 만나는 NPC.
@@ -8,6 +9,7 @@ const SPRITE_FRAMES := preload("res://npc/nadim_sprite_frames.tres")
 
 
 # 나딤 전용 설정을 고정한 뒤 기본 NPC 초기화를 이어서 실행하고, 전용 스프라이트로 교체한다
+# (@tool·에디터 가드 이유는 npc.gd 참고)
 func _ready() -> void:
 	dialogue_tree = DialogueData.NADIM_DIALOGUE
 	dialogue_start_id = "nadim_greeting"
@@ -17,4 +19,4 @@ func _ready() -> void:
 
 	$AnimatedSprite2D.sprite_frames = SPRITE_FRAMES
 	$AnimatedSprite2D.scale = Vector2(1.45, 1.45)
-	$AnimatedSprite2D.play("idle")
+	_play_idle_or_static()

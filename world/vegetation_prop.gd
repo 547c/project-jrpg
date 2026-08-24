@@ -1,3 +1,4 @@
+@tool
 class_name VegetationProp
 extends StaticBody2D
 
@@ -74,11 +75,13 @@ var _collision: CollisionShape2D
 
 
 func _ready() -> void:
-	add_to_group("vegetation_prop")
+	if not Engine.is_editor_hint():
+		add_to_group("vegetation_prop")
 	_build()
 
 
-# 변종 표를 보고 스프라이트를 구성하고, 덤불이면 밑동 충돌까지 만든다
+# 변종 표를 보고 스프라이트를 구성하고, 덤불이면 밑동 충돌까지 만든다.
+# 에디터에서는 스프라이트만 그리고 그림자/흔들림 셰이더/충돌은 건너뛴다 (이유는 tree_prop.gd 참고)
 func _build() -> void:
 	if not VARIANTS.has(variant):
 		push_warning("VegetationProp: 알 수 없는 variant '%s'" % variant)
@@ -91,11 +94,26 @@ func _build() -> void:
 	atlas.atlas = load(SHEET) as Texture2D
 	atlas.region = region
 
+	if _sprite == null:
+		_sprite = Sprite2D.new()
+		_sprite.name = "Sprite2D"
+		_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		_sprite.centered = false
+		add_child(_sprite)
+
+	_sprite.texture = atlas
+	# 그림의 아래 끝이 정렬 기준점보다 SORT_BIAS만큼 아래(= 실제 밑동)에 오도록 배치
+	_sprite.offset = Vector2(-region.size.x / 2.0, SORT_BIAS - region.size.y)
+
+	if Engine.is_editor_hint():
+		return
+
 	# 스프라이트와 완전히 같은 흔들림을 타도록 머티리얼 하나를 두 노드가 함께 쓴다 (tree_prop.gd와 동일한 이유)
 	var sway_material := ShaderMaterial.new()
 	sway_material.shader = SWAY_SHADER
 	sway_material.set_shader_parameter("sway_strength", SWAY_STRENGTH)
 	sway_material.set_shader_parameter("sway_speed", SWAY_SPEED)
+	_sprite.material = sway_material
 
 	# 일단 이 노드의 자식으로 만든 뒤 공용 ShadowLayer로 넘긴다 (tree_prop.gd와 동일)
 	if _shadow == null:
@@ -110,18 +128,6 @@ func _build() -> void:
 
 	_shadow.texture = atlas
 	ShadowLayer.lay_on_ground(_shadow, Vector2(-region.size.x / 2.0, SORT_BIAS - region.size.y), SORT_BIAS)
-
-	if _sprite == null:
-		_sprite = Sprite2D.new()
-		_sprite.name = "Sprite2D"
-		_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		_sprite.centered = false
-		_sprite.material = sway_material
-		add_child(_sprite)
-
-	_sprite.texture = atlas
-	# 그림의 아래 끝이 정렬 기준점보다 SORT_BIAS만큼 아래(= 실제 밑동)에 오도록 배치
-	_sprite.offset = Vector2(-region.size.x / 2.0, SORT_BIAS - region.size.y)
 
 	_build_collision(region, bool(spec["blocks"]))
 

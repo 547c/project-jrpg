@@ -1,3 +1,4 @@
+@tool
 class_name TreeProp
 extends StaticBody2D
 
@@ -67,14 +68,21 @@ var _collision: CollisionShape2D
 
 
 func _ready() -> void:
-	add_to_group("tree_prop")
-	# 플레이어/NPC와 같은 밴드에 서야 서로 Y 좌표로 앞뒤가 갈린다.
-	# 자세한 이유는 SceneManager의 상수 주석 + docs/map_objects.md #3
-	z_index = SceneManager.CHARACTER_BAND_Z_INDEX
+	# @tool이라 에디터에서도 _ready()가 실행된다. SceneManager는 오토로드라 게임이 실제로
+	# 돌아갈 때만 트리에 존재하므로, 에디터에서 아래 줄을 그대로 실행하면 그 자리에서 에러난다
+	if not Engine.is_editor_hint():
+		add_to_group("tree_prop")
+		# 플레이어/NPC와 같은 밴드에 서야 서로 Y 좌표로 앞뒤가 갈린다.
+		# 자세한 이유는 SceneManager의 상수 주석 + docs/map_objects.md #3
+		z_index = SceneManager.CHARACTER_BAND_Z_INDEX
 	_build()
 
 
-# 변종 표를 보고 스프라이트(시트에서 잘라낸 영역)와 밑동 충돌을 구성한다
+# 변종 표를 보고 스프라이트(시트에서 잘라낸 영역)와 밑동 충돌을 구성한다.
+# 에디터에서는 스프라이트만 그리고 그 아래(그림자/흔들림 셰이더/충돌)는 전부 건너뛴다 —
+# 그림자는 ShadowLayer.adopt()가 씬 트리에 없는 자기 자신을 찾아 헤매고, 흔들림 셰이더는
+# 에디터 뷰포트에서도 TIME이 흘러 나무가 계속 흔들려 보이는 등 전부 "게임이 실행 중"이라는
+# 전제 위에 있는 로직이라 에디터에서 그대로 돌리면 안 된다
 func _build() -> void:
 	if not VARIANTS.has(variant):
 		push_warning("TreeProp: 알 수 없는 variant '%s'" % variant)
@@ -87,11 +95,26 @@ func _build() -> void:
 	atlas.atlas = load(spec["sheet"]) as Texture2D
 	atlas.region = region
 
+	if _sprite == null:
+		_sprite = Sprite2D.new()
+		_sprite.name = "Sprite2D"
+		_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		_sprite.centered = false
+		add_child(_sprite)
+
+	_sprite.texture = atlas
+	# 그림의 아래 끝이 정렬 기준점보다 SORT_BIAS만큼 아래(= 실제 밑동)에 오도록 배치
+	_sprite.offset = Vector2(-region.size.x / 2.0, SORT_BIAS - region.size.y)
+
+	if Engine.is_editor_hint():
+		return
+
 	# 스프라이트와 완전히 같은 흔들림을 타도록 머티리얼 하나를 두 노드가 함께 쓴다(따로 만들면
 	# 그림자만 미묘하게 다른 위상으로 흔들려 원본에서 분리된 것처럼 보인다 — MODEL_MATRIX 기반
 	# 위상 계산이라 같은 리소스를 공유하는 쪽이 완전히 동일한 값을 보장한다)
 	var sway_material := ShaderMaterial.new()
 	sway_material.shader = SWAY_SHADER
+	_sprite.material = sway_material
 
 	# 일단 이 노드의 자식으로 만든 뒤 공용 ShadowLayer로 넘긴다 — 그래야 다른 그림자와 겹쳐도
 	# 밝기가 균일하다(이유는 world/shadow_layer.gd 주석)
@@ -109,18 +132,6 @@ func _build() -> void:
 
 	_shadow.texture = atlas
 	ShadowLayer.lay_on_ground(_shadow, Vector2(-region.size.x / 2.0, SORT_BIAS - region.size.y), SORT_BIAS)
-
-	if _sprite == null:
-		_sprite = Sprite2D.new()
-		_sprite.name = "Sprite2D"
-		_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		_sprite.centered = false
-		_sprite.material = sway_material
-		add_child(_sprite)
-
-	_sprite.texture = atlas
-	# 그림의 아래 끝이 정렬 기준점보다 SORT_BIAS만큼 아래(= 실제 밑동)에 오도록 배치
-	_sprite.offset = Vector2(-region.size.x / 2.0, SORT_BIAS - region.size.y)
 
 	if _collision == null:
 		_collision = CollisionShape2D.new()

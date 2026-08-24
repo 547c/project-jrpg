@@ -1,3 +1,4 @@
+@tool
 extends NPC
 
 # 카밀(감시자 동료). 유서프가 정체를 밝히는 노드(yusuf_secret_stage2)를 본 뒤에만 마을에 등장한다.
@@ -14,7 +15,10 @@ const FINAL_CHOICE_NODE_IDS := ["kamil_choice_reveal", "kamil_choice_secret"]
 var _active: bool = false # 현재 마을에 나타나 상호작용 가능한 상태인지
 
 
-# 카밀 전용 설정을 고정한 뒤 기본 NPC 초기화를 이어서 실행하고, 등장 조건에 맞춰 표시 여부를 정한다
+# 카밀 전용 설정을 고정한 뒤 기본 NPC 초기화를 이어서 실행하고, 등장 조건에 맞춰 표시 여부를 정한다.
+# _refresh_presence()는 GameState(오토로드)를 참조하므로 에디터에는 그 자체가 없다 — 에디터에서는
+# 건너뛰고, 대신 항상 보이는 상태로 둬 편집 중에 스프라이트를 볼 수 있게 한다
+# (@tool·에디터 가드 이유는 npc.gd 참고)
 func _ready() -> void:
 	dialogue_tree = DialogueData.KAMIL_DIALOGUE
 	dialogue_start_id = "kamil_greeting"
@@ -24,14 +28,19 @@ func _ready() -> void:
 
 	$AnimatedSprite2D.sprite_frames = SPRITE_FRAMES
 	$AnimatedSprite2D.scale = Vector2(1.45, 1.45)
-	$AnimatedSprite2D.play("idle")
+	_play_idle_or_static()
 
-	_refresh_presence() # 재입장 등으로 이미 조건을 만족한 상태라면 처음부터 활성
+	if Engine.is_editor_hint():
+		visible = true
+	else:
+		_refresh_presence() # 재입장 등으로 이미 조건을 만족한 상태라면 처음부터 활성
 
 
 # 비활성일 때는 배회/상호작용을 멈추고 등장 조건만 계속 확인하다가, 충족되면 활성으로 전환.
 # 활성이면 기본 NPC의 배회 로직(super._process)을 그대로 수행한다
 func _process(delta: float) -> void:
+	if Engine.is_editor_hint():
+		return
 	if not _active:
 		_refresh_presence()
 		return

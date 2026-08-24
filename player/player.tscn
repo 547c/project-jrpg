@@ -410,6 +410,6 @@ sprite_frames = SubResource("SpriteFrames_1")
 animation = &"idle_down"
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=158176200]
-zoom = Vector2(2, 2)
+zoom = Vector2(1.8, 1.8)
 
 [node name="FootstepPlayer" type="AudioStreamPlayer" parent="."]
