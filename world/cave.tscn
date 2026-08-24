@@ -73,7 +73,7 @@ encounter_id = "skeleton_3"
 [node name="CollisionShape2D" type="CollisionShape2D" parent="SkeletonEncounter3" unique_id=1451677505]
 shape = SubResource("CircleShape2D_encounter")
 
-[node name="DarknessOverlay" parent="." instance=ExtResource("6_darkness")]
+[node name="DarknessOverlay" parent="." unique_id=2138440358 instance=ExtResource("6_darkness")]
 
 [node name="UI" type="CanvasLayer" parent="." unique_id=434105359]
 layer = 4

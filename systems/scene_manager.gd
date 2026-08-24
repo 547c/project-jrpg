@@ -7,6 +7,26 @@ const VILLAGE_SCENE_PATH := "res://world/village.tscn"
 const TITLE_SCREEN_PATH := "res://ui/title_screen.tscn"
 const BATTLE_SCENE_PATH := "res://battle/battle_scene.tscn"
 
+# Y-Sort를 쓰지 않는 씬에서 플레이어에게 주는 z_index. SceneManager는 오토로드라 배경 씬보다
+# 먼저 그려지므로, 그냥 두면 배경에 가려진다
+const PLAYER_OVERLAY_Z_INDEX := 10
+
+# Y-Sort 씬에서 "서로 앞뒤를 가려야 하는 것들"(플레이어/NPC/나무)이 함께 서는 z_index.
+# z_index가 y좌표보다 먼저 비교되므로, 이들이 서로 정렬되려면 값이 같아야 한다.
+# 0이 아니라 5인 이유: 타일맵 데코 레이어가 z_index 1~4를 쓰고 있어서, 0으로 두면 바닥에 깔린
+# 돌·풀 타일이 캐릭터와 나무를 덮어버린다 (예전엔 플레이어가 z 10이라 항상 그 위였다)
+#
+# 새 맵 오브젝트(건물/바위 등)를 Y-Sort에 참여시킬 때도 이 상수를 그대로 쓸 것 — 규칙과 배경은
+# docs/map_objects.md, 적용 사례는 world/tree_prop.gd 참고
+const CHARACTER_BAND_Z_INDEX := 5
+
+# 그림자 전용 레이어(world/shadow_layer.gd)의 z_index. 캐릭터 밴드보다 1 낮게 고정해서, y좌표와
+# 무관하게 그림자는 항상 캐릭터/나무 스프라이트보다 아래·데코 타일보다는 위에 깔리게 한다
+# (Godot는 y-sort보다 z_index를 먼저 비교하므로, 이 값 하나로 순서가 고정된다).
+# 그림자는 여러 개가 겹쳐도 균일한 밝기를 유지해야 해서 y-sort로 개별 정렬할 필요가 없다 —
+# "땅 위에 평평하게 깔린 것"이라 서로 앞뒤를 다툴 이유가 없다는 뜻이기도 하다
+const SHADOW_LAYER_Z_INDEX := CHARACTER_BAND_Z_INDEX - 1
+
 # 파트 1 타이틀 카드 문구 (오프닝 컷신 직후). 파트가 늘어나면 그 전환 지점에서
 # show_chapter_title()에 다른 문구만 넘기면 된다 — 카드 자체는 문구를 모른다
 const PART1_TITLE := "PART 1"
@@ -43,7 +63,7 @@ const SCENE_TINTS: Dictionary = {
 	"res://world/tavern.tscn": Color(0.75, 0.4, 0.15, 0.13), # 실내의 따뜻한 갈색/주황
 }
 
-var _player: Node2D
+var _player: Player
 var _is_changing_scene: bool = false
 var _transitions_suppressed: bool = false
 
@@ -69,12 +89,13 @@ func is_transition_suppressed() -> bool:
 # 오프닝을 보여줄 차례라면 마을 음악 대신 프롤로그 곡을 먼저 틀고, 컷신이 끝난 뒤에야
 # 마을 음악으로 넘어간다 (컷신 중에 마을 음악이 깔리지 않도록 순서를 맞춤)
 func start_game() -> void:
-	_player = PLAYER_SCENE.instantiate() as Node2D
-	_player.z_index = 10 # SceneManager가 오토로드라 배경 씬보다 먼저 그려지므로, 배경 위에 보이도록 z_index를 높임
+	_player = PLAYER_SCENE.instantiate() as Player
+	_player.z_index = PLAYER_OVERLAY_Z_INDEX
 	add_child(_player)
 
 	var old_scene := get_tree().current_scene
 	if old_scene != null:
+		_detach_player_from_scene() # 씬과 함께 플레이어까지 해제되지 않도록 먼저 빼낸다
 		get_tree().root.remove_child(old_scene)
 		old_scene.queue_free()
 
@@ -82,6 +103,7 @@ func start_game() -> void:
 	var new_scene := village_scene.instantiate()
 	get_tree().root.add_child(new_scene)
 	get_tree().current_scene = new_scene
+	_attach_player_to_scene()
 
 	var show_opening: bool = not GameState.get_flag("seen_opening")
 	if show_opening:
@@ -111,6 +133,7 @@ func start_game() -> void:
 # (다음 start_game() 호출 시 플레이어를 새로 만들 수 있도록)
 func return_to_title() -> void:
 	if _player != null:
+		_detach_player_from_scene() # 씬과 이중으로 해제되지 않도록 먼저 빼낸 뒤 정리
 		_player.queue_free()
 		_player = null
 
@@ -170,6 +193,42 @@ func _play_opening() -> void:
 	cutscene_layer.queue_free()
 
 
+# 현재 씬이 Y-Sort를 켠 씬(마을)이면 플레이어를 그 씬 밑으로 옮긴다.
+# Y-Sort는 "같은 부모 밑의 형제들"끼리만 정렬하는데, 플레이어는 오토로드인 SceneManager가 들고 있어
+# 기본적으로 씬 트리 바깥에 있다 — 그래서 옮겨주지 않으면 나무/NPC와 절대 섞여 정렬되지 않는다.
+# Y-Sort를 쓰지 않는 씬(동굴/숲 등)에서는 기존처럼 SceneManager 밑에 z_index로 띄운 채 둔다
+func _attach_player_to_scene() -> void:
+	if _player == null:
+		return
+
+	var scene := get_tree().current_scene
+	var use_y_sort: bool = scene is Node2D and (scene as Node2D).y_sort_enabled
+	var desired_parent: Node = scene if use_y_sort else self
+
+	if _player.get_parent() != desired_parent:
+		var world_position := _player.global_position
+		_player.get_parent().remove_child(_player)
+		desired_parent.add_child(_player)
+		_player.global_position = world_position
+
+	# Y-Sort 씬에서는 나무/NPC와 같은 밴드에 서야 Y 좌표로 앞뒤를 겨룰 수 있다
+	_player.z_index = CHARACTER_BAND_Z_INDEX if use_y_sort else PLAYER_OVERLAY_Z_INDEX
+
+	# 발밑 그림자는 씬의 ShadowLayer가 들고 있어서 씬과 함께 사라진다 — 플레이어 자신은 씬을
+	# 넘어 살아남으므로, 새 씬에 들어올 때마다 그 씬의 레이어에 다시 만들어 붙여야 한다
+	# (그림자 레이어가 없는 씬에서는 아무 일도 일어나지 않는다)
+	_player.attach_shadow()
+
+
+# 현재 씬을 해제하기 전에 플레이어를 SceneManager 밑으로 되돌린다.
+# 씬의 자식으로 들어가 있는 상태에서 씬을 free하면 플레이어까지 함께 사라진다
+func _detach_player_from_scene() -> void:
+	if _player == null or _player.get_parent() == self:
+		return
+	_player.get_parent().remove_child(_player)
+	add_child(_player)
+
+
 # 메인 씬이 트리에 들어온 뒤, 현재 씬의 "최초 스폰" 지점으로 플레이어를 이동하고 방문 플래그를 기록
 func _place_initial_player() -> void:
 	var current := get_tree().current_scene
@@ -227,6 +286,7 @@ func _apply_battle_enter() -> void:
 
 	var old_scene := get_tree().current_scene
 	if old_scene != null:
+		_detach_player_from_scene() # 전투 씬으로 넘어가는 동안 플레이어가 씬과 함께 사라지지 않게
 		get_tree().root.remove_child(old_scene)
 		old_scene.queue_free()
 
@@ -289,6 +349,7 @@ func _apply_scene_change(scene_path: String, spawn_point_name: String, use_exact
 
 	var old_scene := get_tree().current_scene
 	if old_scene != null:
+		_detach_player_from_scene() # 씬과 함께 플레이어까지 해제되지 않도록 먼저 빼낸다
 		get_tree().root.remove_child(old_scene)
 		old_scene.queue_free()
 
@@ -296,6 +357,7 @@ func _apply_scene_change(scene_path: String, spawn_point_name: String, use_exact
 	var new_scene := next_scene.instantiate()
 	get_tree().root.add_child(new_scene)
 	get_tree().current_scene = new_scene
+	_attach_player_to_scene() # Y-Sort 씬이면 그 밑으로 옮겨 나무/NPC와 함께 정렬되게 한다
 
 	# 전환한 구역의 방문 여부를 GameState에 기록
 	_record_visited(scene_path)
@@ -336,8 +398,8 @@ func _apply_scene_change(scene_path: String, spawn_point_name: String, use_exact
 # 플레이어가 아직 없으면(타이틀 화면 등에서 로드하는 경우) 생성한다
 func ensure_player_exists() -> void:
 	if _player == null:
-		_player = PLAYER_SCENE.instantiate() as Node2D
-		_player.z_index = 10
+		_player = PLAYER_SCENE.instantiate() as Player
+		_player.z_index = PLAYER_OVERLAY_Z_INDEX
 		add_child(_player)
 
 

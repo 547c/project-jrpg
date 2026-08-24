@@ -35,6 +35,9 @@ var _pulse: InteractPulse
 # 감지 영역 시그널을 연결하고, 안내 문구/이름표를 초기 상태로 숨김. 이름표는 dialogue_tree에서
 # dialogue_start_id 노드의 speaker 값을 읽어와 채움 (게이팅된 placeholder도 같은 speaker를 쓰므로 안전)
 func _ready() -> void:
+	# 플레이어/나무와 같은 밴드에 서야 Y-Sort 씬(마을)에서 서로 앞뒤가 갈린다.
+	# Y-Sort를 안 쓰는 씬에서도 데코 타일에 덮이지 않게 되어 표시가 더 안정적이다
+	z_index = SceneManager.CHARACTER_BAND_Z_INDEX
 	body_entered.connect(_on_body_entered)
 	body_exited.connect(_on_body_exited)
 	_interact_prompt.hide()
@@ -46,6 +49,16 @@ func _ready() -> void:
 	_home_position = global_position
 	_wander_target = _home_position
 	_enter_wander_idle_state()
+
+	# 발밑 그림자는 한 프레임 미뤄서 붙인다 — 서브클래스(elara_npc.gd 등)가 super._ready() 다음
+	# 줄에서야 sprite_frames를 채우기 때문에, 여기서 바로 재면 아직 잴 그림이 없다
+	_attach_shadow.call_deferred()
+
+
+# 캐릭터 시트를 재서 발밑 타원 그림자를 만들어 씬의 ShadowLayer에 붙인다
+# (그림자 레이어가 없는 씬에서는 아무 일도 일어나지 않는다 — world/character_shadow.gd 참고)
+func _attach_shadow() -> void:
+	CharacterShadow.attach(self, _sprite)
 
 
 # dialogue_tree에서 dialogue_start_id에 해당하는 노드의 speaker 필드를 찾아 반환 (없으면 빈 문자열)

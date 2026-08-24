@@ -1,3 +1,4 @@
+class_name Player
 extends CharacterBody2D
 
 const RUN_SPEED_MULTIPLIER := 1.6
@@ -49,6 +50,7 @@ const FOOTSTEP_VOLUME_DB := -14.0 # 과하지 않게 낮춤
 var _direction_queue: Array[String] = []
 var _last_facing: String = "down"
 var _footstep_timer: float = 0.0
+var _shadow: CharacterShadow
 
 @onready var _footstep_player: AudioStreamPlayer = $FootstepPlayer
 
@@ -63,6 +65,15 @@ const _AXIS_VECTORS := {
 # Area2D 트리거 등이 플레이어를 식별할 수 있도록 "player" 그룹에 등록
 func _ready() -> void:
 	add_to_group("player")
+
+
+# 발밑 그림자를 현재 씬의 ShadowLayer에 만들어 붙인다 (그림자를 쓰는 씬에서만 실제로 생긴다).
+# 플레이어는 씬을 넘어 살아남지만 그림자는 씬과 함께 사라지므로, 씬에 들어올 때마다
+# SceneManager가 다시 불러준다 — 자세한 이유는 world/character_shadow.gd 주석
+func attach_shadow() -> void:
+	if is_instance_valid(_shadow):
+		_shadow.queue_free()
+	_shadow = CharacterShadow.attach(self, $AnimatedSprite2D as AnimatedSprite2D)
 
 
 # 매 프레임(물리) 입력 처리, 이동, 애니메이션, 발소리 갱신을 순서대로 실행

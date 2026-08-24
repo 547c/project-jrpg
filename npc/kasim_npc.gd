@@ -18,5 +18,5 @@ func _ready() -> void:
 	$AnimatedSprite2D.sprite_frames = SPRITE_FRAMES
 	# 몬스터 팩 시트(32x32 Idle)라 몬스터 표시 배율을 그대로 재사용한다 — 이미 플레이어(1.45배, 64px
 	# 프레임) 기준으로 측정해둔 값이라(monster_encounter.gd의 DISPLAY_SCALE["SKELETON"]) 새로 잴 필요가 없다
-	$AnimatedSprite2D.scale = Vector2(1.5104, 1.5104)
+	$AnimatedSprite2D.scale = Vector2(1.45, 1.45)
 	$AnimatedSprite2D.play("idle")

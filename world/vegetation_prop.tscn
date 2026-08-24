@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://world/vegetation_prop.gd" id="1_veg"]
+
+[node name="VegetationProp" type="StaticBody2D"]
+script = ExtResource("1_veg")
