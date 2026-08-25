@@ -49,6 +49,7 @@
 [ext_resource type="PackedScene" path="res://world/vegetation_prop.tscn" id="91_veg"]
 [ext_resource type="PackedScene" path="res://world/shadow_layer.tscn" id="92_shadow"]
 [ext_resource type="PackedScene" path="res://world/rock_prop.tscn" id="93_rock"]
+[ext_resource type="PackedScene" path="res://world/leaf_emitter.tscn" id="94_leaf"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_idli4"]
 texture = ExtResource("1_1d4n2")
@@ -18740,3 +18741,5 @@ variant = "plant_13_10_1x2"
 [node name="Veg172" parent="." unique_id=369357411 instance=ExtResource("91_veg")]
 position = Vector2(290, 362)
 variant = "plant_7_10_1x2"
+
+[node name="LeafEmitter" parent="." unique_id=847162039 instance=ExtResource("94_leaf")]

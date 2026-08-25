@@ -411,7 +411,7 @@ animation = &"idle_down"
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=158176200]
 position_smoothing_enabled = true
-position_smoothing_speed = 10.0
+position_smoothing_speed = 6.0
 zoom = Vector2(1.5, 1.5)
 
 [node name="FootstepPlayer" type="AudioStreamPlayer" parent="."]
