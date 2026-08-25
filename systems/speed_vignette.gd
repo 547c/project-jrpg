@@ -8,7 +8,7 @@ extends CanvasLayer
 # 안 쓸 때 렌더 비용 0으로 끄기)는 여기서 전담한다.
 
 const FADE_DURATION := 0.5
-const RUN_STRENGTH := 0.35 # 은은하게 — 액션 게임처럼 화면을 조이지 않는다
+const RUN_STRENGTH := 0.5 # 0.35는 거의 안 느껴진다는 피드백을 받아 올림 — 그래도 화면을 조이는 액션 게임 수준까지는 안 감
 
 @onready var _rect: ColorRect = $Rect
 

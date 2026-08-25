@@ -8,7 +8,7 @@ shader_type canvas_item;
 // 완전히 안 보인다 — 켜질 때만 SpeedVignette가 노드를 visible=true로 바꾼다.
 //
 // [왜 UI에는 안 닿는가]
-// 이 셰이더가 붙는 ColorRect는 world/speed_vignette.tscn(CanvasLayer layer=3) 하나뿐이고,
+// 이 셰이더가 붙는 ColorRect는 systems/speed_vignette.tscn(CanvasLayer layer=3) 하나뿐이고,
 // HUD(layer 5)/대화창/메뉴는 전부 그보다 위 레이어에서 따로 합성된다. Godot은 CanvasLayer를
 // 레이어 순서대로 각자 완결된 상태로 그리므로, 이 레이어가 SCREEN_TEXTURE로 훔쳐보는 화면에는
 // 아직 UI가 없다 — 정의상 UI를 건드릴 수가 없다.
@@ -17,8 +17,8 @@ uniform sampler2D screen_texture : hint_screen_texture, filter_linear;
 uniform float strength : hint_range(0.0, 1.0) = 0.0;
 uniform float inner_radius : hint_range(0.0, 1.5) = 0.6; // 이 반경 안쪽은 전혀 손대지 않는다
 uniform float outer_radius : hint_range(0.0, 1.5) = 1.05; // 이 반경 바깥이 최대 강도
-uniform float blur_amount : hint_range(0.0, 8.0) = 2.0; // 가장자리 블러 반경(px 단위, 약하게)
-uniform float darken : hint_range(0.0, 1.0) = 0.28; // 가장자리 최대 어둡기(약하게)
+uniform float blur_amount : hint_range(0.0, 8.0) = 4.0; // 가장자리 블러 반경(px 단위)
+uniform float darken : hint_range(0.0, 1.0) = 0.4; // 가장자리 최대 어둡기
 
 void fragment() {
 	// 화면비를 보정해서 비네트가 타원이 아니라 원형으로 균일하게 퍼지게 한다

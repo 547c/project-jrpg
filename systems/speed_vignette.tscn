@@ -8,8 +8,8 @@ shader = ExtResource("2_shader")
 shader_parameter/strength = 0.0
 shader_parameter/inner_radius = 0.6
 shader_parameter/outer_radius = 1.05
-shader_parameter/blur_amount = 2.0
-shader_parameter/darken = 0.28
+shader_parameter/blur_amount = 4.0
+shader_parameter/darken = 0.4
 
 [node name="SpeedVignette" type="CanvasLayer"]
 layer = 3
