@@ -220,6 +220,49 @@ func _attach_player_to_scene() -> void:
 	# (그림자 레이어가 없는 씬에서는 아무 일도 일어나지 않는다)
 	_player.attach_shadow()
 
+	# WaterShimmerLayer 등 물 위 타일을 별도 레이어로 옮기는 스크립트는 add_child를 지연 호출한다.
+	# 같은 프레임 안에서 더 나중에 큐에 들어간 이 호출도 지연되므로, 그 레이어가 실제로 생긴 뒤에
+	# 경계를 계산하게 된다
+	_apply_camera_limits.call_deferred()
+
+
+# 현재 씬의 TileMap/TileMapLayer 사용 범위(없으면 Background)를 기준으로 카메라 이동 한계를 설정
+func _apply_camera_limits() -> void:
+	if _player == null:
+		return
+	var bounds := _compute_scene_bounds(get_tree().current_scene)
+	if bounds.size == Vector2.ZERO:
+		return
+	_player._camera.limit_left = int(bounds.position.x)
+	_player._camera.limit_top = int(bounds.position.y)
+	_player._camera.limit_right = int(bounds.end.x)
+	_player._camera.limit_bottom = int(bounds.end.y)
+
+
+func _compute_scene_bounds(scene: Node) -> Rect2:
+	var bounds := Rect2()
+	var has_bounds := false
+	for child in scene.get_children():
+		if not (child is TileMap or child is TileMapLayer):
+			continue
+		var used: Rect2i = child.get_used_rect()
+		if used.size == Vector2i.ZERO:
+			continue
+		var a: Vector2 = child.to_global(child.map_to_local(used.position))
+		var b: Vector2 = child.to_global(child.map_to_local(used.position + used.size))
+		var rect := Rect2(a, b - a).abs()
+		bounds = rect if not has_bounds else bounds.merge(rect)
+		has_bounds = true
+
+	if has_bounds:
+		return bounds
+
+	var background := scene.get_node_or_null("Background") as Control
+	if background != null:
+		return Rect2(background.global_position, background.size)
+
+	return Rect2()
+
 
 # 현재 씬을 해제하기 전에 플레이어를 SceneManager 밑으로 되돌린다.
 # 씬의 자식으로 들어가 있는 상태에서 씬을 free하면 플레이어까지 함께 사라진다
