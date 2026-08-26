@@ -1,8 +1,9 @@
 class_name LeafEmitter
 extends Node2D
 
-# 야외 씬에 은은하게 떠도는 낙엽 앰비언트 파티클. 이번 라운드는 기본 낙하/착지/페이드만 —
-# 카메라 앞 확대/블러 전경 레이어(다음 라운드 예정)는 여기 포함하지 않는다.
+# 야외 씬에 은은하게 떠도는 낙엽 앰비언트 파티클(배경용 — 화면 공간 전경 낙엽은
+# systems/foreground_leaves.gd). 낙하/착지/페이드에 더해 WindSystem 연동(흔들림 폭·스폰 빈도),
+# 높낮이를 표현하는 그림자, 스폰 페이드인까지 포함한다.
 #
 # [스폰 범위 = 고정 지점이 아니라 "현재 화면"]
 # 씬마다 나무 근처 등 손으로 여러 지점에 심어두는 대신, 매번 스폰할 때 Viewport.get_camera_2d()로
@@ -65,10 +66,48 @@ const HUE_JITTER := 0.015 # 같은 계열 안에서도 완전히 똑같은 색�
 const HOLD_DURATION := 2.0
 const LAND_FADE_DURATION := 1.0
 const NATURAL_FADE_DURATION := 0.5
+const SPAWN_FADE_IN_DURATION := 0.2 # 생성 직후 뿅 나타나지 않도록 알파 0->1로 서서히
+
+# [WindSystem 연동]
+# WIND_SWAY_BOOST: 돌풍(wind_strength=1)일 때 좌우 흔들림 폭을 몇 배까지 키울지.
+# WIND_SPAWN_BOOST: 돌풍일 때 스폰 간격을 얼마나 줄일지(더 자주 스폰) — 간격을 (1+wind*BOOST)로
+# 나누므로, wind_strength=1이면 간격이 최대 1/(1+BOOST)배로 줄어든다(잎이 그만큼 더 자주 태어남)
+const WIND_SWAY_BOOST := 1.4
+const WIND_SPAWN_BOOST := 1.5
+
+# [돌풍 버스트]
+# 위 WIND_SPAWN_BOOST는 "바람이 센 동안 계속 스폰 간격이 짧아지는" 연속적인 효과라, 돌풍이
+# 막 시작되는 그 순간의 "확 터지는" 느낌은 따로 안 난다. 그래서 wind_changed 시그널로
+# wind_strength가 GUST_BURST_THRESHOLD를 막 넘어서는 상승 엣지(레벨이 아니라 "그 순간")를
+# 감지해 한꺼번에 GUST_BURST_COUNT장을 스폰한다.
+#
+# [GUST_BURST_COOLDOWN이 필요한 이유]
+# WindSystem의 리듬을 실제로 시뮬레이션해보면, 하나의 "큰 돌풍" 안에서도 빠른 주기(FAST_PERIOD
+# =5.4초) 성분 때문에 문턱을 짧은 간격(4~6초)으로 두 번 넘나드는 경우가 흔하다 — 쿨다운 없이
+# 매번 반응하면 같은 돌풍인데 버스트가 두 번 터진다. GUST_BURST_COOLDOWN(8초)을 넉넉히 둬서
+# 같은 돌풍 안의 재진입은 무시하고, 진짜 다음 돌풍(보통 15~25초 뒤)에만 다시 터지게 한다
+const GUST_BURST_THRESHOLD := 0.7
+const GUST_BURST_COUNT := 10
+const GUST_BURST_COOLDOWN := 8.0
+
+# [그림자]
+# 착지 직전까지는 잎과 그림자 사이가 멀어져(SHADOW_MAX_GAP) 공중에 떠 있는 높낮이감을 주고,
+# 착지 순간 거리 0으로 완전히 겹친다. 그림자는 ShadowLayer(CanvasGroup)로 넘어가 다른 그림자와
+# 겹쳐도 밝기가 균일하게 유지된다 — 나무/식생/캐릭터와 같은 공용 레이어를 그대로 재사용한다.
+#
+# [단순한 점이 아니라 프롭과 같은 실루엣 방식]
+# tree_prop.gd/vegetation_prop.gd/rock_prop.gd와 같은 방식(잎 텍스처를 그대로 복제해 검게
+# 칠한 뒤 ShadowLayer.lay_on_ground()로 눕힘)을 쓴다. 다만 프롭과 달리 낙엽은 떨어지는 동안
+# 계속 회전(spin_speed)하므로, 프롭처럼 한 번만 눕히고 끝나는 게 아니라 매 프레임 "회전 →
+# 눕히기" 순서로 다시 계산해야 한다(_apply_shadow_transform). 높이에 따른 간격(SHADOW_MAX_GAP)은
+# 이 실루엣 변환과 무관하게 여전히 global_position만으로 표현한다 — 잎이 중심 정렬(centered=true)
+# 이라 프롭의 발밑 보정(SORT_BIAS)이 필요 없고, 단순히 위치를 띄우는 것만으로 충분하다.
+const SHADOW_MAX_GAP := 12.0
 
 
 class _Leaf:
 	var sprite: Sprite2D
+	var shadow: Sprite2D
 	var active: bool = false
 	var state: int = _State.FALLING
 	var timer: float = 0.0 # 현재 state 안에서 흐른 시간
@@ -87,6 +126,8 @@ class _Leaf:
 var _leaves: Array[_Leaf] = []
 var _frames: Array[AtlasTexture] = []
 var _spawn_timer: float = 0.0
+var _was_gusting: bool = false
+var _last_burst_time: float = -INF
 
 
 func _ready() -> void:
@@ -106,24 +147,51 @@ func _ready() -> void:
 		sprite.visible = false
 		sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		add_child(sprite)
+
+		# 나무/식생/캐릭터와 같은 방식: 일단 이 노드의 자식으로 만든 뒤 공용 ShadowLayer로 넘긴다.
+		# 완전 불투명 검정으로 그리고(반투명함은 ShadowLayer의 self_modulate 알파 하나로만 준다),
+		# 풀에서 쉬는 동안은 안 보이게 꺼둔다. 텍스처는 스폰될 때마다 그 순간 고른 잎 모양으로 채운다
+		var shadow := Sprite2D.new()
+		shadow.centered = true
+		shadow.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		shadow.modulate = Color(0, 0, 0, 1)
+		shadow.visible = false
+		add_child(shadow)
+		ShadowLayer.adopt(shadow, self)
+
 		var leaf := _Leaf.new()
 		leaf.sprite = sprite
+		leaf.shadow = shadow
 		_leaves.append(leaf)
 
 	# 나무/캐릭터와 같은 밴드 — 자세한 이유는 SceneManager 상수 주석 + docs/map_objects.md #3
 	z_index = SceneManager.CHARACTER_BAND_Z_INDEX
 	_spawn_timer = randf_range(spawn_interval.x, spawn_interval.y)
+	WindSystem.wind_changed.connect(_on_wind_changed)
 
 
 func _process(delta: float) -> void:
 	_spawn_timer -= delta
 	if _spawn_timer <= 0.0:
-		_spawn_timer = randf_range(spawn_interval.x, spawn_interval.y)
+		# 돌풍일 때 간격을 줄여(=더 자주 스폰) 바람이 셀수록 잎이 더 많이 날리게 한다
+		var wind_speedup := 1.0 + WindSystem.wind_strength * WIND_SPAWN_BOOST
+		_spawn_timer = randf_range(spawn_interval.x, spawn_interval.y) / wind_speedup
 		_spawn_leaf()
 
 	for leaf in _leaves:
 		if leaf.active:
 			_update_leaf(leaf, delta)
+
+
+# 낙엽의 지금 회전/크기를 반영해 그림자를 바닥에 눕힌 실루엣으로 그린다. fade<1.0이면(FADING
+# 중) 그만큼 더 작게 그려 착지 그림자와 같은 방식(알파 대신 크기)으로 사라지게 한다.
+# 프롭의 lay_on_ground는 "한 번만 눕히고 끝"이지만, 낙엽은 떨어지는 동안 계속 회전하므로 이
+# 함수를 매 프레임 다시 불러 "회전 → 눕히기" 순서를 다시 계산해야 한다(순서가 바뀌면 안 된다 —
+# 잎이 공중에서 스스로 도는 것과, 그 결과물을 바닥에 투영하는 건 서로 다른 단계다)
+func _apply_shadow_transform(leaf: _Leaf, fade: float = 1.0) -> void:
+	var spin := Transform2D(leaf.sprite.rotation, leaf.sprite.scale * fade, 0.0, Vector2.ZERO)
+	var combined := ShadowLayer.ground_transform() * spin
+	leaf.shadow.transform = Transform2D(combined.x, combined.y, leaf.shadow.transform.origin)
 
 
 # 지금 화면에 실제로 보이는 월드 범위(+camera_margin)를 구한다. 활성 카메라가 아직 없으면
@@ -159,10 +227,11 @@ func _spawn_leaf() -> void:
 	var sprite := leaf.sprite
 	sprite.texture = _frames[randi() % FRAME_COUNT]
 	sprite.rotation = randf_range(0.0, TAU)
-	sprite.scale = Vector2.ONE * randf_range(0.85, 1.15)
+	var spawn_scale := randf_range(0.85, 1.15)
+	sprite.scale = Vector2.ONE * spawn_scale
 
 	leaf.color = _random_leaf_color()
-	sprite.modulate = leaf.color
+	sprite.modulate = Color(leaf.color.r, leaf.color.g, leaf.color.b, 0.0) # 스폰 페이드인 시작(알파 0)
 
 	# 화면 위쪽 한 줄이 아니라 지금 보이는 범위 전체에 고르게 스폰한다 — 그래야 한 화면 안에
 	# "막 태어난 잎/떨어지는 중인 잎/막 착지한 잎"이 동시에 섞여 있는 자연스러운 앙상블이 된다
@@ -173,6 +242,11 @@ func _spawn_leaf() -> void:
 	leaf.base_x = to_local(spawn_global).x
 	sprite.position = to_local(spawn_global)
 	sprite.visible = true
+
+	leaf.shadow.texture = sprite.texture
+	_apply_shadow_transform(leaf)
+	leaf.shadow.global_position = sprite.global_position + Vector2(0.0, SHADOW_MAX_GAP)
+	leaf.shadow.visible = true
 
 	leaf.active = true
 	leaf.state = _State.FALLING
@@ -193,6 +267,25 @@ func _find_free_leaf() -> _Leaf:
 	return null
 
 
+# wind_strength가 GUST_BURST_THRESHOLD를 막 넘어서는 상승 엣지에서만 반응한다(레벨이 아니라
+# 순간) — 그 위에 계속 머물러 있어도 다시 터지지 않고, GUST_BURST_COOLDOWN이 지나야 재무장된다
+func _on_wind_changed(strength: float) -> void:
+	var gusting := strength >= GUST_BURST_THRESHOLD
+	if gusting and not _was_gusting:
+		var now := Time.get_ticks_msec() / 1000.0
+		if now - _last_burst_time >= GUST_BURST_COOLDOWN:
+			_last_burst_time = now
+			_burst_leaves()
+	_was_gusting = gusting
+
+
+# 돌풍이 시작되는 순간 한꺼번에 여러 장을 후두둑 쏟아낸다. _spawn_leaf()는 풀에 남는 자리가
+# 없으면 조용히 건너뛰므로, 이미 화면에 낙엽이 많이 떠 있을 때는 자연히 더 적게(또는 0장) 터진다
+func _burst_leaves() -> void:
+	for i in range(GUST_BURST_COUNT):
+		_spawn_leaf()
+
+
 # 초록 계열 3종 중 하나를 고르고, 그 계열 범위 안에서만 채도/명도(+아주 살짝 색상)를 흔들어
 # "진하고 연하고 다양하지만 절대 이상한 색으로는 안 가는" 변주를 만든다
 func _random_leaf_color() -> Color:
@@ -203,8 +296,15 @@ func _random_leaf_color() -> Color:
 	return Color.from_hsv(hue, randf_range(sat_range.x, sat_range.y), randf_range(val_range.x, val_range.y))
 
 
-# 상태별로 낙엽 하나를 갱신한다: 떨어지는 중(사인파 흔들림) -> 착지(정지, 2초 유지) -> 페이드아웃(free).
-# 착지하지 못하고 max_lifetime을 넘기면 착지를 건너뛰고 바로(더 짧게) 페이드아웃한다
+# 상태별로 낙엽 하나를 갱신한다: 떨어지는 중(사인파 흔들림, 스폰 직후엔 페이드인) ->
+# 착지(정지, 2초 유지) -> 페이드아웃(free). 착지하지 못하고 max_lifetime을 넘기면 착지를
+# 건너뛰고 바로(더 짧게) 페이드아웃한다.
+#
+# [그림자는 왜 알파가 아니라 크기로 페이드하는가]
+# ShadowLayer(CanvasGroup)는 "자식들은 전부 불투명 검정이어야 그룹 alpha 한 번으로 겹침이
+# 균일해진다"는 전제 위에 있다(shadow_layer.gd 주석). 개별 그림자에 알파를 넣어 페이드시키면
+# 겹친 곳만 다시 진해지는 원래 문제가 돌아온다. 대신 도형 자체를 0까지 줄이면(scale) 여전히
+# "칠해지는 곳은 항상 완전 불투명"이라는 전제를 안 깨면서도 시각적으로는 사라지는 것처럼 보인다.
 func _update_leaf(leaf: _Leaf, delta: float) -> void:
 	leaf.age += delta
 	var sprite := leaf.sprite
@@ -212,9 +312,19 @@ func _update_leaf(leaf: _Leaf, delta: float) -> void:
 	match leaf.state:
 		_State.FALLING:
 			leaf.timer += delta
+			var wind_factor := 1.0 + WindSystem.wind_strength * WIND_SWAY_BOOST
 			sprite.position.y += leaf.fall_speed * delta
-			sprite.position.x = leaf.base_x + sin(leaf.age * leaf.sway_freq + leaf.sway_phase) * leaf.sway_amp
+			sprite.position.x = leaf.base_x + sin(leaf.age * leaf.sway_freq + leaf.sway_phase) * leaf.sway_amp * wind_factor
 			sprite.rotation += leaf.spin_speed * delta
+
+			var fade_in_alpha := clampf(leaf.age / SPAWN_FADE_IN_DURATION, 0.0, 1.0)
+			sprite.modulate = Color(leaf.color.r, leaf.color.g, leaf.color.b, fade_in_alpha)
+
+			# 잎이 계속 도는 동안은 그림자도 매 프레임 같은 회전을 반영해 다시 눕혀야 한다
+			_apply_shadow_transform(leaf)
+			# 착지에 가까워질수록(progress->1) 그림자와의 간격을 0으로 좁혀 높낮이감을 준다
+			var progress := clampf(leaf.timer / leaf.fall_duration, 0.0, 1.0)
+			leaf.shadow.global_position = sprite.global_position + Vector2(0.0, lerpf(SHADOW_MAX_GAP, 0.0, progress))
 
 			if leaf.timer >= leaf.fall_duration:
 				leaf.state = _State.LANDED
@@ -224,16 +334,21 @@ func _update_leaf(leaf: _Leaf, delta: float) -> void:
 
 		_State.LANDED:
 			leaf.timer += delta
+			leaf.shadow.global_position = sprite.global_position # 착지 = 그림자와 완전히 겹침
 			if leaf.timer >= HOLD_DURATION:
 				_begin_fade(leaf, LAND_FADE_DURATION)
 
 		_State.FADING:
 			leaf.timer += delta
-			var alpha := 1.0 - clampf(leaf.timer / leaf.fade_duration, 0.0, 1.0)
+			var fade := clampf(leaf.timer / leaf.fade_duration, 0.0, 1.0)
+			var alpha := 1.0 - fade
 			sprite.modulate = Color(leaf.color.r, leaf.color.g, leaf.color.b, alpha)
+			leaf.shadow.global_position = sprite.global_position
+			_apply_shadow_transform(leaf, alpha) # 그림자는 알파 대신 크기로 페이드 (ShadowLayer 사양, 위 주석 참고)
 			if leaf.timer >= leaf.fade_duration:
 				leaf.active = false
 				sprite.visible = false
+				leaf.shadow.visible = false
 
 
 func _begin_fade(leaf: _Leaf, duration: float) -> void:

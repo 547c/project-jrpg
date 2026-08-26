@@ -72,12 +72,19 @@ const VARIANTS: Dictionary = {
 var _shadow: Sprite2D
 var _sprite: Sprite2D
 var _collision: CollisionShape2D
+var _sway_material: ShaderMaterial
 
 
 func _ready() -> void:
 	if not Engine.is_editor_hint():
 		add_to_group("vegetation_prop")
 	_build()
+
+
+# 씬을 나갈 때 WindSystem 등록 목록에서도 빼준다 (이유는 tree_prop.gd/wind_system.gd 참고)
+func _exit_tree() -> void:
+	if _sway_material != null:
+		WindSystem.unregister_material(_sway_material)
 
 
 # 변종 표를 보고 스프라이트를 구성하고, 덤불이면 밑동 충돌까지 만든다.
@@ -108,12 +115,16 @@ func _build() -> void:
 	if Engine.is_editor_hint():
 		return
 
-	# 스프라이트와 완전히 같은 흔들림을 타도록 머티리얼 하나를 두 노드가 함께 쓴다 (tree_prop.gd와 동일한 이유)
-	var sway_material := ShaderMaterial.new()
-	sway_material.shader = SWAY_SHADER
-	sway_material.set_shader_parameter("sway_strength", SWAY_STRENGTH)
-	sway_material.set_shader_parameter("sway_speed", SWAY_SPEED)
-	_sprite.material = sway_material
+	# 스프라이트와 완전히 같은 흔들림을 타도록 머티리얼 하나를 두 노드가 함께 쓴다 (tree_prop.gd와 동일한 이유).
+	# 인스턴스 변수에 저장해두는 이유: _process()가 매 프레임 여기에 WindSystem 값을 밀어넣는다
+	if _sway_material == null:
+		_sway_material = ShaderMaterial.new()
+		_sway_material.shader = SWAY_SHADER
+		_sway_material.set_shader_parameter("sway_strength", SWAY_STRENGTH)
+		_sway_material.set_shader_parameter("sway_speed", SWAY_SPEED)
+		# 매 프레임 wind_strength 갱신은 WindSystem이 한꺼번에 처리한다 (tree_prop.gd와 동일한 이유)
+		WindSystem.register_material(_sway_material)
+	_sprite.material = _sway_material
 
 	# 일단 이 노드의 자식으로 만든 뒤 공용 ShadowLayer로 넘긴다 (tree_prop.gd와 동일)
 	if _shadow == null:
@@ -122,7 +133,7 @@ func _build() -> void:
 		_shadow.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		_shadow.centered = false
 		_shadow.modulate = Color(0, 0, 0, 1)
-		_shadow.material = sway_material
+		_shadow.material = _sway_material
 		add_child(_shadow)
 		ShadowLayer.adopt(_shadow, self)
 

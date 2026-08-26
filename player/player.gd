@@ -69,7 +69,7 @@ var _direction_queue: Array[String] = []
 var _last_facing: String = "down"
 var _last_is_running: bool = false # 입력을 뗀 뒤 감속 슬라이드 중에도 걷기/달리기 애니메이션을 유지하기 위해 기억해둔다
 var _footstep_timer: float = 0.0
-var _shadow: CharacterShadow
+var _shadow: PlayerShadow
 var _is_running_moving: bool = false # "달리는 중"의 실제 기준 = Shift를 누른 채 실제로 이동 중
 var _zoom_tween: Tween
 
@@ -92,11 +92,12 @@ func _ready() -> void:
 
 # 발밑 그림자를 현재 씬의 ShadowLayer에 만들어 붙인다 (그림자를 쓰는 씬에서만 실제로 생긴다).
 # 플레이어는 씬을 넘어 살아남지만 그림자는 씬과 함께 사라지므로, 씬에 들어올 때마다
-# SceneManager가 다시 불러준다 — 자세한 이유는 world/character_shadow.gd 주석
+# SceneManager가 다시 불러준다 — 자세한 이유는 world/player_shadow.gd 주석.
+# NPC는 여전히 CharacterShadow(타원)를 그대로 쓴다 — 플레이어만 실루엣 방식으로 바꿨다
 func attach_shadow() -> void:
 	if is_instance_valid(_shadow):
 		_shadow.queue_free()
-	_shadow = CharacterShadow.attach(self, $AnimatedSprite2D as AnimatedSprite2D)
+	_shadow = PlayerShadow.attach(self, $AnimatedSprite2D as AnimatedSprite2D)
 
 
 # 매 프레임(물리) 입력 처리, 이동, 애니메이션, 발소리 갱신을 순서대로 실행

@@ -1,6 +1,6 @@
 extends CanvasLayer
 
-# 달리기 중 화면 가장자리 비네트+블러 (autoload). SceneTint(layer 2)와 HUD(layer 5) 사이에 그려서
+# 달리기 중 화면 가장자리 비네트+블러 (autoload). SceneTint(layer 2)와 HUD(layer 8) 사이에 그려서
 # 월드 화면 위에는 얹히되 HUD/대화창/메뉴는 절대 건드리지 않는다 — 자세한 이유는
 # speed_vignette.gdshader 주석 참고.
 #

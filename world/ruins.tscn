@@ -47,5 +47,6 @@ sprite_modulate = Color(0.55, 0.4, 0.7, 1)
 shape = SubResource("CircleShape2D_boss")
 
 [node name="UI" type="CanvasLayer" parent="."]
+layer = 100
 
 [node name="DialogueBox" parent="UI" instance=ExtResource("3_dlgbox")]

@@ -175,6 +175,7 @@ func _play_opening() -> void:
 	GameState.set_flag("seen_opening", true)
 
 	var cutscene_layer := CanvasLayer.new()
+	cutscene_layer.layer = 100
 	add_child(cutscene_layer)
 	var cutscene_box := CUTSCENE_BOX_SCENE.instantiate() as CutsceneBox
 	cutscene_layer.add_child(cutscene_box)

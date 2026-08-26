@@ -111,12 +111,24 @@ static func ground_transform() -> Transform2D:
 # 그래서 원점은 그대로 두고 offset만 보정해서, 결과적으로 발밑 F를 축으로 눕힌 것과 같게 만든다:
 #   원하는 결과 q = F + M*(p - F) 이고 노드가 실제로 그리는 건 q = M*(offset + 픽셀) 이므로
 #   offset = art_offset - F + M⁻¹*F 로 두면 두 식이 정확히 같아진다.
-static func lay_on_ground(shadow: Sprite2D, art_offset: Vector2, foot_y: float) -> void:
+#
+# [extra_scale / Node2D 매개변수 타입]
+# 프롭은 전부 scale=1이라 그동안은 이 문제가 없었는데, 플레이어 그림자(player_shadow.gd)처럼
+# 스프라이트 자체에 배율(1.45배 등)이 걸려 있으면 얘기가 다르다 — 아래에서 transform을 통째로
+# 덮어쓰므로, 미리 shadow.scale을 걸어놔도 이 대입 한 줄에 지워진다. 그래서 배율을 아예 이
+# 함수의 인자로 받아 눕히는 행렬 자체에 곱해 넣는다(균등 배율 한정 — x/y 배율이 다르면 대각선이
+# 아닌 성분까지 어긋나 이 한 줄짜리 곱셈으로는 안 맞는다). Sprite2D.offset은 AnimatedSprite2D에도
+# 똑같이 있지만 두 타입이 공통 부모를 안 쓰는 남남이라, 정적 타입을 Node2D로 넓히고 set()으로
+# 덕타이핑한다(둘 다 실제로 offset 프로퍼티가 있어 런타임에는 아무 차이가 없다)
+static func lay_on_ground(shadow: Node2D, art_offset: Vector2, foot_y: float, extra_scale: float = 1.0) -> void:
 	var flatten := ground_transform()
+	var basis_x := flatten.x * extra_scale
+	var basis_y := flatten.y * extra_scale
 	# 이미 ShadowLayer로 옮겨졌을 수도 있으므로 위치(origin)는 건드리지 않고 회전/기울임만 바꾼다
-	shadow.transform = Transform2D(flatten.x, flatten.y, shadow.transform.origin)
+	shadow.transform = Transform2D(basis_x, basis_y, shadow.transform.origin)
 	var foot := Vector2(0.0, foot_y)
-	shadow.offset = art_offset - foot + flatten.affine_inverse() * foot
+	var basis_only := Transform2D(basis_x, basis_y, Vector2.ZERO)
+	shadow.set("offset", art_offset - foot + basis_only.affine_inverse() * foot)
 
 
 # 높이 height인 지점이 같은 광원 아래에서 바닥의 어디로 밀리는지(가로 거리).

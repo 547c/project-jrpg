@@ -115,7 +115,7 @@ texture_margin_bottom = 32.0
 axis_stretch_horizontal = 1
 
 [node name="HUD" type="CanvasLayer" unique_id=836659726]
-layer = 5
+layer = 8
 script = ExtResource("1_hud")
 
 [node name="MainHud" type="Control" parent="." unique_id=846760609]

@@ -1,7 +1,7 @@
 extends CanvasLayer
 
 # 카메라 바로 앞을 스쳐 지나가는 "전경 낙엽" (autoload). world/leaf_emitter.gd의 배경 낙엽과
-# 짝을 이루는 화면 공간 레이어다. SceneTint(layer 2)/SpeedVignette(layer 3) 위, HUD(layer 5)
+# 짝을 이루는 화면 공간 레이어다. SceneTint(layer 2)/SpeedVignette(layer 3) 위, HUD(layer 8)
 # 아래에 그려서 — 게임 월드와 달리기 비네트 위로는 지나가되 UI는 절대 가리지 않는다
 # (레이어 값 자체는 systems/foreground_leaves.tscn에 있다).
 #

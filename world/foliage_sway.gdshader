@@ -18,8 +18,16 @@ uniform float sway_speed = 1.1;
 // 따로 만들지 않아도 제각각 흔들린다
 uniform float phase_by_position = 0.05;
 
+// WindSystem.wind_strength(0~1)를 매 프레임 여기로 밀어넣는다(tree_prop.gd/vegetation_prop.gd의
+// _process 참고) — 평소 흔들림 폭/속도에 이 값만큼 배율을 더해 돌풍일 때 더 세게, 살짝 더
+// 빠르게 흔들리게 한다. wind_strength=0이면 곱해지는 배율이 1.0이라 이전과 완전히 동일하다
+uniform float wind_strength : hint_range(0.0, 1.0) = 0.0;
+uniform float wind_boost : hint_range(0.0, 3.0) = 1.3; // wind_strength=1일 때 흔들림 폭을 몇 배까지 키울지
+
 void vertex() {
 	float phase = (MODEL_MATRIX[3].x + MODEL_MATRIX[3].y) * phase_by_position;
 	float top = 1.0 - UV.y; // 위쪽(잎) 1 -> 아래쪽(뿌리) 0
-	VERTEX.x += sin(TIME * sway_speed + phase) * sway_strength * top;
+	float amp_scale = 1.0 + wind_strength * wind_boost;
+	float speed_scale = 1.0 + wind_strength * wind_boost * 0.3; // 폭보다는 살짝만 — 정신없이 빨라지면 어색하다
+	VERTEX.x += sin(TIME * sway_speed * speed_scale + phase) * sway_strength * amp_scale * top;
 }

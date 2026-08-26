@@ -69,5 +69,6 @@ shape = SubResource("CircleShape2D_encounter")
 position = Vector2(450, 320)
 
 [node name="UI" type="CanvasLayer" parent="."]
+layer = 100
 
 [node name="DialogueBox" parent="UI" instance=ExtResource("5_dlgbox")]

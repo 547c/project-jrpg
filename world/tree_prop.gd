@@ -65,6 +65,7 @@ const VARIANTS: Dictionary = {
 var _shadow: Sprite2D
 var _sprite: Sprite2D
 var _collision: CollisionShape2D
+var _sway_material: ShaderMaterial
 
 
 func _ready() -> void:
@@ -76,6 +77,13 @@ func _ready() -> void:
 		# 자세한 이유는 SceneManager의 상수 주석 + docs/map_objects.md #3
 		z_index = SceneManager.CHARACTER_BAND_Z_INDEX
 	_build()
+
+
+# 씬을 나갈 때(다른 지역으로 이동 등) WindSystem의 등록 목록에서도 빼줘야 한다 —
+# 안 그러면 이 머티리얼을 계속 참조해 메모리 누수가 된다. 자세한 이유는 wind_system.gd 참고
+func _exit_tree() -> void:
+	if _sway_material != null:
+		WindSystem.unregister_material(_sway_material)
 
 
 # 변종 표를 보고 스프라이트(시트에서 잘라낸 영역)와 밑동 충돌을 구성한다.
@@ -111,10 +119,15 @@ func _build() -> void:
 
 	# 스프라이트와 완전히 같은 흔들림을 타도록 머티리얼 하나를 두 노드가 함께 쓴다(따로 만들면
 	# 그림자만 미묘하게 다른 위상으로 흔들려 원본에서 분리된 것처럼 보인다 — MODEL_MATRIX 기반
-	# 위상 계산이라 같은 리소스를 공유하는 쪽이 완전히 동일한 값을 보장한다)
-	var sway_material := ShaderMaterial.new()
-	sway_material.shader = SWAY_SHADER
-	_sprite.material = sway_material
+	# 위상 계산이라 같은 리소스를 공유하는 쪽이 완전히 동일한 값을 보장한다).
+	# 인스턴스 변수에 저장해두는 이유: _process()가 매 프레임 여기에 WindSystem 값을 밀어넣는다
+	if _sway_material == null:
+		_sway_material = ShaderMaterial.new()
+		_sway_material.shader = SWAY_SHADER
+		# 매 프레임 wind_strength 갱신은 각자 _process를 두지 않고 WindSystem에 맡긴다
+		# (이유는 wind_system.gd 주석 — 인스턴스가 200개 넘게 있어 개별 _process 비용이 컸다)
+		WindSystem.register_material(_sway_material)
+	_sprite.material = _sway_material
 
 	# 일단 이 노드의 자식으로 만든 뒤 공용 ShadowLayer로 넘긴다 — 그래야 다른 그림자와 겹쳐도
 	# 밝기가 균일하다(이유는 world/shadow_layer.gd 주석)
@@ -126,7 +139,7 @@ func _build() -> void:
 		# 완전 불투명 검정으로 그린다 — 실제로 보이는 반투명함은 ShadowLayer의 self_modulate
 		# 알파 하나로만 준다(겹쳐도 진해지지 않게 하는 핵심, ShadowLayer 주석 참고)
 		_shadow.modulate = Color(0, 0, 0, 1)
-		_shadow.material = sway_material
+		_shadow.material = _sway_material
 		add_child(_shadow)
 		ShadowLayer.adopt(_shadow, self)
 

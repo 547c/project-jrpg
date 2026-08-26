@@ -83,5 +83,6 @@ reward_item = "ruins_key"
 popup_text = "낡은 부적이 들어있다. 표면에 알아보기 힘든 문양이 새겨져 있다 — 어딘가 익숙한 느낌이다."
 
 [node name="UI" type="CanvasLayer" parent="."]
+layer = 100
 
 [node name="DialogueBox" parent="UI" instance=ExtResource("3_dlgbox")]
