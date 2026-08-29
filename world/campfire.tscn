@@ -1,11 +1,48 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://world/campfire.gd" id="1_campfire"]
 [ext_resource type="Texture2D" path="res://assets/graphics/Pixel Crawler - Free Pack/Environment/Structures/Stations/Bonfire/Bonfire.png" id="2_furnace"]
+[ext_resource type="Texture2D" path="res://assets/graphics/Pixel Crawler - Free Pack/Environment/Structures/Stations/Bonfire/Fire_01-Sheet.png" id="3_flame"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_bonfire"]
 atlas = ExtResource("2_furnace")
 region = Rect2(0, 16, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_flame_0"]
+atlas = ExtResource("3_flame")
+region = Rect2(0, 0, 32, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_flame_1"]
+atlas = ExtResource("3_flame")
+region = Rect2(32, 0, 32, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_flame_2"]
+atlas = ExtResource("3_flame")
+region = Rect2(64, 0, 32, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_flame_3"]
+atlas = ExtResource("3_flame")
+region = Rect2(96, 0, 32, 48)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_flame"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_flame_0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_flame_1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_flame_2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_flame_3")
+}],
+"loop": true,
+"name": &"play",
+"speed": 8.0
+}]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_range"]
 radius = 48.0
@@ -16,6 +53,12 @@ script = ExtResource("1_campfire")
 [node name="Sprite2D" type="Sprite2D" parent="."]
 scale = Vector2(1.5, 1.5)
 texture = SubResource("AtlasTexture_bonfire")
+
+[node name="Flame" type="AnimatedSprite2D" parent="."]
+position = Vector2(0, -6)
+scale = Vector2(1.5, 1.5)
+sprite_frames = SubResource("SpriteFrames_flame")
+autoplay = "play"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_range")

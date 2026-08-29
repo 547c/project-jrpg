@@ -194,7 +194,13 @@ theme_override_colors/font_color = Color(0.4, 0.32, 0.24, 1)
 autowrap_mode = 3
 text = "Narration"
 
-[node name="TextLabel" type="Label" parent="RootHBox/NpcPanel/NpcContent" unique_id=2124029575]
+[node name="TextMargin" type="MarginContainer" parent="RootHBox/NpcPanel/NpcContent"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="TextLabel" type="Label" parent="RootHBox/NpcPanel/NpcContent/TextMargin" unique_id=2124029575]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_colors/font_color = Color(0.25, 0.15, 0.07, 1)
@@ -278,6 +284,81 @@ texture_filter = 1
 texture_normal = SubResource("AtlasTexture_arrow_right")
 ignore_texture_size = true
 stretch_mode = 5
+
+[node name="HistoryButton" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -78.0
+offset_top = 8.0
+offset_right = -10.0
+offset_bottom = 34.0
+texture_filter = 1
+theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_font_sizes/font_size = 12
+theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+theme_override_styles/hover = SubResource("StyleBoxTexture_button_hover")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_button_pressed")
+text = "기록"
+
+[node name="HistoryPanel" type="PanelContainer" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture_filter = 1
+theme_override_styles/panel = SubResource("StyleBoxTexture_panel")
+
+[node name="HistoryContent" type="VBoxContainer" parent="HistoryPanel"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="HistoryTitle" type="Label" parent="HistoryPanel/HistoryContent"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_font_sizes/font_size = 16
+text = "지금까지 나눈 대화"
+
+[node name="HistoryScroll" type="ScrollContainer" parent="HistoryPanel/HistoryContent"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="HistoryList" type="VBoxContainer" parent="HistoryPanel/HistoryContent/HistoryScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="HistoryButtonRow" type="HBoxContainer" parent="HistoryPanel/HistoryContent"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 10
+
+[node name="HistoryBackButton" type="Button" parent="HistoryPanel/HistoryContent/HistoryButtonRow"]
+visible = false
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+size_flags_horizontal = 3
+texture_filter = 1
+theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+theme_override_styles/hover = SubResource("StyleBoxTexture_button_hover")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_button_pressed")
+text = "뒤로가기"
+
+[node name="HistoryCloseButton" type="Button" parent="HistoryPanel/HistoryContent/HistoryButtonRow"]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+size_flags_horizontal = 3
+texture_filter = 1
+theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+theme_override_styles/hover = SubResource("StyleBoxTexture_button_hover")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_button_pressed")
+text = "닫기"
 
 [node name="DecisiveFrame" type="Control" parent="."]
 visible = false

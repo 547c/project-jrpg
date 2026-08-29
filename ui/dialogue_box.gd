@@ -83,14 +83,23 @@ const PORTRAITS: Dictionary = {
 @onready var _affinity_bar: ProgressBar = $RootHBox/NpcPanel/NpcContent/HeaderRow/InfoColumn/AffinityRow/AffinityBar
 @onready var _affinity_value_label: Label = $RootHBox/NpcPanel/NpcContent/HeaderRow/InfoColumn/AffinityRow/AffinityValueLabel
 @onready var _narration_label: Label = $RootHBox/NpcPanel/NpcContent/NarrationLabel
-@onready var _text_label: Label = $RootHBox/NpcPanel/NpcContent/TextLabel
+@onready var _text_label: Label = $RootHBox/NpcPanel/NpcContent/TextMargin/TextLabel
 @onready var _option_buttons_box: VBoxContainer = $RootHBox/OptionsPanel/OptionsContent/OptionButtons
 @onready var _page_label: Label = $RootHBox/OptionsPanel/OptionsContent/PageRow/PageLabel
 @onready var _prev_button: TextureButton = $RootHBox/OptionsPanel/OptionsContent/PageRow/PrevButton
 @onready var _next_button: TextureButton = $RootHBox/OptionsPanel/OptionsContent/PageRow/NextButton
 @onready var _bleep_player: AudioStreamPlayer = $BleepPlayer
+@onready var _history_button: Button = $HistoryButton
+@onready var _history_panel: PanelContainer = $HistoryPanel
+@onready var _history_title: Label = $HistoryPanel/HistoryContent/HistoryTitle
+@onready var _history_list: VBoxContainer = $HistoryPanel/HistoryContent/HistoryScroll/HistoryList
+@onready var _history_back_button: Button = $HistoryPanel/HistoryContent/HistoryButtonRow/HistoryBackButton
+@onready var _history_close_button: Button = $HistoryPanel/HistoryContent/HistoryButtonRow/HistoryCloseButton
+
+const HISTORY_TOPICS_TITLE := "지금까지 나눈 대화"
 
 var _nodes_by_id: Dictionary = {}
+var _root_node_id: String = ""
 var _last_shown_node_id: String = ""
 var _npc_id: String = "" # 현재 대화 상대 NPC의 id (빈 문자열이면 NPC가 아닌 대화 — 얼굴/호감도 숨김)
 var _typewriter: Typewriter
@@ -106,6 +115,9 @@ func _ready() -> void:
 	_typewriter = Typewriter.new(_text_label, _bleep_player)
 	_prev_button.pressed.connect(_on_prev_page)
 	_next_button.pressed.connect(_on_next_page)
+	_history_button.pressed.connect(_on_history_pressed)
+	_history_back_button.pressed.connect(_on_history_back_pressed)
+	_history_close_button.pressed.connect(_on_history_close_pressed)
 
 
 # 대화 트리를 id 기준으로 인덱싱하고 start_id 노드부터 대화를 시작.
@@ -117,8 +129,11 @@ func start_dialogue(dialogue_tree: Array, start_id: String, npc_id: String = "")
 		_nodes_by_id[node["id"]] = node
 
 	_npc_id = npc_id
+	_root_node_id = start_id
 	_setup_npc_panel(npc_id)
 
+	_history_panel.visible = false
+	_root_hbox.visible = true
 	show()
 	_show_node(start_id)
 
@@ -243,6 +258,7 @@ func _filter_visible_options(options: Array) -> Array:
 
 # 옵션의 표시 조건들을 모두 만족하는지 판단.
 # - show_if_flag: 해당 flag가 true여야 함
+# - show_if_flag_false: 해당 flag가 false여야 함 (두 갈래를 같은 flag로 양쪽 다 게이팅할 때)
 # - show_if_flags: 나열된 flag가 "전부" true여야 함 (여러 조건이 동시에 필요한 갈래용)
 # - show_if_quest_inactive: 해당 퀘스트가 아직 수락되지 않았을 때만 (수락 옵션용)
 # - show_if_quest_active: 해당 퀘스트가 수락되어 진행 중일 때만 (진행 확인 옵션용)
@@ -251,6 +267,10 @@ func _filter_visible_options(options: Array) -> Array:
 func _is_option_visible(option: Dictionary) -> bool:
 	var show_if_flag: String = option.get("show_if_flag", "")
 	if show_if_flag != "" and not GameState.get_flag(show_if_flag):
+		return false
+
+	var show_if_flag_false: String = option.get("show_if_flag_false", "")
+	if show_if_flag_false != "" and GameState.get_flag(show_if_flag_false):
 		return false
 
 	for flag_name in option.get("show_if_flags", []):
@@ -276,6 +296,29 @@ func _is_option_visible(option: Dictionary) -> bool:
 	return true
 
 
+# 이미 본 대사는 목록에서 완전히 제외하고 기록으로만 남긴다. 다음은 이미 봤어도 계속 노출:
+# - 상점/의뢰판 등 기능으로 이어지는 옵션
+# - give_gift/next_id_by_affinity처럼 도착 노드가 고정돼 있지 않은 옵션
+# - text_if_flag/text_by_affinity_tier로 내용이 시점마다 달라질 수 있는 노드로 가는 옵션
+func _is_option_consumed(option: Dictionary) -> bool:
+	if is_action_option(option) or _leads_to_action(option):
+		return false
+	if not option.get("next_id_by_affinity", {}).is_empty():
+		return false
+	if not option.get("give_gift", {}).is_empty():
+		return false
+
+	var target: String = option.get("next_id", "")
+	if target == "" or not _nodes_by_id.has(target) or not GameState.has_seen_node(target):
+		return false
+
+	var target_node: Dictionary = _nodes_by_id[target]
+	if target_node.has("text_if_flag") or target_node.has("text_by_affinity_tier"):
+		return false
+
+	return true
+
+
 # 옵션의 required_affinity 조건을 만족하는지 (없으면 항상 true). 미충족 옵션은 보이되 선택 불가(빨강)
 func _is_affinity_met(option: Dictionary) -> bool:
 	var req: Dictionary = option.get("required_affinity", {})
@@ -292,13 +335,17 @@ func _is_affinity_met(option: Dictionary) -> bool:
 # - 옵션이 MAX_OPTIONS를 넘으면 방어적으로 잘라낸다
 func _populate_options(options: Array, default_next_id: String = "") -> void:
 	var visible_options := _filter_visible_options(options)
+	var active_options: Array = []
+	for option in visible_options:
+		if not _is_option_consumed(option):
+			active_options.append(option)
 	_all_entries = []
 
-	if visible_options.is_empty():
+	if active_options.is_empty():
 		var fallback: Dictionary = {"label": "[계속]", "next_id": default_next_id} if default_next_id != "" else {"label": "닫기", "next_id": ""}
 		_all_entries.append({"option": fallback, "locked": false, "seen": false, "action": false})
 	else:
-		for option in visible_options:
+		for option in active_options:
 			_all_entries.append({
 				"option": option,
 				"locked": not _is_affinity_met(option),
@@ -535,6 +582,102 @@ func _resolve_next_id_by_affinity(spec: Dictionary) -> String:
 		if value < int(thresholds[i]):
 			return next_ids[i]
 	return next_ids[next_ids.size() - 1]
+
+
+func _on_history_pressed() -> void:
+	SFXPlayer.play(SFXPlayer.UI_CLICK_SOUND)
+	_root_hbox.visible = false
+	_history_panel.visible = true
+	offset_top = offset_bottom - MAX_PANEL_HEIGHT
+	_show_history_topics()
+
+
+func _on_history_back_pressed() -> void:
+	SFXPlayer.play(SFXPlayer.UI_CLICK_SOUND)
+	_show_history_topics()
+
+
+func _on_history_close_pressed() -> void:
+	SFXPlayer.play(SFXPlayer.UI_CLICK_SOUND)
+	_history_panel.visible = false
+	_root_hbox.visible = true
+	_update_panel_height()
+
+
+func _clear_history_list() -> void:
+	for child in _history_list.get_children():
+		child.queue_free()
+
+
+# 시작 노드(_root_node_id)의 최상위 옵션 중 실제로 골라본 적 있는 것만 주제로 나열
+func _show_history_topics() -> void:
+	_history_title.text = HISTORY_TOPICS_TITLE
+	_history_back_button.visible = false
+	_clear_history_list()
+
+	if not _nodes_by_id.has(_root_node_id):
+		return
+
+	for option in _nodes_by_id[_root_node_id].get("options", []):
+		var target: String = option.get("next_id", "")
+		if target == "" or not GameState.has_seen_node(target):
+			continue
+		var button := Button.new()
+		button.text = option.get("label", "")
+		_style_history_button(button)
+		button.pressed.connect(_show_history_detail.bind(option))
+		_history_list.add_child(button)
+
+
+func _show_history_detail(topic_option: Dictionary) -> void:
+	_history_title.text = topic_option.get("label", "")
+	_history_back_button.visible = true
+	_clear_history_list()
+
+	_add_history_line("플레이어: %s" % topic_option.get("label", ""))
+	_walk_history_transcript(topic_option.get("next_id", ""), {})
+
+
+# 노드 자체의 next_id로 자동 이어지는 구간은 플레이어 줄 없이 대사만, 옵션으로 갈라지는 지점은
+# 실제로 본 적 있는 갈래마다 "플레이어: [선택지]"를 앞세워 순서대로 나열한다
+func _walk_history_transcript(node_id: String, visited: Dictionary) -> void:
+	if node_id == "" or visited.has(node_id) or not _nodes_by_id.has(node_id) or not GameState.has_seen_node(node_id):
+		return
+	visited[node_id] = true
+
+	var node: Dictionary = _nodes_by_id[node_id]
+	var text := _resolve_text(node)
+	if text != "":
+		_add_history_line("%s: %s" % [_resolve_display_name(node), text])
+
+	var next_id: String = node.get("next_id", "")
+	if next_id != "":
+		_walk_history_transcript(next_id, visited)
+		return
+
+	for option in node.get("options", []):
+		var target: String = option.get("next_id", "")
+		if target == "" or not GameState.has_seen_node(target):
+			continue
+		_add_history_line("플레이어: %s" % option.get("label", ""))
+		_walk_history_transcript(target, visited)
+
+
+func _add_history_line(text: String) -> void:
+	var label := Label.new()
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.add_theme_color_override("font_color", COLOR_NORMAL)
+	label.text = text
+	_history_list.add_child(label)
+
+
+func _style_history_button(button: Button) -> void:
+	var template := _option_buttons_box.get_child(0) as Button
+	button.custom_minimum_size = Vector2(0, 36)
+	button.add_theme_color_override("font_color", COLOR_NORMAL)
+	button.add_theme_stylebox_override("normal", template.get_theme_stylebox("normal"))
+	button.add_theme_stylebox_override("hover", template.get_theme_stylebox("hover"))
+	button.add_theme_stylebox_override("pressed", template.get_theme_stylebox("pressed"))
 
 
 # 대화창을 숨기고, 마지막으로 보여줬던 노드 id와 함께 종료를 알림

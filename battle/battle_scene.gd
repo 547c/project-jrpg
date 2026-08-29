@@ -669,6 +669,13 @@ const HOVER_SCALE := 1.15
 const HOVER_RISE := 14.0 # 확대와 함께 위로 떠오르는 픽셀 수
 const HOVER_DURATION := 0.12
 
+# ── 배너 스타일 버튼(턴 종료/무기 변경/도망가기) 호버/눌림 피드백 ──────────────
+# 오브젝티브 박스 배경은 원래 정적 표시용이라 상태별 텍스처가 따로 없어, modulate/scale로 대신한다
+const BANNER_BUTTON_HOVER_MODULATE := Color(1.15, 1.15, 1.15, 1.0)
+const BANNER_BUTTON_PRESS_MODULATE := Color(0.85, 0.85, 0.85, 1.0)
+const BANNER_BUTTON_PRESS_SCALE := 0.96
+const BANNER_BUTTON_FEEDBACK_DURATION := 0.08
+
 @onready var _view: CanvasLayer = $View
 @onready var _actors: Node2D = $View/Actors
 @onready var _hit_flash: ColorRect = $View/HitFlash
@@ -847,6 +854,11 @@ func _ready() -> void:
 	_end_turn_button.pressed.connect(_on_end_turn_pressed)
 	_flee_button.pressed.connect(_on_flee_pressed)
 	_close_button.pressed.connect(_on_close_pressed)
+
+	_wire_banner_button_feedback(_weapon_button)
+	_wire_banner_button_feedback(_end_turn_button)
+	_wire_banner_button_feedback(_flee_button)
+	_wire_banner_button_feedback(_close_button)
 
 
 # 과열 게이지 프레임, 카드 스킬/저항 아이콘, 카드 프레임 스타일박스를 한 번만 잘라서 캐시해둔다
@@ -2216,6 +2228,34 @@ func _tween_card_hover(index: int, hovering: bool) -> void:
 	tween.set_parallel(true)
 	tween.tween_property(wrapper, "scale", Vector2.ONE * (HOVER_SCALE if hovering else 1.0), HOVER_DURATION)
 	tween.tween_property(wrapper, "position", target_pos, HOVER_DURATION)
+
+
+func _wire_banner_button_feedback(button: Button) -> void:
+	button.mouse_entered.connect(_on_banner_button_hover.bind(button, true))
+	button.mouse_exited.connect(_on_banner_button_hover.bind(button, false))
+	button.button_down.connect(_on_banner_button_pressed.bind(button))
+	button.button_up.connect(_on_banner_button_released.bind(button))
+
+
+func _on_banner_button_hover(button: Button, hovering: bool) -> void:
+	if button.disabled:
+		return
+	var target := BANNER_BUTTON_HOVER_MODULATE if hovering else Color.WHITE
+	create_tween().tween_property(button, "modulate", target, BANNER_BUTTON_FEEDBACK_DURATION)
+
+
+func _on_banner_button_pressed(button: Button) -> void:
+	button.pivot_offset = button.size / 2.0
+	var tween := create_tween().set_parallel(true)
+	tween.tween_property(button, "modulate", BANNER_BUTTON_PRESS_MODULATE, BANNER_BUTTON_FEEDBACK_DURATION)
+	tween.tween_property(button, "scale", Vector2.ONE * BANNER_BUTTON_PRESS_SCALE, BANNER_BUTTON_FEEDBACK_DURATION)
+
+
+func _on_banner_button_released(button: Button) -> void:
+	var target := BANNER_BUTTON_HOVER_MODULATE if button.is_hovered() else Color.WHITE
+	var tween := create_tween().set_parallel(true)
+	tween.tween_property(button, "modulate", target, BANNER_BUTTON_FEEDBACK_DURATION)
+	tween.tween_property(button, "scale", Vector2.ONE, BANNER_BUTTON_FEEDBACK_DURATION)
 
 
 # 호버 상태를 트윈 없이 즉시 되돌린다. 손패가 새로 깔리거나 칸이 비는 등 "그 카드가 더 이상 아까

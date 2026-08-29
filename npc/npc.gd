@@ -244,7 +244,7 @@ func _resolve_start_id() -> String:
 # _wander_state 자체는 대화 중에도 안 바뀌었으므로(MOVING이면 그대로 MOVING), 애니메이션을
 # 그 상태에 맞춰 다시 맞춰줘야 한다 — 안 그러면 idle로 멈춰 있던 스프라이트가 다음 프레임부터
 # 위치만 다시 슬금슬금 움직이는(애니메이션과 실제 이동이 어긋나는) 정반대 문제가 생긴다
-func _on_dialogue_ended() -> void:
+func _on_dialogue_ended(_last_node_id: String = "") -> void:
 	_in_dialogue = false
 	_update_wander_animation(_wander_state == WanderState.MOVING)
 	if _player_in_range:

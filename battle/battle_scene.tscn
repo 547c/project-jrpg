@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://d3jlp6dbxcr5w" path="res://battle/battle_scene.gd" id="1_battle"]
 [ext_resource type="Texture2D" uid="uid://fq726ml3dqoh" path="res://assets/GUI/MedievalUiMega/medieval.png" id="2_medieval"]
 [ext_resource type="Texture2D" uid="uid://786qtn7r4ods" path="res://assets/graphics/Pixel Crawler - Free Pack/Entities/Characters/Body_A/Animations/Idle_Base/Idle_Down-Sheet.png" id="3_playersheet"]
+[ext_resource type="Texture2D" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Title banners/BannerSmall_05A.png" id="4_banner"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_player_card_frame"]
 atlas = ExtResource("2_medieval")
@@ -44,16 +45,12 @@ corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_button_wood"]
-atlas = ExtResource("2_medieval")
-region = Rect2(656, 206, 63, 51)
-
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_button_normal"]
-texture = SubResource("AtlasTexture_button_wood")
-texture_margin_left = 14.0
-texture_margin_top = 14.0
-texture_margin_right = 14.0
-texture_margin_bottom = 14.0
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_button_banner"]
+texture = ExtResource("4_banner")
+texture_margin_left = 16.0
+texture_margin_top = 10.0
+texture_margin_right = 16.0
+texture_margin_bottom = 10.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_flavor_box"]
 bg_color = Color(0.05, 0.04, 0.04, 0.55)
@@ -387,18 +384,22 @@ theme_override_constants/separation = 10
 texture_filter = 1
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_colors/font_color = Color(0.28, 0.18, 0.22, 1)
 theme_override_font_sizes/font_size = 14
-theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+theme_override_styles/normal = SubResource("StyleBoxTexture_button_banner")
+theme_override_styles/hover = SubResource("StyleBoxTexture_button_banner")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_button_banner")
 text = "턴 종료"
 
 [node name="FleeButton" type="Button" parent="View/HUD/BottomBar/MainControls/LeftButtons" unique_id=1794551139]
 texture_filter = 1
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_colors/font_color = Color(0.28, 0.18, 0.22, 1)
 theme_override_font_sizes/font_size = 14
-theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+theme_override_styles/normal = SubResource("StyleBoxTexture_button_banner")
+theme_override_styles/hover = SubResource("StyleBoxTexture_button_banner")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_button_banner")
 text = "도망가기"
 
 [node name="WeaponColumn" type="Control" parent="View/HUD/BottomBar/MainControls" unique_id=312591004]
@@ -435,9 +436,11 @@ layout_mode = 0
 offset_top = 184.0
 offset_right = 110.0
 offset_bottom = 230.0
-theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_colors/font_color = Color(0.28, 0.18, 0.22, 1)
 theme_override_font_sizes/font_size = 13
-theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+theme_override_styles/normal = SubResource("StyleBoxTexture_button_banner")
+theme_override_styles/hover = SubResource("StyleBoxTexture_button_banner")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_button_banner")
 text = "무기: 검"
 
 [node name="HandArea" type="Control" parent="View/HUD/BottomBar/MainControls" unique_id=1462297779]
@@ -1402,9 +1405,11 @@ offset_left = 16.0
 offset_top = 150.0
 offset_right = 250.0
 offset_bottom = 196.0
-theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
+theme_override_colors/font_color = Color(0.28, 0.18, 0.22, 1)
 theme_override_font_sizes/font_size = 14
-theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+theme_override_styles/normal = SubResource("StyleBoxTexture_button_banner")
+theme_override_styles/hover = SubResource("StyleBoxTexture_button_banner")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_button_banner")
 text = "닫기"
 
 [node name="HitFlash" type="ColorRect" parent="View" unique_id=1091884629]
