@@ -58,7 +58,7 @@ const MONSTERS: Dictionary = {
 		"gold_max": 16,
 		"equipment_tier": ItemData.TIER_GOLD, # 사막 미라 — 금 등급
 		"portrait_region": Rect2(24, 33, 16, 16), # 64x64 Idle 프레임에서 미라 머리(하단 정렬 캐릭터의 상부)만 크롭
-		"appear_text": "미라가 흐릿한 신음을 흘리며 다가온다 — 마치 무언가에 저항하고 있는 것처럼.",
+		"appear_text": "미라가 거친 숨을 몰아쉬며 다가온다. 메마른 땅의 기운에 오래 시달려 사나워진 듯하다.",
 	},
 	# 유적 보스(임시): 전용 에셋이 아직 없어 미라 Warrior 스프라이트를 재사용(필드에선 확대+색조로 구분).
 	# 지금까지 중 가장 강함. 처치 시 battle_scene이 ruins_boss_defeated 플래그를 세운다

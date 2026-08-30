@@ -1719,7 +1719,7 @@ const KAMIL_DIALOGUE: Array = [
 				# 2부 결정적 선택: 유적 보스를 처치하고 진실까지 알아낸 뒤에만, 그리고 아직 이 갈래를 안 봤을 때만 열린다
 				"label": "[유적에서 알게 된 걸 말한다]",
 				"next_id": "kamil_truth_1",
-				"show_if_flags": ["ruins_boss_defeated", "truth_discovered"],
+				"show_if_flags": ["ruins_boss_defeated", "truth_revealed"],
 				"show_if_not_seen": "kamil_truth_1",
 			},
 			{
@@ -1833,14 +1833,14 @@ const KAMIL_DIALOGUE: Array = [
 	{
 		"id": "kamil_intro_1",
 		"speaker": "카밀",
-		"text": "저는 카밀입니다. 유서프와 같은 일을 하고 있죠 — '감시자' 말입니다.",
+		"text": "...카밀이에요. 유서프랑 비슷한 일을 하는 사람, 정도로만 알아두세요.",
 		"is_decisive": false,
 		"next_id": "kamil_intro_2",
 	},
 	{
 		"id": "kamil_intro_2",
 		"speaker": "카밀",
-		"text": "바다 건너에 도움이 필요한 곳이 있습니다. 준비되면 말씀하세요. 배를 준비해두겠습니다.",
+		"text": "필요한 게 있으면 말씀하세요. 사막 쪽으로 가실 거라면, 배는 준비해둘게요.",
 		"is_decisive": false,
 		"options": [
 			{"label": "[지금 갈게요]", "next_id": "kamil_confirm_departure"},
@@ -1997,14 +1997,14 @@ const NADIM_DIALOGUE: Array = [
 	{
 		"id": "nadim_secret_1",
 		"speaker": "나딤",
-		"text": "저 미라들, 원래는... 유적을 지키던 존재였다고 들었어. 아주 오래전엔.",
+		"text": "저 마른 것들 말이야... 원래 이 근처에 흔한 짐승들이었어. 그냥 좀 사나운 정도였지.",
 		"is_decisive": false,
 		"next_id": "nadim_secret_2",
 	},
 	{
 		"id": "nadim_secret_2",
 		"speaker": "나딤",
-		"text": "근데 언젠가부터 저렇게 변해버렸지. 폭주하듯이, 닥치는 대로 공격하고.",
+		"text": "근데 언젠가부터 눈에 띄게 사나워졌어. 이유도 없이 닥치는 대로 달려들고.",
 		"affinity_change_on_show": {"npc_id": "nadim", "amount": 3, "once": true},
 		"is_decisive": false,
 		"next_id": "nadim_secret_3",

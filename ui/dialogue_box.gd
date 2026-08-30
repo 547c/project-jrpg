@@ -108,6 +108,8 @@ var _typewriter: Typewriter
 var _all_entries: Array = []
 var _current_page: int = 0
 
+var _panel_height_tween: Tween # _update_panel_height()가 재생 중인 높이 트윈 (겹침 방지용으로 매번 kill 후 재생성)
+
 
 # 다른 씬에서 이 DialogueBox를 찾을 수 있도록 그룹에 등록하고, 공용 타이핑 헬퍼와 페이지 넘김 버튼을 준비
 func _ready() -> void:
@@ -229,7 +231,10 @@ func _update_panel_height() -> void:
 			break
 
 	var target_height: float = clampf(content_height, MIN_PANEL_HEIGHT, MAX_PANEL_HEIGHT)
-	offset_top = offset_bottom - target_height
+	if is_instance_valid(_panel_height_tween):
+		_panel_height_tween.kill()
+	_panel_height_tween = create_tween()
+	_panel_height_tween.tween_property(self, "offset_top", offset_bottom - target_height, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
 # text_by_affinity_tier가 있으면 해당 NPC의 현재 호감도 구간(cold/neutral/warm/trusted)에 맞는 문구를
