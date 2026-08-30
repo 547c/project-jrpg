@@ -2,26 +2,97 @@
 
 ## Setting
 
-Long ago, the land was sustained by the **Veins** — ancient waterways said to
-carry the world's life force beneath the earth, feeding villages, forests,
-and mountains alike. Centuries ago, the Veins began failing in scattered
-places across the continent, and regions dependent on them slowly withered
-or twisted into strange states.
+Long ago, the land of Orsia was sustained by the **Veins** — ancient
+channels said to carry the world's life force beneath the earth, feeding
+villages, forests, and mountains alike. In that age the land was fertile
+beyond memory and people lived long, healthy lives.
 
-The player begins in a small village on the far edge of this decline —
-remote enough that it had been spared, until now. The village well has
-just run dry for the first time.
+Today the Veins run far weaker across the entire continent — but no
+living person remembers it any other way, so the diminished flow is
+simply believed to be normal. The truth, hidden from the surface world,
+is that this was never a natural decline (see "The Truth" below).
 
-*(In-game, this backstory is delivered once, briefly, in an opening text
-cutscene. During actual gameplay, NPCs and text never use terms like "the
-Veins" — they speak plainly: "the well's gone dry," "something's wrong in
-the cave.")*
+The player begins in a small village on the far edge of the continent —
+one of the last villages where a Vein still flows at all. The village
+well has just run dry for the first time in living memory.
+
+*(In-game, this backstory is delivered gradually through NPC dialogue and
+discovery, never as an upfront exposition dump. Early dialogue never uses
+meta-terms like "the Veins" casually — NPCs speak plainly: "the well's
+gone dry," "something's wrong in the cave.")*
+
+## The Truth (revealed gradually across Part 1 and Part 2)
+
+- **The Watchers** are an order of immortal beings who discovered,
+  centuries ago, how to control the flow of the Veins. Their method:
+  forcibly seal a living person inside a containment vessel — **a
+  Warden** — and place one near each major Vein. A Warden acts as a
+  filter: it drastically cuts the flow reaching its village and siphons
+  the rest down into the Watchers' hidden underground world.
+- The Veins are the source of life itself — power and wealth to the
+  Watchers, who use the siphoned flow to sustain their own immortality.
+  That immortality isn't a one-time gift; it requires continuous supply,
+  which is why the theft has never stopped.
+- To keep the surface world docile, the Watchers built and maintained a
+  myth: a Warden is not a person, but a benevolent **Guardian spirit**,
+  worthy of shrines and offerings. The village's well-wishing customs and
+  the old stone altar outside the cave are relics of this cover story.
+- Why steal gradually instead of all at once: (1) a Warden's containment
+  has a throughput limit — draining a Vein too fast destroys the Warden
+  and the site before the theft is complete; (2) an abrupt change would
+  be noticed and provoke revolt, while a slow, generational decline goes
+  unnoticed — today's belief that the current flow is "normal" is proof
+  the strategy worked; (3) immortality demands constant resupply, so the
+  system was designed to extract forever, not once — and as more
+  villages are fully drained into desert, the shrinking number of viable
+  villages left must be drained harder, an unsustainable structure now
+  nearing collapse.
+- The player's village is one of the last places on the continent where
+  a Warden hasn't yet been fully drained.
+
+## What Actually Happened That Night
+
+The village's Warden had been sealed for centuries, its will and memory
+all but erased — until the Watchers ordered this village's Vein drained
+completely (so few undrained villages remain). A last, faint spark of the
+Warden's humanity resisted that order. That resistance — not malfunction,
+not corruption — was the tremor, the low cry, and the blue light the
+villagers felt that night. The well running fully dry wasn't compliance;
+it was a side effect of the Warden losing fine control while straining
+against the command. What Rohan and Mia each separately described as a
+"sad sound" was, literally, exactly that.
+
+## Guardian Resolution — Two Outcomes
+
+- **Combat**: the Warden's containment is destroyed outright. The village
+  is permanently cut off from the Watchers' network (a "failed
+  collection" from their side); the flow returns, unstable, with no one
+  left to regulate it. The Warden dies having successfully resisted —
+  with no one left alive to know why.
+- **Dialogue**: rather than simply calming the Warden, the player's
+  persistence convinces it to release its own binding. Sensing something
+  in the player, it lets go — not a death, but a self-chosen release. In
+  its final moment before dissolving, it leaves a fragmentary warning:
+  the Watchers exist, and they live underground.
+
+Both paths converge on the same payoff: the true, ancient volume of the
+Vein bursts through the broken filter — far more water than the well
+ever produced, physical proof something has been wrong for a very long
+time.
+
+## Yusuf's Real Role (supersedes any earlier "Watcher ally" framing)
+
+Yusuf is not part of a group trying to *stop* the Veins from failing —
+he is a former surface-world operative *for* the Watchers. Recruited
+under the belief he was helping maintain "an old, harmless tradition,"
+he eventually saw a Warden up close and realized what he'd actually been
+part of. He fled, and has drifted between villages since — which is also
+how he already knows the pattern repeats: nearly every village he's
+passed through was already a desert.
 
 ## v1.0 Scope — "The Village Well"
 
-The well dried up because the **Guardian** sealed within the nearby cave —
-an ancient being left behind to protect the local vein — has been
-weakened or corrupted, and is now unintentionally blocking the flow.
+The well dried up because of what's sealed within the nearby cave — see "The Truth" below for what the villagers don't know.
 
 ### Core NPCs (state-tracked)
 
@@ -57,9 +128,6 @@ color) so the player recognizes them as consequential.
 
 ## Threads left open for later (not implemented in v1.0)
 
-- **The Watchers** — a scattered group working to keep the Veins from
-  failing entirely. Yusuf is implied to be connected to them, though this
-  is never confirmed in v1.0.
 - **Other failing regions** — rumors of places far worse off than this
   village, hinting at a larger world beyond the current 3 zones.
 - **Why the Veins are failing** — an unanswered mystery, intended to span
@@ -96,42 +164,12 @@ core/state-tracked NPC — no ending impact, sells gear only).
 - **Not yet implemented**: at max affinity, Kasim is meant to gift the
   player a weapon. Only the reverse (player → Kasim gift) exists so far.
 
-## Part 2 — "Traces in the Sand" (added, no longer deferred to v2)
+## Part 2 (structure in progress)
 
-After the well is restored and reported to Elara, Yusuf reveals his true
-affiliation: he belongs to the **Watchers**, a scattered group tracking
-the failing Veins across the continent. This village's crisis was a small
-signal — a desert settlement across the sea is dying much faster.
-
-### New location: The Desert (reached by boat)
-
-A small dock is added near the village's coastline. Taking the boat
-leads to a desert region — a settlement being consumed by the same
-force that dried the well, but far more advanced.
-
-### New NPCs (2)
-
-- **A Watcher companion** (Yusuf's colleague) — guides the player to the
-  desert, reveals more about the Watchers' purpose and methods.
-- **A desert settlement leader/survivor** — desperate, represents the
-  human cost of the Veins failing; asks the player for help.
-
-### Part 2 decisive choice
-
-**Reveal the truth to the world, or keep it secret with the Watchers.**
-
-- The Watchers argue secrecy prevents panic.
-- The desert survivors argue the truth is needed so others can prepare.
-
-This choice shapes a second layer of ending beyond the original three,
-building on (not replacing) the Part 1 outcome.
-
-### Part 2 goal
-
-Investigate ancient ruins in the desert for clues to why the Veins are
-failing. The full answer is deliberately left unresolved — consistent
-with the original design note that this mystery spans future updates —
-but the player learns enough to make the Part 2 decisive choice.
+Yusuf's true history is now established (see "Yusuf's Real Role" above).
+The full Part 2 arc — confronting Yusuf, the desert/ruins reveal, and the
+final confrontation with the Watchers underground — is still being
+written. This section will be filled in once that's finalized.
 
 ## Affinity system (added, replaces simple binary flags for ongoing NPC relationships)
 

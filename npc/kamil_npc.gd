@@ -1,12 +1,12 @@
 @tool
 extends NPC
 
-# 카밀(감시자 동료). 유서프가 정체를 밝히는 노드(yusuf_secret_stage2)를 본 뒤에만 마을에 등장한다.
+# 카밀(감시자 동료). 유서프가 씬9에서 조직 경험을 전부 고백한 뒤(yusuf_full_confession)에만 마을에 등장한다.
 # 그 전에는 숨김+비활성(감지/상호작용 불가) 상태로 있다가, 조건이 충족되면 즉시 나타난다
 # (유서프와의 대화 직후 마을을 떠나지 않아도 바로 등장하도록 _process에서 가볍게 재확인).
 
 const SPRITE_FRAMES := preload("res://npc/kamil_sprite_frames.tres")
-const APPEAR_AFTER_SEEN := "yusuf_secret_stage2" # 이 노드를 본 뒤부터 등장
+const APPEAR_AFTER_FLAG := "yusuf_full_confession" # 이 플래그가 켜진 뒤부터 등장
 
 # 2부 결정적 선택의 두 결과 노드. 이 중 하나에서 대화가 끝나면 최종 엔딩으로 전환한다
 # (엘라라가 elara_ending_trigger로 1부 엔딩을 띄우는 것과 같은 패턴)
@@ -47,12 +47,12 @@ func _process(delta: float) -> void:
 	super._process(delta)
 
 
-# 등장 조건(APPEAR_AFTER_SEEN 노드를 봤는지)을 확인해 표시/감지 상태를 맞춘다.
+# 등장 조건(APPEAR_AFTER_FLAG가 켜졌는지)을 확인해 표시/감지 상태를 맞춘다.
 # 한 번 활성화되면 다시 숨기지 않는다
 func _refresh_presence() -> void:
 	if _active:
 		return
-	if GameState.has_seen_node(APPEAR_AFTER_SEEN):
+	if GameState.get_flag(APPEAR_AFTER_FLAG):
 		_active = true
 		visible = true
 		monitoring = true # Area2D 감지 재개 → 이제부터 [E] 안내/상호작용 가능

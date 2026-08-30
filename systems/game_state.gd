@@ -114,9 +114,8 @@ const DEFAULT_FLAGS: Dictionary = {
 	"seen_opening": false,                 # 오프닝 인트로를 이미 봤는가 (재부팅 시 반복 방지)
 	"guardian_event_done": false,          # 동굴 수호자 조우 이벤트를 이미 겪었는가
 	"guardian_dying_hint_heard": false,    # 대화 경로 결말에서 "감시자들은 지하에" 단서를 들었는가
-	"yusuf_partial_confession": false,     # 유서프가 감시자 조직에 몸담았던 과거를 절반쯤 고백했는가
 	"heard_ancient_abundance_hint": false, # 엘라라/로한 중 누구에게서든 낙원 시대 떡밥을 들었는가
-	"yusuf_last_village_hint": false,      # 유서프에게서 "이 마을이 몇 안 남은 곳"이라는 단서를 들었는가
+	"yusuf_full_confession": false,        # 씬9에서 유서프가 감시자 조직 경험을 전부 고백했는가 (카밀 등장 조건)
 	"player_hp": 25,                       # 플레이어 현재 체력
 	# 최대 체력은 두 값으로 나뉜다:
 	# - player_base_max_hp: 레벨업으로만 오르는 "기본" 최대 체력 (_apply_level_up이 올림)
