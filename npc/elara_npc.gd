@@ -18,6 +18,13 @@ func _ready() -> void:
 	_play_idle_or_static()
 
 
+# 미아 결정적 선택 직후 한 번은 체크인 대사로, 그 뒤로는 평소 인사로
+func _resolve_start_id() -> String:
+	if GameState.get_flag("met_mia_decisive") and not GameState.get_flag("elara_grind_advice_given"):
+		return "elara_grind_advice_1"
+	return dialogue_start_id
+
+
 # 기본 동작(안내 문구 복원)을 그대로 수행한 뒤, 대화가 엔딩 트리거 노드에서 끝났다면 엔딩으로 전환
 func _on_dialogue_ended(last_node_id: String = "") -> void:
 	super._on_dialogue_ended()

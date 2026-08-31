@@ -125,6 +125,7 @@ const ELARA_DIALOGUE: Array = [
 				"label": "[궁금한 게 있어요, 장로님]",
 				"next_id": "elara_secret_intro",
 				"required_affinity": {"npc_id": "elara", "min": 60},
+				"show_if_flag": "guardian_event_done",
 				"show_if_not_seen": "elara_secret_end",
 			},
 			{
@@ -327,7 +328,7 @@ const ELARA_DIALOGUE: Array = [
 		"text": "사람처럼... 말을 했다고? 살아있는 게 아니고?",
 		"is_decisive": false,
 		"options": [
-			{"label": "[네. \"얼마나 됐을까, 묶인 지\"라고 하더니 — 마지막엔 \"감시자들은 지하에 있다\"는 말을 하다 말고, 그대로 사라졌어요.]", "next_id": "elara_ending_peace_3"},
+			{"label": "[네. \"얼마나 됐을까, 묶인 지\"라고 하더니, 마지막엔 \"감시자들은 지하에 있다\"는 말을 하다 말고, 그대로 사라졌어요.]", "next_id": "elara_ending_peace_3"},
 		],
 	},
 	{
@@ -535,7 +536,7 @@ const ELARA_DIALOGUE: Array = [
 	{
 		"id": "elara_secret_stage2_2",
 		"speaker": "엘라라",
-		"text": "\"물이 밤낮으로 넘쳐흘러, 마을 사람 누구도 목마름을 몰랐다.\" — 이렇게 적혀 있어. 처음엔 그냥 과장이겠거니 했지.",
+		"text": "이렇게 적혀 있어. \"물이 밤낮으로 넘쳐흘러, 마을 사람 누구도 목마름을 몰랐다.\" 처음엔 그냥 과장이겠거니 했지.",
 		"is_decisive": false,
 		"next_id": "elara_secret_stage2_3",
 	},
@@ -552,6 +553,40 @@ const ELARA_DIALOGUE: Array = [
 		"narration": "(고개를 젓는다)",
 		"text": "...나도 내가 무슨 말을 하는지 모르겠군. 그냥, 요즘 자꾸 이 기록이 마음에 걸려서 말이야.",
 		"set_flag_on_show": "heard_ancient_abundance_hint",
+		"is_decisive": false,
+		"options": [],
+	},
+	# --- 체크인: 미아 결정적 선택 직후, 한 번만 뜨는 대화 ---
+	{
+		"id": "elara_grind_advice_1",
+		"speaker": "엘라라",
+		"narration": "(플레이어를 보자 표정이 진지해진다)",
+		"text": "...다들 만나고 왔군. 얼굴 보니 알겠네.",
+		"is_decisive": false,
+		"options": [
+			{"label": "[로한, 유서프, 미아... 다들 이상한 얘기를 하더라고요.]", "next_id": "elara_grind_advice_2"},
+		],
+	},
+	{
+		"id": "elara_grind_advice_2",
+		"speaker": "엘라라",
+		"text": "그래, 나도 대충 전해 들었네. 다들 같은 밤 얘기를 하고 있으니, 이게 그냥 넘길 일이 아니라는 것만은 분명해졌구먼.",
+		"is_decisive": false,
+		"next_id": "elara_grind_advice_3",
+	},
+	{
+		"id": "elara_grind_advice_3",
+		"speaker": "엘라라",
+		"narration": "(걱정스러운 눈으로)",
+		"text": "자네가 저 동굴까지 들어가 볼 생각이라면... 말리진 않겠네만, 절대 몸부터 사리지 말고 단단히 준비하고 가게. 요즘 숲이랑 동굴 몬스터들도 부쩍 사나워졌다고 하니.",
+		"is_decisive": false,
+		"next_id": "elara_grind_advice_end",
+	},
+	{
+		"id": "elara_grind_advice_end",
+		"speaker": "",
+		"text": "...그래, 무작정 들어갈 순 없지. 먼저 좀 더 강해져야겠어.",
+		"set_flag_on_show": "elara_grind_advice_given",
 		"is_decisive": false,
 		"options": [],
 	},
@@ -582,13 +617,14 @@ const ROHAN_DIALOGUE: Array = [
 			{"label": "[동굴에 대해 묻는다]", "next_id": "rohan_cave"},
 			{"label": "[숲에 대해 묻는다]", "next_id": "rohan_forest"},
 			{"label": "[사냥은 잘 되냐고 묻는다]", "next_id": "rohan_smalltalk"},
-			{"label": "[오크 처치를 돕겠다고 한다]", "next_id": "rohan_quest_accept", "start_quest": "forest_orcs", "show_if_quest_inactive": "forest_orcs"},
+			{"label": "[오크 처치를 돕겠다고 한다]", "next_id": "rohan_quest_accept", "start_quest": "forest_orcs", "show_if_quest_inactive": "forest_orcs", "show_if_flag": "met_mia_decisive"},
 			{"label": "[오크는 어떻게 되어가요?]", "next_id": "rohan_quest_status", "show_if_quest_active": "forest_orcs"},
 			{"label": "[다른 사람들에 대해 묻는다]", "next_id": "rohan_gossip", "show_if_flag": "met_elara"},
 			{
 				"label": "[뭔가 고민이 있어 보여요]",
 				"next_id": "rohan_secret_intro",
 				"required_affinity": {"npc_id": "rohan", "min": 60},
+				"show_if_flag": "guardian_event_done",
 				"show_if_not_seen": "rohan_secret_end",
 			},
 			{
@@ -897,13 +933,14 @@ const YUSUF_DIALOGUE: Array = [
 			{"label": "[동굴 이야기를 묻는다]", "next_id": "yusuf_cave_hint"},
 			{"label": "[당신은 누구세요?]", "next_id": "yusuf_who"},
 			{"label": "[뭘 팔고 있어요?]", "next_id": "yusuf_wares"},
-			{"label": "[스켈레톤 처치를 돕겠다고 한다]", "next_id": "yusuf_quest_accept", "start_quest": "cave_skeletons", "show_if_quest_inactive": "cave_skeletons"},
+			{"label": "[스켈레톤 처치를 돕겠다고 한다]", "next_id": "yusuf_quest_accept", "start_quest": "cave_skeletons", "show_if_quest_inactive": "cave_skeletons", "show_if_flag": "met_mia_decisive"},
 			{"label": "[스켈레톤은 어떻게 되어가요?]", "next_id": "yusuf_quest_status", "show_if_quest_active": "cave_skeletons"},
 			{"label": "[다른 사람들에 대해 묻는다]", "next_id": "yusuf_gossip", "show_if_flag": "met_elara"},
 			{
 				"label": "[정말 그냥 상인이 맞아요?]",
 				"next_id": "yusuf_secret_stage1",
 				"required_affinity": {"npc_id": "yusuf", "min": 50},
+				"show_if_flag": "guardian_event_done",
 				"show_if_not_seen": "yusuf_secret_stage1c",
 			},
 			{
@@ -1388,7 +1425,7 @@ const FILTER_ROOM_DIALOGUE: Array = [
 		"speaker": "유서프",
 		"narration": "(넋을 잃고 바라보며)",
 		"text": "...이만큼이나. 이 정도였다니.",
-		"set_flag_on_show": "truth_revealed",
+		"set_flag_on_show": ["truth_revealed", "filter_room_done"],
 		"is_decisive": false,
 		"options": [
 			{"label": "[이제 어떡하죠?]", "next_id": "filter_room_12"},
@@ -1589,7 +1626,7 @@ const MIA_DIALOGUE: Array = [
 				"label": "[그 꿈 이야기, 좀 더 해줄래?]",
 				"next_id": "mia_dream_intro",
 				"required_affinity": {"npc_id": "mia", "min": 60},
-				"show_if_flag": "earned_mia_trust",
+				"show_if_flags": ["earned_mia_trust", "guardian_event_done"],
 				"show_if_not_seen": "mia_dream_end",
 			},
 			{
@@ -2368,7 +2405,7 @@ const GUARDIAN_DIALOGUE: Array = [
 	{
 		"id": "guardian_mono_peace_6",
 		"speaker": "",
-		"text": "감시자. 지하. 대체 그게 뭔데 — 이 사람을 여기 가둬놓고, 이런 짓까지 할 수 있었던 거지.",
+		"text": "감시자. 지하. 대체 그게 뭔데... 이 사람을 여기 가둬놓고, 이런 짓까지 할 수 있었던 거지.",
 		"is_decisive": false,
 		"next_id": "guardian_mono_water_1",
 	},

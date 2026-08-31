@@ -116,6 +116,9 @@ const DEFAULT_FLAGS: Dictionary = {
 	"guardian_dying_hint_heard": false,    # 대화 경로 결말에서 "감시자들은 지하에" 단서를 들었는가
 	"heard_ancient_abundance_hint": false, # 엘라라/로한 중 누구에게서든 낙원 시대 떡밥을 들었는가
 	"yusuf_full_confession": false,        # 씬9에서 유서프가 감시자 조직 경험을 전부 고백했는가 (카밀 등장 조건)
+	"elara_grind_advice_given": false,      # 미아 결정적 선택 이후 엘라라의 체크인 대사(사냥 조언)를 들었는가
+	"arrived_desert": false,               # 사막(desert.tscn)에 처음 도착했는가 (objective 단계 9→10 전환)
+	"filter_room_done": false,             # 씬12 필터룸을 완료했는가 (truth_revealed와 별개 — 씬13 선택으로 덮이지 않음)
 	"player_hp": 25,                       # 플레이어 현재 체력
 	# 최대 체력은 두 값으로 나뉜다:
 	# - player_base_max_hp: 레벨업으로만 오르는 "기본" 최대 체력 (_apply_level_up이 올림)
@@ -1093,9 +1096,10 @@ func restore_quests(data: Dictionary) -> void:
 # Stage 4→5 전환에 쓰는 progress(진행도) 임계값 (현재 퀘스트 2개 기준, guardian 게이트와 동일)
 const OBJECTIVE_PROGRESS_TARGET := 2
 
-# 별도 flag로 저장하지 않고, 기존 진행 flag들로 현재 메인 목표 단계(1~8)를 매번 계산해서 반환.
+# 별도 flag로 저장하지 않고, 기존 진행 flag들로 현재 메인 목표 단계(1~15)를 매번 계산해서 반환.
 # objective 상태가 실제 진행 상황과 항상 일치하게 유지된다.
-# 6~8은 2부 진행: 엘라라 보고(6) → 유서프에게 더 알아보기(7) → 부두에서 출항(8)
+# 7~9는 1부 마무리~출항: 엘라라 보고(7) → 유서프에게 더 알아보기(8) → 부두에서 출항(9)
+# 10~15는 2부: 나딤(10) → 사막 위협/열쇠(11) → 문지기(12) → 필터룸(13) → 카밀 최종 선택(14) → 완료(15)
 func get_current_objective_stage() -> int:
 	if not get_flag("met_elara"):
 		return 1
@@ -1107,19 +1111,40 @@ func get_current_objective_stage() -> int:
 	if not get_flag("met_mia_decisive"):
 		return 3
 
-	if get_flag("progress") < OBJECTIVE_PROGRESS_TARGET:
+	if not get_flag("elara_grind_advice_given"):
 		return 4
 
-	if not get_flag("guardian_event_done"):
+	if get_flag("progress") < OBJECTIVE_PROGRESS_TARGET:
 		return 5
 
-	if not get_flag("part1_reported"):
+	if not get_flag("guardian_event_done"):
 		return 6
 
-	if not get_flag("boat_available"):
+	if not get_flag("part1_reported"):
 		return 7
 
-	return 8
+	if not get_flag("boat_available"):
+		return 8
+
+	if not get_flag("arrived_desert"):
+		return 9
+
+	if not get_flag("ruins_available"):
+		return 10
+
+	if not (is_quest_complete("desert_mummies") and has_item("ruins_key")):
+		return 11
+
+	if not get_flag("ruins_boss_defeated"):
+		return 12
+
+	if not get_flag("filter_room_done"):
+		return 13
+
+	if not get_flag("part2_complete"):
+		return 14
+
+	return 15
 
 
 # 현재 단계에 대응하는 안내 문구를 반환 (진행도 N은 실시간 계산해서 보간)
@@ -1128,19 +1153,33 @@ func get_objective_text() -> String:
 		1:
 			return "엘라라를 찾아가 대화해보세요"
 		2:
-			return "마을 사람들과 대화하며 정보를 모으세요 (%d/2)" % _met_villager_count()
+			return "로한과 유서프를 찾아가 대화하세요 (%d/2)" % _met_villager_count()
 		3:
-			return "술집에서 미아를 만나 결정적 정보를 얻으세요"
+			return "마을 외곽에서 미아를 만나 결정적 정보를 얻으세요"
 		4:
-			return "숲과 동굴의 몬스터를 처치해 힘을 기르세요 (레벨 %d/%d)" % [get_flag("progress"), OBJECTIVE_PROGRESS_TARGET]
+			return "엘라라에게 돌아가 알아낸 것을 전하세요"
 		5:
-			return "동굴 깊은 곳의 수호자를 찾아가세요"
+			return "퀘스트 버튼을 눌러 받을 수 있는 퀘스트와 의뢰인을 확인한 후 레벨업하세요"
 		6:
-			return "우물의 결과를 엘라라에게 알리세요"
+			return "동굴 깊은 곳의 수호자를 찾아가세요"
 		7:
+			return "우물의 결과를 엘라라에게 알리세요"
+		8:
 			return "유서프에게 가서 더 알아보세요"
-		_:
+		9:
 			return "부두에서 배를 타고 떠나세요"
+		10:
+			return "사막 정착지에서 나딤을 찾아 대화하세요"
+		11:
+			return "사막의 위협을 처치하고 유적의 열쇠를 찾으세요"
+		12:
+			return "유적 안으로 들어가 문지기와 맞서세요"
+		13:
+			return "필터룸 깊숙이 들어가 진실을 확인하세요"
+		14:
+			return "카밀과 이야기해 다음 행보를 정하세요"
+		_:
+			return "선택을 마쳤습니다. 이야기는 여기서 계속됩니다."
 
 
 # met_rohan + met_yusuf 중 true인 개수 (0~2)

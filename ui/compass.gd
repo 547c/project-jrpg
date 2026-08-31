@@ -14,7 +14,8 @@ extends Control
 const VILLAGE := "res://world/village.tscn"
 const FOREST := "res://world/forest.tscn"
 const CAVE := "res://world/cave.tscn"
-const TAVERN := "res://world/tavern.tscn"
+const DESERT := "res://world/desert.tscn"
+const RUINS := "res://world/ruins.tscn"
 
 const ORBIT_RADIUS := 70.0 # 화면 중앙(≈ 플레이어)으로부터 화살표를 띄우는 거리(px)
 
@@ -67,31 +68,53 @@ func resolve_target(scene: Node, player_pos: Vector2) -> Dictionary:
 	var stage: int = GameState.get_current_objective_stage()
 	var scene_path: String = scene.scene_file_path
 
-	# Stage 4(몬스터 처치)는 특정 대상 하나를 가리키기 애매하므로 별도 처리
-	if stage == 4:
+	# Stage 5/11(몬스터 처치·사막 위협)은 특정 대상 하나를 가리키기 애매하므로 숨김
+	if stage == 5:
 		return _resolve_monster_stage(scene, scene_path, player_pos)
+	if stage == 11 or stage == 15:
+		return _hidden()
+
+	# 문지기/필터룸은 유적(ruins.tscn) 안에서만 특정 노드를 가리킬 수 있고, ruins_entrance.gd가
+	# 일반 area_transition과 달리 destination_scene_path를 노출하지 않아 _portal_toward로 못 찾는다.
+	# 그래서 사막에서는 문지기 대신 유적 입구를 가리키는 걸로 대신한다
+	if stage == 12:
+		if scene_path == RUINS:
+			return _from_node(scene.get_node_or_null("RuinsBoss"))
+		if scene_path == DESERT:
+			return _from_node(scene.get_node_or_null("RuinsEntrance"))
+		return _hidden()
+	if stage == 13:
+		if scene_path == RUINS:
+			return _from_node(scene.get_node_or_null("FilterRoom"))
+		return _hidden()
 
 	# 나머지 stage: (목표 씬, 그 씬 안에서 가리킬 노드 이름)으로 환원
 	var target_scene := ""
 	var node_name := ""
 	match stage:
-		1, 6:
+		1, 4, 7:
 			target_scene = VILLAGE
 			node_name = "Elara"
 		2:
 			target_scene = VILLAGE # 마을 안에서 가리킬 NPC는 아래에서 "안 만난 쪽 중 가까운 쪽"으로 결정
 		3:
-			target_scene = TAVERN
+			target_scene = VILLAGE
 			node_name = "Mia"
-		5:
+		6:
 			target_scene = CAVE
 			node_name = "GuardianEncounter"
-		7:
+		8:
 			target_scene = VILLAGE # 2부: 유서프에게 더 알아보기 — 마을 안이면 유서프, 아니면 마을 포탈
 			node_name = "Yusuf"
-		8:
+		9:
 			target_scene = VILLAGE # 2부: 부두에서 출항 — 마을 안이면 부두, 아니면 마을 포탈
 			node_name = "Dock"
+		10:
+			target_scene = DESERT # 2부: 나딤을 찾아 대화 — 사막 안이면 나딤, 아니면 사막행 포탈
+			node_name = "Nadim"
+		14:
+			target_scene = VILLAGE # 2부: 카밀과 최종 대화 — 마을 안이면 카밀, 아니면 마을 포탈
+			node_name = "Kamil"
 		_:
 			return _hidden()
 
@@ -107,7 +130,7 @@ func resolve_target(scene: Node, player_pos: Vector2) -> Dictionary:
 	return _from_node(_portal_toward(scene, scene_path, target_scene))
 
 
-# Stage 4: 아직 완료 못 한 몬스터 퀘스트(숲/동굴)의 씬으로 가는 포탈을 가리킨다.
+# Stage 5: 아직 완료 못 한 몬스터 퀘스트(숲/동굴)의 씬으로 가는 포탈을 가리킨다.
 # 단, 이미 그 몬스터 씬 안에 있으면(여러 마리라 특정 하나를 가리키기 애매) 화살표를 숨긴다
 func _resolve_monster_stage(scene: Node, scene_path: String, player_pos: Vector2) -> Dictionary:
 	var incomplete: Array[String] = []
@@ -117,7 +140,7 @@ func _resolve_monster_stage(scene: Node, scene_path: String, player_pos: Vector2
 		incomplete.append(CAVE)
 
 	if incomplete.is_empty():
-		return _hidden() # 방어적 (stage 4면 최소 하나는 미완료여야 함)
+		return _hidden() # 방어적 (stage 5면 최소 하나는 미완료여야 함)
 
 	if scene_path in incomplete:
 		return _hidden() # 클리어해야 할 몬스터 씬 안 — 화살표 숨김

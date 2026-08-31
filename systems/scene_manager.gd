@@ -43,6 +43,7 @@ const VISITED_FLAGS: Dictionary = {
 	"res://world/village.tscn": "visited_village",
 	"res://world/forest.tscn": "visited_forest",
 	"res://world/cave.tscn": "visited_cave",
+	"res://world/desert.tscn": "arrived_desert",
 }
 
 # 씬 경로별로 진입 시 재생할 배경음악을 매핑 (전투 씬은 battle_scene.gd가 직접 재생하므로 여기 없음)

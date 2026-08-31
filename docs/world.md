@@ -100,8 +100,10 @@ The well dried up because of what's sealed within the nearby cave — see "The T
 |---|---|---|
 | Elara (Elder) | Knowledge/guidance, frames the mystery | Narrative pacing, ending flavor text |
 | Rohan (Hunter) | Forest guide, opinionated about the Guardian | Choice 1 flavor, no ending impact |
-| Yusuf (Traveling Merchant) | Info broker, subtly more than he seems | Choice 1 hint-giver, **v2 setup** |
+| Yusuf (Traveling Merchant) | Former Watcher operative, defected after witnessing a Warden's suffering — confesses fully at the start of Part 2 | Choice 1 hint-giver, Part 2 opening |
 | Mia (Child) | Sole witness, frightened, hiding what she saw | Choice 2, direct ending impact |
+| Kamil (Boat keeper) | Still Watcher-affiliated but quietly uneasy since parting from her sister — ferries the player to the desert and holds Part 2's final decisive choice | Part 2 desert transition, final ending branch |
+| Nadim (Desert survivor) | Kamil's younger sister, leads the desert settlement, gives the ruins quests | Part 2 desert quests, ruins access |
 
 ### Decisive Choices (drive the ending)
 
@@ -110,8 +112,10 @@ The well dried up because of what's sealed within the nearby cave — see "The T
 2. **Mia's trust** — pressure her for answers, or wait and let her come forward
    → flag: `earned_mia_trust`
 
-### Endings (3)
 
+### Endings
+
+**Part 1 (3)** — decided by `resolved_guardian_peacefully` / `earned_mia_trust`:
 - **Good** — both flags true: Guardian purified, Mia's trust earned. Well
   fully restored, village warms to the player.
 - **Neutral** — one flag true: partial resolution, well restored but
@@ -119,12 +123,21 @@ The well dried up because of what's sealed within the nearby cave — see "The T
 - **Bad** — both flags false: Guardian destroyed, Mia never opens up. Well
   stays broken; village grows wary of the player.
 
+**Part 2 (2)** — after the ruins boss and the Filter Room reveal, Kamil
+offers to guide the player into the Watchers' underground world. Trusting
+her (`truth_revealed = true`) leads to the **Reveal** ending; refusing
+(`truth_revealed = false`) leads to the **Secret** ending. Both currently
+end at the threshold of the underground — the full confrontation there is
+future scope, not yet built.
+
 ### Dialogue design
 
-Every NPC has frequent light branching dialogue (2 response options,
-affects only the next line — no state tracking). The two decisive choices
-above are visually distinguished in the dialogue UI (different border/
-color) so the player recognizes them as consequential.
+Each NPC runs a node-based dialogue tree (`systems/dialogue_data.gd`),
+gated by flags, active quests, and affinity thresholds. Light options are
+consumed once seen; players can revisit past conversations through a
+two-level history (topic list → full transcript). Decisive, story-altering
+choices are visually distinguished in the dialogue UI (different border/
+color) — two in Part 1, one more in Part 2 (Kamil's trust choice).
 
 ## Threads left open for later (not implemented in v1.0)
 
@@ -164,12 +177,17 @@ core/state-tracked NPC — no ending impact, sells gear only).
 - **Not yet implemented**: at max affinity, Kasim is meant to gift the
   player a weapon. Only the reverse (player → Kasim gift) exists so far.
 
-## Part 2 (structure in progress)
+## Part 2
 
-Yusuf's true history is now established (see "Yusuf's Real Role" above).
-The full Part 2 arc — confronting Yusuf, the desert/ruins reveal, and the
-final confrontation with the Watchers underground — is still being
-written. This section will be filled in once that's finalized.
+Yusuf's true history is now established (see "Yusuf's Real Role" above)
+and fully confessed at the start of Part 2. From there, the player uses
+Kamil and Nadim's existing boat route to reach the desert, fights the
+ruins' guardian boss, and witnesses the Filter Room's mural reveal
+(`truth_revealed`) — confirming the Watchers' identity and the underground
+world's existence. Kamil then offers to guide the player underground;
+trusting or refusing her branches into the two Part 2 endings above. The
+underground confrontation itself is still unbuilt — deferred until the
+story is finalized and ported into a dedicated final zone.
 
 ## Affinity system (added, replaces simple binary flags for ongoing NPC relationships)
 

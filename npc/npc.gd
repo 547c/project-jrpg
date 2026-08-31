@@ -204,13 +204,15 @@ func _pick_new_wander_target() -> void:
 	_wander_target = _home_position + Vector2(cos(angle), sin(angle)) * dist
 
 
-# 씬에서 DialogueBox를 찾아 이 NPC의 대화 트리로 대화를 시작하고, 이 NPC를 만났음을 GameState에 기록
+# 씬에서 DialogueBox를 찾아 이 NPC의 대화 트리로 대화를 시작하고, 정상 대화가 열렸을 때만
+# 이 NPC를 만났음을 GameState에 기록 (잠금 placeholder만 본 경우는 "만남"으로 치지 않는다)
 func _start_dialogue() -> void:
 	var dialogue_box := get_tree().get_first_node_in_group("dialogue_box") as DialogueBox
 	if dialogue_box == null:
 		return
 
-	if met_flag_name != "":
+	var start_id := _resolve_start_id()
+	if met_flag_name != "" and start_id == dialogue_start_id:
 		GameState.set_flag(met_flag_name, true)
 
 	if not dialogue_box.dialogue_ended.is_connected(_on_dialogue_ended):
@@ -220,7 +222,7 @@ func _start_dialogue() -> void:
 	_update_wander_animation(false) # _process가 멈추는 동안(아래 참고) 재생 중이던 run/walk 루프도 함께 idle로 고정
 	_interact_prompt.hide()
 	_name_label.hide()
-	dialogue_box.start_dialogue(dialogue_tree, _resolve_start_id(), _resolve_npc_id())
+	dialogue_box.start_dialogue(dialogue_tree, start_id, _resolve_npc_id())
 
 
 # 호감도/초상화용 npc_id를 반환. 명시적으로 지정돼 있으면 그것을, 아니면 met_flag_name에서

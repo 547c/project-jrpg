@@ -4,7 +4,6 @@
 [ext_resource type="Script" uid="uid://pt071dvpdb2d" path="res://world/area_transition.gd" id="2_trans"]
 [ext_resource type="PackedScene" path="res://ui/dialogue_box.tscn" id="3_dlgbox"]
 [ext_resource type="PackedScene" path="res://npc/npc.tscn" id="4_npc"]
-[ext_resource type="Script" uid="uid://ce30xc5a34hwh" path="res://npc/mia_npc.gd" id="5_mia"]
 [ext_resource type="Script" uid="uid://boaevrtxjyhvg" path="res://npc/kasim_npc.gd" id="6_kasim"]
 [ext_resource type="Texture2D" uid="uid://dq5qfss4f4x12" path="res://assets/graphics/Pixel Crawler - Free Pack/MockUps/Tavern.png" id="7_n6gcj"]
 
@@ -7108,10 +7107,6 @@ destination_spawn_point = "VillageSpawnFromTavern"
 position = Vector2(-1.4305115e-06, -23.48228)
 scale = Vector2(0.53245187, 1)
 shape = SubResource("RectangleShape2D_door")
-
-[node name="Mia" parent="." unique_id=80865614 instance=ExtResource("4_npc")]
-position = Vector2(406, 347)
-script = ExtResource("5_mia")
 
 [node name="Kasim" parent="." unique_id=1297424824 instance=ExtResource("4_npc")]
 position = Vector2(712, 165)

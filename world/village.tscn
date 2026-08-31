@@ -52,6 +52,7 @@
 [ext_resource type="PackedScene" path="res://world/rock_prop.tscn" id="93_rock"]
 [ext_resource type="PackedScene" path="res://world/leaf_emitter.tscn" id="94_leaf"]
 [ext_resource type="Script" uid="uid://bss3dhgk8uhk4" path="res://world/water_shimmer.gd" id="95_watershimmer"]
+[ext_resource type="Script" uid="uid://ce30xc5a34hwh" path="res://npc/mia_npc.gd" id="96_mia"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_idli4"]
 texture = ExtResource("1_1d4n2")
@@ -17008,19 +17009,19 @@ dialogue_tree = [{
 "next_id": "elara_well_incident"
 }],
 "speaker": "엘라라",
-"text": "그래, 그 얘기가 궁금하겠지. 요 며칠 마을이 영 어수선하지 않은가 — 자네도 저기 우물가에 사람들 모여 있는 거 보였겠지."
+"text": "그래, 그 얘기가 궁금하겠지. 요 며칠 마을이 영 어수선하지 않은가."
 }, {
 "id": "elara_well_incident",
 "is_decisive": false,
 "next_id": "elara_well_light",
 "speaker": "엘라라",
-"text": "사흘 전 밤 얘기일세. 정확히는 자정이 막 지났을 무렵이었지. 온 마을이 짧게, 하지만 분명하게 흔들렸어. 자다가 벌떡 깬 사람이 한둘이 아니었네. 나도 그랬고."
+"text": "사흘 전 밤 얘기일세... 정확히는... 아마 자정이 막 지났을 무렵이었지. 마을 전체가 콰광! 하고 흔들린 게야! 자다가 놀라서 벌떡 일어난 사람이 한둘이 아니었다니까. 나도 그랬고."
 }, {
 "id": "elara_well_light",
 "is_decisive": false,
 "next_id": "elara_well_dry",
 "speaker": "엘라라",
-"text": "그리고 그 직후에, 저 동굴 쪽 하늘이 잠깐 이상한 빛으로 물들었다더군. 나는 못 봤네만, 그날 늦게까지 안 자고 있던 사람 몇이 봤다고 하더군 — 파르스름한, 이 세상 것 같지 않은 빛이었다고."
+"text": "그리고 그 직후에, 저 동굴 쪽 하늘이 잠깐 이상한 빛으로 물들었다더군. 나는 못 봤네만, 그날 늦게까지 안 자고 있던 사람 몇이 봤다고 하더군. 파르스름한, 이 세상 것 같지 않은 빛이었다고 말이야."
 }, {
 "id": "elara_well_dry",
 "is_decisive": false,
@@ -17032,7 +17033,7 @@ dialogue_tree = [{
 "next_id": "elara_well_react_b"
 }],
 "speaker": "엘라라",
-"text": "그리고 다음 날 아침, 우물지기가 두레박을 내렸는데 바닥까지 텅 비어 있었어. 하룻밤 사이에 그리 된 거야. 이 마을이 생긴 이래로 우물이 마른 적은 단 한 번도 없었네."
+"text": "그리고 다음 날 아침, 글쎄 우물지기가 두레박을 내렸는데 바닥까지 텅 비어 있지 뭔가. 하룻밤 사이에 그리 된 게야. 이 마을이 생긴 이래로 우물이 마른 적은 단 한 번도 없었네."
 }, {
 "id": "elara_well_react_a",
 "is_decisive": false,
@@ -17056,7 +17057,7 @@ dialogue_tree = [{
 "next_id": "elara_well_legend"
 }],
 "speaker": "엘라라",
-"text": "사실 이 동굴에 대해서는, 우리 마을에 아주 오래전부터 내려오는 이야기가 하나 있어. 자네도 저 동굴 어귀에 낡은 돌 제단 같은 게 있는 거 본 적 있나?"
+"text": "사실 이 동굴에 대해서는, 우리 마을에 아주 오래전부터 내려오는 이야기가 하나 있어. 자네도 저 돌 제단 같은 거 본 적 있나?"
 }, {
 "id": "elara_well_legend",
 "is_decisive": false,
@@ -17071,19 +17072,19 @@ dialogue_tree = [{
 "next_id": "elara_well_puzzle"
 }],
 "speaker": "엘라라",
-"text": "그 물지기라는 게 뭐냐 하면 — 이 땅 밑을 흐르는 물줄기를 지켜주는 존재라고 했어. 동굴 깊은 곳에 잠들어 있으면서, 우리가 쓰는 물이 마르지 않게 돌봐준다고. 다들 그냥 옛날이야기라고 여겼지, 나도 마찬가지였고. 근데 이번 일을 보니... 영 아니라고는 못하겠군."
+"text": "그 물지기라는 게 뭐냐 하면, 이 땅 밑을 흐르는 물줄기를 지켜주는 존재라고 했어. 동굴 깊은 곳에 잠들어 있으면서, 우리가 쓰는 물이 마르지 않게 돌봐준다고. 다들 그냥 옛날이야기라고 여겼지, 나도 마찬가지였고. 근데 이번 일을 보니... 영 아니라고는 못하겠군."
 }, {
 "id": "elara_well_puzzle",
 "is_decisive": false,
 "next_id": "elara_well_send_rohan",
 "speaker": "엘라라",
-"text": "모르지. 근데 이상하지 않나 — 지켜주는 존재라면서 왜 갑자기 물을 막겠나. 앞뒤가 안 맞아. 하지만 뭔가 있는 건 분명해 보이니, 확인은 해봐야 하지 않겠나."
+"text": "모르지. 근데 이상하지 않나. 지켜주는 존재라면서 왜 갑자기 물을 막겠나. 앞뒤가 안 맞아. 하지만 뭔가 있는 건 분명해 보이니, 확인은 해봐야 하지 않겠나."
 }, {
 "id": "elara_well_send_rohan",
 "is_decisive": false,
 "next_id": "elara_well_send_mia",
 "speaker": "엘라라",
-"text": "혼자 가는 건 말리고 싶네만... 자네라면 괜찮을 것 같기도 하고. 그래도 준비는 좀 하고 가게. 우선 로한을 찾아가보게 — 그 사람이 숲 쪽에 살다시피 하는데, 마침 그날 밤 근처에 있었다고 오늘 아침에 여기 들러서 그러더군. 얼굴이 하얗게 질려서 말이야."
+"text": "혼자 가는 건 말리고 싶네만... 자네라면 괜찮을 것 같기도 하고. 그래도 준비는 좀 하고 가게. 우선 로한을 찾아가보게. 그 사람이 숲 쪽에 살다시피 하는데, 마침 그날 밤 근처에 있었다고 오늘 아침에 여기 들러서 그러더군. 얼굴이 하얗게 질려서 말이야."
 }, {
 "id": "elara_well_send_mia",
 "is_decisive": false,
@@ -17531,7 +17532,7 @@ dialogue_tree = [{
 "next_id": "rohan_cave_4"
 }],
 "speaker": "로한",
-"text": "요 몇 주째 여우고 살쾡이고 할 것 없이 마을 닭장 쪽으로 자꾸 내려오더군. 원래 이 계절엔 숲에 먹이가 충분해서 그럴 일이 없는데 말이야. 그래서 며칠 밤 순찰을 늘렸었네 — 그날도 그래서 늦게까지 밖에 있었던 거고."
+"text": "요 몇 주째 여우고 살쾡이고 할 것 없이 마을 닭장 쪽으로 자꾸 내려오더군. 원래 이 계절엔 숲에 먹이가 충분해서 그럴 일이 없는데 말이야. 그래서 며칠 밤 순찰을 늘렸었네. 그날도 그래서 늦게까지 밖에 있었던 거고."
 }, {
 "id": "rohan_cave_4",
 "is_decisive": false,
@@ -17546,7 +17547,7 @@ dialogue_tree = [{
 "next_id": "rohan_cave_6"
 }],
 "speaker": "로한",
-"text": "근데 진짜 소름 끼쳤던 건 그다음이야. 주변 짐승들이 죄다 미친 듯이 도망치기 시작했어. 새들이 한밤중에 떼로 날아오르고, 여우 한 마리는 내 앞을 그냥 지나쳐 가더군 — 나를 보고도 신경도 안 쓸 정도로. 이 숲에서 십 년 넘게 사냥했는데, 그런 반응은 처음 봤어."
+"text": "근데 진짜 소름 끼쳤던 건 그다음이야. 주변 짐승들이 죄다 미친 듯이 도망치기 시작했어. 새들이 한밤중에 떼로 날아오르고, 여우 한 마리는 내 앞을 그냥 지나쳐 가더군. 나를 보고도 신경도 안 쓸 정도로 말이야. 이 숲에서 십 년 넘게 사냥했는데, 그런 반응은 처음 봤어."
 }, {
 "id": "rohan_cave_6",
 "is_decisive": false,
@@ -17740,27 +17741,34 @@ dialogue_tree = [{
 "is_decisive": false,
 "next_id": "rohan_secret_stage2_2",
 "speaker": "로한",
-"text": "예전? ...나도 직접 본 건 아니고, 할아버지한테 들은 얘기지만."
+"text": "예전? 나도 직접 본 건 아니고... 그런데 우리 집안에 대대로 내려오는 게 하나 있어. 할아버지의 할아버지 때부터, 아니 그보다 더 전부터 이어져온 사냥 기록서야."
 }, {
 "id": "rohan_secret_stage2_2",
 "is_decisive": false,
+"narration": "(품에서 낡은 책을 꺼내 보여준다)",
 "next_id": "rohan_secret_stage2_3",
 "speaker": "로한",
-"text": "할아버지 말로는, 당신이 젊었을 땐 숲에 짐승이 지금보다 훨씬 많았대. 사냥감이 넘쳐서 하루에 몇 마리씩 잡아도 티도 안 났다더군. 나무도 훨씬 크고 빽빽했고."
+"text": "이 안에 사냥법이며 짐승들 습성이며 다 적혀있는데... 가끔 보면 도무지 믿기지 않는 구절들이 있어."
 }, {
 "id": "rohan_secret_stage2_3",
 "is_decisive": false,
 "next_id": "rohan_secret_stage2_4",
 "speaker": "로한",
-"text": "근데 이상한 게, 그게 갑자기 그렇게 된 게 아니라는 거야. 할아버지 젊었을 때부터 지금까지, 아주 조금씩, 세대를 거치면서 줄어든 거래. 그래서 아무도 이상하다고 못 느꼈나 봐. 워낙 천천히 줄었으니까."
+"text": "나무 둘레가 어른 셋이 팔을 벌려도 못 감쌀 정도였다느니, 열매 하나가 이만한 크기였다느니. 처음 읽었을 땐 그냥 옛날 사람들 허풍인 줄 알았지."
 }, {
 "id": "rohan_secret_stage2_4",
 "is_decisive": false,
-"narration": "(팔짱을 끼며)",
+"next_id": "rohan_secret_stage2_5",
+"speaker": "로한",
+"text": "근데 진짜 이상한 건 늑대 얘기야. 지금이야 늑대 한 마리쯤은 나 혼자서도 잡는, 뭐 그런 흔한 짐승 취급이잖아. 근데 기록엔 늑대가 사냥꾼 여럿이 모여야 겨우 잡을 수 있는 아주 강한 짐승으로 나와있어. 한 마리 잡으면 그 고기로 마을 전체가 배불리 먹었다고 적혀있고."
+}, {
+"id": "rohan_secret_stage2_5",
+"is_decisive": false,
+"narration": "(책을 다시 품에 넣으며)",
 "options": [],
 "set_flag_on_show": "heard_ancient_abundance_hint",
 "speaker": "로한",
-"text": "나도 별생각 없이 흘려들었었는데... 요즘 들어 자꾸 그 얘기가 생각나. 뭔가 있는 건가, 진짜."
+"text": "할아버지도 이 부분 읽을 때마다 고개를 갸웃거리셨어. \"이게 대체 어느 시절 얘기인지, 지금이랑은 너무 안 맞는다\"고. 나도 똑같은 생각이야. 근데 답은 못 찾았지."
 }]
 dialogue_start_id = "rohan_greeting"
 met_flag_name = "met_rohan"
@@ -17808,19 +17816,10 @@ dialogue_tree = [{
 },
 "show_if_not_seen": "yusuf_secret_stage1c"
 }, {
-"label": "[그때 그 말, 계속 마음에 걸렸어요. 당신... 정확히 뭘 본 거예요?]",
-"next_id": "yusuf_secret_stage2",
-"required_affinity": {
-"min": 80,
-"npc_id": "yusuf"
-},
-"show_if_flag": "guardian_event_done",
-"show_if_not_seen": "yusuf_secret_stage2j",
-"show_if_seen": "yusuf_secret_stage1c"
-}, {
-"label": "[떠돌아다니면서... 다른 마을들은 어땠어요?]",
-"next_id": "yusuf_secret_stage3_1",
-"show_if_seen": "yusuf_secret_stage2j"
+"label": "[저번에 물었던 거, 다시 물어봐도 될까요?]",
+"next_id": "yusuf_confession_1",
+"show_if_flag": "part1_reported",
+"show_if_not_seen": "yusuf_confession_end"
 }, {
 "give_gift": {
 "amount": 9,
@@ -18053,114 +18052,144 @@ dialogue_tree = [{
 "speaker": "유서프",
 "text": "이 정도만 말해두지. 더 궁금하면... 나를 좀 더 믿게 되면 그때 얘기하세."
 }, {
-"id": "yusuf_secret_stage2",
+"id": "yusuf_confession_1",
 "is_decisive": false,
-"narration": "(웃음기가 사라진다)",
-"next_id": "yusuf_secret_stage2b",
-"speaker": "유서프",
-"text": "...결국 묻는군. 그럴 줄 알았어."
-}, {
-"id": "yusuf_secret_stage2b",
-"is_decisive": false,
-"next_id": "yusuf_secret_stage2c",
-"speaker": "유서프",
-"text": "좋아. 어차피 언젠가는 말했어야 할 이야기니까. 나는... 한때 '감시자'라고 불리는 사람들과 함께 일했어."
-}, {
-"id": "yusuf_secret_stage2c",
-"is_decisive": false,
+"narration": "(표정이 살짝 굳는다)",
 "options": [{
-"label": "[근데요?]",
-"next_id": "yusuf_secret_stage2d"
+"label": "[가디언... 아니, 그 사람이 사라지기 전에 이런 말을 했어요. \"감시자들은... 지하에 있다\"고.]",
+"next_id": "yusuf_confession_2"
 }],
 "speaker": "유서프",
-"text": "처음 들었을 땐 나쁘지 않은 일 같았지. \"맥이 마르는 마을들을 지키는 사람들\"이라고 했거든. 결절점에 이상이 생기면 가서 살피고, 필요하면 막아준다고. 나도 그 말을 믿었어. 아니, 믿고 싶었던 것 같기도 하고."
+"text": "...그래, 올 줄 알았어. 무슨 일이 있었는지 말해봐."
 }, {
-"id": "yusuf_secret_stage2d",
+"id": "yusuf_confession_2",
 "is_decisive": false,
-"next_id": "yusuf_secret_stage2f",
+"narration": "(숨을 크게 들이쉰다)",
+"next_id": "yusuf_confession_3",
 "speaker": "유서프",
-"text": "근데 어느 마을에서, 그 \"필터\"라는 걸 직접 봤어. 다들 그냥 오래된 장치라고 부르는 그거. 근데 그거... 장치가 아니었어."
+"text": "...그렇군. 결국 여기서도."
 }, {
-"affinity_change_on_show": {
-"amount": 5,
-"npc_id": "yusuf"
-},
-"id": "yusuf_secret_stage2f",
+"id": "yusuf_confession_3",
+"is_decisive": false,
+"narration": "(한참 침묵하다)",
+"options": [{
+"label": "[뭔데요?]",
+"next_id": "yusuf_confession_4"
+}],
+"speaker": "유서프",
+"text": "...좋아. 이제 진짜로 말해야 할 때가 됐나 보군. 자네한테 한 번도 얘기 안 한 게 있어."
+}, {
+"id": "yusuf_confession_4",
+"is_decisive": false,
+"next_id": "yusuf_confession_5",
+"speaker": "유서프",
+"text": "나, 사실 그냥 떠돌이 장사꾼이 아니야. 예전에... '감시자'라고 불리는 사람들 밑에서 일한 적이 있어."
+}, {
+"id": "yusuf_confession_5",
+"is_decisive": false,
+"next_id": "yusuf_confession_6",
+"speaker": "유서프",
+"text": "처음엔 나쁜 일인 줄도 몰랐어. \"맥이 마르는 마을들을 돌보는 일\"이라고 했거든. 근데 어느 마을에서, 그 \"필터\"라는 걸 직접 봤어. 다들 그냥 오래된 장치라고 부르는 그거."
+}, {
+"id": "yusuf_confession_6",
 "is_decisive": false,
 "narration": "(사이)",
-"next_id": "yusuf_secret_stage2g",
+"next_id": "yusuf_confession_7",
 "speaker": "유서프",
-"text": "안에 사람이 있었어. 움직이지도, 말도 제대로 못 하는데 — 눈빛만은 살아있더군. 그리고 그게 괴로워하고 있다는 걸, 나는 알 수 있었어."
+"text": "근데 그거, 장치가 아니었어. 안에 사람이 있었어. 움직이지도, 말도 제대로 못 하는데... 눈빛만은 살아있더군. 괴로워하고 있다는 걸, 나는 알 수 있었어."
 }, {
-"id": "yusuf_secret_stage2g",
+"id": "yusuf_confession_7",
 "is_decisive": false,
-"next_id": "yusuf_secret_stage2h",
+"next_id": "yusuf_confession_8",
 "speaker": "유서프",
-"text": "내가 위에 있는 사람한테 물었지. 이게 뭐냐고. 왜 이런 게 있냐고. 표정 하나 안 바뀌고 그러더군. \"원래 그런 거다. 신경 쓸 것 없다.\""
+"text": "그날 밤에 도망쳤어. 그 뒤로 이 마을 저 마을 떠돌면서... 뭘 찾고 있었는지 나도 몰라. 근데 이 마을 와서 동굴 사건 얘기를 듣는 순간, 등골이 서늘하더군. 여기서도 똑같은 일이 벌어지고 있었던 거야."
 }, {
-"id": "yusuf_secret_stage2h",
+"id": "yusuf_confession_8",
 "is_decisive": false,
-"narration": "(말을 흐리다가 고개를 젓는다)",
-"next_id": "yusuf_secret_stage2e",
+"next_id": "yusuf_confession_9",
 "speaker": "유서프",
-"text": "그 말을 듣는 순간 알았어. 저 사람들, 아무것도 막고 있는 게 아니라는 걸. ...아니, 그 다음은 나도 확신 없어. 그냥 뭔가 크게 잘못됐다는 것만 알았지."
+"text": "근데 사실, 나도 다는 몰라. 내가 있을 때, 위에 있는 사람들이 하는 말들, 조각조각 주워들은 게 다야."
 }, {
-"id": "yusuf_secret_stage2e",
+"id": "yusuf_confession_9",
+"is_decisive": false,
+"next_id": "yusuf_confession_10",
+"speaker": "유서프",
+"text": "그 사람들, 뭔가를 계속 \"회수\"한다고 했어. 정확히 뭘 회수하는 건지, 어디로 보내는 건지는 말 안 해줬지. 나 같은 말단은 알 필요 없다는 식이었어."
+}, {
+"id": "yusuf_confession_10",
 "is_decisive": false,
 "options": [{
-"label": "[그래서 지금은 뭘 하려는 거예요?]",
-"next_id": "yusuf_secret_stage2i"
+"label": "[저 밑이라면... 지하요?]",
+"next_id": "yusuf_confession_11"
+}, {
+"label": "[혹시 그것 때문에 물지기가 필요한 거예요?]",
+"next_id": "yusuf_confession_11"
 }],
 "speaker": "유서프",
-"text": "그날 밤에 도망쳤어. 그 뒤로 이 마을 저 마을 떠돌면서 — 뭘 찾고 있었는지 나도 몰라. 근데 이 마을 와서 동굴 사건 얘기를 듣는 순간, 등골이 서늘하더군. 여기서도 똑같은 일이 벌어지고 있었던 거야."
+"text": "근데 딱 한 번, 술에 취한 감독관 하나가 이런 말을 흘린 적이 있어. \"저 밑에 가면, 위에서 상상도 못 할 게 있다\"고. 그러고 바로 입을 다물더군."
 }, {
-"id": "yusuf_secret_stage2i",
+"id": "yusuf_confession_11",
 "is_decisive": false,
-"narration": "(다시 평소 말투로 돌아가려 애쓰며 살짝 웃는다)",
-"next_id": "yusuf_secret_stage2j",
+"narration": "(고개를 끄덕인다)",
+"next_id": "yusuf_confession_12",
 "speaker": "유서프",
-"text": "글쎄. 장사나 하면서 눈치나 보고 있지, 뭐. ...근데 자네가 그 동굴에 들어갔다 나온 뒤로 물맛이 달라졌다는 소문, 나도 들었어. 그거 진짜인가?"
+"text": "그때는 무슨 소리인지 몰랐는데, 지금 자네 얘기 들으니까... 소름이 돋는군."
 }, {
-"id": "yusuf_secret_stage2j",
+"id": "yusuf_confession_12",
 "is_decisive": false,
-"narration": "(표정이 살짝 흔들린다)",
-"options": [],
-"set_flag_on_show": "yusuf_partial_confession",
+"next_id": "yusuf_confession_13",
 "speaker": "유서프",
-"text": "...그렇군. 그럼 정말로 뭔가 바뀌고 있는 거겠지. 언젠가, 진짜 언젠가는 나도 다 말할 날이 오겠지. 지금은 아니지만."
+"text": "생각해봐. 물지기가 마을 맥을 줄이고 있다는 건 이제 확실해. 근데 줄어든 만큼 그 맥이 그냥 사라지는 게 아니라면? 어디론가 가고 있는 거라면?"
 }, {
-"id": "yusuf_secret_stage3_1",
+"id": "yusuf_confession_13",
+"is_decisive": false,
+"narration": "(스스로도 믿기지 않는다는 듯)",
+"options": [{
+"label": "[근데 왜요? 그렇게까지 해서 뭘 얻으려고요?]",
+"next_id": "yusuf_confession_14"
+}],
+"speaker": "유서프",
+"text": "...설마, 그 지하라는 데로? 그 사람들이, 그동안 계속... 맥을 빼돌리고 있었던 건가?"
+}, {
+"id": "yusuf_confession_14",
+"is_decisive": false,
+"narration": "(고개를 젓는다)",
+"next_id": "yusuf_confession_15",
+"speaker": "유서프",
+"text": "그것까진 나도 몰라. 권력? 돈? ...아니면 훨씬 더 큰 뭔가일 수도 있고. 맥이 그냥 자원이 아니라 생명의 근원이라면, 그걸 쌓아서 뭘 하려는 건지 상상하기도 무서워."
+}, {
+"id": "yusuf_confession_15",
+"is_decisive": false,
+"narration": "(플레이어를 본다)",
+"options": [{
+"label": "[증거요?]",
+"next_id": "yusuf_confession_16"
+}],
+"speaker": "유서프",
+"text": "근데 짐작만으론 아무것도 못 해. 증거가 필요해."
+}, {
+"id": "yusuf_confession_16",
+"is_decisive": false,
+"next_id": "yusuf_confession_17",
+"speaker": "유서프",
+"text": "여기 물지기는 이제 사라졌잖아. 직접 물어볼 수도 없고. 근데... 이미 완전히 말라버린 마을들, 사막이 된 곳들에는 아직 물지기 껍데기가 남아있을 거야. 거기 가면 뭐라도 나올지 몰라."
+}, {
+"id": "yusuf_confession_17",
+"is_decisive": false,
+"options": [{
+"label": "[같이 가는 거예요?]",
+"next_id": "yusuf_confession_end"
+}],
+"speaker": "유서프",
+"text": "문제는 거기가 바다 건너에 있다는 거야. 마을 부두에 배가 한 척 있다고 들었어. 그거 타면 갈 수 있을 거야."
+}, {
+"id": "yusuf_confession_end",
 "is_decisive": false,
 "narration": "(씁쓸하게 웃는다)",
-"next_id": "yusuf_secret_stage3_2",
-"speaker": "유서프",
-"text": "좋은 질문은 아니군."
-}, {
-"id": "yusuf_secret_stage3_2",
-"is_decisive": false,
-"next_id": "yusuf_secret_stage3_3",
-"speaker": "유서프",
-"text": "거의 다... 말라 있었어. 우물이고 강이고, 죄다. 사람이 아예 안 사는 곳도 있었고, 몇 안 남아서 겨우 버티는 곳도 있었지."
-}, {
-"id": "yusuf_secret_stage3_3",
-"is_decisive": false,
-"next_id": "yusuf_secret_stage3_4",
-"speaker": "유서프",
-"text": "처음엔 그냥 가뭄이 심한 지역인가 보다 했어. 근데 한 곳, 두 곳, 열 곳... 가는 곳마다 똑같은 얘기를 들으니까, 이게 우연이 아니란 걸 알겠더군."
-}, {
-"id": "yusuf_secret_stage3_4",
-"is_decisive": false,
-"narration": "(목소리가 낮아진다)",
-"next_id": "yusuf_secret_stage3_5",
-"speaker": "유서프",
-"text": "그리고 이 마을에 왔을 때, 뭔가 달랐어. 여기는 아직... 살아있었거든. 그때 알았지. 여기가 몇 안 남은 곳 중 하나라는 걸."
-}, {
-"id": "yusuf_secret_stage3_5",
-"is_decisive": false,
 "options": [],
-"set_flag_on_show": "yusuf_last_village_hint",
+"set_flag_on_show": "yusuf_full_confession",
 "speaker": "유서프",
-"text": "그러니까 그 동굴에서 있었던 일, 절대 가볍게 볼 일이 아니야. 어쩌면... 여기가 마지막이었을지도 몰라."
+"text": "나도 이제 와서 발 빼기엔 너무 멀리 왔지. ...그래, 같이 가자. 이번엔 도망 안 쳐."
 }]
 dialogue_start_id = "yusuf_greeting"
 met_flag_name = "met_yusuf"
@@ -18187,7 +18216,7 @@ dialogue_tree = [{
 }, {
 "label": "[유적에서 알게 된 걸 말한다]",
 "next_id": "kamil_truth_1",
-"show_if_flags": ["ruins_boss_defeated", "truth_discovered"],
+"show_if_flags": ["ruins_boss_defeated", "truth_revealed"],
 "show_if_not_seen": "kamil_truth_1"
 }, {
 "give_gift": {
@@ -18226,45 +18255,68 @@ dialogue_tree = [{
 }, {
 "id": "kamil_truth_1",
 "is_decisive": false,
-"next_id": "kamil_truth_2",
+"narration": "(표정을 살피며)",
+"options": [{
+"label": "[당신, 알고 있었던 거예요?]",
+"next_id": "kamil_truth_1b"
+}],
 "speaker": "카밀",
-"text": "...표정을 보니, 뭔가 찾은 모양이군요."
+"text": "...봤군요. 벽화."
+}, {
+"id": "kamil_truth_1b",
+"is_decisive": false,
+"narration": "(침묵하다)",
+"next_id": "kamil_truth_1c",
+"speaker": "카밀",
+"text": "...조금은요. 전부는 아니지만."
+}, {
+"id": "kamil_truth_1c",
+"is_decisive": false,
+"options": [{
+"label": "[그럼 도와줄 수 있어요? 지하로 가는 방법.]",
+"next_id": "kamil_truth_2"
+}],
+"speaker": "카밀",
+"text": "저도 그쪽 사람이에요. 감시자요. 근데... 동생 만나고 나서부터, 계속 마음이 편치 않았어요. 배 태워주는 것 정도는 괜찮겠지, 하고 넘어온 것도 사실 스스로 생각해도 이상했고요."
 }, {
 "id": "kamil_truth_2",
 "is_decisive": false,
+"narration": "(망설이다)",
 "next_id": "kamil_truth_3",
 "speaker": "카밀",
-"text": "'감시자의 실수'라... 예상은 했지만, 직접 들으니..."
+"text": "...알아요. 들어가는 길. 안에 구조도 어느 정도는. 근데... 저를 믿고 그 정보를 받을지는, 당신이 정하세요."
 }, {
 "id": "kamil_truth_3",
 "is_decisive": true,
 "options": [{
 "flag_to_set": "truth_revealed",
 "flag_value": true,
-"label": "[진실을 세상에 알린다]",
+"label": "[당신을 믿고 도움을 받는다]",
 "next_id": "kamil_choice_reveal"
 }, {
 "flag_to_set": "truth_revealed",
 "flag_value": false,
-"label": "[비밀로 유지한다]",
+"label": "[거절하고 우리끼리 알아낸다]",
 "next_id": "kamil_choice_secret"
 }],
 "speaker": "카밀",
-"text": "이걸 세상에 알려야 할까요, 아니면... 조용히 묻어야 할까요. 결정은 당신에게 맡기겠습니다."
+"text": "저는 아직 그쪽 사람이에요. 제가 드리는 정보가 진짜인지, 혹시 함정은 아닌지, 저도 백 퍼센트 장담은 못 해요."
 }, {
 "id": "kamil_choice_reveal",
 "is_decisive": false,
+"narration": "(안도한 듯, 그러나 무거운 표정으로)",
 "options": [],
 "set_flag_on_show": "part2_complete",
 "speaker": "카밀",
-"text": "...당신의 선택을 존중합니다. 저도 더 이상 숨기지 않겠습니다."
+"text": "...고마워요. 후회 안 하게 할게요. 지하로 가는 입구, 제가 아는 데까지는 안내할게요."
 }, {
 "id": "kamil_choice_secret",
 "is_decisive": false,
+"narration": "(씁쓸하게 웃는다)",
 "options": [],
 "set_flag_on_show": "part2_complete",
 "speaker": "카밀",
-"text": "...현명한 선택일 수도 있겠군요. 저는 계속 지켜보겠습니다."
+"text": "...그렇겠죠. 당연해요. 그래도 조심하세요. 저 없이 들어가는 건... 훨씬 위험할 거예요."
 }, {
 "id": "kamil_gift_thanks",
 "is_decisive": false,
@@ -18283,7 +18335,7 @@ dialogue_tree = [{
 "is_decisive": false,
 "next_id": "kamil_intro_2",
 "speaker": "카밀",
-"text": "저는 카밀입니다. 유서프와 같은 일을 하고 있죠 — '감시자' 말입니다."
+"text": "...카밀이에요. 유서프랑 비슷한 일을 하는 사람, 정도로만 알아두세요."
 }, {
 "id": "kamil_intro_2",
 "is_decisive": false,
@@ -18295,7 +18347,7 @@ dialogue_tree = [{
 "next_id": ""
 }],
 "speaker": "카밀",
-"text": "바다 건너에 도움이 필요한 곳이 있습니다. 준비되면 말씀하세요. 배를 준비해두겠습니다."
+"text": "필요한 게 있으면 말씀하세요. 사막 쪽으로 가실 거라면, 배는 준비해둘게요."
 }, {
 "id": "kamil_confirm_departure",
 "is_decisive": false,
@@ -18307,6 +18359,317 @@ dialogue_tree = [{
 dialogue_start_id = "kamil_greeting"
 met_flag_name = "met_kamil"
 npc_id = "kamil"
+
+[node name="Mia" parent="." unique_id=-474810695 instance=ExtResource("4_npc")]
+position = Vector2(420, 260)
+script = ExtResource("96_mia")
+dialogue_tree = [{
+"id": "mia_locked_greeting",
+"is_decisive": false,
+"narration": "(낯선 사람을 경계하며 뒤로 물러선다)",
+"options": [],
+"speaker": "미아",
+"text": "..."
+}, {
+"id": "mia_greeting",
+"is_decisive": false,
+"narration": "(마을 외곽, 담벼락 아래 — 미아가 혼자 쪼그려 앉아 땅에 나뭇가지로 뭔가를 그리고 있다. 인기척에 흠칫하며 그림을 슥슥 지운다) (작게, 경계하며)",
+"options": [{
+"label": "[괜찮아? 여기서 뭐 해?]",
+"next_id": "mia_q1"
+}, {
+"label": "[그냥 인사만 한다]",
+"next_id": "mia_smalltalk",
+"show_if_flag": "met_mia"
+}, {
+"give_gift": {
+"amount": 9,
+"next_id_fail": "mia_gift_none",
+"next_id_success": "mia_gift_thanks",
+"npc_id": "mia"
+},
+"label": "[선물을 준다]"
+}],
+"speaker": "미아",
+"text": "...누구세요."
+}, {
+"id": "mia_q1",
+"is_decisive": false,
+"narration": "(아직 경계하며)",
+"options": [{
+"label": "[응, 며칠 전에 왔어. 근데 진짜 여기서 뭐 하고 있었어?]",
+"next_id": "mia_q2"
+}],
+"speaker": "미아",
+"text": "...그냥요. 마을 사람... 아니죠?"
+}, {
+"id": "mia_q2",
+"is_decisive": false,
+"narration": "(조금 누그러지며)",
+"options": [{
+"label": "[나비, 이름 예쁘다. 원래 여기서 자주 놀아?]",
+"next_id": "mia_q3"
+}],
+"speaker": "미아",
+"text": "...나비 찾고 있었어요. 제 고양이요. 어제부터 안 보여서."
+}, {
+"id": "mia_q3",
+"is_decisive": false,
+"narration": "(살짝 웃는 듯하다가 다시 굳는다)",
+"options": [{
+"label": "[그날 밤에도 나비 찾으러 나갔었어?]",
+"next_id": "mia_q4"
+}],
+"speaker": "미아",
+"text": "...아니요. 여긴 잘 안 와요. 그냥... 나비 찾다 보니까 여기까지 왔어요."
+}, {
+"id": "mia_q4",
+"is_decisive": false,
+"narration": "(움찔하며 뒤로 물러난다)",
+"options": [{
+"label": "[엘라라 촌장님한테 들었어. 걱정 많이 하시더라, 너희 어머니도.]",
+"next_id": "mia_q5"
+}],
+"speaker": "미아",
+"text": "...어떻게 알아요?"
+}, {
+"id": "mia_q5",
+"is_decisive": false,
+"narration": "(시선을 피하며, 목소리가 작아진다) (말을 흐리며 무릎 사이에 얼굴을 파묻는다)",
+"options": [{
+"label": "[...괜찮아, 무리해서 말 안 해도 돼]",
+"next_id": "mia_q6"
+}],
+"speaker": "미아",
+"text": "...그날도, 나비가 안 보여서... 원래 밤에 잠이 잘 안 와서 가끔 몰래 나가거든요. 근데 그날은 나비 우는 소리가 들리는 것 같아서 동굴 쪽까지 갔었어요."
+}, {
+"id": "mia_q6",
+"is_decisive": false,
+"narration": "(고개를 든다, 눈이 살짝 붉다)",
+"next_id": "mia_approach_press",
+"speaker": "미아",
+"text": "...진짜요?"
+}, {
+"id": "mia_gift_thanks",
+"is_decisive": false,
+"options": [],
+"speaker": "미아",
+"text": "우와... 나 주는 거예요? 헤헤, 고마워요! 소중히 간직할게요."
+}, {
+"id": "mia_gift_none",
+"is_decisive": false,
+"narration": "(막상 건넬 것이 없다)",
+"options": [],
+"speaker": "미아",
+"text": "줄 게 없네요."
+}, {
+"id": "mia_approach_press",
+"is_decisive": true,
+"narration": "(미아가 뭔가 더 말하려다, 망설인다)",
+"options": [{
+"flag_to_set": "earned_mia_trust",
+"flag_value": false,
+"label": "[아니, 사실대로 말해줘. 중요한 일이야]",
+"next_id": "mia_scared"
+}, {
+"flag_to_set": "earned_mia_trust",
+"flag_value": true,
+"label": "[...응, 진짜야. 천천히 얘기해도 돼]",
+"next_id": "mia_relieved"
+}],
+"speaker": "미아",
+"text": ""
+}, {
+"id": "mia_scared",
+"is_decisive": false,
+"narration": "(눈을 크게 뜨고 몸을 움츠린다) (양팔로 무릎을 감싸 안는다)",
+"options": [{
+"label": "[미안, 다그치려던 건 아니었어]",
+"next_id": "mia_scared_apology"
+}, {
+"label": "[...알겠어]",
+"next_id": ""
+}],
+"set_flag_on_show": "met_mia_decisive",
+"speaker": "미아",
+"text": "...몰라요. 아무것도 못 봤어요."
+}, {
+"id": "mia_scared_apology",
+"is_decisive": false,
+"narration": "(고개를 돌린 채) (한참 침묵하다가, 아주 작게)",
+"options": [],
+"speaker": "미아",
+"text": "...괜찮아요. ...그냥, 파란 빛. 그거 봤어요. 그게 다예요. 더는... 말하기 싫어요."
+}, {
+"id": "mia_relieved",
+"is_decisive": false,
+"narration": "(조금 안심한 듯, 그래도 여전히 조심스럽게)",
+"options": [{
+"label": "[응, 약속할게. 네가 본 거 그대로 믿을게]",
+"next_id": "mia_relieved_reveal"
+}],
+"set_flag_on_show": "met_mia_decisive",
+"speaker": "미아",
+"text": "...진짜 아무한테도 말 안 할 거예요? 어른들은 다 저보고 무서워서 헛것 봤다고 그래요."
+}, {
+"id": "mia_relieved_reveal",
+"is_decisive": false,
+"narration": "(숨을 한 번 크게 쉬고)",
+"options": [{
+"label": "[무섭지 않았어?]",
+"next_id": "mia_relieved_detail"
+}],
+"speaker": "미아",
+"text": "...그날, 나비 쫓아서 동굴 어귀까지 갔었어요. 거기 오래된 돌 있는 데까지요. 근데 갑자기 땅이 흔들리고, 동굴 안에서 파란 빛이 확 새어나왔어요."
+}, {
+"id": "mia_relieved_detail",
+"is_decisive": false,
+"options": [],
+"speaker": "미아",
+"text": "처음엔 무서웠는데... 근데 그 빛이랑 같이 소리가 들렸어요. 낮게, 오래오래 이어지는 소리요. 무서운 소리가 아니라... 꼭 누가 우는 소리 같았어요. 사람이 우는 소리요. 그래서 더 무서웠던 것 같아요. 왜 그런 게 저 안에서 우는 건지 몰라서."
+}, {
+"id": "mia_smalltalk",
+"is_decisive": false,
+"narration": "(미아가 예전보다 편하게 쳐다본다)",
+"options": [{
+"label": "[요즘 어때?]",
+"next_id": "mia_smalltalk_ok",
+"next_id_by_affinity": {
+"next_ids": ["mia_smalltalk_shy", "mia_smalltalk_ok", "mia_smalltalk_close"],
+"npc_id": "mia",
+"thresholds": [40, 70]
+}
+}, {
+"label": "[그 꿈 이야기, 좀 더 해줄래?]",
+"next_id": "mia_dream_intro",
+"required_affinity": {
+"min": 60,
+"npc_id": "mia"
+},
+"show_if_flags": ["earned_mia_trust", "guardian_event_done"],
+"show_if_not_seen": "mia_dream_end"
+}, {
+"label": "[요즘도 그 꿈을 꿔?]",
+"next_id": "mia_dream_followup",
+"show_if_seen": "mia_dream_end"
+}],
+"speaker": "미아",
+"text": "..."
+}, {
+"affinity_change_on_show": {
+"amount": 1,
+"npc_id": "mia"
+},
+"id": "mia_smalltalk_shy",
+"is_decisive": false,
+"options": [],
+"speaker": "미아",
+"text": "...그냥 그래요."
+}, {
+"affinity_change_on_show": {
+"amount": 2,
+"npc_id": "mia"
+},
+"id": "mia_smalltalk_ok",
+"is_decisive": false,
+"options": [],
+"speaker": "미아",
+"text": "이제 무섭지 않아요. 당신 덕분에요."
+}, {
+"affinity_change_on_show": {
+"amount": 3,
+"npc_id": "mia"
+},
+"id": "mia_smalltalk_close",
+"is_decisive": false,
+"options": [],
+"speaker": "미아",
+"text": "당신이 오면 좋아요. 얘기할 사람이 생긴 것 같아서."
+}, {
+"id": "mia_dream_intro",
+"is_decisive": false,
+"options": [{
+"label": "[어떤 꿈인데?]",
+"next_id": "mia_dream_1"
+}, {
+"label": "[괜찮으면 말 안 해도 돼]",
+"next_id": ""
+}],
+"speaker": "미아",
+"text": "...그거요? 사실 그날 밤 말고도, 예전부터 이상한 꿈을 꿨어요."
+}, {
+"id": "mia_dream_1",
+"is_decisive": false,
+"next_id": "mia_dream_2",
+"speaker": "미아",
+"text": "물이... 빛나는 꿈이에요. 근데 슬픈 빛이었어요. 꼭 뭔가를 찾고 있는 것처럼."
+}, {
+"affinity_change_on_show": {
+"amount": 4,
+"npc_id": "mia"
+},
+"id": "mia_dream_2",
+"is_decisive": false,
+"next_id": "mia_dream_end",
+"speaker": "미아",
+"text": "엄마는 그냥 애가 꾸는 꿈이라고 했는데... 그날 밤 진짜로 그 빛을 봤을 때, 무서웠던 것보다 익숙하다는 느낌이 더 컸어요."
+}, {
+"id": "mia_dream_end",
+"is_decisive": false,
+"options": [],
+"speaker": "미아",
+"text": "...이상하죠? 아무튼, 당신한테는 말할 수 있어서 다행이에요."
+}, {
+"id": "mia_dream_followup",
+"is_decisive": false,
+"next_id": "mia_dream_followup2",
+"speaker": "미아",
+"text": "요즘도 가끔 그 꿈을 꿔요. 근데... 요즘은 배경이 달라요. 물 대신 온통 모래인 곳이에요."
+}, {
+"id": "mia_dream_followup2",
+"is_decisive": false,
+"narration": "(인형을 꼭 안으며)",
+"next_id": "mia_dream_followup3",
+"speaker": "미아",
+"text": "예전엔 그냥 반짝이는 물이 슬퍼 보이기만 했는데... 요즘은, 누가 우는 소리도 들려. 꿈속에서."
+}, {
+"id": "mia_dream_followup3",
+"is_decisive": false,
+"narration": "(작은 목소리로)",
+"options": [{
+"label": "[아니, 진짜였을 수도 있어]",
+"next_id": "mia_dream_followup_yes"
+}, {
+"label": "[글쎄, 꿈은 꿈이니까]",
+"next_id": "mia_dream_followup_no"
+}],
+"speaker": "미아",
+"text": "근데 엄마한테 말하면 또 \"그냥 꿈이야\" 그러겠지. ...당신도 그렇게 생각해?"
+}, {
+"affinity_change_on_show": {
+"amount": 2,
+"npc_id": "mia"
+},
+"id": "mia_dream_followup_yes",
+"is_decisive": false,
+"options": [],
+"speaker": "미아",
+"text": "...정말요? 그렇게 말해주니까 좀 안심돼요."
+}, {
+"affinity_change_on_show": {
+"amount": -1,
+"npc_id": "mia"
+},
+"id": "mia_dream_followup_no",
+"is_decisive": false,
+"options": [],
+"speaker": "미아",
+"text": "...역시 그런가요. ...그냥 그런 거겠죠, 뭐."
+}]
+dialogue_start_id = "mia_greeting"
+met_flag_name = "met_mia"
+wander_radius_min = 20.0
+wander_radius_max = 30.0
 
 [node name="Dock" parent="." unique_id=441350026 instance=ExtResource("29_dock")]
 position = Vector2(815, 267)

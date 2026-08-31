@@ -186,9 +186,13 @@ func _show_node(node_id: String) -> void:
 	var node: Dictionary = _nodes_by_id[node_id]
 	var is_decisive: bool = node.get("is_decisive", false)
 
-	# 이 노드에 "도달"한 순간 세워둘 flag (예: 결정적 선택을 통과해 결과 노드에 이르렀음을 기록)
-	var flag_on_show: String = node.get("set_flag_on_show", "")
-	if flag_on_show != "":
+	# 이 노드에 "도달"한 순간 세워둘 flag (예: 결정적 선택을 통과해 결과 노드에 이르렀음을 기록).
+	# 문자열 하나 또는 여러 flag를 한 번에 세울 배열, 둘 다 받는다
+	var flag_on_show = node.get("set_flag_on_show", "")
+	if flag_on_show is Array:
+		for f in flag_on_show:
+			GameState.set_flag(f, true)
+	elif flag_on_show != "":
 		GameState.set_flag(flag_on_show, true)
 
 	# 이 노드에 "도달"한 순간 적용할 호감도 변화 (예: 속내를 털어놓는 대사에 도달한 것 자체가 효과를 가짐).
