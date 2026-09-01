@@ -96,7 +96,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _update_compass_hint() -> void:
-	_compass_hint.text = "[M] 나침반: %s" % ("켜짐" if _compass.is_enabled() else "꺼짐")
+	_compass_hint.text = tr("[M] 나침반: %s") % (tr("켜짐") if _compass.is_enabled() else tr("꺼짐"))
 
 
 # 경험치 진행바를 코드로 만들어 Lv 라벨 오른쪽(스탯 카드 아래 한 줄)에 붙인다.

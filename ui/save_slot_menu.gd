@@ -37,13 +37,13 @@ func _ready() -> void:
 
 func open_save_mode() -> void:
 	_mode = "save"
-	_title_label.text = "저장하기"
+	_title_label.text = tr("저장하기")
 	_open()
 
 
 func open_load_mode() -> void:
 	_mode = "load"
-	_title_label.text = "불러오기"
+	_title_label.text = tr("불러오기")
 	_open()
 
 
@@ -80,10 +80,10 @@ func _refresh_slots() -> void:
 		var summary: Dictionary = summaries[i]
 		var btn: Button = _slot_buttons[i]
 		if summary.is_empty():
-			btn.text = "슬롯 %d\n비어있음" % slot_num
+			btn.text = tr("슬롯 %d\n비어있음") % slot_num
 			btn.disabled = (_mode == "load") # 불러오기 모드에선 빈 슬롯 선택 불가
 		else:
-			btn.text = "슬롯 %d    Lv. %d    HP: %d/%d\n%s" % [
+			btn.text = tr("슬롯 %d    Lv. %d    HP: %d/%d\n%s") % [
 				slot_num, summary["progress"], summary["player_hp"], summary["player_max_hp"], summary["objective_text"],
 			]
 			btn.disabled = false
@@ -104,9 +104,9 @@ func _on_slot_pressed(slot_num: int) -> void:
 func _do_save(slot_num: int) -> void:
 	if SaveManager.save_game(slot_num):
 		_refresh_slots()
-		_show_toast("슬롯 %d에 저장했습니다" % slot_num)
+		_show_toast(tr("슬롯 %d에 저장했습니다") % slot_num)
 	else:
-		_show_toast("저장에 실패했습니다")
+		_show_toast(tr("저장에 실패했습니다"))
 
 
 func _do_load(slot_num: int) -> void:

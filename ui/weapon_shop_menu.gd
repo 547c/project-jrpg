@@ -150,7 +150,7 @@ func _on_next_page() -> void:
 
 # 골드/페이지 표시, 각 행의 아이템 정보·수량·총가격·구매 가능 여부를 전부 현재 상태로 갱신
 func _refresh() -> void:
-	_gold_label.text = "보유 골드: %d" % GameState.gold
+	_gold_label.text = tr("보유 골드: %d") % GameState.gold
 	_page_label.text = "%d/%d" % [_page + 1, _total_pages()]
 	_prev_button.disabled = _page <= 0
 	_next_button.disabled = _page >= _total_pages() - 1
@@ -179,13 +179,13 @@ func _refresh() -> void:
 		_row_icons[i].visible = true
 		_row_icons[i].texture = ItemData.build_icon(item_id)
 		_row_labels[i].visible = true
-		_row_labels[i].text = "%s - %s (%d 골드)" % [item["name"], item["description"], price]
+		_row_labels[i].text = tr("%s - %s (%d 골드)") % [tr(item["name"]), tr(item["description"]), price]
 		_row_minus[i].visible = true
 		_row_qty_labels[i].visible = true
 		_row_qty_labels[i].text = str(qty)
 		_row_plus[i].visible = true
 		_row_total_labels[i].visible = true
-		_row_total_labels[i].text = "총 %d 골드" % total
+		_row_total_labels[i].text = tr("총 %d 골드") % total
 		_row_buy[i].visible = true
 		_row_buy[i].disabled = GameState.gold < total
 
@@ -201,11 +201,11 @@ func _on_buy_pressed(row: int) -> void:
 	var total := qty * _price(item_id)
 
 	if not GameState.spend_gold(total):
-		_show_message("골드가 부족합니다")
+		_show_message(tr("골드가 부족합니다"))
 		return
 
 	GameState.add_item(item_id, qty)
-	_show_message("%s을(를) %d개 구매했다!" % [ItemData.ITEMS[item_id]["name"], qty])
+	_show_message(tr("%s을(를) %d개 구매했다!") % [tr(ItemData.ITEMS[item_id]["name"]), qty])
 	_quantities[item_id] = MIN_QUANTITY
 	_refresh()
 

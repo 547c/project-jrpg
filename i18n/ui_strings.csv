@@ -25,3 +25,103 @@ keys,ko,en
 [우물에 대해 묻는다],[우물에 대해 묻는다],[Ask about the well]
 [무슨 일이에요?],[무슨 일이에요?],[What happened?]
 [선물을 준다],[선물을 준다],[Give a gift]
+카밀,카밀,Kamil
+나딤,나딤,Nadim
+카심,카심,Kasim
+아직은... 좀 더 가까워져야 들을 수 있을 것 같다.,아직은... 좀 더 가까워져야 들을 수 있을 것 같다.,...We're not close enough yet for that.
+지금까지 나눈 대화,지금까지 나눈 대화,Conversations so far
+뒤로가기,뒤로가기,Back
+플레이어: %s,플레이어: %s,You: %s
+보유 골드: %d,보유 골드: %d,Gold: %d
+새로고침 (%d골드),새로고침 (%d골드),Refresh (%d gold)
+이미 진행 중인 의뢰가 있어요. 먼저 마치고 오세요.,이미 진행 중인 의뢰가 있어요. 먼저 마치고 오세요.,You already have an active bounty. Finish that one first.
+골드가 부족해요. (%d골드 필요),골드가 부족해요. (%d골드 필요),Not enough gold. (%d gold needed)
+새 의뢰를 붙였어요.,새 의뢰를 붙였어요.,New bounties posted.
+그 의뢰는 지금 받을 수 없어요.,그 의뢰는 지금 받을 수 없어요.,That bounty can't be accepted right now.
+의뢰를 맡았어요. 조심히 다녀오세요.,의뢰를 맡았어요. 조심히 다녀오세요.,Bounty accepted. Stay safe out there.
+의뢰판,의뢰판,Bounty Board
+의뢰,의뢰,Bounty
+보상,보상,Reward
+수락,수락,Accept
+새로고침,새로고침,Refresh
+[M] 나침반: %s,[M] 나침반: %s,[M] Compass: %s
+켜짐,켜짐,On
+꺼짐,꺼짐,Off
+목표,목표,Objective
+해제,해제,Unequip
+장착,장착,Equip
+인벤토리,인벤토리,Inventory
+퀘스트 완료!,퀘스트 완료!,Quest Complete!
+"
+경험치 +%d","
+경험치 +%d","
++%d XP"
+의뢰 완료!,의뢰 완료!,Bounty Complete!
+레벨 업!,레벨 업!,Level Up!
+"레벨 %d 달성!
+최대 체력 +%d / 최대 마나 +%d / 스킬포인트 +%d","레벨 %d 달성!
+최대 체력 +%d / 최대 마나 +%d / 스킬포인트 +%d","Reached level %d!
+Max HP +%d / Max Mana +%d / Skill Points +%d"
+%s  [완료],%s  [완료],%s  [Done]
+%s  [잠김],%s  [잠김],%s  [Locked]
+아직 수락하지 않았다. (지금 의뢰인에게 말을 걸 수 있다),아직 수락하지 않았다. (지금 의뢰인에게 말을 걸 수 있다),Not yet accepted. (You can talk to the client now.)
+수락 조건: %s,수락 조건: %s,Requirement: %s
+현재: 진행도 %d · 레벨 %d,현재: 진행도 %d · 레벨 %d,Current: Progress %d - Level %d
+진행도: %s,진행도: %s,Progress: %s
+남은 처치: %d마리,남은 처치: %d마리,Remaining: %d
+보상: %s,보상: %s,Reward: %s
+"슬롯 %d
+비어있음","슬롯 %d
+비어있음","Slot %d
+Empty"
+"슬롯 %d    Lv. %d    HP: %d/%d
+%s","슬롯 %d    Lv. %d    HP: %d/%d
+%s","Slot %d    Lv. %d    HP: %d/%d
+%s"
+슬롯 %d에 저장했습니다,슬롯 %d에 저장했습니다,Saved to slot %d
+저장에 실패했습니다,저장에 실패했습니다,Save failed
+이 슬롯을 덮어쓰시겠습니까?,이 슬롯을 덮어쓰시겠습니까?,Overwrite this slot?
+예,예,Yes
+아니요,아니요,No
+%s - %s (%d 골드),%s - %s (%d 골드),%s - %s (%d gold)
+총 %d 골드,총 %d 골드,Total: %d gold
+골드가 부족합니다,골드가 부족합니다,Not enough gold
+%s을(를) %d개 구매했다!,%s을(를) %d개 구매했다!,Bought %s x%d!
+구매,구매,Buy
+유서프의 상점,유서프의 상점,Yusuf's Shop
+카심의 무기점,카심의 무기점,Kasim's Weapon Shop
+스킵,스킵,Skip
+정말 스킵하시겠습니까?,정말 스킵하시겠습니까?,Are you sure you want to skip?
+엔딩 기록,엔딩 기록,Ending Records
+쓰러졌다...,쓰러졌다...,You have fallen...
+다시 시작,다시 시작,Try Again
+마나포션,마나포션,Mana Potion
+마나 50% 회복,마나 50% 회복,Restores 50% Mana
+체력포션,체력포션,Health Potion
+체력 50% 회복,체력 50% 회복,Restores 50% HP
+작은 선물,작은 선물,Small Gift
+누군가에게 선물하면 기뻐할 것이다,누군가에게 선물하면 기뻐할 것이다,Someone would be happy to receive this as a gift
+유적의 열쇠,유적의 열쇠,Ruins Key
+이걸로 사막 유적의 문을 열 수 있을 것 같다,이걸로 사막 유적의 문을 열 수 있을 것 같다,This looks like it could open the door to the desert ruins
+나무검,나무검,Wooden Sword
+물리 피해 +1,물리 피해 +1,Physical Damage +1
+뼈검,뼈검,Bone Sword
+물리 피해 +2,물리 피해 +2,Physical Damage +2
+금검,금검,Gold Sword
+물리 피해 +4,물리 피해 +4,Physical Damage +4
+나무 지팡이,나무 지팡이,Wooden Staff
+마법 피해 +1,마법 피해 +1,Magic Damage +1
+뼈 지팡이,뼈 지팡이,Bone Staff
+마법 피해 +2,마법 피해 +2,Magic Damage +2
+금 지팡이,금 지팡이,Gold Staff
+마법 피해 +4,마법 피해 +4,Magic Damage +4
+나무 방패,나무 방패,Wooden Shield
+최대 체력 +5,최대 체력 +5,Max HP +5
+뼈 방패,뼈 방패,Bone Shield
+최대 체력 +10,최대 체력 +10,Max HP +10
+금 방패,금 방패,Gold Shield
+최대 체력 +20,최대 체력 +20,Max HP +20
+숲의 오크 소탕,숲의 오크 소탕,Orc Cleanup in the Forest
+동굴의 스켈레톤,동굴의 스켈레톤,Skeletons in the Cave
+사막의 미라 처치,사막의 미라 처치,Mummies in the Desert
+유적의 열쇠 찾기,유적의 열쇠 찾기,Find the Ruins Key

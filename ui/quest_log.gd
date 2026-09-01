@@ -111,11 +111,11 @@ func _build_main_tab() -> void:
 
 
 func _quest_title_text(quest_id: String, quest: Dictionary) -> String:
-	var title: String = quest["title"]
+	var title: String = tr(quest["title"])
 	if quest["complete"]:
-		return "%s  [완료]" % title
+		return tr("%s  [완료]") % title
 	if not quest["active"] and not GameState.can_start_quest(quest_id):
-		return "%s  [잠김]" % title
+		return tr("%s  [잠김]") % title
 	return title
 
 
@@ -145,10 +145,10 @@ func _quest_status_lines(quest_id: String, quest: Dictionary) -> Array[String]:
 	# 아직 수락하지 않은 퀘스트: 받을 수 있으면 그렇게, 아니면 부족한 조건을 그대로 보여준다
 	var requirement := GameState.get_quest_requirement_text(quest_id)
 	if requirement == "":
-		lines.append("아직 수락하지 않았다. (지금 의뢰인에게 말을 걸 수 있다)")
+		lines.append(tr("아직 수락하지 않았다. (지금 의뢰인에게 말을 걸 수 있다)"))
 	else:
-		lines.append("수락 조건: %s" % requirement)
-		lines.append("현재: 진행도 %d · 레벨 %d" % [GameState.get_flag("progress"), GameState.get_player_level()])
+		lines.append(tr("수락 조건: %s") % requirement)
+		lines.append(tr("현재: 진행도 %d · 레벨 %d") % [GameState.get_flag("progress"), GameState.get_player_level()])
 	return lines
 
 
@@ -157,17 +157,17 @@ func _quest_status_lines(quest_id: String, quest: Dictionary) -> Array[String]:
 # 의뢰는 한 번에 하나만 받을 수 있어 목록이 아니라 항목 하나(또는 안내)만 그린다
 func _build_sub_tab() -> void:
 	if not GameState.has_active_sub_quest():
-		_add_entry("진행 중인 의뢰 없음",
-			["엘라라에게 말을 걸어 의뢰판을 확인해보세요."] as Array[String], SUBTITLE_LOCKED_COLOR)
+		_add_entry(tr("진행 중인 의뢰 없음"),
+			[tr("엘라라에게 말을 걸어 의뢰판을 확인해보세요.")] as Array[String], SUBTITLE_LOCKED_COLOR)
 		return
 
 	var quest := GameState.active_sub_quest
 	var remaining := SubQuestData.total_target(quest) - SubQuestData.total_progress(quest)
 	var lines: Array[String] = [
-		"의뢰인: %s" % SubQuestData.GIVER,
-		"진행도: %s" % SubQuestData.describe_progress(quest),
-		"남은 처치: %d마리" % remaining,
-		"보상: %s" % SubQuestData.describe_rewards(quest),
+		tr("의뢰인: %s") % tr(SubQuestData.GIVER),
+		tr("진행도: %s") % SubQuestData.describe_progress(quest),
+		tr("남은 처치: %d마리") % remaining,
+		tr("보상: %s") % SubQuestData.describe_rewards(quest),
 	]
 	_add_entry(SubQuestData.title(quest), lines, SUBTITLE_COLOR)
 

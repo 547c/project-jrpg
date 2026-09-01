@@ -73,7 +73,7 @@ func _price(item_id: String) -> int:
 func _setup_item_row(item_id: String, icon: TextureRect, label: Label) -> void:
 	var item: Dictionary = ItemData.ITEMS[item_id]
 	icon.texture = ItemData.build_icon(item_id)
-	label.text = "%s - %s (%d 골드)" % [item["name"], item["description"], _price(item_id)]
+	label.text = tr("%s - %s (%d 골드)") % [tr(item["name"]), tr(item["description"]), _price(item_id)]
 
 
 # 대화창에서 상점을 연다
@@ -117,7 +117,7 @@ func _on_quantity_step(item_id: String, delta: int) -> void:
 # 골드 표시, 각 아이템의 수량 표시/총가격/구매 가능 여부를 전부 현재 상태로 갱신.
 # 골드가 줄어들어(다른 아이템 구매 등) 이미 선택된 수량을 더는 감당 못 하면 자동으로 낮춘다
 func _refresh() -> void:
-	_gold_label.text = "보유 골드: %d" % GameState.gold
+	_gold_label.text = tr("보유 골드: %d") % GameState.gold
 
 	for item_id in _quantities.keys():
 		var max_q: int = max(MIN_QUANTITY, _max_affordable_quantity(item_id))
@@ -132,7 +132,7 @@ func _update_row(quantity_label: Label, total_label: Label, buy_button: Button, 
 	var qty: int = _quantities[item_id]
 	var total: int = qty * _price(item_id)
 	quantity_label.text = str(qty)
-	total_label.text = "총 %d 골드" % total
+	total_label.text = tr("총 %d 골드") % total
 	buy_button.disabled = GameState.gold < total
 
 
@@ -142,11 +142,11 @@ func _on_buy_pressed(item_id: String) -> void:
 	var qty: int = _quantities[item_id]
 	var total: int = qty * _price(item_id)
 	if not GameState.spend_gold(total):
-		_show_message("골드가 부족합니다")
+		_show_message(tr("골드가 부족합니다"))
 		return
 
 	GameState.add_item(item_id, qty)
-	_show_message("%s을(를) %d개 구매했다!" % [ItemData.ITEMS[item_id]["name"], qty])
+	_show_message(tr("%s을(를) %d개 구매했다!") % [tr(ItemData.ITEMS[item_id]["name"]), qty])
 	_quantities[item_id] = MIN_QUANTITY
 	_refresh()
 

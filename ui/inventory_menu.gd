@@ -237,7 +237,7 @@ func _refresh_equip_button() -> void:
 		return
 
 	var slot := ItemData.get_slot(_selected_item_id)
-	_equip_button.text = "해제" if GameState.get_equipped(slot) == _selected_item_id else "장착"
+	_equip_button.text = tr("해제") if GameState.get_equipped(slot) == _selected_item_id else tr("장착")
 	_equip_button.visible = true
 
 

@@ -69,8 +69,8 @@ func _on_sub_quest_changed() -> void:
 
 
 func _refresh() -> void:
-	_gold_label.text = "보유 골드: %d" % GameState.gold
-	_refresh_button.text = "새로고침 (%d골드)" % SubQuestData.REFRESH_COST
+	_gold_label.text = tr("보유 골드: %d") % GameState.gold
+	_refresh_button.text = tr("새로고침 (%d골드)") % SubQuestData.REFRESH_COST
 	_refresh_button.disabled = GameState.gold < SubQuestData.REFRESH_COST
 
 	var board: Array = GameState.bounty_board
@@ -89,26 +89,26 @@ func _refresh() -> void:
 		_accept_buttons[i].disabled = busy
 
 	if busy:
-		_show_message("이미 진행 중인 의뢰가 있어요. 먼저 마치고 오세요.")
+		_show_message(tr("이미 진행 중인 의뢰가 있어요. 먼저 마치고 오세요."))
 
 
 func _on_refresh() -> void:
 	SFXPlayer.play(SFXPlayer.UI_CLICK_SOUND)
 	if not GameState.refresh_bounty_board():
-		_show_message("골드가 부족해요. (%d골드 필요)" % SubQuestData.REFRESH_COST)
+		_show_message(tr("골드가 부족해요. (%d골드 필요)") % SubQuestData.REFRESH_COST)
 		return
-	_show_message("새 의뢰를 붙였어요.")
+	_show_message(tr("새 의뢰를 붙였어요."))
 
 
 func _on_accept(index: int) -> void:
 	SFXPlayer.play(SFXPlayer.UI_CLICK_SOUND)
 	if GameState.has_active_sub_quest():
-		_show_message("이미 진행 중인 의뢰가 있어요. 먼저 마치고 오세요.")
+		_show_message(tr("이미 진행 중인 의뢰가 있어요. 먼저 마치고 오세요."))
 		return
 	if not GameState.accept_sub_quest(index):
-		_show_message("그 의뢰는 지금 받을 수 없어요.")
+		_show_message(tr("그 의뢰는 지금 받을 수 없어요."))
 		return
-	_show_message("의뢰를 맡았어요. 조심히 다녀오세요.")
+	_show_message(tr("의뢰를 맡았어요. 조심히 다녀오세요."))
 
 
 func _show_message(text: String) -> void:

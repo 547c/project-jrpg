@@ -171,8 +171,8 @@ func _refresh_affinity_display() -> void:
 # 아니면 노드의 speaker(가디언 "???" 등)로 폴백
 func _resolve_display_name(node: Dictionary) -> String:
 	if PORTRAITS.has(_npc_id):
-		return PORTRAITS[_npc_id].get("name", "")
-	return node.get("speaker", "")
+		return tr(PORTRAITS[_npc_id].get("name", ""))
+	return tr(node.get("speaker", ""))
 
 
 # 주어진 id의 대화 노드를 화면에 표시 (id가 없거나 빈 문자열이면 대화 종료)
@@ -518,7 +518,7 @@ func _on_button_pressed(option: Dictionary) -> void:
 		return
 
 	if not _is_affinity_met(option):
-		_typewriter.start(LOCKED_HINT) # 대사 자리에 잠깐 안내를 타이핑 (노드는 그대로, 옵션 유지)
+		_typewriter.start(tr(LOCKED_HINT)) # 대사 자리에 잠깐 안내를 타이핑 (노드는 그대로, 옵션 유지)
 		return
 
 	_on_option_pressed(option)
@@ -634,7 +634,7 @@ func _clear_history_list() -> void:
 
 # 시작 노드(_root_node_id)의 최상위 옵션 중 실제로 골라본 적 있는 것만 주제로 나열
 func _show_history_topics() -> void:
-	_history_title.text = HISTORY_TOPICS_TITLE
+	_history_title.text = tr(HISTORY_TOPICS_TITLE)
 	_history_back_button.visible = false
 	_clear_history_list()
 
@@ -646,18 +646,18 @@ func _show_history_topics() -> void:
 		if target == "" or not GameState.has_seen_node(target):
 			continue
 		var button := Button.new()
-		button.text = option.get("label", "")
+		button.text = tr(option.get("label", ""))
 		_style_history_button(button)
 		button.pressed.connect(_show_history_detail.bind(option))
 		_history_list.add_child(button)
 
 
 func _show_history_detail(topic_option: Dictionary) -> void:
-	_history_title.text = topic_option.get("label", "")
+	_history_title.text = tr(topic_option.get("label", ""))
 	_history_back_button.visible = true
 	_clear_history_list()
 
-	_add_history_line("플레이어: %s" % topic_option.get("label", ""))
+	_add_history_line(tr("플레이어: %s") % tr(topic_option.get("label", "")))
 	_walk_history_transcript(topic_option.get("next_id", ""), {})
 
 
@@ -682,7 +682,7 @@ func _walk_history_transcript(node_id: String, visited: Dictionary) -> void:
 		var target: String = option.get("next_id", "")
 		if target == "" or not GameState.has_seen_node(target):
 			continue
-		_add_history_line("플레이어: %s" % option.get("label", ""))
+		_add_history_line(tr("플레이어: %s") % tr(option.get("label", "")))
 		_walk_history_transcript(target, visited)
 
 

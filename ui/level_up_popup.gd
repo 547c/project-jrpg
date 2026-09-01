@@ -58,19 +58,19 @@ func _is_blocked() -> bool:
 func _on_quest_completed(quest_title: String, xp_gained: int) -> void:
 	var body := quest_title
 	if xp_gained > 0:
-		body += "\n경험치 +%d" % xp_gained
-	_queue("퀘스트 완료!", body)
+		body += tr("\n경험치 +%d") % xp_gained
+	_queue(tr("퀘스트 완료!"), body)
 
 
 # 의뢰 완료 안내. 보상 내역은 GameState가 이미 문장으로 만들어 보내므로 그대로 띄운다
 func _on_sub_quest_completed(title: String, reward_text: String) -> void:
-	_queue("의뢰 완료!", "%s
+	_queue(tr("의뢰 완료!"), "%s
 %s" % [title, reward_text])
 
 
 # 레벨업 안내 (한 번에 여러 레벨이 오르면 레벨마다 한 번씩 들어와 순서대로 쌓인다)
 func _on_player_leveled_up(new_level: int, hp_gain: int, mana_gain: int, skill_point_gain: int) -> void:
-	_queue("레벨 업!", "레벨 %d 달성!\n최대 체력 +%d / 최대 마나 +%d / 스킬포인트 +%d" % [
+	_queue(tr("레벨 업!"), tr("레벨 %d 달성!\n최대 체력 +%d / 최대 마나 +%d / 스킬포인트 +%d") % [
 		new_level, hp_gain, mana_gain, skill_point_gain])
 
 
