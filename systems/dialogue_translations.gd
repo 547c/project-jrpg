@@ -361,6 +361,29 @@ const EN: Dictionary = {
 	"opening_3:narration": "When did the Vein — which seemed as if it would flow forever — begin to stop? Where it ran dry, plague spread, and the land let out a parched scream.",
 	"opening_4:narration": "This is the story of Orsia, a quiet village on the margins that news of the ruin never reached — beginning as even its last Vein finally runs dry—",
 	"opening_5:narration": "The first page, of one boy's story.",
+
+	"ruins_boss_greeting:narration": "(in a mechanical voice)",
+	"ruins_boss_greeting": "...Unauthorized. Withdraw.",
+	"ruins_boss_repeat:narration": "(The Gatekeeper shows no reaction, only repeating the same words. There's no getting through to it — this thing, too, seems to have lost its humanity long ago.)",
+	"ruins_boss_repeat": "...Unauthorized. Withdraw.",
+	"ruins_boss_aftermath_1:narration": "(looking down at the Gatekeeper)",
+	"ruins_boss_aftermath_1": "...Was this one a person too, once.",
+	"ruins_boss_aftermath_end:narration": "(nodding)",
+	"ruins_boss_aftermath_end": "...Let's go.",
+
+	"ruins_lore_intro:narration": "A carving is etched into the wall: people paying respect to beings that watch over the water's flow. Beside it, a record written in unfamiliar characters.",
+	"ruins_lore_1": "...Hard to translate, but a few words are recognizable: 'binding,' 'Watcher,' 'mistake.'",
+	"ruins_lore_2": "The last line reads: 'What we sought to contain was, in the end, set free by our own hands.'",
+
+	"campfire_ask:narration": "The campfire burns warmly.",
+	"campfire_ask": "Would you like to rest for a while?",
+	"campfire_rest": "Fully recovered.",
+
+	"dock_unavailable:narration": "Nothing is tied up at the old dock.",
+	"dock_unavailable": "It doesn't look usable yet.",
+	"dock_ask:narration": "A small boat waits at the dock.",
+	"dock_ask": "Are you sure you want to leave?",
+	"dock_confirm_yes:narration": "(boards the boat)",
 }
 
 const TABLES: Dictionary = {
