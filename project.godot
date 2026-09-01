@@ -17,6 +17,7 @@ config/icon="res://icon.svg"
 
 [autoload]
 
+LocaleManager="*res://systems/locale_manager.gd"
 GameState="*res://systems/game_state.gd"
 WindSystem="*res://systems/wind_system.gd"
 MusicManager="*res://systems/music_manager.tscn"

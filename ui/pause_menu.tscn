@@ -95,9 +95,9 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -180.0
-offset_top = -210.0
+offset_top = -240.0
 offset_right = 180.0
-offset_bottom = 210.0
+offset_bottom = 240.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxTexture_panel")
@@ -207,6 +207,19 @@ mouse_filter = 2
 texture = SubResource("AtlasTexture_sound_on")
 expand_mode = 1
 stretch_mode = 5
+
+[node name="LanguageButton" type="Button" parent="Root/Panel/VBox" unique_id=1471203856]
+texture_filter = 1
+custom_minimum_size = Vector2(0, 42)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.93, 0.96, 1, 1)
+theme_override_colors/font_pressed_color = Color(0.8, 0.86, 0.95, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 16
+theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_button_pressed")
+theme_override_styles/hover = SubResource("StyleBoxTexture_button_hover")
+text = "English"
 
 [node name="Toast" type="Label" parent="Root/Panel/VBox" unique_id=1399062844]
 visible = false

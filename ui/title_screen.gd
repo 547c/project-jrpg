@@ -4,12 +4,15 @@ extends Control
 @onready var _load_button: Button = $LoadButton
 @onready var _record_button: Button = $RecordButton
 @onready var _load_hint: Label = $LoadHint
+@onready var _language_button: Button = $LanguageButton
 
 
 func _ready() -> void:
 	_play_button.pressed.connect(_on_play_pressed)
 	_load_button.pressed.connect(_on_load_pressed)
 	_record_button.pressed.connect(_on_record_pressed)
+	_language_button.pressed.connect(_on_language_pressed)
+	_refresh_language_button()
 
 	# 저장된 슬롯이 하나도 없으면 불러오기 버튼을 비활성화하고 안내를 표시
 	var save_exists := SaveManager.has_any_save()
@@ -35,3 +38,13 @@ func _on_load_pressed() -> void:
 func _on_record_pressed() -> void:
 	SFXPlayer.play(SFXPlayer.UI_CLICK_SOUND)
 	EndingRecordMenu.open()
+
+
+func _on_language_pressed() -> void:
+	SFXPlayer.play(SFXPlayer.UI_CLICK_SOUND)
+	LocaleManager.toggle_locale()
+	_refresh_language_button()
+
+
+func _refresh_language_button() -> void:
+	_language_button.text = LocaleManager.next_locale_label()

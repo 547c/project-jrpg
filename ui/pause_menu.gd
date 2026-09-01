@@ -13,6 +13,7 @@ const SOUND_MUTED_REGION := Rect2(801, 483, 13, 12)
 @onready var _title_button: Button = $Root/Panel/VBox/TitleButton
 @onready var _music_button: Button = $Root/Panel/VBox/MusicButton
 @onready var _music_icon: TextureRect = $Root/Panel/VBox/MusicButton/Icon
+@onready var _language_button: Button = $Root/Panel/VBox/LanguageButton
 @onready var _toast: Label = $Root/Panel/VBox/Toast
 
 var _sound_on_icon: AtlasTexture
@@ -27,6 +28,7 @@ func _ready() -> void:
 	_load_button.pressed.connect(_on_load)
 	_title_button.pressed.connect(_on_title)
 	_music_button.pressed.connect(_on_music_toggle)
+	_language_button.pressed.connect(_on_language_toggle)
 
 	_sound_on_icon = _music_icon.texture as AtlasTexture
 	_sound_muted_icon = AtlasTexture.new()
@@ -66,6 +68,7 @@ func _can_open() -> bool:
 func _open() -> void:
 	_toast.visible = false
 	_refresh_music_button()
+	_refresh_language_button()
 	_root.visible = true
 
 
@@ -111,8 +114,20 @@ func _on_music_toggle() -> void:
 # 음악이 꺼진 상태면(뮤트) "음악 켜기"로, 켜진 상태면 "음악 끄기"로 표시(눌렀을 때 벌어질 동작을 안내)
 func _refresh_music_button() -> void:
 	if MusicManager.is_muted():
-		_music_button.text = "  음악 켜기"
+		_music_button.text = "  " + tr("음악 켜기")
 		_music_icon.texture = _sound_muted_icon
 	else:
-		_music_button.text = "  음악 끄기"
+		_music_button.text = "  " + tr("음악 끄기")
 		_music_icon.texture = _sound_on_icon
+
+
+# 음악 버튼과 같은 방식: 버튼에는 "누르면 바뀔 언어"를 표시한다
+func _on_language_toggle() -> void:
+	SFXPlayer.play(SFXPlayer.UI_CLICK_SOUND)
+	LocaleManager.toggle_locale()
+	_refresh_music_button() # 코드로 조립한 텍스트라 자동 번역이 안 걸려 직접 갱신
+	_refresh_language_button()
+
+
+func _refresh_language_button() -> void:
+	_language_button.text = LocaleManager.next_locale_label()

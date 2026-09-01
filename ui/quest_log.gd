@@ -132,14 +132,14 @@ func _quest_title_color(quest_id: String, quest: Dictionary) -> Color:
 # 조건 판정은 GameState.can_start_quest/get_quest_requirement_text를 그대로 쓴다 (판정 로직 중복 없음)
 func _quest_status_lines(quest_id: String, quest: Dictionary) -> Array[String]:
 	var lines: Array[String] = []
-	lines.append("의뢰인: %s" % quest["giver"])
+	lines.append(tr("의뢰인: %s") % tr(quest["giver"]))
 
 	if quest["complete"]:
-		lines.append("완료했다.")
+		lines.append(tr("완료했다."))
 		return lines
 
 	if quest["active"]:
-		lines.append("진행도 %d / %d" % [quest["current"], quest["target"]])
+		lines.append(tr("진행도 %d / %d") % [quest["current"], quest["target"]])
 		return lines
 
 	# 아직 수락하지 않은 퀘스트: 받을 수 있으면 그렇게, 아니면 부족한 조건을 그대로 보여준다

@@ -1,6 +1,8 @@
 class_name DialogueBox
 extends Control
 
+const DialogueTranslations := preload("res://systems/dialogue_translations.gd")
+
 # 대화가 완전히 종료되었을 때 발행. last_node_id는 종료 직전 마지막으로 보여준 노드의 id
 # (구독자가 "어떤 대사에서 끝났는지"로 특별 처리를 하고 싶을 때 사용 — 예: 엔딩 트리거)
 signal dialogue_ended(last_node_id: String)
@@ -208,7 +210,8 @@ func _show_node(node_id: String) -> void:
 	_refresh_affinity_display() # on-show/옵션 효과로 바뀐 호감도를 매 노드마다 바에 반영
 
 	var narration: String = node.get("narration", "")
-	_narration_label.text = narration
+	var narration_translation := DialogueTranslations.get_line("%s:narration" % node_id)
+	_narration_label.text = narration_translation if narration_translation != "" else narration
 	_narration_label.visible = narration != ""
 
 	_decisive_frame.visible = is_decisive
@@ -245,15 +248,26 @@ func _update_panel_height() -> void:
 # 반환(구간별 문구가 없으면 "text"로 폴백). 없으면 text_if_flag(flag 참/거짓 분기)를 확인하고,
 # 그마저 없으면 "text"를 그대로 반환
 func _resolve_text(node: Dictionary) -> String:
+	var node_id: String = node.get("id", "")
+
 	var tier_texts: Dictionary = node.get("text_by_affinity_tier", {})
 	if not tier_texts.is_empty():
 		var tier := GameState.get_affinity_tier(tier_texts.get("npc_id", ""))
+		var tier_translation := DialogueTranslations.get_line("%s:%s" % [node_id, tier])
+		if tier_translation != "":
+			return tier_translation
 		return tier_texts.get(tier, node.get("text", ""))
 
 	var text_if_flag: String = node.get("text_if_flag", "")
 	if text_if_flag == "":
-		return node.get("text", "")
-	return node.get("text", "") if GameState.get_flag(text_if_flag) else node.get("text_false", "")
+		var translation := DialogueTranslations.get_line(node_id)
+		return translation if translation != "" else node.get("text", "")
+
+	var is_true: bool = GameState.get_flag(text_if_flag)
+	var branch_translation := DialogueTranslations.get_line("%s:%s" % [node_id, "true" if is_true else "false"])
+	if branch_translation != "":
+		return branch_translation
+	return node.get("text", "") if is_true else node.get("text_false", "")
 
 
 # 표시 조건을 통과한 옵션만 남김
@@ -490,7 +504,7 @@ func _option_color(entry: Dictionary) -> Color:
 # 기능 옵션에만 마름모 접두사를 붙인다. 데이터를 고치지 않고 그릴 때만 얹으므로,
 # 같은 옵션을 다른 곳에서 읽어도 라벨 원문은 그대로다
 func _option_label(entry: Dictionary) -> String:
-	var label: String = entry["option"].get("label", "")
+	var label: String = tr(entry["option"].get("label", ""))
 	if entry.get("action", false):
 		return ACTION_PREFIX + label
 	return label
