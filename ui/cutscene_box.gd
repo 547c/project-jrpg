@@ -1,6 +1,8 @@
 class_name CutsceneBox
 extends Control
 
+const DialogueTranslations := preload("res://systems/dialogue_translations.gd")
+
 # 오프닝처럼 화자 표시 없이 나레이션만 순서대로 보여주는 전용 컷신 UI(이미지 슬라이드쇼 방식).
 # DialogueData의 노드(id/narration or text/next_id/image)를 그대로 재사용하되,
 # 선택지는 다루지 않고 next_id를 따라 선형으로만 진행한다.
@@ -70,7 +72,14 @@ func _show_node(node_id: String) -> void:
 	await _apply_image(node)
 
 	var narration: String = node.get("narration", "")
-	_typewriter.start(narration if narration != "" else node.get("text", ""))
+	var narration_translation := DialogueTranslations.get_line("%s:narration" % node_id)
+	var resolved_narration := narration_translation if narration_translation != "" else narration
+	if resolved_narration != "":
+		_typewriter.start(resolved_narration)
+		return
+
+	var text_translation := DialogueTranslations.get_line(node_id)
+	_typewriter.start(text_translation if text_translation != "" else node.get("text", ""))
 
 
 # node에 새 배경 이미지가 지정돼 있고 현재 배경과 다르면 교체한다.

@@ -42,6 +42,9 @@ found directly in `systems/dialogue_data.gd` / `docs/part1_story_script_draft.md
 | 신뢰의 기로 (씬13 제목) | Threshold of Trust | docs/part1_story_script_draft.md |
 | 잊혀진 진실 (Part2 챕터 타이틀) | The Forgotten Truth | world/dock.gd (PART2_SUBTITLE) |
 | 문지기 대치 대사: "허가되지 않은 자. 물러가라." | "Unauthorized. Withdraw." | world/ruins_boss.gd |
+| 오크 (몬스터) | Orc | systems/battle_data.gd, 의뢰판/퀘스트로그 몬스터 이름 |
+| 스켈레톤 (몬스터) | Skeleton | systems/battle_data.gd, 의뢰판/퀘스트로그 몬스터 이름 |
+| 미라 (몬스터) | Mummy | systems/battle_data.gd, 의뢰판/퀘스트로그 몬스터 이름 |
 
 ## NPC names (reference only — already used as-is, romanized, no translation needed)
 

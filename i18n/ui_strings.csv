@@ -125,3 +125,169 @@ Empty"
 동굴의 스켈레톤,동굴의 스켈레톤,Skeletons in the Cave
 사막의 미라 처치,사막의 미라 처치,Mummies in the Desert
 유적의 열쇠 찾기,유적의 열쇠 찾기,Find the Ruins Key
+오크,오크,Orc
+스켈레톤,스켈레톤,Skeleton
+미라,미라,Mummy
+%s 토벌 의뢰,%s 토벌 의뢰,%s Bounty
+%s %d마리,%s %d마리,%s x%d
+%s %d/%d,%s %d/%d,%s %d/%d
+골드 %d,골드 %d,%d Gold
+경험치 %d,경험치 %d,%d XP
+%s 호감도 +%d,%s 호감도 +%d,%s Affinity +%d
+보너스: ,보너스: ,Bonus: 
+이전 퀘스트,이전 퀘스트,Previous Quest
+%s 완료 및 레벨 %d 이상 필요,%s 완료 및 레벨 %d 이상 필요,Complete %s and reach Level %d
+"[알겠어요, 안 물어볼게요]","[알겠어요, 안 물어볼게요]","[Okay, I won't ask]"
+[스켈레톤 처치를 돕겠다고 한다],[스켈레톤 처치를 돕겠다고 한다],[Offer to help deal with the skeletons]
+"[저번에 물었던 거, 다시 물어봐도 될까요?]","[저번에 물었던 거, 다시 물어봐도 될까요?]",[Can I ask you again about what I asked before?]
+[심상치 않네요],[심상치 않네요],[Something feels off]
+[당신은 누구세요?],[당신은 누구세요?],[Who are you?]
+[그래도 위험한 건 위험한 거잖아요],[그래도 위험한 건 위험한 거잖아요],"[Still, dangerous is dangerous]"
+[동굴에 대해 묻는다],[동굴에 대해 묻는다],[Ask about the cave]
+[다른 사람들에 대해 묻는다],[다른 사람들에 대해 묻는다],[Ask about the others]
+"[엘라라 촌장님한테 들었어. 걱정 많이 하시더라, 너희 어머니도.]","[엘라라 촌장님한테 들었어. 걱정 많이 하시더라, 너희 어머니도.]","[Elara told me. She's worried, and so is your mother.]"
+[다른 마을은 어떤가요?],[다른 마을은 어떤가요?],[What are other villages like?]
+[사실 좀 지쳤어요],[사실 좀 지쳤어요],"[Actually, I'm a bit tired]"
+[그럼 뭘 드시고 사세요?],[그럼 뭘 드시고 사세요?],[Then what do you live on?]
+"[네, 다른 마을에서도 이런 일이 있었나요?]","[네, 다른 마을에서도 이런 일이 있었나요?]",[Has this happened in other villages too?]
+"[아니, 사실대로 말해줘. 중요한 일이야]","[아니, 사실대로 말해줘. 중요한 일이야]","[No, tell me the truth. This is important.]"
+[그날 밤에도 나비 찾으러 나갔었어?],[그날 밤에도 나비 찾으러 나갔었어?],[Were you out looking for Nabi that night too?]
+"[아니요, 아직요]","[아니요, 아직요]","[No, not yet]"
+[거기는 어떻게 됐어요?],[거기는 어떻게 됐어요?],[What happened there?]
+[요즘도 그 꿈을 꿔?],[요즘도 그 꿈을 꿔?],[Do you still have that dream?]
+[당신을 믿고 도움을 받는다],[당신을 믿고 도움을 받는다],[Trust you and accept the help]
+[제가 가볼게요],[제가 가볼게요],[I'll go take a look]
+[그 기록에 대해 좀 더 자세히 들려주실 수 있어요?],[그 기록에 대해 좀 더 자세히 들려주실 수 있어요?],[Could you tell me more about that record?]
+[그냥 안부를 묻는다],[그냥 안부를 묻는다],[Just ask how they're doing]
+[미라들에 대해 어떻게 생각하세요?],[미라들에 대해 어떻게 생각하세요?],[What do you think about the mummies?]
+"[궁금한 게 있어요, 장로님]","[궁금한 게 있어요, 장로님]","[I have a question, Elder]"
+[그냥 인사만 한다],[그냥 인사만 한다],[Just say hello]
+[뭔데요?],[뭔데요?],[What is it?]
+[엘라라는 어떤 분인가요?],[엘라라는 어떤 분인가요?],[What kind of person is Elara?]
+[오크 처치를 돕겠다고 한다],[오크 처치를 돕겠다고 한다],[Offer to help deal with the orcs]
+[이게... 물지기가 처음 생겨난 순간인가요?],[이게... 물지기가 처음 생겨난 순간인가요?],[Is this... the moment a Warden was first created?]
+[누구세요?],[누구세요?],[Who are you?]
+[요즘 어때?],[요즘 어때?],[How have you been?]
+[장사는 잘 되세요?],[장사는 잘 되세요?],[Is business going well?]
+[그게 무슨 말이에요?],[그게 무슨 말이에요?],[What do you mean by that?]
+[그럼 뭔데요?],[그럼 뭔데요?],[Then what is it?]
+"[오크 얘기, 또 생각났나 보군]","[오크 얘기, 또 생각났나 보군]","[Thinking about the orcs again, are you]"
+[혹시 도망 안 치셨어요?],[혹시 도망 안 치셨어요?],[Didn't you run away?]
+"[미안, 다그치려던 건 아니었어]","[미안, 다그치려던 건 아니었어]","[Sorry, I didn't mean to push you]"
+[유서프 씨는 왜 이 마을에 온 거예요?],[유서프 씨는 왜 이 마을에 온 거예요?],"[Why did you come to this village, Yusuf?]"
+[테스트 선택 B],[테스트 선택 B],[Test Choice B]
+[혹시 옛날부터 전해지는 이야기 아세요?],[혹시 옛날부터 전해지는 이야기 아세요?],"[Do you know any old stories about it, by any chance?]"
+"[가디언... 아니, 그 사람이 사라지기 전에 이런 말을 했어요. ""감시자들은... 지하에 있다""고.]","[가디언... 아니, 그 사람이 사라지기 전에 이런 말을 했어요. ""감시자들은... 지하에 있다""고.]","[The Guardian... no, that person said this before disappearing: ""The Watchers... are underground.""]"
+[미라 처치를 돕겠다고 한다],[미라 처치를 돕겠다고 한다],[Offer to help deal with the mummies]
+[열쇠는 찾았나요?],[열쇠는 찾았나요?],[Did you find the key?]
+[숲에 대해 묻는다],[숲에 대해 묻는다],[Ask about the forest]
+[그럼 도와줄 수 있어요? 지하로 가는 방법.],[그럼 도와줄 수 있어요? 지하로 가는 방법.],[Then can you help me? A way to get underground.]
+[유서프를 아세요?],[유서프를 아세요?],[Do you know Yusuf?]
+[그래서 뭘 보신 거예요?],[그래서 뭘 보신 거예요?],[So what did you see?]
+[수상한데요?],[수상한데요?],[That sounds suspicious.]
+"[...응, 진짜야. 천천히 얘기해도 돼]","[...응, 진짜야. 천천히 얘기해도 돼]","[...Yeah, really. Take your time telling me]"
+[말하기 싫으면 안 해도 돼요],[말하기 싫으면 안 해도 돼요],[You don't have to say it if you don't want to]
+"[응, 약속할게. 네가 본 거 그대로 믿을게]","[응, 약속할게. 네가 본 거 그대로 믿을게]","[Yes, I promise. I'll believe exactly what you saw.]"
+[의뢰판을 살펴본다],[의뢰판을 살펴본다],[Check the bounty board]
+[그냥 소문 아닐까요?],[그냥 소문 아닐까요?],[Could it just be a rumor?]
+[저 밑이라면... 지하요?],[저 밑이라면... 지하요?],[Down there... you mean underground?]
+[역시 뭔가 있었네요],[역시 뭔가 있었네요],[I knew there was something to it]
+[모르겠어요. 그냥 그렇게 들렸어요.],[모르겠어요. 그냥 그렇게 들렸어요.],[I don't know. That's just how it sounded.]
+"[아니, 그냥 안부 물으러 왔어요]","[아니, 그냥 안부 물으러 왔어요]","[No, I just came to see how you're doing]"
+[...알겠어],[...알겠어],[...Okay]
+"[네. ""얼마나 됐을까, 묶인 지""라고 하더니, 마지막엔 ""감시자들은 지하에 있다""는 말을 하다 말고, 그대로 사라졌어요.]","[네. ""얼마나 됐을까, 묶인 지""라고 하더니, 마지막엔 ""감시자들은 지하에 있다""는 말을 하다 말고, 그대로 사라졌어요.]","[Yes. It said ""How long has it been, since I was bound,"" and at the end started to say ""The Watchers are underground"" before disappearing, mid-sentence.]"
+[너... 지금 뭐랑 싸우고 있는 것 같은데. 뭔데 그래.],[너... 지금 뭐랑 싸우고 있는 것 같은데. 뭔데 그래.],[You... seem to be fighting something. What is it.]
+[정말 그냥 상인이 맞아요?],[정말 그냥 상인이 맞아요?],[Are you really just a merchant?]
+[여기 물지기는... 이미],[여기 물지기는... 이미],[The Warden here is already...]
+[이제 어떡하죠?],[이제 어떡하죠?],[What do we do now?]
+"[당신, 알고 있었던 거예요?]","[당신, 알고 있었던 거예요?]",[You knew about this?]
+[마을에 대해 묻는다],[마을에 대해 묻는다],[Ask about the village]
+[거절하고 우리끼리 알아낸다],[거절하고 우리끼리 알아낸다],[Refuse and find out on our own]
+[사냥은 잘 되냐고 묻는다],[사냥은 잘 되냐고 묻는다],[Ask if the hunting's going well]
+[그 기록에 대해서 더 생각해봤나],[그 기록에 대해서 더 생각해봤나],[Ask more about that record]
+[동굴 이야기를 묻는다],[동굴 이야기를 묻는다],[Ask about the cave]
+[여기도 물지기가 있었어요?],[여기도 물지기가 있었어요?],[Was there a Warden here too?]
+[같이 가는 거예요?],[같이 가는 거예요?],[Are you coming with me?]
+[괜찮으면 말 안 해도 돼],[괜찮으면 말 안 해도 돼],[You don't have to tell me if you'd rather not]
+[그래서 아팠던 거구나. 그동안 계속.],[그래서 아팠던 거구나. 그동안 계속.],[So that's why it hurt. This whole time.]
+[의뢰? 뭐 일거리 있나요?],[의뢰? 뭐 일거리 있나요?],[A bounty? Got any work?]
+[왜 저를 기다렸나요?],[왜 저를 기다렸나요?],[Why were you waiting for me?]
+[근데 왜요? 그렇게까지 해서 뭘 얻으려고요?],[근데 왜요? 그렇게까지 해서 뭘 얻으려고요?],[But why? What would they gain from going that far?]
+[다음에 볼게요],[다음에 볼게요],[I'll come back later]
+[오크들도 피해자라는 건가요?],[오크들도 피해자라는 건가요?],[Are the orcs victims too?]
+[로한은 어떤 사람인가요?],[로한은 어떤 사람인가요?],[What kind of person is Rohan?]
+[증거요?],[증거요?],[Proof?]
+[혹시 다른 단서는 없었나요?],[혹시 다른 단서는 없었나요?],[Were there any other clues?]
+"[근데 마지막에... 사람처럼 말을 했어요. ""미안하다""고.]","[근데 마지막에... 사람처럼 말을 했어요. ""미안하다""고.]","[But at the end... it spoke like a person. It said ""I'm sorry.""]"
+[괜찮아? 여기서 뭐 해?],[괜찮아? 여기서 뭐 해?],[Are you okay? What are you doing here?]
+[구체적으로 뭐가 이상한가요?],[구체적으로 뭐가 이상한가요?],[What exactly is strange about it?]
+"[싸우지 않고 이야기했어요. 근데... 사라지기 전에, 사람처럼 말을 하고서 사라졌어요.]","[싸우지 않고 이야기했어요. 근데... 사라지기 전에, 사람처럼 말을 하고서 사라졌어요.]","[I talked instead of fighting. But... before it disappeared, it spoke like a person, and then vanished.]"
+[당신은 몬스터가 아닌가요?],[당신은 몬스터가 아닌가요?],[Aren't you a monster?]
+"[로한, 유서프, 미아... 다들 이상한 얘기를 하더라고요.]","[로한, 유서프, 미아... 다들 이상한 얘기를 하더라고요.]","[Rohan, Yusuf, Mia... they all told me strange stories.]"
+[본 것 같아요],[본 것 같아요],[I think I've seen it]
+[유서프는 믿을 만한가요?],[유서프는 믿을 만한가요?],[Is Yusuf trustworthy?]
+[미아는 왜 저렇게 겁이 많나요?],[미아는 왜 저렇게 겁이 많나요?],[Why is Mia so frightened?]
+"[아니요, 못 봤어요]","[아니요, 못 봤어요]","[No, I haven't seen it]"
+[알겠어요],[알겠어요],[Okay]
+[잠깐! ...싸우러 온 거 아니야.],[잠깐! ...싸우러 온 거 아니야.],[Wait! ...I'm not here to fight.]
+[그 존재가 우물을 마르게 한 걸까요?],[그 존재가 우물을 마르게 한 걸까요?],[Could that thing be what's drying up the well?]
+"[나비, 이름 예쁘다. 원래 여기서 자주 놀아?]","[나비, 이름 예쁘다. 원래 여기서 자주 놀아?]","[Nabi, pretty name. Do you usually play here?]"
+[해결했어요. 근데...],[해결했어요. 근데...],[I resolved it. But...]
+[유적에서 알게 된 걸 말한다],[유적에서 알게 된 걸 말한다],[Tell her what you learned in the ruins]
+"[응, 며칠 전에 왔어. 근데 진짜 여기서 뭐 하고 있었어?]","[응, 며칠 전에 왔어. 근데 진짜 여기서 뭐 하고 있었어?]","[Yeah, I got here a few days ago. But really, what were you doing here?]"
+[감시자들이 뭔가 저지른 건가요?],[감시자들이 뭔가 저지른 건가요?],[Did the Watchers do something?]
+[그럼 우리가 할 수 있는 건...],[그럼 우리가 할 수 있는 건...],[Then what we can do is...]
+[딱히 필요한 건 없어요],[딱히 필요한 건 없어요],[I don't need anything in particular]
+[오크는 어떻게 되어가요?],[오크는 어떻게 되어가요?],[How's it going with the orcs?]
+[뭘 팔고 있어요?],[뭘 팔고 있어요?],[What are you selling?]
+[제가 뭘 도우면 될까요?],[제가 뭘 도우면 될까요?],[What can I do to help?]
+[다녀왔다고 말한다],[다녀왔다고 말한다],[Say you're back]
+"[네, 도움이 필요하다고 들었어요]","[네, 도움이 필요하다고 들었어요]","[Yes, I heard you needed help]"
+[그때는 어떻게 됐나요?],[그때는 어떻게 됐나요?],[What happened then?]
+[그렇군요],[그렇군요],[I see]
+[들어간다],[들어간다],[Go in]
+[작은 마을이라 심심하지 않아요?],[작은 마을이라 심심하지 않아요?],[Isn't it boring in such a small village?]
+"[...괜찮아, 무리해서 말 안 해도 돼]","[...괜찮아, 무리해서 말 안 해도 돼]","[...It's okay, you don't have to force yourself to talk]"
+"[글쎄, 꿈은 꿈이니까]","[글쎄, 꿈은 꿈이니까]","[Well, a dream's just a dream]"
+"[이 소리... 미아가 말했던 거랑 같아. 무섭다기보단, 아파하는 것 같은데.]","[이 소리... 미아가 말했던 거랑 같아. 무섭다기보단, 아파하는 것 같은데.]",[This sound... it's just like what Mia described. It doesn't sound scary so much as it sounds like it's in pain.]
+[평화로워 보여요],[평화로워 보여요],[It looks peaceful]
+[어떤 꿈인데?],[어떤 꿈인데?],[What kind of dream?]
+[무슨 이야기예요?],[무슨 이야기예요?],[What kind of story?]
+"[괜찮아. 이제 그만 쉬어도 돼. 그 명령, 안 들어도 돼.]","[괜찮아. 이제 그만 쉬어도 돼. 그 명령, 안 들어도 돼.]",[It's okay. You can rest now. You don't have to obey that order.]
+[뭔가 고민이 있어 보여요],[뭔가 고민이 있어 보여요],[You seem troubled]
+[미라는 어떻게 되어가요?],[미라는 어떻게 되어가요?],[How's it going with the mummies?]
+[무섭지 않았어?],[무섭지 않았어?],[Weren't you scared?]
+[로한을 아세요?],[로한을 아세요?],[Do you know Rohan?]
+[뭔가 알고 계신 거죠?],[뭔가 알고 계신 거죠?],"[You know something, don't you?]"
+[물건을 산다],[물건을 산다],[Buy something]
+"[아니, 진짜였을 수도 있어]","[아니, 진짜였을 수도 있어]","[No, it might have been real]"
+[오크들이 왜 그렇게 됐을까요?],[오크들이 왜 그렇게 됐을까요?],[Why do you think the orcs ended up like that?]
+[무기를 든다 (전투)],[무기를 든다 (전투)],[Take up arms (combat)]
+[결정적 선택 B],[결정적 선택 B],[Decisive Choice B]
+[짐승들이 왜 숨었을까요?],[짐승들이 왜 숨었을까요?],[Why do you think the animals went into hiding?]
+[유적의 열쇠를 찾아보겠다고 한다],[유적의 열쇠를 찾아보겠다고 한다],[Offer to search for the ruins key]
+"[저 사람들, 늙지를 않네요.]","[저 사람들, 늙지를 않네요.]","[Those people, they don't age.]"
+"[아니에요, 다음에 물어볼게요]","[아니에요, 다음에 물어볼게요]","[No, I'll ask another time]"
+[왜 지금까지 숨기셨어요?],[왜 지금까지 숨기셨어요?],[Why did you hide it until now?]
+[지금 갈게요],[지금 갈게요],[I'll go now]
+[테스트 선택 A],[테스트 선택 A],[Test Choice A]
+[아직 준비가 안 됐어요],[아직 준비가 안 됐어요],[I'm not ready yet]
+"[근데 이상한 게, 물이 원래 우물에서 나오던 양이 아니에요. 훨씬 많아요. 마치... 처음부터 이래야 했던 것처럼요.]","[근데 이상한 게, 물이 원래 우물에서 나오던 양이 아니에요. 훨씬 많아요. 마치... 처음부터 이래야 했던 것처럼요.]",[But here's the strange part — it's not the amount the well used to give. It's far more. Like... it was always supposed to be this much.]
+[됐어요],[됐어요],[Never mind]
+[다가가서 말을 건다 (대화 시도)],[다가가서 말을 건다 (대화 시도)],[Approach and speak (attempt dialogue)]
+[무슨 생각이요?],[무슨 생각이요?],[What are you thinking about?]
+[오래됐네요],[오래됐네요],[That's quite old]
+"[그 꿈 이야기, 좀 더 해줄래?]","[그 꿈 이야기, 좀 더 해줄래?]",[Can you tell me more about that dream?]
+[예전엔 숲이 어땠어요?],[예전엔 숲이 어땠어요?],[What was the forest like before?]
+[결정적 선택 A],[결정적 선택 A],[Decisive Choice A]
+[여기서 무슨 일이 있었던 건가요?],[여기서 무슨 일이 있었던 건가요?],[What happened here?]
+"[괜찮아요, 걱정 마세요]","[괜찮아요, 걱정 마세요]","[It's fine, don't worry]"
+[나딤을 아세요?],[나딤을 아세요?],[Do you know Nadim?]
+[명령... 받고 있는 거야? 그것 때문에 이러는 거야?],[명령... 받고 있는 거야? 그것 때문에 이러는 거야?],[You're... under orders? Is that why you're like this?]
+[카밀을 아세요?],[카밀을 아세요?],[Do you know Kamil?]
+[너무 위험한 거 아닌가요?],[너무 위험한 거 아닌가요?],[Isn't that too dangerous?]
+[뭘 파세요?],[뭘 파세요?],[What do you sell?]
+[스켈레톤은 어떻게 되어가요?],[스켈레톤은 어떻게 되어가요?],[How's it going with the skeletons?]
+[봉인 해제],[봉인 해제],[Release the binding]
+[혹시 그것 때문에 물지기가 필요한 거예요?],[혹시 그것 때문에 물지기가 필요한 거예요?],[Is that why the Wardens are needed?]
+[그냥 우연 아닐까요?],[그냥 우연 아닐까요?],[Could it just be a coincidence?]

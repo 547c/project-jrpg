@@ -16944,6 +16944,7 @@ dialogue_tree = [{
 "min": 60,
 "npc_id": "elara"
 },
+"show_if_flag": "guardian_event_done",
 "show_if_not_seen": "elara_secret_end"
 }, {
 "label": "[그 기록에 대해서 더 생각해봤나]",
@@ -17156,7 +17157,7 @@ dialogue_tree = [{
 "is_decisive": false,
 "narration": "(놀라며)",
 "options": [{
-"label": "[네. \"얼마나 됐을까, 묶인 지\"라고 하더니 — 마지막엔 \"감시자들은 지하에 있다\"는 말을 하다 말고, 그대로 사라졌어요.]",
+"label": "[네. \"얼마나 됐을까, 묶인 지\"라고 하더니, 마지막엔 \"감시자들은 지하에 있다\"는 말을 하다 말고, 그대로 사라졌어요.]",
 "next_id": "elara_ending_peace_3"
 }],
 "speaker": "엘라라",
@@ -17398,7 +17399,7 @@ dialogue_tree = [{
 "is_decisive": false,
 "next_id": "elara_secret_stage2_3",
 "speaker": "엘라라",
-"text": "\"물이 밤낮으로 넘쳐흘러, 마을 사람 누구도 목마름을 몰랐다.\" — 이렇게 적혀 있어. 처음엔 그냥 과장이겠거니 했지."
+"text": "이렇게 적혀 있어. \"물이 밤낮으로 넘쳐흘러, 마을 사람 누구도 목마름을 몰랐다.\" 처음엔 그냥 과장이겠거니 했지."
 }, {
 "id": "elara_secret_stage2_3",
 "is_decisive": false,
@@ -17413,6 +17414,36 @@ dialogue_tree = [{
 "set_flag_on_show": "heard_ancient_abundance_hint",
 "speaker": "엘라라",
 "text": "...나도 내가 무슨 말을 하는지 모르겠군. 그냥, 요즘 자꾸 이 기록이 마음에 걸려서 말이야."
+}, {
+"id": "elara_grind_advice_1",
+"is_decisive": false,
+"narration": "(플레이어를 보자 표정이 진지해진다)",
+"options": [{
+"label": "[로한, 유서프, 미아... 다들 이상한 얘기를 하더라고요.]",
+"next_id": "elara_grind_advice_2"
+}],
+"speaker": "엘라라",
+"text": "...다들 만나고 왔군. 얼굴 보니 알겠네."
+}, {
+"id": "elara_grind_advice_2",
+"is_decisive": false,
+"next_id": "elara_grind_advice_3",
+"speaker": "엘라라",
+"text": "그래, 나도 대충 전해 들었네. 다들 같은 밤 얘기를 하고 있으니, 이게 그냥 넘길 일이 아니라는 것만은 분명해졌구먼."
+}, {
+"id": "elara_grind_advice_3",
+"is_decisive": false,
+"narration": "(걱정스러운 눈으로)",
+"next_id": "elara_grind_advice_end",
+"speaker": "엘라라",
+"text": "자네가 저 동굴까지 들어가 볼 생각이라면... 말리진 않겠네만, 절대 몸부터 사리지 말고 단단히 준비하고 가게. 요즘 숲이랑 동굴 몬스터들도 부쩍 사나워졌다고 하니."
+}, {
+"id": "elara_grind_advice_end",
+"is_decisive": false,
+"options": [],
+"set_flag_on_show": "elara_grind_advice_given",
+"speaker": "",
+"text": "...그래, 무작정 들어갈 순 없지. 먼저 좀 더 강해져야겠어."
 }]
 dialogue_start_id = "elara_greeting"
 met_flag_name = "met_elara"
@@ -17441,6 +17472,7 @@ dialogue_tree = [{
 }, {
 "label": "[오크 처치를 돕겠다고 한다]",
 "next_id": "rohan_quest_accept",
+"show_if_flag": "met_mia_decisive",
 "show_if_quest_inactive": "forest_orcs",
 "start_quest": "forest_orcs"
 }, {
@@ -17458,6 +17490,7 @@ dialogue_tree = [{
 "min": 60,
 "npc_id": "rohan"
 },
+"show_if_flag": "guardian_event_done",
 "show_if_not_seen": "rohan_secret_end"
 }, {
 "label": "[오크 얘기, 또 생각났나 보군]",
@@ -17797,6 +17830,7 @@ dialogue_tree = [{
 }, {
 "label": "[스켈레톤 처치를 돕겠다고 한다]",
 "next_id": "yusuf_quest_accept",
+"show_if_flag": "met_mia_decisive",
 "show_if_quest_inactive": "cave_skeletons",
 "start_quest": "cave_skeletons"
 }, {
@@ -17814,6 +17848,7 @@ dialogue_tree = [{
 "min": 50,
 "npc_id": "yusuf"
 },
+"show_if_flag": "guardian_event_done",
 "show_if_not_seen": "yusuf_secret_stage1c"
 }, {
 "label": "[저번에 물었던 거, 다시 물어봐도 될까요?]",

@@ -871,8 +871,8 @@ func get_quest_requirement_text(quest_id: String) -> String:
 		return ""
 	var req: Dictionary = QUEST_REQUIREMENTS[quest_id]
 	var prev_id: String = req.get("prev_quest", "")
-	var prev_title: String = quests[prev_id]["title"] if quests.has(prev_id) else "이전 퀘스트"
-	return "%s 완료 및 레벨 %d 이상 필요" % [prev_title, int(req["level"])]
+	var prev_title: String = tr(quests[prev_id]["title"]) if quests.has(prev_id) else tr("이전 퀘스트")
+	return tr("%s 완료 및 레벨 %d 이상 필요") % [prev_title, int(req["level"])]
 
 
 # 퀘스트 완료 시 그 퀘스트를 의뢰한 NPC의 호감도를 올린다 (숲 오크→로한, 동굴 스켈레톤→유서프, 사막 미라/유적 열쇠→나딤)

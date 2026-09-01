@@ -110,18 +110,18 @@ static func is_complete(quest: Dictionary) -> bool:
 
 static func monster_name(monster_type: String) -> String:
 	var data: Dictionary = BattleData.MONSTERS.get(monster_type, {})
-	return String(data.get("name", monster_type))
+	return TranslationServer.translate(String(data.get("name", monster_type)))
 
 
 static func title(quest: Dictionary) -> String:
-	return "%s 토벌 의뢰" % describe_targets(quest)
+	return TranslationServer.translate("%s 토벌 의뢰") % describe_targets(quest)
 
 
 # "오크 3마리" / "오크 3마리 + 스켈레톤 2마리"
 static func describe_targets(quest: Dictionary) -> String:
 	var parts: Array[String] = []
 	for monster_type in quest.get("targets", {}).keys():
-		parts.append("%s %d마리" % [monster_name(monster_type), int(quest["targets"][monster_type])])
+		parts.append(TranslationServer.translate("%s %d마리") % [monster_name(monster_type), int(quest["targets"][monster_type])])
 	return " + ".join(parts)
 
 
@@ -130,7 +130,7 @@ static func describe_progress(quest: Dictionary) -> String:
 	var parts: Array[String] = []
 	var progress: Dictionary = quest.get("progress", {})
 	for monster_type in quest.get("targets", {}).keys():
-		parts.append("%s %d/%d" % [
+		parts.append(TranslationServer.translate("%s %d/%d") % [
 			monster_name(monster_type),
 			int(progress.get(monster_type, 0)),
 			int(quest["targets"][monster_type]),
@@ -140,9 +140,9 @@ static func describe_progress(quest: Dictionary) -> String:
 
 static func describe_rewards(quest: Dictionary) -> String:
 	var parts: Array[String] = [
-		"골드 %d" % int(quest.get("gold", 0)),
-		"경험치 %d" % int(quest.get("xp", 0)),
-		"%s 호감도 +%d" % [GIVER, int(quest.get("affinity", 0))],
+		TranslationServer.translate("골드 %d") % int(quest.get("gold", 0)),
+		TranslationServer.translate("경험치 %d") % int(quest.get("xp", 0)),
+		TranslationServer.translate("%s 호감도 +%d") % [TranslationServer.translate(GIVER), int(quest.get("affinity", 0))],
 	]
 	var bonus := describe_bonus(quest)
 	if bonus != "":
@@ -155,7 +155,7 @@ static func describe_bonus(quest: Dictionary) -> String:
 	for key in ["bonus_item", "bonus_equipment"]:
 		var item_id: String = String(quest.get(key, ""))
 		if item_id != "" and ItemData.ITEMS.has(item_id):
-			names.append(String(ItemData.ITEMS[item_id]["name"]))
+			names.append(TranslationServer.translate(String(ItemData.ITEMS[item_id]["name"])))
 	if names.is_empty():
 		return ""
-	return "보너스: " + ", ".join(names)
+	return TranslationServer.translate("보너스: ") + ", ".join(names)
