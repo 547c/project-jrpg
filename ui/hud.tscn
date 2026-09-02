@@ -15,6 +15,8 @@
 [ext_resource type="Texture2D" uid="uid://kypo61yb0xne" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Buttons/Button_02D_Normal.png" id="13_btn_normal"]
 [ext_resource type="Texture2D" uid="uid://benc4a2uuam0" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Buttons/Button_02D_Selected.png" id="14_btn_hover"]
 [ext_resource type="Texture2D" uid="uid://ewrkhk5uyvma" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Buttons/Button_02D_Pressed.png" id="15_btn_pressed"]
+[ext_resource type="Texture2D" uid="uid://cb2xo3w5jmh2" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Background boxes/BGbox_08A.png" id="16_minimapframe"]
+[ext_resource type="Script" path="res://ui/minimap.gd" id="17_minimap"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_statcard"]
 bg_color = Color(0.1, 0.075, 0.09, 0.86)
@@ -113,6 +115,16 @@ texture_margin_top = 24.0
 texture_margin_right = 20.0
 texture_margin_bottom = 32.0
 axis_stretch_horizontal = 1
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_minimap_frame"]
+texture = ExtResource("16_minimapframe")
+texture_margin_left = 28.0
+texture_margin_top = 28.0
+texture_margin_right = 28.0
+texture_margin_bottom = 28.0
+axis_stretch_horizontal = 1
+axis_stretch_vertical = 1
+draw_center = false
 
 [node name="HUD" type="CanvasLayer" unique_id=836659726]
 layer = 8
@@ -373,6 +385,49 @@ theme_override_font_sizes/font_size = 11
 text = "[M] 나침반: 켜짐"
 horizontal_alignment = 2
 vertical_alignment = 1
+
+[node name="Minimap" type="Control" parent="ObjectiveHud" unique_id=500000001]
+layout_mode = 0
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -218.0
+offset_top = 88.0
+offset_right = -12.0
+offset_bottom = 294.0
+mouse_filter = 2
+script = ExtResource("17_minimap")
+
+[node name="ViewportContainer" type="SubViewportContainer" parent="ObjectiveHud/Minimap" unique_id=500000002]
+layout_mode = 0
+offset_left = 28.0
+offset_top = 28.0
+offset_right = 178.0
+offset_bottom = 178.0
+mouse_filter = 2
+stretch = true
+
+[node name="SubViewport" type="SubViewport" parent="ObjectiveHud/Minimap/ViewportContainer" unique_id=500000003]
+size = Vector2i(150, 150)
+
+[node name="Camera2D" type="Camera2D" parent="ObjectiveHud/Minimap/ViewportContainer/SubViewport" unique_id=500000004]
+
+[node name="Frame" type="Panel" parent="ObjectiveHud/Minimap" unique_id=500000005]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxTexture_minimap_frame")
+
+[node name="Marker" type="Polygon2D" parent="ObjectiveHud/Minimap" unique_id=500000006]
+color = Color(0.96, 0.85, 0.35, 1)
+
+[node name="Outline" type="Line2D" parent="ObjectiveHud/Minimap/Marker" unique_id=500000007]
+width = 1.5
+default_color = Color(0.25, 0.15, 0.05, 0.9)
+joint_mode = 2
 
 [node name="Compass" type="Control" parent="." unique_id=771030022]
 layout_mode = 3
