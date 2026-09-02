@@ -377,3 +377,62 @@ It helps you understand the flow of the story"
 공격력↓,공격력↓,Attack↓
 방어력↓,방어력↓,Defense↓
 저항↓,저항↓,Resist↓
+검,검,Sword
+지팡이,지팡이,Staff
+반격!,반격!,Counter!
+회피!,회피!,Dodge!
+막았다!,막았다!,Blocked!
+코스트 0,코스트 0,Cost 0
+회피 준비,회피 준비,Dodge Ready
+반격 준비,반격 준비,Counter Ready
+방어 %d,방어 %d,Guard %d
+공격력 +%d%%,공격력 +%d%%,ATK +%d%%
+공격력 -%d%%,공격력 -%d%%,ATK -%d%%
+정신을 잃었다...,정신을 잃었다...,You lost consciousness...
+%s 출현!,%s 출현!,%s appears!
+%s %d마리가 나타났다!,%s %d마리가 나타났다!,%s x%d appeared!
+%d번째 턴 — 카드를 사용하세요.,%d번째 턴 — 카드를 사용하세요.,Turn %d — Use a card.
+%s %s 면역을 얻었다! 데미지 %d%% 감소,%s %s 면역을 얻었다! 데미지 %d%% 감소,%s gained %s immunity! Damage reduced by %d%%
+"%s — 대상을 선택하세요.
+(빈 곳 클릭 · 우클릭 · ESC로 취소)","%s — 대상을 선택하세요.
+(빈 곳 클릭 · 우클릭 · ESC로 취소)","%s — Choose a target.
+(Click empty space, right-click, or ESC to cancel)"
+손패를 모두 사용했다 — 턴을 넘긴다.,손패를 모두 사용했다 — 턴을 넘긴다.,You've used your whole hand — ending turn.
+%s — 체력 %d 회복!,%s — 체력 %d 회복!,%s — Recovered %d HP!
+%s — 마나 %d 회복!,%s — 마나 %d 회복!,%s — Recovered %d MP!
+%s — 다음 공격 피해를 %d 줄인다.,%s — 다음 공격 피해를 %d 줄인다.,%s — Reduces the next attack's damage by %d.
+%s — 다음 공격을 흘려낸다.,%s — 다음 공격을 흘려낸다.,%s — Dodges the next attack.
+%s — 다음 공격을 받아넘기고 반격한다.,%s — 다음 공격을 받아넘기고 반격한다.,%s — Parries and counters the next attack.
+"%s — 체력 %d, 마나 %d 회복!","%s — 체력 %d, 마나 %d 회복!","%s — Recovered %d HP and %d MP!"
+%s — %d라운드 동안 공격력 +%d%%!,%s — %d라운드 동안 공격력 +%d%%!,%s — For %d rounds, ATK +%d%%!
+%s! %s의 공격력 -%d%% (%d라운드),%s! %s의 공격력 -%d%% (%d라운드),%s! %s's ATK -%d%% (%d rounds)
+%s — 다음에 내는 카드 1장의 코스트가 0이 된다.,%s — 다음에 내는 카드 1장의 코스트가 0이 된다.,%s — The next card played costs 0.
+%s! %d마리에게 %s (%d라운드),%s! %d마리에게 %s (%d라운드),%s! %d enemies get %s (%d rounds)
+%s! %s (%d라운드),%s! %s (%d라운드),%s! %s (%d rounds)
+무기를 %s(으)로 바꿨다.,무기를 %s(으)로 바꿨다.,Switched weapon to %s.
+이번 턴에는 더 이상 무기를 바꿀 수 없다.,이번 턴에는 더 이상 무기를 바꿀 수 없다.,Can't switch weapons again this turn.
+%s 마력을 회복했다! (체력도 %d 회복),%s 마력을 회복했다! (체력도 %d 회복),%s recovered mana! (also healed %d HP)
+%s 마력을 회복했다!,%s 마력을 회복했다!,%s recovered mana!
+%s의 공격을 받아넘겼다! %d 피해로 되돌려줬다!,%s의 공격을 받아넘겼다! %d 피해로 되돌려줬다!,Parried %s's attack! Countered for %d damage!
+%s의 공격을 피했다!,%s의 공격을 피했다!,Dodged %s's attack!
+%s의 공격을 완전히 막아냈다!,%s의 공격을 완전히 막아냈다!,Completely blocked %s's attack!
+%s의 공격! %d 피해!,%s의 공격! %d 피해!,%s's attack! %d damage!
+전투에서 도망쳤다! (골드 %d 소모),전투에서 도망쳤다! (골드 %d 소모),Fled the battle! (Lost %d gold)
+%s %d마리,%s %d마리,%s x%d
+"%s 처치!
+골드 %d · 경험치 %d 획득!
+체력을 약간 회복했다.","%s 처치!
+골드 %d · 경험치 %d 획득!
+체력을 약간 회복했다.","%s defeated!
+Gained %d gold and %d XP!
+Recovered a bit of health."
+"
+%s을(를) 얻었다!","
+%s을(를) 얻었다!","
+Got %s!"
+%s! %d 피해!,%s! %d 피해!,%s! %d damage!
+"  (마나 %d 흡수)","  (마나 %d 흡수)","  (Drained %d MP)"
+"  (체력 %d 회복)","  (체력 %d 회복)","  (Healed %d HP)"
+%s — 체력과 마나를 완전히 회복했다! (무기 과열 %d%%),%s — 체력과 마나를 완전히 회복했다! (무기 과열 %d%%),%s — Fully restored HP and MP! (Weapon heat %d%%)
+%s — %s,%s — %s,%s — %s
+%s! %d마리에게 총 %d 피해!,%s! %d마리에게 총 %d 피해!,%s! Hit %d enemies for %d damage total!

@@ -1038,8 +1038,8 @@ func start_with(monster_type: String, variants: Array) -> void:
 func _appear_text() -> String:
 	var count := _manager.monsters.size() if _manager != null else 1
 	if count > 1:
-		return "%s %d마리가 나타났다!" % [_monster_data["name"], count]
-	return _monster_data.get("appear_text", "%s 출현!" % _monster_data["name"])
+		return tr("%s %d마리가 나타났다!") % [_monster_data["name"], count]
+	return _monster_data.get("appear_text", tr("%s 출현!") % _monster_data["name"])
 
 
 # ── 매니저 시그널 수신 (기록만; 연출은 아래 flow 함수들이 담당) ──────────────
@@ -1054,7 +1054,7 @@ func _on_turn_started(_turn_number: int) -> void:
 func _show_turn_message() -> void:
 	if _manager == null:
 		return
-	var text := "%d번째 턴 — 카드를 사용하세요." % _manager.turn_number
+	var text := tr("%d번째 턴 — 카드를 사용하세요.") % _manager.turn_number
 	var resist_text := _resistance_announcement()
 	if resist_text != "":
 		text += "\n" + resist_text
@@ -1077,13 +1077,14 @@ func _resistance_announcement() -> String:
 		var kind := ""
 		match monster.resistance.current:
 			EnemyResistance.ResistanceType.PHYSICAL:
-				kind = "물리"
+				kind = tr("물리")
 			EnemyResistance.ResistanceType.MAGIC:
-				kind = "마법"
+				kind = tr("마법")
 			_:
 				continue
 		var name_ := monster.display_name
-		lines.append("%s%s %s 면역을 얻었다! 데미지 %d%% 감소" % [name_, _subject_particle(name_), kind, cut_percent])
+		var subject := name_ + _subject_particle(name_)
+		lines.append(tr("%s %s 면역을 얻었다! 데미지 %d%% 감소") % [subject, kind, cut_percent])
 
 	return "\n".join(lines)
 
@@ -1214,7 +1215,7 @@ func _begin_targeting(card: Card) -> void:
 	for monster in _manager.alive_monsters():
 		_target_markers.append(_build_target_marker(monster.index))
 
-	_message.text = "%s — 대상을 선택하세요.\n(빈 곳 클릭 · 우클릭 · ESC로 취소)" % card.card_name
+	_message.text = tr("%s — 대상을 선택하세요.\n(빈 곳 클릭 · 우클릭 · ESC로 취소)") % card.card_name
 	_refresh_hand_buttons()
 
 
@@ -1420,7 +1421,7 @@ func _play_card_flow(card: Card, target_index: int = -1) -> void:
 	# (어떤 조건에서 자동으로 넘기고 어떤 조건에서 안 넘기는지는 is_hand_exhausted() 주석 참고)
 	# 마지막 카드 연출이 끝나자마자 적이 달려들면 급하게 느껴져서, 안내 문구와 함께 한 박자 둔다
 	if _manager.is_hand_exhausted():
-		_message.text = "손패를 모두 사용했다 — 턴을 넘긴다."
+		_message.text = tr("손패를 모두 사용했다 — 턴을 넘긴다.")
 		await _wait(0.5)
 		await _end_turn_flow()
 		return
@@ -1556,30 +1557,30 @@ func _animate_card(card: Card, hp_before: int, mana_before: int, monster_hp_befo
 			_play_card_vfx(card, _player_sprite)
 			_show_popup(_player_sprite.position, "+%d" % healed, HEAL_COLOR)
 			_animate_hp_bar(_player_hp_bar, GameState.get_flag("player_hp"))
-			_message.text = "%s — 체력 %d 회복!" % [card.card_name, healed]
+			_message.text = tr("%s — 체력 %d 회복!") % [card.card_name, healed]
 			await _wait(0.4)
 		Card.EffectType.RESTORE_MANA:
 			var restored: int = GameState.get_flag("player_mana") - mana_before
 			_play_card_vfx(card, _player_sprite)
 			_show_popup(_player_sprite.position, "+%d MP" % restored, MANA_COLOR)
-			_message.text = "%s — 마나 %d 회복!" % [card.card_name, restored]
+			_message.text = tr("%s — 마나 %d 회복!") % [card.card_name, restored]
 			await _wait(0.4)
 		Card.EffectType.DEFEND:
 			_play_card_vfx(card, _player_sprite)
-			_show_popup(_player_sprite.position, "방어 %d" % _manager.get_pending_defense(), GUARD_COLOR)
-			_message.text = "%s — 다음 공격 피해를 %d 줄인다." % [card.card_name, _manager.get_pending_defense()]
+			_show_popup(_player_sprite.position, tr("방어 %d") % _manager.get_pending_defense(), GUARD_COLOR)
+			_message.text = tr("%s — 다음 공격 피해를 %d 줄인다.") % [card.card_name, _manager.get_pending_defense()]
 			await _wait(0.35)
 		Card.EffectType.DODGE:
 			_play_card_vfx(card, _player_sprite)
-			_show_popup(_player_sprite.position, "회피 준비", DODGE_COLOR)
-			_message.text = "%s — 다음 공격을 흘려낸다." % card.card_name
+			_show_popup(_player_sprite.position, tr("회피 준비"), DODGE_COLOR)
+			_message.text = tr("%s — 다음 공격을 흘려낸다.") % card.card_name
 			await _wait(0.35)
 		Card.EffectType.COUNTER:
 			# 실제 반격 타격(2단계)은 _play_counter_vfx()가 적 턴에 따로 재생한다 — 여기서는
 			# "받아넘길 준비를 했다"는 1단계 연출만 보여준다
 			_play_card_vfx(card, _player_sprite)
-			_show_popup(_player_sprite.position, "반격 준비", GUARD_COLOR)
-			_message.text = "%s — 다음 공격을 받아넘기고 반격한다." % card.card_name
+			_show_popup(_player_sprite.position, tr("반격 준비"), GUARD_COLOR)
+			_message.text = tr("%s — 다음 공격을 받아넘기고 반격한다.") % card.card_name
 			await _wait(0.35)
 		Card.EffectType.RESTORE_BOTH:
 			if card.card_name == "불사조의 축복":
@@ -1596,31 +1597,31 @@ func _animate_card(card: Card, hp_before: int, mana_before: int, monster_hp_befo
 			_spawn_vfx_sprite("mana", _player_sprite.position + Vector2(14, -6))
 			_show_popup(_player_sprite.position, "+%d / +%d MP" % [healed, mana_restored], HEAL_COLOR)
 			_animate_hp_bar(_player_hp_bar, GameState.get_flag("player_hp"))
-			_message.text = "%s — 체력 %d, 마나 %d 회복!" % [card.card_name, healed, mana_restored]
+			_message.text = tr("%s — 체력 %d, 마나 %d 회복!") % [card.card_name, healed, mana_restored]
 			await _wait(0.4)
 		Card.EffectType.BUFF_ATTACK_SELF:
 			# 자기 자신에게 거는 버프 — 플레이어 위에 이펙트를 띄우고 배지를 갱신한다
 			SFXPlayer.play(VFX_SFX["mana"])
 			_spawn_vfx_sprite("mana", _player_sprite.position)
-			_show_popup(_player_sprite.position, "공격력 +%d%%" % card.value, BUFF_COLOR)
+			_show_popup(_player_sprite.position, tr("공격력 +%d%%") % card.value, BUFF_COLOR)
 			_refresh_status_badges()
-			_message.text = "%s — %d라운드 동안 공격력 +%d%%!" % [card.card_name, card.secondary_value, card.value]
+			_message.text = tr("%s — %d라운드 동안 공격력 +%d%%!") % [card.card_name, card.secondary_value, card.value]
 			await _wait(0.45)
 		Card.EffectType.DEBUFF_ATTACK_ENEMY:
 			SFXPlayer.play(VFX_SFX["defend"])
 			_spawn_vfx_sprite("defend", target_sprite.position)
 			_flash_hit(target_sprite)
-			_show_popup(target_sprite.position, "공격력 -%d%%" % card.value, DEBUFF_COLOR)
+			_show_popup(target_sprite.position, tr("공격력 -%d%%") % card.value, DEBUFF_COLOR)
 			_refresh_status_badges()
-			_message.text = "%s! %s의 공격력 -%d%% (%d라운드)" % [
+			_message.text = tr("%s! %s의 공격력 -%d%% (%d라운드)") % [
 				card.card_name, _monster_display_name(target_index), card.value, card.secondary_value]
 			await _wait(0.45)
 		Card.EffectType.FREE_NEXT_CARD:
 			# 대상이 없고 수치도 없는 카드라, 플레이어 위에 잔상 이펙트(dodge)를 한 번 띄우는 것으로
 			# "빨라졌다"만 전한다 — 실제 이득은 다음 카드의 비용 배지가 사라지는 것으로 곧바로 보인다
 			_play_card_vfx(card, _player_sprite)
-			_show_popup(_player_sprite.position, "코스트 0", BUFF_COLOR)
-			_message.text = "%s — 다음에 내는 카드 1장의 코스트가 0이 된다." % card.card_name
+			_show_popup(_player_sprite.position, tr("코스트 0"), BUFF_COLOR)
+			_message.text = tr("%s — 다음에 내는 카드 1장의 코스트가 0이 된다.") % card.card_name
 			await _wait(0.4)
 		Card.EffectType.STATUS_PACKAGE:
 			await _play_status_package_effect(card)
@@ -1646,10 +1647,10 @@ func _play_status_package_effect(card: Card) -> void:
 
 	_refresh_status_badges()
 	if _card_targets.size() > 1 and not to_self:
-		_message.text = "%s! %d마리에게 %s (%d라운드)" % [
+		_message.text = tr("%s! %d마리에게 %s (%d라운드)") % [
 			card.card_name, _card_targets.size(), summary, card.secondary_value]
 	else:
-		_message.text = "%s! %s (%d라운드)" % [card.card_name, summary, card.secondary_value]
+		_message.text = tr("%s! %s (%d라운드)") % [card.card_name, summary, card.secondary_value]
 	await _wait(0.5)
 
 
@@ -1777,9 +1778,9 @@ func _on_weapon_pressed() -> void:
 	_cancel_targeting()
 	var next_weapon = WeaponState.WeaponType.STAFF if _manager.weapon.equipped == WeaponState.WeaponType.SWORD else WeaponState.WeaponType.SWORD
 	if _manager.switch_weapon(next_weapon):
-		_message.text = "무기를 %s(으)로 바꿨다." % _weapon_name(next_weapon)
+		_message.text = tr("무기를 %s(으)로 바꿨다.") % _weapon_name(next_weapon)
 	else:
-		_message.text = "이번 턴에는 더 이상 무기를 바꿀 수 없다."
+		_message.text = tr("이번 턴에는 더 이상 무기를 바꿀 수 없다.")
 	_refresh_all()
 
 
@@ -1843,6 +1844,7 @@ func _animate_monster_recover(action: Dictionary) -> void:
 	var index: int = action["attacker"]
 	var sprite := _monster_sprite_at(index)
 	var name_ := _monster_display_name(index)
+	var subject := name_ + _subject_particle(name_)
 	var mana_gained: int = action["mana"]
 	var hp_gained: int = action["hp"]
 
@@ -1856,9 +1858,9 @@ func _animate_monster_recover(action: Dictionary) -> void:
 		_spawn_vfx_sprite("heal", sprite.position, ENEMY_RECOVER_VFX_SCALE)
 		_show_popup(sprite.position + Vector2(0, -26), "+%d" % hp_gained, HEAL_COLOR)
 		_refresh_monster_hp_bars()
-		_message.text = "%s%s 마력을 회복했다! (체력도 %d 회복)" % [name_, _subject_particle(name_), hp_gained]
+		_message.text = tr("%s 마력을 회복했다! (체력도 %d 회복)") % [subject, hp_gained]
 	else:
-		_message.text = "%s%s 마력을 회복했다!" % [name_, _subject_particle(name_)]
+		_message.text = tr("%s 마력을 회복했다!") % subject
 
 	await _wait(ENEMY_RECOVER_HOLD)
 
@@ -1919,27 +1921,27 @@ func _animate_enemy_attack_result(attack: Dictionary, attacker_sprite: AnimatedS
 	# 여기서는 적 HP바/숫자를 그 결과에 맞춰 따라가게만 한다 (플레이어는 피해를 안 받는다)
 	var counter: int = attack["counter"]
 	if counter > 0:
-		_show_popup(_player_sprite.position, "반격!", GUARD_COLOR)
+		_show_popup(_player_sprite.position, tr("반격!"), GUARD_COLOR)
 		await _wait(0.2)
 		_shake_actors()
 		_flash_hit(attacker_sprite)
 		_play_counter_vfx(attacker_sprite.position)
 		_show_popup(attacker_sprite.position, "-%d" % counter, DAMAGE_COLOR)
 		_refresh_monster_hp_bars()
-		_message.text = "%s의 공격을 받아넘겼다! %d 피해로 되돌려줬다!" % [attacker_name, counter]
+		_message.text = tr("%s의 공격을 받아넘겼다! %d 피해로 되돌려줬다!") % [attacker_name, counter]
 		await _wait(0.4)
 		return
 
 	if attack["dodged"]:
-		_show_popup(_player_sprite.position, "회피!", DODGE_COLOR)
-		_message.text = "%s의 공격을 피했다!" % attacker_name
+		_show_popup(_player_sprite.position, tr("회피!"), DODGE_COLOR)
+		_message.text = tr("%s의 공격을 피했다!") % attacker_name
 		await _wait(0.3)
 		return
 
 	var damage: int = attack["damage"]
 	if damage <= 0:
-		_show_popup(_player_sprite.position, "막았다!", GUARD_COLOR)
-		_message.text = "%s의 공격을 완전히 막아냈다!" % attacker_name
+		_show_popup(_player_sprite.position, tr("막았다!"), GUARD_COLOR)
+		_message.text = tr("%s의 공격을 완전히 막아냈다!") % attacker_name
 		await _wait(0.3)
 		return
 
@@ -1951,7 +1953,7 @@ func _animate_enemy_attack_result(attack: Dictionary, attacker_sprite: AnimatedS
 	_play_edge_flash()
 	_show_popup(_player_sprite.position, "-%d" % damage, DAMAGE_COLOR)
 	_animate_hp_bar(_player_hp_bar, GameState.get_flag("player_hp"))
-	_message.text = "%s의 공격! %d 피해!" % [attacker_name, damage]
+	_message.text = tr("%s의 공격! %d 피해!") % [attacker_name, damage]
 	await _wait(0.35)
 
 
@@ -1997,7 +1999,7 @@ func _on_flee_pressed() -> void:
 	GameState.spend_gold(penalty)
 	_player_gold_label.text = str(GameState.gold)
 
-	_message.text = "전투에서 도망쳤다! (골드 %d 소모)" % penalty
+	_message.text = tr("전투에서 도망쳤다! (골드 %d 소모)") % penalty
 	await _wait(0.4)
 	SceneManager.flee_battle()
 
@@ -2434,7 +2436,7 @@ func _gauge_frame_index(gauge: int) -> int:
 
 
 func _weapon_name(weapon: int) -> String:
-	return "검" if weapon == WeaponState.WeaponType.SWORD else "지팡이"
+	return tr("검") if weapon == WeaponState.WeaponType.SWORD else tr("지팡이")
 
 
 # 연출 중에는 모든 조작을 잠근다 (손패 버튼은 _refresh_hand_buttons가 _mode도 함께 반영)
@@ -2547,10 +2549,10 @@ func _finish_victory() -> void:
 
 	var defeated_label: String = _monster_data["name"]
 	if defeated_count > 1:
-		defeated_label = "%s %d마리" % [_monster_data["name"], defeated_count]
-	_message.text = "%s 처치!\n골드 %d · 경험치 %d 획득!\n체력을 약간 회복했다." % [defeated_label, total_gold, total_xp]
+		defeated_label = tr("%s %d마리") % [_monster_data["name"], defeated_count]
+	_message.text = tr("%s 처치!\n골드 %d · 경험치 %d 획득!\n체력을 약간 회복했다.") % [defeated_label, total_gold, total_xp]
 	for item_id in dropped_items:
-		_message.text += "\n%s을(를) 얻었다!" % ItemData.ITEMS[item_id]["name"]
+		_message.text += tr("\n%s을(를) 얻었다!") % ItemData.ITEMS[item_id]["name"]
 
 	_main_column.visible = false
 	_close_button.visible = true
@@ -2594,7 +2596,7 @@ func _finish_defeat() -> void:
 	for badge in _resist_badges:
 		badge.visible = false
 	_main_column.visible = false
-	_message.text = "정신을 잃었다..."
+	_message.text = tr("정신을 잃었다...")
 	SceneManager.reveal_player()
 	GameOverScreen.show_game_over()
 
@@ -2964,12 +2966,12 @@ func _play_damage_trait_feedback() -> void:
 	if stolen > 0:
 		_spawn_vfx_sprite("mana", _player_sprite.position)
 		_show_popup(_player_sprite.position, "+%d MP" % stolen, MANA_COLOR)
-		_message.text += "  (마나 %d 흡수)" % stolen
+		_message.text += tr("  (마나 %d 흡수)") % stolen
 	if leeched > 0:
 		_spawn_vfx_sprite("heal", _player_sprite.position)
 		_show_popup(_player_sprite.position, "+%d" % leeched, HEAL_COLOR)
 		_animate_hp_bar(_player_hp_bar, GameState.get_flag("player_hp"))
-		_message.text += "  (체력 %d 회복)" % leeched
+		_message.text += tr("  (체력 %d 회복)") % leeched
 
 
 # 이번 카드가 대상들에게 입힌 피해의 합 (메시지에 쓸 총계)
@@ -2987,10 +2989,10 @@ func _damage_result_message(card: Card) -> String:
 	# 도박의 일격처럼 "빗나갈 수 있는" 카드는 0 피해가 실패를 뜻하므로 숫자 대신 그 사실을 적는다.
 	# "도박의 일격! 0 피해!"는 카드가 씹힌 것처럼 읽힌다
 	if _is_whiff(card):
-		return "%s — %s" % [card.card_name, DamageTraits.get_whiff_text(card.damage_trait)]
+		return tr("%s — %s") % [card.card_name, DamageTraits.get_whiff_text(card.damage_trait)]
 	if _card_targets.size() > 1:
-		return "%s! %d마리에게 총 %d 피해!" % [card.card_name, _card_targets.size(), total]
-	return "%s! %d 피해!" % [card.card_name, total]
+		return tr("%s! %d마리에게 총 %d 피해!") % [card.card_name, _card_targets.size(), total]
+	return tr("%s! %d 피해!") % [card.card_name, total]
 
 
 func _set_monster_hp_display(index: int, hp: int) -> void:
@@ -3166,7 +3168,7 @@ func _play_triple_helix_cutscene(card: Card, monster_hp_before: int, target_inde
 	await return_tween.finished
 
 	_update_monster_hp_text() # 실제 소유자(매니저) 값과 최종적으로 다시 맞춰둔다
-	_message.text = "%s! %d 피해!" % [card.card_name, total_damage]
+	_message.text = tr("%s! %d 피해!") % [card.card_name, total_damage]
 	await _wait(0.2)
 
 
@@ -3257,7 +3259,7 @@ func _play_swift_cutscene(card: Card, monster_hp_before: int, target_index: int)
 	await return_tween.finished
 
 	_update_monster_hp_text()
-	_message.text = "%s! %d 피해!" % [card.card_name, total_damage]
+	_message.text = tr("%s! %d 피해!") % [card.card_name, total_damage]
 	await _wait(0.25)
 
 
@@ -3362,7 +3364,7 @@ func _play_phoenix_cutscene(card: Card, hp_before: int, mana_before: int) -> voi
 	_flash_hit(_player_sprite)
 	_show_popup(pos, "+%d / +%d MP" % [healed, mana_restored], HEAL_COLOR)
 	_animate_hp_bar(_player_hp_bar, GameState.get_flag("player_hp"))
-	_message.text = "%s — 체력과 마나를 완전히 회복했다! (무기 과열 %d%%)" % [card.card_name, card.on_use_set_gauge]
+	_message.text = tr("%s — 체력과 마나를 완전히 회복했다! (무기 과열 %d%%)") % [card.card_name, card.on_use_set_gauge]
 	await _wait(PHOENIX_HOLD)
 
 
@@ -3471,7 +3473,7 @@ func _play_judgment_cutscene(card: Card, monster_hp_before: int, target_index: i
 	# 7) 화면 색을 확실히 원상복귀 (트윈에 맡기지 않고 직접 0으로 되돌린다)
 	_hit_flash.color = Color(1, 1, 1, 0.0)
 	_bolt_flash.color = Color(JUDGMENT_BOLT_TINT.r, JUDGMENT_BOLT_TINT.g, JUDGMENT_BOLT_TINT.b, 0.0)
-	_message.text = "%s! %d 피해!" % [card.card_name, total_damage]
+	_message.text = tr("%s! %d 피해!") % [card.card_name, total_damage]
 	await _wait(0.25)
 
 
@@ -3590,7 +3592,7 @@ func _play_meteor_cutscene(card: Card, monster_hp_before: int, target_index: int
 	return_tween.tween_property(_player_sprite, "position", start_pos, METEOR_RETURN_DURATION)
 	await return_tween.finished
 
-	_message.text = "%s! %d 피해!" % [card.card_name, total_damage]
+	_message.text = tr("%s! %d 피해!") % [card.card_name, total_damage]
 	await _wait(0.25)
 
 
