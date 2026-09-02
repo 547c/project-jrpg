@@ -13,7 +13,14 @@ const WANDER_IDLE_DURATION_MAX := 4.0
 
 enum WanderState { IDLE, MOVING }
 
-@export var dialogue_tree: Array = DialogueData.TEST_DIALOGUE.duplicate(true) # 이 NPC가 재생할 대화 트리 (지금은 테스트용 기본값)
+# 이 NPC가 재생할 대화 트리. 서브클래스(elara_npc.gd 등)가 _ready()에서 자기 것으로 채운다.
+#
+# [@export가 아닌 이유] export로 두면 씬(.tscn)에 저장되는 프로퍼티가 되는데, 기본값이
+# duplicate(true)라 평가할 때마다 새 배열이라서 Godot이 "기본값과 다르다"고 보고 매번 씬에 구워버린다.
+# 그래서 마을 씬을 에디터에서 열고 저장할 때마다 대사 스냅샷 수백 줄이 diff에 생겼다.
+# 인스펙터로 이 값을 지정하는 NPC는 하나도 없으므로(전부 서브클래스 대입) export를 떼어 아예
+# 저장 대상에서 제외한다 — 씬 파일에 죽은 사본이 쌓이지 않는다
+var dialogue_tree: Array = DialogueData.TEST_DIALOGUE.duplicate(true)
 @export var dialogue_start_id: String = "start" # 대화를 시작할 노드 id
 @export var met_flag_name: String = "" # 대화가 시작되면 true로 설정할 GameState 플래그 이름 (예: "met_elara"), 없으면 ""
 @export var npc_id: String = "" # 호감도/초상화용 NPC 식별자(예: "elara"). 비워두면 met_flag_name에서 자동 도출("met_elara"->"elara")
