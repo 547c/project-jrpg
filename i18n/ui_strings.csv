@@ -449,3 +449,72 @@ Got %s!"
 [체력부족]","
 [Not Enough HP]"
 무기: %s,무기: %s,Weapon: %s
+투기,투기,Fighting Spirit
+흡혈,흡혈,Blood Drain
+카운터 슬래쉬,카운터 슬래쉬,Counter Slash
+무력화,무력화,Disable
+피하기,피하기,Dodge
+처형,처형,Execute
+익스플로전,익스플로전,Explosion
+파이어볼,파이어볼,Fireball
+섬광,섬광,Flash Slash
+광란,광란,Frenzy
+도박의 일격,도박의 일격,Gambler's Strike
+방어,방어,Guard
+가속,가속,Haste
+치유의 빛,치유의 빛,Healing Light
+얼음화살,얼음화살,Ice Arrow
+천벌,천벌,Divine Judgment
+번개창,번개창,Lightning Spear
+마력탄,마력탄,Magic Bolt
+마력흡수,마력흡수,Mana Drain
+마나 회복,마나 회복,Mana Draught
+유성낙하,유성낙하,Meteor Drop
+불사조의 축복,불사조의 축복,Phoenix Blessing
+반사방패,반사방패,Reflect Shield
+봉인,봉인,Seal
+회전베기,회전베기,Spin Slash
+찌르기,찌르기,Stab
+초재생,초재생,Super Regen
+신속,신속,Swift
+위협,위협,Threaten
+시공균열,시공균열,Time Rift
+삼중나선,삼중나선,Triple Helix
+베기,베기,Slash
+숨을 고르며 투지를 끌어올린다. 다음 일격이 한층 매서워진다.,숨을 고르며 투지를 끌어올린다. 다음 일격이 한층 매서워진다.,"Steadying your breath, you stoke your fighting spirit. The next strike lands harder."
+벤 자리에서 흘러나온 것이 칼날을 타고 거꾸로 올라온다.,벤 자리에서 흘러나온 것이 칼날을 타고 거꾸로 올라온다.,What spills from the wound climbs back up the blade.
+적의 공격을 받아넘기며 그 힘을 그대로 되돌려준다.,적의 공격을 받아넘기며 그 힘을 그대로 되돌려준다.,Parry the enemy's blow and send its force right back.
+급소를 노려 자세를 무너뜨린다. 팔은 무거워지고 빈틈은 벌어진다.,급소를 노려 자세를 무너뜨린다. 팔은 무거워지고 빈틈은 벌어진다.,"A strike to the weak point breaks their stance — arms grow heavy, openings widen."
+본능적으로 몸을 비틀어 공격을 흘려낸다.,본능적으로 몸을 비틀어 공격을 흘려낸다.,"Instinct twists the body aside, letting the attack slide past."
+숨이 얕아진 것을 확인하고서야 칼끝을 겨눈다. 쓰러지기 직전의 상대에게는 자비가 없다.,숨이 얕아진 것을 확인하고서야 칼끝을 겨눈다. 쓰러지기 직전의 상대에게는 자비가 없다.,Only once their breath grows shallow does the blade take aim. There is no mercy for the nearly fallen.
+압도적인 마력이 폭발하여 모든 것을 집어삼킨다.,압도적인 마력이 폭발하여 모든 것을 집어삼킨다.,"Overwhelming magic detonates, swallowing everything in its path."
+타오르는 불꽃 덩어리를 적에게 던진다.,타오르는 불꽃 덩어리를 적에게 던진다.,Hurls a blazing ball of fire at the enemy.
+순간적으로 빛나며 빠르게 이동해 베어내는 검기.,순간적으로 빛나며 빠르게 이동해 베어내는 검기.,A flash of blade energy that closes the distance and cuts in an instant.
+"검붉은 열기가 시야를 좁힌다. 제 몸을 태워 얻은 힘은 잠시뿐이지만, 그동안은 무엇도 막지 못한다.","검붉은 열기가 시야를 좁힌다. 제 몸을 태워 얻은 힘은 잠시뿐이지만, 그동안은 무엇도 막지 못한다.","A crimson heat narrows your vision. The power burned from your own body is fleeting, but nothing can stop it while it lasts."
+"겨누지 않고 휘두른다. 맞으면 한 번에 끝나고, 빗나가면 아무것도 남지 않는다.","겨누지 않고 휘두른다. 맞으면 한 번에 끝나고, 빗나가면 아무것도 남지 않는다.","A swing thrown without aim. Land it and it's over in one blow — miss, and nothing is left."
+다가올 일격에 대비해 자세를 낮춘다.,다가올 일격에 대비해 자세를 낮춘다.,Lower your stance to brace for the coming blow.
+한 박자를 앞당긴다. 다음 한 수는 대가를 치르기 전에 이미 나가 있다.,한 박자를 앞당긴다. 다음 한 수는 대가를 치르기 전에 이미 나가 있다.,A single beat ahead. The next move is already out before its cost comes due.
+따스한 빛이 상처를 어루만진다.,따스한 빛이 상처를 어루만진다.,A warm light soothes the wound.
+차가운 냉기를 압축해 쏘아내는 초급 빙결 마법.,차가운 냉기를 압축해 쏘아내는 초급 빙결 마법.,A basic frost spell that compresses biting cold into a bolt.
+하늘의 심판을 빌려와 적을 벌한다. 거스를 수 없는 빛이 모든 것을 꿰뚫는다.,하늘의 심판을 빌려와 적을 벌한다. 거스를 수 없는 빛이 모든 것을 꿰뚫는다.,Calls down heaven's judgment upon the enemy. An unstoppable light pierces through all.
+하늘의 번개를 압축해 창처럼 내리꽂는다.,하늘의 번개를 압축해 창처럼 내리꽂는다.,Compresses the sky's lightning into a spear and drives it down.
+손끝에 모인 마력을 압축해 쏘아내는 초급 마법.,손끝에 모인 마력을 압축해 쏘아내는 초급 마법.,A basic spell that condenses magic gathered at the fingertips into a bolt.
+상대가 끌어모으던 힘의 실마리를 붙잡아 그대로 제 쪽으로 당긴다.,상대가 끌어모으던 힘의 실마리를 붙잡아 그대로 제 쪽으로 당긴다.,Seizes the thread of power the enemy was gathering and pulls it back to yourself.
+체력을 대가로 마력의 흐름을 되찾는다.,체력을 대가로 마력의 흐름을 되찾는다.,Reclaims the flow of magic at the cost of your own vitality.
+하늘 높이 뛰어올라 온몸의 무게를 실어 내리찍는다.,하늘 높이 뛰어올라 온몸의 무게를 실어 내리찍는다.,Leaps high into the air and comes crashing down with the full weight of the body.
+불사조의 깃털이 감싸며 상처와 지친 마력을 단숨에 되돌린다. 다만 그 대가로 다음 몇 턴은 무기가 뜨겁게 달아오른다.,불사조의 깃털이 감싸며 상처와 지친 마력을 단숨에 되돌린다. 다만 그 대가로 다음 몇 턴은 무기가 뜨겁게 달아오른다.,"A phoenix feather wraps around you, restoring wounds and spent magic in an instant. But the price is a weapon that runs white-hot for the next few turns."
+가벼운 몸놀림으로 공격을 흘리며 짧게 반격한다.,가벼운 몸놀림으로 공격을 흘리며 짧게 반격한다.,"A light, agile motion deflects the attack and answers with a quick counter."
+낡은 인장이 대기를 옭아맨다. 힘도 저항도 봉인 안에서는 반쯤 잠든다.,낡은 인장이 대기를 옭아맨다. 힘도 저항도 봉인 안에서는 반쯤 잠든다.,An old seal binds the air itself. Both strength and resistance lie half-dormant within it.
+몸을 팽이처럼 회전시켜 주위를 한 번에 베어낸다.,몸을 팽이처럼 회전시켜 주위를 한 번에 베어낸다.,"Spins the body like a top, cutting down everything nearby in one motion."
+"빠르고 가벼운 찌르기, 준비 없이 즉각 반응할 수 있다.","빠르고 가벼운 찌르기, 준비 없이 즉각 반응할 수 있다.","A quick, light thrust — fast enough to answer without preparation."
+육체와 마력이 동시에 빠르게 재생된다.,육체와 마력이 동시에 빠르게 재생된다.,Body and magic regenerate rapidly at the same time.
+"눈으로 좇을 수 없는 속도로 파고들어, 숨 한 번에 베어낸다.","눈으로 좇을 수 없는 속도로 파고들어, 숨 한 번에 베어낸다.","Closes in at a speed too fast to follow, cutting down in a single breath."
+살기를 드러내 상대의 기세를 꺾는다. 움츠러든 팔은 예전만큼 무겁지 않다.,살기를 드러내 상대의 기세를 꺾는다. 움츠러든 팔은 예전만큼 무겁지 않다.,Bares killing intent to break the enemy's nerve. A cowed arm no longer swings as heavy as before.
+시간의 틈을 열어 순간을 얼려버린다. 모든 타격이 그 안에 갇혔다가 한꺼번에 풀려난다.,시간의 틈을 열어 순간을 얼려버린다. 모든 타격이 그 안에 갇혔다가 한꺼번에 풀려난다.,"Opens a rift in time, freezing the instant itself. Every strike is trapped within it, then released all at once."
+검기가 세 겹의 나선으로 소용돌이치며 적을 짓밟는다.,검기가 세 겹의 나선으로 소용돌이치며 적을 짓밟는다.,"Blade energy spirals into a triple helix, trampling the enemy."
+가장 기본적이지만 믿음직한 검술. 망설임 없이 휘두른다.,가장 기본적이지만 믿음직한 검술. 망설임 없이 휘두른다.,"A basic but reliable swordstroke, swung without hesitation."
+폭주한 근원체,폭주한 근원체,Runaway Wellspring
+미라가 거친 숨을 몰아쉬며 다가온다. 메마른 땅의 기운에 오래 시달려 사나워진 듯하다.,미라가 거친 숨을 몰아쉬며 다가온다. 메마른 땅의 기운에 오래 시달려 사나워진 듯하다.,"The mummy shambles closer, breathing hard. It seems the parched land's long grip has driven it feral."
+"이 모든 폭주의 근원처럼 보이는, 뒤틀린 존재가 앞을 막는다.","이 모든 폭주의 근원처럼 보이는, 뒤틀린 존재가 앞을 막는다.","A warped being, seemingly the source of all this chaos, blocks your path."
+턴 종료,턴 종료,End Turn
+도망가기,도망가기,Flee

@@ -451,7 +451,7 @@ func _fill_entry(i: int, card_id: String, is_deck: bool, deck_full: bool) -> voi
 	_entry_frames[i].texture = load(SLOT_FRAME_UNLOCKED if unlocked else SLOT_FRAME_LOCKED) as Texture2D
 	_entry_icons[i].texture = CardLibrary.build_icon(card_id)
 	_entry_locks[i].visible = not unlocked
-	_entry_names[i].text = card.card_name
+	_entry_names[i].text = tr(card.card_name)
 	_entry_descs[i].text = "%s · %s" % [card.get_tier_label(), card.get_effect_description()]
 
 	# 오른쪽 끝 영역을 탭에 맞춰 갈아끼운다
@@ -561,11 +561,11 @@ func _on_entry_pressed(i: int) -> void:
 	var affordable := GameState.can_unlock_card(card_id)
 	if affordable:
 		_confirm_message.text = tr("%s 잠금해제에 %d 포인트를 사용하시겠습니까?\n(보유: %d P)") % [
-			card.card_name, cost, GameState.get_skill_points()
+			tr(card.card_name), cost, GameState.get_skill_points()
 		]
 	else:
 		_confirm_message.text = tr("%s 잠금해제에는 %d 포인트가 필요합니다.\n(보유: %d P — 포인트가 부족합니다)") % [
-			card.card_name, cost, GameState.get_skill_points()
+			tr(card.card_name), cost, GameState.get_skill_points()
 		]
 	_confirm_button.disabled = not affordable
 	_confirm_popup.visible = true

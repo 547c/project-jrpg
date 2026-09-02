@@ -66,7 +66,7 @@ func _init(index_: int, monster_type_: String, variant_: Dictionary) -> void:
 	hp = max_hp
 	resistance = EnemyResistance.new()
 	status = StatusEffects.new()
-	display_name = monster_data["name"]
+	display_name = tr(monster_data["name"])
 
 
 func is_alive() -> bool:

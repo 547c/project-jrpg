@@ -88,7 +88,7 @@ static func describe_package(package_id: String) -> String:
 		return ""
 	var parts: Array[String] = []
 	for entry in package["effects"]:
-		parts.append(tr("%s %d%%") % [tr(KIND_LABEL[entry["kind"]]), int(entry["magnitude"])])
+		parts.append(TranslationServer.translate("%s %d%%") % [TranslationServer.translate(KIND_LABEL[entry["kind"]]), int(entry["magnitude"])])
 	return ", ".join(parts)
 
 

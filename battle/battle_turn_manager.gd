@@ -94,7 +94,7 @@ func _init(monster_type_: String, variants: Array, cards: Array[Card]) -> void:
 	# 같은 종류가 여러 마리면 이름에 번호를 붙여 메시지에서 구분되게 한다 (한 마리면 그냥 "오크")
 	if monsters.size() > 1:
 		for monster in monsters:
-			monster.display_name = "%s %d" % [monster.monster_data["name"], monster.index + 1]
+			monster.display_name = "%s %d" % [tr(monster.monster_data["name"]), monster.index + 1]
 
 	deck = Deck.new(cards)
 	hand = Hand.new()
