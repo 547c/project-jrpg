@@ -1,5 +1,7 @@
 extends Control
 
+const UiTranslator := preload("res://systems/ui_translator.gd")
+
 # 인벤토리 패널. HUD의 가방 버튼이 open()/close()로 토글한다.
 # _root(자기 자신)가 "inventory_menu" 그룹에 속하고 visible로 열림 여부를 나타내 이동 잠금과 연동된다.
 # 슬롯(칸 테두리 + 클릭 영역 + 아이콘 + 개수)은 _ready()에서 코드로 생성 — 페이지당 칸수이지, 전체
@@ -35,6 +37,7 @@ var _selected_item_id: String = ""
 
 
 func _ready() -> void:
+	UiTranslator.bind(self)
 	add_to_group("inventory_menu")
 	visible = false
 	_tooltip.visible = false

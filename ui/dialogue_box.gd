@@ -2,6 +2,7 @@ class_name DialogueBox
 extends Control
 
 const DialogueTranslations := preload("res://systems/dialogue_translations.gd")
+const UiTranslator := preload("res://systems/ui_translator.gd")
 
 # 대화가 완전히 종료되었을 때 발행. last_node_id는 종료 직전 마지막으로 보여준 노드의 id
 # (구독자가 "어떤 대사에서 끝났는지"로 특별 처리를 하고 싶을 때 사용 — 예: 엔딩 트리거)
@@ -115,6 +116,7 @@ var _panel_height_tween: Tween # _update_panel_height()가 재생 중인 높이 
 
 # 다른 씬에서 이 DialogueBox를 찾을 수 있도록 그룹에 등록하고, 공용 타이핑 헬퍼와 페이지 넘김 버튼을 준비
 func _ready() -> void:
+	UiTranslator.bind(self)
 	add_to_group("dialogue_box")
 	_typewriter = Typewriter.new(_text_label, _bleep_player)
 	_prev_button.pressed.connect(_on_prev_page)

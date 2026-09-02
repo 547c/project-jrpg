@@ -1,5 +1,7 @@
 extends Control
 
+const UiTranslator := preload("res://systems/ui_translator.gd")
+
 # 카드 컬렉션/덱 구성 스펠북 (HUD의 책 버튼이 open()/close()로 토글).
 # 배경은 Franuka RPG UI Pack의 펼친 책(Spellbook.png, 2x)이고, 항목/탭은 인벤토리 메뉴와 같은
 # "실측 좌표 + 코드 생성" 방식으로 그림 위에 정확히 겹쳐 배치한다.
@@ -123,6 +125,7 @@ var _entry_card_ids: Array[String] = []
 
 var _tab_buttons: Array[Button] = []
 var _tab_sprites: Array[TextureRect] = []
+var _tab_labels: Array[Label] = []
 
 var _current_tab: int = TAB_COLLECTION
 var _page: int = 0
@@ -136,6 +139,7 @@ var _pending_card_id: String = ""
 
 
 func _ready() -> void:
+	UiTranslator.bind(self, _on_locale_changed)
 	add_to_group("spellbook_menu")
 	visible = false
 	_confirm_popup.visible = false
@@ -214,13 +218,22 @@ func _build_tabs() -> void:
 		label.add_theme_constant_override("outline_size", 3)
 		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		label.text = TAB_DEFS[i]["label"]
+		label.text = tr(TAB_DEFS[i]["label"])
 		label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		tab.add_child(label)
 
 		tab.pressed.connect(_on_tab_pressed.bind(i))
 		_tab_buttons.append(tab)
 		_tab_sprites.append(sprite)
+		_tab_labels.append(label)
+
+
+# 탭 글자와 항목 목록은 코드로 만들어 붙인 것이라 언어가 바뀌면 여기서 직접 다시 채운다
+func _on_locale_changed() -> void:
+	for i in range(_tab_labels.size()):
+		_tab_labels[i].text = tr(TAB_DEFS[i]["label"])
+	if visible:
+		_refresh()
 
 
 # 항목 6칸(왼쪽 3 + 오른쪽 3)을 만들어 종이 위 실측 좌표에 배치한다.
@@ -403,12 +416,12 @@ func _refresh_entries() -> void:
 
 	var is_deck := _current_tab == TAB_DECK
 	# 페이지 번호는 제목에 붙여 쓴다 — 책 한가운데는 어두운 제본 부분이라 거기 라벨을 두면 안 읽힌다
-	_title_label.text = "%s (%d/%d)" % ["덱 구성" if is_deck else "카드 컬렉션", _page + 1, total_pages]
+	_title_label.text = "%s (%d/%d)" % [tr("덱 구성") if is_deck else tr("카드 컬렉션"), _page + 1, total_pages]
 	if is_deck:
-		_points_label.text = "덱: %d / %d" % [GameState.get_deck_size(), GameState.MAX_BATTLE_DECK_SIZE]
-		_hint_label.text = "비워두면 자동 구성"
+		_points_label.text = tr("덱: %d / %d") % [GameState.get_deck_size(), GameState.MAX_BATTLE_DECK_SIZE]
+		_hint_label.text = tr("비워두면 자동 구성")
 	else:
-		_points_label.text = "스킬포인트: %d" % GameState.get_skill_points()
+		_points_label.text = tr("스킬포인트: %d") % GameState.get_skill_points()
 	_hint_label.visible = is_deck
 
 	_prev_button.disabled = _page <= 0
@@ -460,7 +473,7 @@ func _fill_entry(i: int, card_id: String, is_deck: bool, deck_full: bool) -> voi
 		return
 
 	if unlocked:
-		_entry_costs[i].text = "보유 중"
+		_entry_costs[i].text = tr("보유 중")
 		_entry_costs[i].add_theme_color_override("font_color", COLOR_OWNED)
 	else:
 		_entry_costs[i].text = "%dP" % CardLibrary.get_unlock_cost(card_id)
@@ -547,11 +560,11 @@ func _on_entry_pressed(i: int) -> void:
 	_pending_card_id = card_id
 	var affordable := GameState.can_unlock_card(card_id)
 	if affordable:
-		_confirm_message.text = "%s 잠금해제에 %d 포인트를 사용하시겠습니까?\n(보유: %d P)" % [
+		_confirm_message.text = tr("%s 잠금해제에 %d 포인트를 사용하시겠습니까?\n(보유: %d P)") % [
 			card.card_name, cost, GameState.get_skill_points()
 		]
 	else:
-		_confirm_message.text = "%s 잠금해제에는 %d 포인트가 필요합니다.\n(보유: %d P — 포인트가 부족합니다)" % [
+		_confirm_message.text = tr("%s 잠금해제에는 %d 포인트가 필요합니다.\n(보유: %d P — 포인트가 부족합니다)") % [
 			card.card_name, cost, GameState.get_skill_points()
 		]
 	_confirm_button.disabled = not affordable

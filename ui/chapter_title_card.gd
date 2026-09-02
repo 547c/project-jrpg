@@ -33,7 +33,7 @@ func _ready() -> void:
 # 문구를 채우고 등장 -> 유지 -> 퇴장까지 재생. 끝날 때까지 await로 기다릴 수 있다
 func play(part_text: String, subtitle: String) -> void:
 	_part_label.text = part_text
-	_subtitle_label.text = subtitle
+	_subtitle_label.text = tr(subtitle)
 
 	# 가운데를 기준으로 확대되도록 피벗을 잡는다. size는 레이아웃이 한 번 돈 뒤에야 확정되므로
 	# 그 전에 읽으면 피벗이 0이 되어 왼쪽 위에서 커지는 것처럼 보인다

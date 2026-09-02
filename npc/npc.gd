@@ -2,6 +2,8 @@
 class_name NPC
 extends Area2D
 
+const UiTranslator := preload("res://systems/ui_translator.gd")
+
 # 배회: monster_encounter.gd의 WANDER 상태(반경 내 랜덤 이동, 저속)를 참고한 훨씬 좁고 느린 버전.
 # "서성거림" 정도의 자연스러운 느낌을 위해 몬스터(반경 40~60px, 18px/s)보다 훨씬 좁고 느리게 잡는다.
 # 실내 NPC 등은 서브클래스가 _ready()에서 super._ready() 호출 전에 wander_radius_min/max를 덮어써 더 좁힐 수 있다
@@ -54,6 +56,7 @@ func _ready() -> void:
 	z_index = SceneManager.CHARACTER_BAND_Z_INDEX
 	body_entered.connect(_on_body_entered)
 	body_exited.connect(_on_body_exited)
+	UiTranslator.bind(self)
 	_interact_prompt.hide()
 	_name_label.text = _resolve_display_name()
 	_name_label.hide()
@@ -92,7 +95,7 @@ func _attach_shadow() -> void:
 func _resolve_display_name() -> String:
 	for node in dialogue_tree:
 		if node.get("id", "") == dialogue_start_id:
-			return node.get("speaker", "")
+			return tr(node.get("speaker", ""))
 	return ""
 
 

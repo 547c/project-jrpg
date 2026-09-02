@@ -1,5 +1,7 @@
 extends CanvasLayer
 
+const UiTranslator := preload("res://systems/ui_translator.gd")
+
 # 의뢰판 (autoload). ELARA_DIALOGUE의 "[의뢰판을 살펴본다]" 옵션이 open()으로 대화창 위에 띄운다.
 # 의뢰 3개는 GameState.bounty_board가 들고 있고(세이브 포함), 여기서는 그리기와 버튼 처리만 한다.
 
@@ -18,6 +20,7 @@ var _accept_buttons: Array[Button] = []
 
 
 func _ready() -> void:
+	UiTranslator.bind(self, _refresh)
 	add_to_group("bounty_board")
 	_root.visible = false
 	_message_label.visible = false

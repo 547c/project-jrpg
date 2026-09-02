@@ -19,6 +19,7 @@ found directly in `systems/dialogue_data.gd` / `docs/part1_story_script_draft.md
 | 오르시아 | Orsia | docs/world.md, dialogue_data.gd |
 | 유적 | ruins | docs/world.md |
 | 필터룸 | Filter Room | docs/world.md |
+| 수호자 (동굴 보스) | Guardian | dialogue_data.gd, systems/game_state.gd (get_objective_text) |
 | 계속하기 | Continue | ui_strings.csv |
 | 저장하기 / 불러오기 | Save / Load | ui_strings.csv |
 | 퀘스트 / 메인 퀘스트 / 서브 퀘스트 | Quests / Main / Side | ui_strings.csv |

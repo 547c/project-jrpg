@@ -296,3 +296,56 @@ Empty"
 "[모르겠어요. 근데 왠지, 그럴 것 같아요.]","[모르겠어요. 근데 왠지, 그럴 것 같아요.]","[I don't know. But somehow, I think so.]"
 [기록을 읽어본다],[기록을 읽어본다],[Read the record]
 문지기,문지기,Gatekeeper
+골드 +%d,골드 +%d,Gold +%d
+경험치 +%d,경험치 +%d,XP +%d
+오르시아,오르시아,Orsia
+[E] 대화,[E] 대화,[E] Talk
+[E] 쉬어가기,[E] 쉬어가기,[E] Rest
+[E] 문,[E] 문,[E] Door
+[E] 상자 열기,[E] 상자 열기,[E] Open Chest
+[E] 살펴보기,[E] 살펴보기,[E] Examine
+[E] 유적으로 들어가기,[E] 유적으로 들어가기,[E] Enter the Ruins
+[E] 부두,[E] 부두,[E] Dock
+[E] 배를 타고 떠나기,[E] 배를 타고 떠나기,[E] Sail Away
+"정말 스킵하시겠습니까?
+이야기의 흐름을 이해하는데 도움이 됩니다","정말 스킵하시겠습니까?
+이야기의 흐름을 이해하는데 도움이 됩니다","Are you sure you want to skip?
+It helps you understand the flow of the story"
+엘라라를 찾아가 대화해보세요,엘라라를 찾아가 대화해보세요,Try going to talk to Elara
+로한과 유서프를 찾아가 대화하세요 (%d/2),로한과 유서프를 찾아가 대화하세요 (%d/2),Go talk to Rohan and Yusuf (%d/2)
+마을 외곽에서 미아를 만나 결정적 정보를 얻으세요,마을 외곽에서 미아를 만나 결정적 정보를 얻으세요,Meet Mia on the outskirts of the village to get the key information
+엘라라에게 돌아가 알아낸 것을 전하세요,엘라라에게 돌아가 알아낸 것을 전하세요,Go back to Elara and tell her what you found out
+퀘스트 버튼을 눌러 받을 수 있는 퀘스트와 의뢰인을 확인한 후 레벨업하세요,퀘스트 버튼을 눌러 받을 수 있는 퀘스트와 의뢰인을 확인한 후 레벨업하세요,"Press the Quest button to check available quests and clients, then level up"
+동굴 깊은 곳의 수호자를 찾아가세요,동굴 깊은 곳의 수호자를 찾아가세요,Head deep into the cave to find the Guardian
+우물의 결과를 엘라라에게 알리세요,우물의 결과를 엘라라에게 알리세요,Tell Elara the outcome at the well
+유서프에게 가서 더 알아보세요,유서프에게 가서 더 알아보세요,Go to Yusuf to find out more
+부두에서 배를 타고 떠나세요,부두에서 배를 타고 떠나세요,Leave by boat from the dock
+사막 정착지에서 나딤을 찾아 대화하세요,사막 정착지에서 나딤을 찾아 대화하세요,Find and talk to Nadim at the desert settlement
+사막의 위협을 처치하고 유적의 열쇠를 찾으세요,사막의 위협을 처치하고 유적의 열쇠를 찾으세요,Defeat the threat in the desert and find the key to the ruins
+유적 안으로 들어가 문지기와 맞서세요,유적 안으로 들어가 문지기와 맞서세요,Enter the ruins and face the Gatekeeper
+필터룸 깊숙이 들어가 진실을 확인하세요,필터룸 깊숙이 들어가 진실을 확인하세요,Go deep into the Filter Room and confirm the truth
+카밀과 이야기해 다음 행보를 정하세요,카밀과 이야기해 다음 행보를 정하세요,Talk to Kamil to decide the next move
+선택을 마쳤습니다. 이야기는 여기서 계속됩니다.,선택을 마쳤습니다. 이야기는 여기서 계속됩니다.,The choice has been made. The story continues from here.
+무언가를 발견했다!,무언가를 발견했다!,Found something!
+%s 발견!,%s 발견!,Found %s!
+골드 %d 발견!,골드 %d 발견!,Found %d gold!
+낡은 부적이 들어있다. 표면에 알아보기 힘든 문양이 새겨져 있다 — 어딘가 익숙한 느낌이다.,낡은 부적이 들어있다. 표면에 알아보기 힘든 문양이 새겨져 있다 — 어딘가 익숙한 느낌이다.,An old talisman is inside. A hard-to-make-out symbol is etched on its surface — it feels oddly familiar.
+컬렉션,컬렉션,Collection
+덱 구성,덱 구성,Deck
+카드 컬렉션,카드 컬렉션,Card Collection
+< 이전,< 이전,< Prev
+다음 >,다음 >,Next >
+잠금해제,잠금해제,Unlock
+취소,취소,Cancel
+덱: %d / %d,덱: %d / %d,Deck: %d / %d
+비워두면 자동 구성,비워두면 자동 구성,Leave empty to auto-build
+스킬포인트: %d,스킬포인트: %d,Skill Points: %d
+보유 중,보유 중,Owned
+"%s 잠금해제에 %d 포인트를 사용하시겠습니까?
+(보유: %d P)","%s 잠금해제에 %d 포인트를 사용하시겠습니까?
+(보유: %d P)","Unlock %s for %d points?
+(You have: %d P)"
+"%s 잠금해제에는 %d 포인트가 필요합니다.
+(보유: %d P — 포인트가 부족합니다)","%s 잠금해제에는 %d 포인트가 필요합니다.
+(보유: %d P — 포인트가 부족합니다)","Unlocking %s requires %d points.
+(You have: %d P — not enough points)"

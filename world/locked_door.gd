@@ -1,6 +1,8 @@
 class_name LockedDoor
 extends Area2D
 
+const UiTranslator := preload("res://systems/ui_translator.gd")
+
 # 장식용 잠긴 문. NPC/캠프파이어(campfire.gd)와 동일한 상호작용 패턴을 따르되,
 # 대화에 옵션이 없어(DialogueBox의 기본 "닫기" 버튼만 뜸) 확인만 하고 바로 닫히며,
 # 씬 이동 등 다른 효과는 전혀 일으키지 않는다
@@ -28,6 +30,7 @@ var _pulse: InteractPulse
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 	body_exited.connect(_on_body_exited)
+	UiTranslator.bind(self)
 	_interact_prompt.hide()
 	_create_presence_marker()
 

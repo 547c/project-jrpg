@@ -1033,15 +1033,15 @@ func _finish_sub_quest() -> void:
 	change_affinity("elara", int(quest.get("affinity", 0)))
 
 	var rewards: Array[String] = [
-		"골드 +%d" % int(quest.get("gold", 0)),
-		"경험치 +%d" % int(quest.get("xp", 0)),
-		"%s 호감도 +%d" % [SubQuestData.GIVER, int(quest.get("affinity", 0))],
+		tr("골드 +%d") % int(quest.get("gold", 0)),
+		tr("경험치 +%d") % int(quest.get("xp", 0)),
+		tr("%s 호감도 +%d") % [tr(SubQuestData.GIVER), int(quest.get("affinity", 0))],
 	]
 	for key in ["bonus_item", "bonus_equipment"]:
 		var item_id: String = String(quest.get(key, ""))
 		if item_id != "" and ItemData.ITEMS.has(item_id):
 			add_item(item_id, 1)
-			rewards.append("%s x1" % ItemData.ITEMS[item_id]["name"])
+			rewards.append(tr("%s x1") % tr(ItemData.ITEMS[item_id]["name"]))
 
 	# 경험치는 마지막에 준다 — add_xp가 레벨업 안내를 따로 큐에 넣으므로,
 	# 의뢰 완료 안내가 레벨업 안내보다 먼저 쌓이도록 순서를 맞춘다
@@ -1151,35 +1151,35 @@ func get_current_objective_stage() -> int:
 func get_objective_text() -> String:
 	match get_current_objective_stage():
 		1:
-			return "엘라라를 찾아가 대화해보세요"
+			return tr("엘라라를 찾아가 대화해보세요")
 		2:
-			return "로한과 유서프를 찾아가 대화하세요 (%d/2)" % _met_villager_count()
+			return tr("로한과 유서프를 찾아가 대화하세요 (%d/2)") % _met_villager_count()
 		3:
-			return "마을 외곽에서 미아를 만나 결정적 정보를 얻으세요"
+			return tr("마을 외곽에서 미아를 만나 결정적 정보를 얻으세요")
 		4:
-			return "엘라라에게 돌아가 알아낸 것을 전하세요"
+			return tr("엘라라에게 돌아가 알아낸 것을 전하세요")
 		5:
-			return "퀘스트 버튼을 눌러 받을 수 있는 퀘스트와 의뢰인을 확인한 후 레벨업하세요"
+			return tr("퀘스트 버튼을 눌러 받을 수 있는 퀘스트와 의뢰인을 확인한 후 레벨업하세요")
 		6:
-			return "동굴 깊은 곳의 수호자를 찾아가세요"
+			return tr("동굴 깊은 곳의 수호자를 찾아가세요")
 		7:
-			return "우물의 결과를 엘라라에게 알리세요"
+			return tr("우물의 결과를 엘라라에게 알리세요")
 		8:
-			return "유서프에게 가서 더 알아보세요"
+			return tr("유서프에게 가서 더 알아보세요")
 		9:
-			return "부두에서 배를 타고 떠나세요"
+			return tr("부두에서 배를 타고 떠나세요")
 		10:
-			return "사막 정착지에서 나딤을 찾아 대화하세요"
+			return tr("사막 정착지에서 나딤을 찾아 대화하세요")
 		11:
-			return "사막의 위협을 처치하고 유적의 열쇠를 찾으세요"
+			return tr("사막의 위협을 처치하고 유적의 열쇠를 찾으세요")
 		12:
-			return "유적 안으로 들어가 문지기와 맞서세요"
+			return tr("유적 안으로 들어가 문지기와 맞서세요")
 		13:
-			return "필터룸 깊숙이 들어가 진실을 확인하세요"
+			return tr("필터룸 깊숙이 들어가 진실을 확인하세요")
 		14:
-			return "카밀과 이야기해 다음 행보를 정하세요"
+			return tr("카밀과 이야기해 다음 행보를 정하세요")
 		_:
-			return "선택을 마쳤습니다. 이야기는 여기서 계속됩니다."
+			return tr("선택을 마쳤습니다. 이야기는 여기서 계속됩니다.")
 
 
 # met_rohan + met_yusuf 중 true인 개수 (0~2)

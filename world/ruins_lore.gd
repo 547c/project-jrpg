@@ -1,6 +1,8 @@
 class_name RuinsLore
 extends Area2D
 
+const UiTranslator := preload("res://systems/ui_translator.gd")
+
 # 유적 내부의 벽화/기록 오브젝트. locked_door.gd와 동일한 상호작용 패턴(범위 안 [E] -> DialogueBox)이되,
 # 옵션이 있는 짧은 대화 트리를 재생하고 마지막 노드(ruins_lore_2)에서 truth_discovered 플래그를 세운다.
 # 씬 이동 등 다른 효과는 없다. 외형(벽화)은 맵의 배경/타일이 담당하고, 여기선 감지 + 표식만.
@@ -45,6 +47,7 @@ var _pulse: InteractPulse
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 	body_exited.connect(_on_body_exited)
+	UiTranslator.bind(self)
 	_interact_prompt.hide()
 	_create_presence_marker()
 

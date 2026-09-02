@@ -1,5 +1,7 @@
 extends CanvasLayer
 
+const UiTranslator := preload("res://systems/ui_translator.gd")
+
 # 전투 패배 시 전체 화면을 덮는 게임오버 화면 (autoload). 전투 씬(battle_scene)이 show_game_over()로 띄운다.
 # [다시 시작]: 절반 회복 + 마을 스폰으로 이동, [불러오기]: 세이브 로드(없으면 안내 후 재시작).
 
@@ -13,6 +15,7 @@ const VILLAGE_SPAWN_POINT := "VillageSpawn"
 
 
 func _ready() -> void:
+	UiTranslator.bind(self)
 	_root.visible = false
 	_toast.visible = false
 	_restart_button.pressed.connect(_on_restart)

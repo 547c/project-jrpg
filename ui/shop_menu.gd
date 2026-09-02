@@ -1,5 +1,7 @@
 extends CanvasLayer
 
+const UiTranslator := preload("res://systems/ui_translator.gd")
+
 # 유서프 상점 (autoload). YUSUF_DIALOGUE의 "[물건을 산다]" 옵션이 open()으로 대화창 위에 띄운다
 # (대화창은 뒤에 그대로 남아있고, Dim이 클릭을 가로채 닫기 전까지는 손댈 수 없음).
 # 판매 아이템은 구매 즉시 소비되지 않고 인벤토리(GameState.inventory)에 추가된다.
@@ -44,12 +46,11 @@ var _quantities: Dictionary = {"mana_potion": MIN_QUANTITY, "hp_potion": MIN_QUA
 
 
 func _ready() -> void:
+	UiTranslator.bind(self, _on_locale_changed)
 	add_to_group("shop_menu")
 	_root.visible = false
 
-	_setup_item_row("mana_potion", _mana_icon, _mana_label)
-	_setup_item_row("hp_potion", _hp_icon, _hp_label)
-	_setup_item_row("gift", _gift_icon, _gift_label)
+	_setup_item_rows()
 
 	_mana_minus_button.pressed.connect(_on_quantity_step.bind("mana_potion", -1))
 	_mana_plus_button.pressed.connect(_on_quantity_step.bind("mana_potion", 1))
@@ -67,6 +68,19 @@ func _ready() -> void:
 # 아이템의 판매 가격 (PRICES에 없으면 0)
 func _price(item_id: String) -> int:
 	return PRICES.get(item_id, 0)
+
+
+func _setup_item_rows() -> void:
+	_setup_item_row("mana_potion", _mana_icon, _mana_label)
+	_setup_item_row("hp_potion", _hp_icon, _hp_label)
+	_setup_item_row("gift", _gift_icon, _gift_label)
+
+
+# 아이템 이름/설명은 여기서 한 번 조립하고 끝이라, 언어가 바뀌면 다시 조립해야 한다
+func _on_locale_changed() -> void:
+	_setup_item_rows()
+	if _root.visible:
+		_refresh()
 
 
 # 아이콘/설명 라벨을 ItemData 기준으로 채움 (이름+설명 조합, 가격은 아이템별 PRICES)

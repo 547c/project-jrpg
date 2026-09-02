@@ -1,5 +1,7 @@
 extends CanvasLayer
 
+const UiTranslator := preload("res://systems/ui_translator.gd")
+
 # 퀘스트 완료 / 레벨업을 알리는 안내창 (autoload). "확인"을 눌러야 닫히며, 열려 있는 동안은
 # "level_up" 그룹으로 플레이어 이동/다른 메뉴 열기를 막는다 (다른 UI 오버레이들과 동일한 패턴).
 #
@@ -27,6 +29,7 @@ var _pending_messages: Array[Dictionary] = []
 
 
 func _ready() -> void:
+	UiTranslator.bind(self)
 	# CanvasLayer 자신은 CanvasItem이 아니라 .visible 기반 차단 체크(as CanvasItem)에 걸리지 않으므로,
 	# 실제로 보이고 숨겨지는 _root(Control)를 그룹에 등록한다
 	_root.add_to_group("level_up")

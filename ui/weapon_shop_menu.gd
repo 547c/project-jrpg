@@ -1,5 +1,7 @@
 extends CanvasLayer
 
+const UiTranslator := preload("res://systems/ui_translator.gd")
+
 # 카심의 무기점 (autoload). KASIM_DIALOGUE의 "[물건을 산다]" 옵션이 open()으로 대화창 위에 띄운다.
 # 기존 ShopMenu(포션/선물, 3개 고정 행)와 같은 구조·구매 흐름을 따르되, 장비 9종을 3개씩
 # 페이지로 나눠 보여준다는 점만 다르다. shop_menu.gd는 건드리지 않고 완전히 별도로 둔다.
@@ -47,6 +49,7 @@ var _quantities: Dictionary = {}
 
 
 func _ready() -> void:
+	UiTranslator.bind(self, _refresh)
 	add_to_group("weapon_shop_menu")
 	_root.visible = false
 

@@ -1,5 +1,7 @@
 extends Control
 
+const UiTranslator := preload("res://systems/ui_translator.gd")
+
 @onready var _play_button: Button = $PlayButton
 @onready var _load_button: Button = $LoadButton
 @onready var _record_button: Button = $RecordButton
@@ -8,6 +10,7 @@ extends Control
 
 
 func _ready() -> void:
+	UiTranslator.bind(self)
 	_play_button.pressed.connect(_on_play_pressed)
 	_load_button.pressed.connect(_on_load_pressed)
 	_record_button.pressed.connect(_on_record_pressed)

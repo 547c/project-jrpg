@@ -1,5 +1,7 @@
 extends CanvasLayer
 
+const UiTranslator := preload("res://systems/ui_translator.gd")
+
 # 엔딩 도감(기록) UI (autoload). 타이틀 화면의 "기록" 버튼이 open()으로 띄운다.
 # SaveSlotMenu와 같은 모달 패턴(Dim + 나무 패널 + 닫기 버튼 + ESC로 닫기)을 따른다.
 #
@@ -30,6 +32,7 @@ var _desc_labels: Array[Label] = []
 
 
 func _ready() -> void:
+	UiTranslator.bind(self)
 	_root.visible = false
 	_close_button.pressed.connect(_on_close_button_pressed)
 	GameState.endings_changed.connect(_on_endings_changed)

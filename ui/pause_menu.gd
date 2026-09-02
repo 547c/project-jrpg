@@ -1,5 +1,7 @@
 extends CanvasLayer
 
+const UiTranslator := preload("res://systems/ui_translator.gd")
+
 # ESC로 토글되는 일시정지 메뉴 (autoload). 씬마다 배치할 필요 없이 항상 최상단에 떠 있다.
 # _root(Control)는 "pause_menu" 그룹에 속하고 visible로 열림 여부를 나타내, 플레이어 이동 잠금과 연동된다.
 
@@ -21,6 +23,7 @@ var _sound_muted_icon: AtlasTexture
 
 
 func _ready() -> void:
+	UiTranslator.bind(self, _refresh_buttons)
 	_root.visible = false
 	_toast.visible = false
 	_continue_button.pressed.connect(_on_continue)
@@ -125,7 +128,11 @@ func _refresh_music_button() -> void:
 func _on_language_toggle() -> void:
 	SFXPlayer.play(SFXPlayer.UI_CLICK_SOUND)
 	LocaleManager.toggle_locale()
-	_refresh_music_button() # 코드로 조립한 텍스트라 자동 번역이 안 걸려 직접 갱신
+
+
+# 코드로 조립한 텍스트라 자동으로 안 걸린다 — 언어가 바뀔 때 UiTranslator가 이걸 불러준다
+func _refresh_buttons() -> void:
+	_refresh_music_button()
 	_refresh_language_button()
 
 

@@ -2,6 +2,7 @@ class_name CutsceneBox
 extends Control
 
 const DialogueTranslations := preload("res://systems/dialogue_translations.gd")
+const UiTranslator := preload("res://systems/ui_translator.gd")
 
 # 오프닝처럼 화자 표시 없이 나레이션만 순서대로 보여주는 전용 컷신 UI(이미지 슬라이드쇼 방식).
 # DialogueData의 노드(id/narration or text/next_id/image)를 그대로 재사용하되,
@@ -28,6 +29,7 @@ var _transitioning: bool = false # 배경 이미지가 페이드로 바뀌는 �
 
 
 func _ready() -> void:
+	UiTranslator.bind(self)
 	add_to_group("cutscene_box")
 	# start_cutscene() 전까지는 확실히 숨어 있게 한다. 씬 파일에 저장된 visible 값에 기대면
 	# 편집기에서 눈 아이콘을 켠 채 저장되는 순간 컷신이 시작되기도 전에 화면에 뜨고,

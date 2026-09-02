@@ -1,5 +1,7 @@
 extends CanvasLayer
 
+const UiTranslator := preload("res://systems/ui_translator.gd")
+
 # 5슬롯 저장/불러오기 선택 UI (autoload). PauseMenu / TitleScreen / GameOverScreen에서
 # open_save_mode() / open_load_mode()로 띄운다. 이전 메뉴 위에 모달로 뜨고, 닫기 시 그대로 복귀.
 # 로드 성공 시 self와 pause/game_over 메뉴를 모두 닫고 게임으로 진입한다.
@@ -20,6 +22,7 @@ var _slot_buttons: Array = []
 
 
 func _ready() -> void:
+	UiTranslator.bind(self)
 	_root.visible = false
 	_confirm_popup.visible = false
 	_toast.visible = false
@@ -84,7 +87,7 @@ func _refresh_slots() -> void:
 			btn.disabled = (_mode == "load") # 불러오기 모드에선 빈 슬롯 선택 불가
 		else:
 			btn.text = tr("슬롯 %d    Lv. %d    HP: %d/%d\n%s") % [
-				slot_num, summary["progress"], summary["player_hp"], summary["player_max_hp"], summary["objective_text"],
+				slot_num, summary["progress"], summary["player_hp"], summary["player_max_hp"], tr(summary["objective_text"]),
 			]
 			btn.disabled = false
 

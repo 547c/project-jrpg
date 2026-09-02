@@ -1,6 +1,8 @@
 class_name TreasureChest
 extends Area2D
 
+const UiTranslator := preload("res://systems/ui_translator.gd")
+
 # 상호작용형 보물 상자. NPC/캠프파이어(campfire.gd)와 같은 패턴(범위 안에서 [E] 안내 -> 상호작용)을
 # 따른다. 한 번 열면 GameState에 "opened_chest_<chest_id>" 플래그를 남겨(기존 몬스터 처치 기록과
 # 같은 ad-hoc 플래그 방식) 다시 열 수 없게 막는다.
@@ -46,6 +48,7 @@ var _pulse: InteractPulse
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 	body_exited.connect(_on_body_exited)
+	UiTranslator.bind(self)
 	_interact_prompt.hide()
 	_create_presence_marker()
 
@@ -113,7 +116,7 @@ func _open() -> void:
 	monitoring = false
 	_pulse.stop()
 	_presence_marker.hide()
-	_show_popup(popup_text if popup_text != "" else default_popup)
+	_show_popup(tr(popup_text) if popup_text != "" else default_popup)
 
 
 # quest_id/reward_item이 지정되면 퀘스트 완료·아이템 지급을, 아니면 기존처럼 골드를 지급한다.
@@ -124,7 +127,7 @@ func _grant_reward() -> String:
 			GameState.complete_quest(quest_id)
 		if reward_item != "":
 			GameState.add_item(reward_item, 1)
-		return "무언가를 발견했다!"
+		return tr("무언가를 발견했다!")
 
 	# 장비 상자: 확률에 당첨되면 지역 상한 이하의 장비 하나를 준다.
 	# 빗나가면 아래 골드 지급으로 그대로 흘러가므로 "꽝이어도 빈손은 아닌" 구조가 된다
@@ -132,11 +135,11 @@ func _grant_reward() -> String:
 		var dropped := _roll_equipment()
 		if dropped != "":
 			GameState.add_item(dropped, 1)
-			return "%s 발견!" % ItemData.ITEMS[dropped]["name"]
+			return tr("%s 발견!") % tr(ItemData.ITEMS[dropped]["name"])
 
 	var amount := randi_range(gold_min, gold_max)
 	GameState.add_gold(amount)
-	return "골드 %d 발견!" % amount # "N을/를 발견했다"는 숫자에 따라 조사가 갈려(10,13,16,17,18,20은 을 / 12,14,15,19는 를) 조사 없는 문구로 통일
+	return tr("골드 %d 발견!") % amount # "N을/를 발견했다"는 숫자에 따라 조사가 갈려(10,13,16,17,18,20은 을 / 12,14,15,19는 를) 조사 없는 문구로 통일
 
 
 # 장비 드롭을 굴린다. 꽝이거나 뽑을 후보가 없으면 빈 문자열

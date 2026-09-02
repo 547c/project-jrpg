@@ -1,5 +1,7 @@
 extends CanvasLayer
 
+const UiTranslator := preload("res://systems/ui_translator.gd")
+
 # 상시 표시 HUD (autoload). 좌상단 체력바 카드+퀘스트 버튼(MainHud)과
 # 우상단 objective 패널(ObjectiveHud)을 별도 컨테이너로 분리해 표시한다.
 # 대화/전투/일시정지/게임오버/퀘스트로그/오프닝 컷신이 열려 있거나, 게임 진행 중(플레이어 존재)이
@@ -63,6 +65,7 @@ var _xp_bar_label: Label
 
 
 func _ready() -> void:
+	UiTranslator.bind(self, _on_locale_changed)
 	_quest_button.pressed.connect(_on_quest_button_pressed)
 	_inventory_button.pressed.connect(_on_inventory_button_pressed)
 	_spellbook_button.pressed.connect(_on_spellbook_button_pressed)
@@ -77,6 +80,13 @@ func _ready() -> void:
 	# 골드는 flags를 거치지 않는 별도 필드라 전용 시그널로 실시간 갱신
 	GameState.gold_changed.connect(_on_gold_changed)
 	_update_gold_label()
+
+
+# HUD는 항상 떠 있어서 언어가 바뀌면 그 자리에서 다시 만들어야 한다 (열 때 갱신되는 다른 화면과 다름)
+func _on_locale_changed() -> void:
+	_update_compass_hint()
+	_update_gold_label()
+	_refresh_objective()
 
 
 # 매 프레임 표시 조건을 갱신하고, 체력바를 현재 HP에 맞추며, 나침반 방향도 갱신한다

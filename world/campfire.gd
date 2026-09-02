@@ -1,6 +1,8 @@
 class_name Campfire
 extends Area2D
 
+const UiTranslator := preload("res://systems/ui_translator.gd")
+
 # NPC(npc.gd)와 동일한 상호작용 패턴: 범위 안에서 [E]를 누르면 DialogueBox로 쉬어갈지 묻는다.
 # "예"를 끝까지 확인(닫기)하면 체력을 모두 회복한다.
 
@@ -46,6 +48,7 @@ var _heal_vfx_frames: SpriteFrames
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 	body_exited.connect(_on_body_exited)
+	UiTranslator.bind(self)
 	_interact_prompt.hide()
 	_pulse = InteractPulse.new(self, _sprite)
 	_heal_vfx_frames = _build_heal_vfx_frames()

@@ -384,6 +384,22 @@ const EN: Dictionary = {
 	"dock_ask:narration": "A small boat waits at the dock.",
 	"dock_ask": "Are you sure you want to leave?",
 	"dock_confirm_yes:narration": "(boards the boat)",
+
+	"ruins_unavailable:narration": "A stone structure, half-buried in the sand, comes into view.",
+	"ruins_unavailable": "It doesn't look like the entrance has been found yet.",
+	"ruins_blocked_mummies:narration": "Before the ruins' sealed door. A chill runs down your spine.",
+	"ruins_blocked_mummies": "The mummies wandering this land should be dealt with first.",
+	"ruins_blocked_key:narration": "A worn keyhole is visible on the massive stone door.",
+	"ruins_blocked_key": "A key is needed to open the door.",
+	"ruins_ask:narration": "As the key slides in, the massive door slowly opens.",
+	"ruins_ask": "Do you want to enter the ruins?",
+	"ruins_confirm_yes:narration": "(steps into the ruins)",
+
+	"locked_door": "It can't be entered right now.",
+
+	"not_ready:narration": "It doesn't seem ready yet.",
+
+	"filter_room_not_ready:narration": "It still looks dangerous inside. The Gatekeeper should be dealt with first.",
 }
 
 const TABLES: Dictionary = {

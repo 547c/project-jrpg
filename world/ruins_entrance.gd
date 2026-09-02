@@ -92,7 +92,7 @@ func _ready() -> void:
 func _on_body_entered(body: Node2D) -> void:
 	if body.is_in_group("player"):
 		_player_in_range = true
-		_interact_prompt.text = PROMPT_OPEN if _can_enter() else PROMPT_LOCKED
+		_interact_prompt.text = tr(PROMPT_OPEN) if _can_enter() else tr(PROMPT_LOCKED)
 		_interact_prompt.show()
 
 

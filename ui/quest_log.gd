@@ -1,5 +1,7 @@
 extends Control
 
+const UiTranslator := preload("res://systems/ui_translator.gd")
+
 # 퀘스트 화면. HUD의 "퀘스트" 버튼이 open()/close()로 토글한다 (진입점은 예전 그대로).
 # 자기 자신이 "quest_log" 그룹에 속하고 visible로 열림 여부를 나타내 이동 잠금과 연동된다.
 #
@@ -40,6 +42,7 @@ var _tab: int = Tab.MAIN
 
 
 func _ready() -> void:
+	UiTranslator.bind(self)
 	add_to_group("quest_log")
 	visible = false
 	_close_button.pressed.connect(_on_close_button_pressed)
