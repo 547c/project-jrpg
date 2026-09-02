@@ -436,3 +436,16 @@ Got %s!"
 %s — 체력과 마나를 완전히 회복했다! (무기 과열 %d%%),%s — 체력과 마나를 완전히 회복했다! (무기 과열 %d%%),%s — Fully restored HP and MP! (Weapon heat %d%%)
 %s — %s,%s — %s,%s — %s
 %s! %d마리에게 총 %d 피해!,%s! %d마리에게 총 %d 피해!,%s! Hit %d enemies for %d damage total!
+"
+[과열]","
+[과열]","
+[Overheated]"
+"
+[마나부족]","
+[마나부족]","
+[Not Enough MP]"
+"
+[체력부족]","
+[체력부족]","
+[Not Enough HP]"
+무기: %s,무기: %s,Weapon: %s

@@ -2060,11 +2060,11 @@ func _populate_card_slot(i: int, cards: Array) -> void:
 	var desc := _card_description(card)
 	if not playable:
 		if not _manager.weapon.can_use_card(card):
-			desc += "\n[과열]"
+			desc += tr("\n[과열]")
 		elif not GameState.can_afford_mana(_manager.get_effective_mana_cost(card)):
-			desc += "\n[마나부족]"
+			desc += tr("\n[마나부족]")
 		elif not _manager.can_afford_hp(_manager.get_effective_hp_cost(card)):
-			desc += "\n[체력부족]"
+			desc += tr("\n[체력부족]")
 
 	_set_card_parts_visible(i, true)
 	frame.texture = _card_front_textures[style_key]
@@ -2343,7 +2343,7 @@ func _kill_tier_glow_tween(i: int) -> void:
 func _refresh_weapon_button() -> void:
 	if _manager == null:
 		return
-	_weapon_button.text = "무기: %s" % _weapon_name(_manager.weapon.equipped)
+	_weapon_button.text = tr("무기: %s") % _weapon_name(_manager.weapon.equipped)
 
 
 # 무기 과열 게이지 바(검/지팡이)와 적 저항 아이콘을 갱신한다. 게이지는 0/25/50/75/100 중 가장 가까운
