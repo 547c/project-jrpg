@@ -88,7 +88,7 @@ static func describe_package(package_id: String) -> String:
 		return ""
 	var parts: Array[String] = []
 	for entry in package["effects"]:
-		parts.append("%s %d%%" % [KIND_LABEL[entry["kind"]], int(entry["magnitude"])])
+		parts.append(tr("%s %d%%") % [tr(KIND_LABEL[entry["kind"]]), int(entry["magnitude"])])
 	return ", ".join(parts)
 
 
@@ -190,5 +190,5 @@ func describe_all() -> Array[String]:
 	for kind in _effects.keys():
 		var effect: Dictionary = _effects[kind]
 		var sign_text := "+" if kind == Kind.ATTACK_UP else "-"
-		lines.append("%s %s%d%% (%d)" % [KIND_LABEL[kind], sign_text, int(effect["magnitude"]), int(effect["rounds"])])
+		lines.append(tr("%s %s%d%% (%d)") % [tr(KIND_LABEL[kind]), sign_text, int(effect["magnitude"]), int(effect["rounds"])])
 	return lines

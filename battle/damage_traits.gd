@@ -98,7 +98,8 @@ static func leech_amount(trait_id: String, dealt: int) -> int:
 
 # 피해가 0으로 끝났을 때 "0 피해!" 대신 쓸 문구 (없으면 빈 문자열)
 static func get_whiff_text(trait_id: String) -> String:
-	return String(get_trait(trait_id).get("whiff_text", ""))
+	var text := String(get_trait(trait_id).get("whiff_text", ""))
+	return tr(text) if text != "" else ""
 
 
 # 카드 설명문에 덧붙일 한 줄 ("마나 4 흡수" 등). 표에 든 수치에서 만들어지므로
@@ -110,14 +111,14 @@ static func describe(trait_id: String) -> String:
 
 	var parts: Array[String] = []
 	if trait_data.has("steal_mana"):
-		parts.append("마나 %d 흡수" % int(trait_data["steal_mana"]))
+		parts.append(tr("마나 %d 흡수") % int(trait_data["steal_mana"]))
 	if trait_data.has("leech_percent"):
-		parts.append("피해의 %d%% 흡혈" % int(trait_data["leech_percent"]))
+		parts.append(tr("피해의 %d%% 흡혈") % int(trait_data["leech_percent"]))
 	if trait_data.has("hp_threshold_percent"):
-		parts.append("체력 %d%% 이하면 %s배" % [
+		parts.append(tr("체력 %d%% 이하면 %s배") % [
 			int(trait_data["hp_threshold_percent"]), _multiplier_text(trait_data)])
 	if trait_data.has("chance_percent"):
-		parts.append("%d%% 확률로 %s배 / 실패 시 0" % [
+		parts.append(tr("%d%% 확률로 %s배 / 실패 시 0") % [
 			int(trait_data["chance_percent"]), _multiplier_text(trait_data)])
 	return ", ".join(parts)
 

@@ -138,55 +138,55 @@ func get_effect_description() -> String:
 	# 광역기는 효과 종류와 상관없이 같은 꼬리표를 붙인다 — 나중에 디버프 광역 카드가 생겨도
 	# 여기 한 곳만 지나가므로 표기가 저절로 일관된다
 	if is_aoe and text != "":
-		return "%s (광역)" % text
+		return tr("%s (광역)") % text
 	return text
 
 
 func _effect_text() -> String:
 	match effect:
 		EffectType.DAMAGE:
-			var kind := "마법" if color == CardColor.MAGIC else "물리"
-			var base := "%s 피해 %d" % [kind, value]
+			var kind := tr("마법") if color == CardColor.MAGIC else tr("물리")
+			var base := tr("%s 피해 %d") % [kind, value]
 			# 부가 성질이 붙은 카드는 그 규칙까지 적어야 카드만 보고 판단할 수 있다
 			var trait_text := DamageTraits.describe(damage_trait)
 			if trait_text != "":
-				return "%s + %s" % [base, trait_text]
+				return tr("%s + %s") % [base, trait_text]
 			return base
 		EffectType.HEAL_HP:
-			return "체력 %d 회복" % value
+			return tr("체력 %d 회복") % value
 		EffectType.RESTORE_MANA:
-			return "마나 %d 회복" % value
+			return tr("마나 %d 회복") % value
 		EffectType.DEFEND:
-			return "다음 피해 %d 감소" % value
+			return tr("다음 피해 %d 감소") % value
 		EffectType.DODGE:
-			return "이번 턴 완전 회피"
+			return tr("이번 턴 완전 회피")
 		EffectType.COUNTER:
-			return "피해 무효 + 반격 %d" % value
+			return tr("피해 무효 + 반격 %d") % value
 		EffectType.BUFF_ATTACK_SELF:
-			return "공격력 +%d%% (%d라운드)" % [value, secondary_value]
+			return tr("공격력 +%d%% (%d라운드)") % [value, secondary_value]
 		EffectType.DEBUFF_ATTACK_ENEMY:
-			return "대상 공격력 -%d%% (%d라운드)" % [value, secondary_value]
+			return tr("대상 공격력 -%d%% (%d라운드)") % [value, secondary_value]
 		EffectType.FREE_NEXT_CARD:
-			return "다음 카드 1장 코스트 0"
+			return tr("다음 카드 1장 코스트 0")
 		EffectType.STATUS_PACKAGE:
 			var summary := StatusEffects.describe_package(status_package)
 			if summary == "":
 				return ""
-			return "%s (%d라운드)" % [summary, secondary_value]
+			return tr("%s (%d라운드)") % [summary, secondary_value]
 		EffectType.RESTORE_BOTH:
 			# "완전 회복" 카드는 최대치보다 확실히 큰 값을 넣고 clamp에 맡기는데(불사조의 축복=999),
 			# 그 숫자를 그대로 보여주면 "체력 999 회복"이라는 이상한 문구가 나온다 — 임계값을 넘으면
 			# 수치 대신 완전 회복이라고 쓴다
 			if value >= FULL_RESTORE_VALUE and secondary_value >= FULL_RESTORE_VALUE:
-				return "체력·마나 완전 회복"
-			return "체력 %d, 마나 %d 회복" % [value, secondary_value]
+				return tr("체력·마나 완전 회복")
+			return tr("체력 %d, 마나 %d 회복") % [value, secondary_value]
 		_:
 			return ""
 
 
 # 화면에 보여줄 티어 이름 ("티어 1" 등). 저장값이 0부터라 +1 해서 사람이 읽는 번호로 바꾼다
 func get_tier_label() -> String:
-	return "티어 %d" % (int(tier) + 1)
+	return tr("티어 %d") % (int(tier) + 1)
 
 
 func is_magic() -> bool:

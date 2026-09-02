@@ -349,3 +349,31 @@ It helps you understand the flow of the story"
 (보유: %d P — 포인트가 부족합니다)","%s 잠금해제에는 %d 포인트가 필요합니다.
 (보유: %d P — 포인트가 부족합니다)","Unlocking %s requires %d points.
 (You have: %d P — not enough points)"
+마법,마법,Magic
+물리,물리,Physical
+%s 피해 %d,%s 피해 %d,%s Damage %d
+%s + %s,%s + %s,%s + %s
+체력 %d 회복,체력 %d 회복,Restores %d HP
+마나 %d 회복,마나 %d 회복,Restores %d Mana
+다음 피해 %d 감소,다음 피해 %d 감소,Reduces next damage by %d
+이번 턴 완전 회피,이번 턴 완전 회피,Fully dodges this turn
+피해 무효 + 반격 %d,피해 무효 + 반격 %d,Negates damage + counters for %d
+공격력 +%d%% (%d라운드),공격력 +%d%% (%d라운드),Attack +%d%% (%d rounds)
+대상 공격력 -%d%% (%d라운드),대상 공격력 -%d%% (%d라운드),Target's Attack -%d%% (%d rounds)
+다음 카드 1장 코스트 0,다음 카드 1장 코스트 0,Next card costs 0
+%s (%d라운드),%s (%d라운드),%s (%d rounds)
+체력·마나 완전 회복,체력·마나 완전 회복,Fully restores HP & Mana
+"체력 %d, 마나 %d 회복","체력 %d, 마나 %d 회복","Restores %d HP, %d Mana"
+%s (광역),%s (광역),%s (AoE)
+티어 %d,티어 %d,Tier %d
+마나 %d 흡수,마나 %d 흡수,Drains %d Mana
+피해의 %d%% 흡혈,피해의 %d%% 흡혈,Lifesteal %d%% of damage
+체력 %d%% 이하면 %s배,체력 %d%% 이하면 %s배,%d%% HP or below: %sx
+%d%% 확률로 %s배 / 실패 시 0,%d%% 확률로 %s배 / 실패 시 0,%d%% chance: %sx / miss: 0
+빗나갔다!,빗나갔다!,Miss!
+%s %d%%,%s %d%%,%s %d%%
+%s %s%d%% (%d),%s %s%d%% (%d),%s %s%d%% (%d)
+공격력↑,공격력↑,Attack↑
+공격력↓,공격력↓,Attack↓
+방어력↓,방어력↓,Defense↓
+저항↓,저항↓,Resist↓
