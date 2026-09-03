@@ -16919,7 +16919,7 @@ dialogue_start_id = "elara_greeting"
 met_flag_name = "met_elara"
 
 [node name="Rohan" parent="." unique_id=827381515 instance=ExtResource("4_npc")]
-position = Vector2(-94, -417)
+position = Vector2(-70, -417)
 script = ExtResource("6_rohan")
 dialogue_start_id = "rohan_greeting"
 met_flag_name = "met_rohan"
