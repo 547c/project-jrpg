@@ -17,6 +17,7 @@
 [ext_resource type="Texture2D" uid="uid://ewrkhk5uyvma" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Buttons/Button_02D_Pressed.png" id="15_btn_pressed"]
 [ext_resource type="Texture2D" uid="uid://cb2xo3w5jmh2" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Background boxes/BGbox_08A.png" id="16_minimapframe"]
 [ext_resource type="Script" path="res://ui/minimap.gd" id="17_minimap"]
+[ext_resource type="Script" path="res://ui/minimap_markers.gd" id="18_minimap_markers"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_statcard"]
 bg_color = Color(0.1, 0.075, 0.09, 0.86)
@@ -389,11 +390,13 @@ vertical_alignment = 1
 [node name="Minimap" type="Control" parent="ObjectiveHud" unique_id=500000001]
 layout_mode = 0
 anchor_left = 1.0
+anchor_top = 1.0
 anchor_right = 1.0
+anchor_bottom = 1.0
 offset_left = -218.0
-offset_top = 88.0
+offset_top = -218.0
 offset_right = -12.0
-offset_bottom = 294.0
+offset_bottom = -12.0
 mouse_filter = 2
 script = ExtResource("17_minimap")
 
@@ -411,6 +414,16 @@ size = Vector2i(150, 150)
 
 [node name="Camera2D" type="Camera2D" parent="ObjectiveHud/Minimap/ViewportContainer/SubViewport" unique_id=500000004]
 
+[node name="DarknessMask" type="ColorRect" parent="ObjectiveHud/Minimap" unique_id=500000008]
+layout_mode = 0
+offset_left = 28.0
+offset_top = 28.0
+offset_right = 178.0
+offset_bottom = 178.0
+mouse_filter = 2
+color = Color(0, 0, 0, 1)
+visible = false
+
 [node name="Frame" type="Panel" parent="ObjectiveHud/Minimap" unique_id=500000005]
 layout_mode = 1
 anchors_preset = 15
@@ -421,13 +434,14 @@ grow_vertical = 2
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxTexture_minimap_frame")
 
-[node name="Marker" type="Polygon2D" parent="ObjectiveHud/Minimap" unique_id=500000006]
-color = Color(0.96, 0.85, 0.35, 1)
-
-[node name="Outline" type="Line2D" parent="ObjectiveHud/Minimap/Marker" unique_id=500000007]
-width = 1.5
-default_color = Color(0.25, 0.15, 0.05, 0.9)
-joint_mode = 2
+[node name="Markers" type="Control" parent="ObjectiveHud/Minimap" unique_id=500000009]
+layout_mode = 0
+offset_left = 28.0
+offset_top = 28.0
+offset_right = 178.0
+offset_bottom = 178.0
+mouse_filter = 2
+script = ExtResource("18_minimap_markers")
 
 [node name="Compass" type="Control" parent="." unique_id=771030022]
 layout_mode = 3

@@ -23,6 +23,7 @@ var _material: ShaderMaterial
 
 
 func _ready() -> void:
+	add_to_group("darkness_overlay") # 이 씬에 시야 제한이 걸려 있는지 조회하는 쪽(미니맵 등)이 사용
 	_material = _rect.material as ShaderMaterial
 
 

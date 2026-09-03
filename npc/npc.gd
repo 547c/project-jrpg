@@ -58,6 +58,8 @@ func _ready() -> void:
 	if Engine.is_editor_hint():
 		return
 
+	add_to_group("npcs") # 미니맵 마커 등 "지금 씬의 NPC 전부"가 필요한 쪽이 조회
+
 	# 플레이어/나무와 같은 밴드에 서야 Y-Sort 씬(마을)에서 서로 앞뒤가 갈린다.
 	# Y-Sort를 안 쓰는 씬에서도 데코 타일에 덮이지 않게 되어 표시가 더 안정적이다
 	z_index = SceneManager.CHARACTER_BAND_Z_INDEX

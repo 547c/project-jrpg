@@ -458,6 +458,11 @@ func get_player_position() -> Vector2:
 	return _player.global_position if _player != null else Vector2.ZERO
 
 
+# 현재 씬의 경계 (메인 카메라의 limit_*와 같은 계산 — 미니맵 카메라도 이걸로 clamp한다)
+func get_current_scene_bounds() -> Rect2:
+	return _compute_scene_bounds(get_tree().current_scene)
+
+
 # 이름이 일치하는 스폰 지점을 찾아 (재생성 없이) 기존 플레이어의 위치만 이동
 func _move_player_to(spawn_point_name: String) -> void:
 	var spawn := _find_spawn_point(spawn_point_name)
