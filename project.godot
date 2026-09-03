@@ -43,6 +43,7 @@ SaveSlotMenu="*res://ui/save_slot_menu.tscn"
 BountyBoardMenu="*res://ui/bounty_board_menu.tscn"
 EndingRecordMenu="*res://ui/ending_record_menu.tscn"
 HUD="*res://ui/hud.tscn"
+VignetteOverlay="*res://systems/vignette_overlay.tscn"
 
 [display]
 

@@ -17150,7 +17150,7 @@ position = Vector2(-2434, 854)
 variant = "model_03_s02_4_0"
 
 [node name="Tree29" parent="Tree06/Tree07" unique_id=169783089 instance=ExtResource("90_tree")]
-position = Vector2(-567, 665)
+position = Vector2(-486, 571)
 variant = "model_03_s04_6_0"
 
 [node name="Veg87" parent="Tree06/Tree07" unique_id=1539807917 instance=ExtResource("91_veg")]
@@ -17162,11 +17162,11 @@ position = Vector2(-174, 340)
 variant = "plant_3_10_1x1"
 
 [node name="Tree30" parent="Tree06/Tree07" unique_id=1147738457 instance=ExtResource("90_tree")]
-position = Vector2(-630, 665)
+position = Vector2(-300, 659)
 variant = "model_02_s04_4_0"
 
 [node name="Tree32" parent="Tree06/Tree07" unique_id=297454946 instance=ExtResource("90_tree")]
-position = Vector2(-459, 569)
+position = Vector2(-610, 646)
 variant = "model_02_s05_0_0"
 
 [node name="Veg101" parent="Tree06/Tree07" unique_id=260215967 instance=ExtResource("91_veg")]
@@ -18375,7 +18375,7 @@ position = Vector2(1106, 231)
 variant = "model_02_s05_0_10"
 
 [node name="Veg165" parent="." unique_id=224417447 instance=ExtResource("91_veg")]
-position = Vector2(-351, 116)
+position = Vector2(-317, 97)
 variant = "plant_14_11_1x1"
 
 [node name="Rock47" parent="." unique_id=1217541089 instance=ExtResource("93_rock")]
