@@ -28,11 +28,7 @@ Seven NPCs (Elara, Rohan, Yusuf, Mia, Kamil, Nadim, Kasim), each with a 0-100 af
 ![Combat 1](docs/screenshots/02_combat_1.gif)
 ![Combat 2 + level up](docs/screenshots/03_combat_2_levelup.gif)
 
-22 cards across 3 tiers, weapon overheat gauges, tiered equipment, multi-enemy fights, and buffs/debuffs. Six of the tier-3 cards have fully custom multi-hit cutscene animations:
-
-![Triple Helix on an orc](docs/screenshots/battle_orc_triple_helix.gif)
-![Time Rift on a skeleton](docs/screenshots/battle_skeleton_time_rift.gif)
-![Judgment on a mummy](docs/screenshots/battle_mummy_judgment.gif)
+22 cards across 3 tiers, weapon overheat gauges, tiered equipment, multi-enemy fights, and buffs/debuffs. Six of the tier-3 cards have fully custom multi-hit cutscene animations.
 
 ### Skills, equipment, and inventory
 ![Quest, inventory, skill deck](docs/screenshots/04_quest_inventory_deck.gif)
