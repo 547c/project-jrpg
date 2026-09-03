@@ -21,6 +21,16 @@ const ACCEL_TIME := 0.12
 # 안 맞는) 것처럼 보이지 않기 위한 보정이기도 하다
 const ANIM_MIN_SPEED_SCALE := 0.55
 
+# 스테미나: 달릴 때만 소모되고, 0이 되면 다시 완전히 찰 때까지 못 달린다(재입력해도 그냥 걷기로 처리됨).
+# 회복은 소모보다 느리게 잡아 "쉬지 않고 계속 달리기"가 손해가 되게 한다
+const MAX_STAMINA := 100.0
+const STAMINA_DRAIN_PER_SEC := 25.0
+const STAMINA_RECOVER_PER_SEC := 15.0
+# 달리기를 멈춘 뒤에도 이만큼은 바가 그대로 떠 있다가(계속 달릴 수도 있으니), 그 안에 다 차지
+# 않으면 그때 가서 페이드 아웃을 시작한다. 다 차면 이 시간을 기다리지 않고 바로 페이드
+const STAMINA_FADE_GRACE := 1.5
+const STAMINA_FADE_DURATION := 0.6
+
 # 발소리: 걷기/달리기 중 일정 간격마다 무작위 발소리를 재생. 지형 구분 없이 Grass 세트를 공용으로 사용
 const FOOTSTEP_DIR := "res://assets/sfx/NA_Character Footsteps (Dirt & Grass) - Pack 1/"
 const FOOTSTEP_WALK_FILES: Array[String] = [
@@ -73,8 +83,14 @@ var _shadow: PlayerShadow
 var _is_running_moving: bool = false # "달리는 중"의 실제 기준 = Shift를 누른 채 실제로 이동 중
 var _zoom_tween: Tween
 
+var _stamina: float = MAX_STAMINA
+var _stamina_locked: bool = false # 0으로 바닥나서 다시 꽉 찰 때까지 달리기가 막힌 상태
+var _stamina_fade_timer: float = 0.0
+var _stamina_fade_tween: Tween
+
 @onready var _footstep_player: AudioStreamPlayer = $FootstepPlayer
 @onready var _camera: Camera2D = $Camera2D
+@onready var _stamina_bar: Node2D = $StaminaBar
 
 const _AXIS_VECTORS := {
 	"up": Vector2(0, -1),
@@ -88,6 +104,7 @@ const _AXIS_VECTORS := {
 func _ready() -> void:
 	add_to_group("player")
 	_camera.zoom = Vector2(BASE_ZOOM, BASE_ZOOM)
+	_stamina_bar.modulate.a = 0.0
 
 
 # 발밑 그림자를 현재 씬의 ShadowLayer에 만들어 붙인다 (그림자를 쓰는 씬에서만 실제로 생긴다).
@@ -104,12 +121,15 @@ func attach_shadow() -> void:
 func _physics_process(delta: float) -> void:
 	var blocked := _is_input_blocked()
 	var direction := "" if blocked else _get_current_direction()
-	var is_running := not blocked and Input.is_action_pressed("run")
+	var wants_to_run := not blocked and Input.is_action_pressed("run")
+	var is_running := wants_to_run and not _stamina_locked
 	_update_velocity(direction, is_running, delta)
 	move_and_slide()
 	_update_animation(direction, is_running)
 	_update_footsteps(direction, is_running, delta)
-	_update_run_camera_effects(direction != "" and is_running)
+	var running_moving := direction != "" and is_running
+	_update_run_camera_effects(running_moving)
+	_update_stamina(running_moving, delta)
 
 
 # 카메라 줌아웃/화면 가장자리 비네트는 "Shift를 누르고 있음"이 아니라 "실제로 달리고 있음"
@@ -129,6 +149,49 @@ func _update_run_camera_effects(running_moving: bool) -> void:
 	_zoom_tween.tween_property(_camera, "zoom", Vector2(target_zoom, target_zoom), CAMERA_ZOOM_TWEEN_DURATION)
 
 	SpeedVignette.set_running(running_moving)
+
+
+# 달리는 동안 소모하고 아니면 회복한다. 0까지 바닥나면 _stamina_locked를 걸어(_physics_process가
+# 읽어 다음 프레임부터 실제 달리기를 막음) 다시 꽉 찰 때까지 풀지 않는다.
+# 바 표시는 "달리는 동안" + "멈춘 뒤 잠깐(STAMINA_FADE_GRACE) 또는 다 찰 때까지"만 켜둔다
+func _update_stamina(running_moving: bool, delta: float) -> void:
+	if running_moving:
+		_stamina = maxf(_stamina - STAMINA_DRAIN_PER_SEC * delta, 0.0)
+		if _stamina <= 0.0:
+			_stamina_locked = true
+		_stamina_fade_timer = STAMINA_FADE_GRACE
+		_show_stamina_bar()
+	else:
+		if _stamina < MAX_STAMINA:
+			_stamina = minf(_stamina + STAMINA_RECOVER_PER_SEC * delta, MAX_STAMINA)
+			if _stamina >= MAX_STAMINA:
+				_stamina_locked = false
+
+		if _stamina >= MAX_STAMINA:
+			_fade_stamina_bar()
+		else:
+			_stamina_fade_timer -= delta
+			if _stamina_fade_timer <= 0.0:
+				_fade_stamina_bar()
+			else:
+				_show_stamina_bar()
+
+	_stamina_bar.set_fraction(_stamina / MAX_STAMINA)
+
+
+func _show_stamina_bar() -> void:
+	if _stamina_fade_tween != null and _stamina_fade_tween.is_valid():
+		_stamina_fade_tween.kill()
+	_stamina_bar.modulate.a = 1.0
+
+
+func _fade_stamina_bar() -> void:
+	if _stamina_bar.modulate.a <= 0.0:
+		return
+	if _stamina_fade_tween != null and _stamina_fade_tween.is_valid():
+		return
+	_stamina_fade_tween = create_tween()
+	_stamina_fade_tween.tween_property(_stamina_bar, "modulate:a", 0.0, STAMINA_FADE_DURATION)
 
 
 # DialogueBox/전투 씬/PauseMenu/GameOver 중 하나라도 화면에 열려 있으면 이동 입력을 무시.

@@ -10,6 +10,7 @@
 [ext_resource type="Texture2D" uid="uid://786qtn7r4ods" path="res://assets/graphics/Pixel Crawler - Free Pack/Entities/Characters/Body_A/Animations/Idle_Base/Idle_Down-Sheet.png" id="5_idled"]
 [ext_resource type="Texture2D" uid="uid://b7ua50pb4jhfw" path="res://assets/graphics/Pixel Crawler - Free Pack/Entities/Characters/Body_A/Animations/Idle_Base/Idle_Side-Sheet.png" id="6_idles"]
 [ext_resource type="Texture2D" uid="uid://b32javay3dfyw" path="res://assets/graphics/Pixel Crawler - Free Pack/Entities/Characters/Body_A/Animations/Idle_Base/Idle_Up-Sheet.png" id="7_idleu"]
+[ext_resource type="Script" path="res://player/stamina_bar.gd" id="13_stambar"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
 size = Vector2(16, 16)
@@ -415,3 +416,8 @@ position_smoothing_speed = 6.0
 zoom = Vector2(1.5, 1.5)
 
 [node name="FootstepPlayer" type="AudioStreamPlayer" parent="."]
+
+[node name="StaminaBar" type="Node2D" parent="."]
+position = Vector2(14, -6)
+rotation_degrees = -90.0
+script = ExtResource("13_stambar")
