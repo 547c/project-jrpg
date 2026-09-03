@@ -1,225 +1,135 @@
-# Project JRPG
+# Project_JRPG
 
-A small 2D top-down JRPG built in Godot 4.7, developed as a solo learning
-project to understand and implement core CS concepts — particularly
-**state management** — from scratch.
+This is 2D open-world JRPG where your choices change your world. Every decision contributes to the state system that shapes how NPCs treat you, which story branches open up, and which ending you land on.
 
-![천벌 cast on a mummy](docs/screenshots/battle_mummy_judgment.gif)
+![Village tour](docs/screenshots/01_opening_village_tour.gif)
 
-## Why this project
+## What is this
 
-I got into playing open-world RPGs since childhood, and what pulled me in
-wasn't just the combat or graphics but how the world seemed to *remember*
-what I did and react to it. NPCs referenced past choices, areas changed
-based on progress. I wanted to understand how that actually works under
-the hood, which is part of what led me to study CS.
+Project_JRPG is an open-world JRPG built in Godot. You can explore small 2d pixel world, fight in turn-based card battles, talk to NPCs to earn affinity, take on different quests, and make choices that actually carry weight. The game tracks what you've done through a flag-based state management system, and the story (Part 1 and Part 2 so far, 5 endings) branches based on that history.
 
-In high school I built a visual novel with branching choices in Ren'Py,
-but never implemented a system that accumulated state across choices —
-that was a skill gap, not a tool limitation. This project is a direct
-attempt to close that gap by designing a state system myself.
+## Why I built this
 
-The full world/story design is documented in [docs/world.md](docs/world.md).
+In high school, I made a branching visual novel in Ren'Py. The problem was that every choice only changed the very next line, or which ending screen you hit at the end. Nothing really carried across the story. I wanted to fix that, but not by making a better visual novel game. I wanted a real game with full movement, combat, inventory, dialogue, all of it, with a state system running underneath that actually remembers what you did, all the way through.
 
-## Goals
+That's what this is. The state management system was never the end goal by itself — it's what makes the story worth playing more than once.
 
-This is not meant to be a polished commercial game. The goal is a small,
-**finished** project that demonstrates:
-- A self-designed state management system (Autoload singleton + signal-based
-  flag system)
-- NPC dialogue that reacts to accumulated player state
-- Branching choices and multiple endings
-- A minimal turn-based combat system tied to optional side quests
+## Features
 
-Once the basic state-management system (movement, dialogue, save/load) was
-working and validated, I deliberately expanded the combat system further —
-adding a card deck, weapon overheat gauges, tiered equipment, and a
-skill-point unlock system — specifically as practice for designing more
-complex, interdependent state.
+### Open-world exploration
+Village, forest, desert, dungeons, and cave areas connected through a scene transition system, with basic exploration elements like hidden chests and interactable NPCs. (I have plans to build out deeper sub-quests and more interactive environment mechanics in future updates.)
+
+### State-driven dialogue & NPCs
+![Village dialogue](docs/screenshots/09_village_dialogue.gif)
+
+Seven NPCs (Elara, Rohan, Yusuf, Mia, Kamil, Nadim, Kasim), each with a 0-100 affinity score that shifts based on dialogue choices and drives their tone and which content opens up — not just whether you finished a specific quest, but the accumulated pattern of what you did.
+
+### Turn-based card combat
+![Combat 1](docs/screenshots/02_combat_1.gif)
+![Combat 2 + level up](docs/screenshots/03_combat_2_levelup.gif)
+
+22 cards across 3 tiers, weapon overheat gauges, tiered equipment, multi-enemy fights, and buffs/debuffs. Six of the tier-3 cards have fully custom multi-hit cutscene animations:
+
+![Triple Helix on an orc](docs/screenshots/battle_orc_triple_helix.gif)
+![Time Rift on a skeleton](docs/screenshots/battle_skeleton_time_rift.gif)
+![Judgment on a mummy](docs/screenshots/battle_mummy_judgment.gif)
+
+### Skills, equipment, and inventory
+![Quest, inventory, skill deck](docs/screenshots/04_quest_inventory_deck.gif)
+
+A skill-point-based deck builder for combat cards, plus an equipment/inventory system for swapping gear.
+
+### Quests & the bounty board
+![Quest accept flow](docs/screenshots/08_quest_accept_flow.gif)
+
+Pick up bounty-board requests and track them through a dedicated quest log.
+
+### Shops
+![Kasim's shop](docs/screenshots/05_kasim_shop.gif)
+
+NPC-run shops for buying gear and supplies.
+
+### Settings: language & audio
+![Language toggle](docs/screenshots/06_language_toggle.gif)
+![Music toggle](docs/screenshots/07_music_toggle.gif)
+
+Audio control and full Korean/English localization with a toggle (English translation is currently machine-translated and still very much a W.I.P!)
 
 ## Tech stack
 
-- **Engine:** Godot 4.7 (GDScript)
-- **Architecture:** Autoload singletons for cross-scene state (`GameState`,
-  `SaveManager`, `SceneManager`, `MusicManager`, `SFXPlayer`), Resource-based
-  data files for content (cards, endings) so new content doesn't require
-  code changes
-- **Assets:** Free and licensed pixel-art/audio packs from several itch.io
-  creators (world tiles, items, icons, cards, music, SFX); a few packs are
-  licensed and not redistributed (excluded via `.gitignore`) — full credits
-  and license status in the Assets section below
-- **AI tooling:** Claude Code used as an implementation/debugging assistant.
-  All architectural decisions (state structure, signal design, system
-  scope) are made by me first; Claude Code implements based on those
-  decisions.
-
-## Assets & Credits
-
-License status below reflects only what's stated in each pack's own bundled
-files (checked directly, not assumed from memory). Where a pack has no
-bundled license/readme/terms file, or the itch.io link couldn't be
-confirmed from the bundled files, that's noted explicitly rather than
-guessed.
-
-- **Pixel Crawler - Free Pack** — Anokolisa (itch.io) — bundled `Terms.txt`
-  allows commercial and non-commercial use, credit appreciated but not
-  required, no reselling. **Not CC0** — this repo previously said CC0,
-  which the bundled file doesn't actually support; corrected here.
-  <sub>https://anokolisa.itch.io — itch.io link inferred from the author
-  name in `Terms.txt`, not written verbatim in the file; please confirm</sub>
-- **Pixel Crawler - Desert** — Anokolisa (itch.io) — same `Terms.txt` as
-  above. Licensed pack, not redistributed (excluded via `.gitignore`).
-  <sub>https://anokolisa.itch.io — same caveat as above</sub>
-- **16x16 RPG Assets** — ssugmi (itch.io) — bundled `README.txt` allows
-  commercial and non-commercial use, no reselling/redistribution, credit
-  appreciated but not required.
-  <sub>https://ssugmi.itch.io — this URL is written verbatim in the
-  bundled file</sub>
-- **Raven Fantasy Icons** — Clockwork Raven (itch.io) — no license/terms
-  file bundled with this pack; the only bundled text file is a personal
-  thank-you note with no license terms. Terms not verified from local
-  files.
-  <sub>no confirmed link — itch.io slug not found in any bundled file</sub>
-- **Card Game Layout Template** — guawoo (itch.io) — no license file
-  bundled with this pack. Terms not verified from local files.
-  <sub>https://guawoo.itch.io — link inferred from the name given above,
-  not confirmed from a bundled file</sub>
-- **Character Footsteps pack** — Nebula Audio (itch.io) — no license file
-  bundled with this pack. Terms not verified from local files.
-  <sub>no confirmed link — multi-word name, itch.io slug not guessed</sub>
-- **Dialogue Bleeps Pack** — dmochas (itch.io) — no license file bundled
-  with this pack. Terms not verified from local files.
-  <sub>https://dmochas.itch.io — link inferred from the name given above,
-  not confirmed from a bundled file</sub>
-- **"16-Bit Fantasy & Adventure Music"** — Marllon Silva / xDeviruchi
-  (itch.io / YouTube) — bundled `DOCUMENTATION & LICENSE.pdf` allows
-  commercial and non-commercial use and modification, but **requires
-  attribution**, worded exactly as: "Original music by Marllon Silva
-  (xDeviruchi)". Original files are not redistributed as standalone
-  assets.
-  <sub>no confirmed itch.io/YouTube URL text found in the PDF</sub>
-- **400 Sounds Pack** — ci (itch.io) — no license file bundled with this
-  pack. Terms not verified from local files.
-  <sub>https://ci.itch.io</sub>
-- **Basic Pixel Health Bar and Scroll Bar** — bdragon1727 (itch.io) — no
-  license file bundled with this pack. Also, which files in this repo
-  actually come from this pack couldn't be confirmed from bundled
-  documentation — best guess is the loose numbered gauge-sheet images in
-  `assets/GUI/`, based only on a code comment, not on any pack
-  documentation.
-  <sub>https://bdragon1727.itch.io — link inferred from the name given
-  above, not confirmed from a bundled file</sub>
-- **750 Effect and FX Pixel All** — bdragon1727 (itch.io) — no license
-  file bundled in `assets/vfx/`. Licensed pack, not redistributed
-  (excluded via `.gitignore`).
-  <sub>https://bdragon1727.itch.io — same caveat as above</sub>
-- **Mona Font** — MonadABXY — bundled `LICENSE/mona.txt` contains the full
-  SIL Open Font License 1.1 text. Note: the license file itself points to
-  https://monadabxy.com, not GitHub.
-- **RPG UI Pack** — Franuka (itch.io) — bundled `License and details.txt`
-  allows commercial and non-commercial use, credit appreciated but not
-  required, no redistribution/resale. Licensed pack, not redistributed
-  (excluded via `.gitignore`).
-  <sub>https://franuka.itch.io — this URL is written verbatim in the
-  bundled file</sub>
-- **UI User Interface Pack (Medieval)** — ToffeeCraft (itch.io) — no
-  license file bundled with this pack. Licensed pack, not redistributed
-  (excluded via `.gitignore`).
-  <sub>https://toffeecraft.itch.io — link inferred from the name given
-  above, not confirmed from a bundled file</sub>
-
-See the Screenshots section below for how the interface actually looks.
+- **Godot 4.7**, GDScript
+- Chose Godot over Unity/Unreal because GDScript's syntax is close to Python — less time learning a new language, more time on the actual state logic
+- **State management**: an autoload singleton (`GameState`) holding a flag dictionary and firing signals, which the rest of the game reacts to. Other autoloads (`SaveManager`, `SceneManager`, `MusicManager`, `SFXPlayer`) handle their own slice of cross-scene state
+- Content (cards, endings) lives in Resource files, so adding new content doesn't require touching code
+- **Localization**: dialogue text keyed by id with a translation overlay, UI strings through Godot's `tr()`
+- **AI tooling**: I used Claude Code as an implementation and debugging assistant. Architecture and design decisions (state structure, signal design, system scope) are mine; Claude Code builds from those decisions
 
 ## Progress
 
 **Core systems**
-- [x] 4-directional player movement + locked camera
-- [x] Sprite animation (walk/idle, 4 directions) with pixel-art filtering
-- [x] Scene/map transitions across 6+ zones (village, forest, cave, desert,
-  ruins, tavern, connected by a dock)
-- [x] State management system (Autoload, flag-based, signal-driven)
-- [x] 5-slot save/load (full state restore: flags, quests, gold, inventory,
-  affinity, unlocked cards, custom deck, player position)
-- [x] Title screen (new game / load / ending record) and opening cutscene
+- [x] 4-directional movement + camera
+- [x] Scene/map transitions across 6+ zones (village, forest, cave, desert, ruins, tavern)
+- [x] Flag-based state management (Autoload, signal-driven)
+- [x] 5-slot save/load (flags, quests, gold, inventory, affinity, unlocked cards, custom deck, position)
+- [x] Title screen and opening cutscene
 
 **Story & dialogue**
-- [x] NPC dialogue reacting to accumulated state (7 NPCs: Elara, Rohan,
-  Yusuf, Mia, Kamil, Nadim, Kasim), branching + gossip system
-- [x] Per-NPC affinity system (0-100, shifts with dialogue choices) driving
-  dialogue tone and high-affinity content
-- [x] Two-part branching story (Part 1: village/forest/cave; Part 2:
-  desert/ruins) with decisive choices and **5 endings**, tracked in an
-  in-game ending-record codex separate from save slots
+- [x] NPC dialogue reacting to accumulated state, branching + gossip system
+- [x] Per-NPC affinity system driving dialogue tone and high-affinity content
+- [x] Two-part branching story (Part 1: village/forest/cave; Part 2: desert/ruins) with 5 endings, tracked in an in-game codex
 
 **Combat**
 - [x] Turn-based card combat: draw/hand/play loop, 22 cards across 3 tiers
-- [x] Weapon overheat gauges (sword/staff, accumulate on use, gate which
-  cards are safe to play)
-- [x] Tiered equipment (sword/staff/shield × wood/bone/gold, 9 pieces)
-  purchasable from a dedicated weapon shop
-- [x] Skill-point unlock system: cards above the starting 6 are unlocked
-  with points earned from leveling up
-- [x] Spellbook UI with a card-collection view and a deck-builder tab for
-  assembling a custom deck
-- [x] Per-card VFX/SFX, including six cards with fully custom multi-hit
-  "cutscene" animations (flash slash, triple helix, swift, meteor drop,
-  time rift, judgment)
-- [x] Item shop (potions, gift item) separate from the weapon shop
+- [x] Weapon overheat gauges, tiered equipment, skill-point unlock system
+- [x] Spellbook UI: card collection view + deck-builder tab
+- [x] Per-card VFX/SFX, tier-3 cards with custom cutscene animations
 - [x] Side quests tied to specific monster encounters, gating story progress
 
-**Not done**
-- [ ] Additional playable classes (stretch goal, not started)
-- [ ] Kasim's max-affinity gift-back content (documented in
-  [docs/world.md](docs/world.md), not yet implemented)
+**Not done yet**
+- [ ] Additional playable classes (stretch goal)
 
-## Screenshots
+## Roadmap
 
-**Exploration & dialogue**
+- Part 1 and Part 2 are done. Preparing a demo release on Steam and itch.io.
+- Next up is a side project called **AI in NPC** — using something like Inworld AI to build an NPC whose responses aren't pre-written branches, but generated live based on what you actually say. The plan is to make one prototype and use that AI-driven NPC into Project_JRPG as an experiment, kept outside the main story and endings at first — just a resident/helper character, to test the idea without risking the rest of the game.
+- The bigger goal past that isn't really Project_JRPG itself. It's working toward a future game where AI genuinely shapes the world and the ending based on how you play, instead of picking between paths I wrote in advance. This project, and the AI NPC experiment after it, are both steps toward that.
+- Full Steam release planned for next year.
 
-![Approaching Rohan in the forest, with quest tracker and HUD visible](docs/screenshots/overworld_dialogue_prompt.webp)
-_Overworld exploration: HP/mana HUD, quest tracker, and an NPC interaction prompt._
+## Assets & Credits
 
-![Branching dialogue with Rohan, showing his affinity bar](docs/screenshots/dialogue_choices.webp)
-_NPC dialogue with a visible affinity bar and branching choices._
+License status below reflects what's actually stated in each pack's own bundled files (checked directly, not assumed from the itch.io page). Where a pack has no bundled license/readme/terms file, that's noted explicitly rather than guessed.
 
-**Shops**
+- **Free Pixel Art Asset Pack – Topdown Tileset RPG 16x16** — Anokolisa (itch.io) — bundled `Terms.txt` allows commercial and non-commercial use, credit appreciated but not required, no reselling. Not CC0.
+  <sub>https://anokolisa.itch.io/free-pixel-art-asset-pack-topdown-tileset-rpg-16x16-sprites</sub>
+- **Pixel Crawler – Desert** — Anokolisa (itch.io) — same `Terms.txt` as above. Paid pack, not redistributed (excluded via `.gitignore`).
+  <sub>https://anokolisa.itch.io/pixel-crawler-desert</sub>
+- **16x16 RPG Assets** — ssugmi (itch.io) — bundled `README.txt` allows commercial and non-commercial use, no reselling/redistribution, credit appreciated but not required.
+  <sub>https://ssugmi.itch.io/16x16-rpg-assets</sub>
+- **Raven Fantasy Icons** — Clockwork Raven (itch.io) — no license/terms file bundled; terms not independently verified.
+  <sub>https://clockworkraven.itch.io/raven-fantasy-icons</sub>
+- **Card Game Layout Template** — guawoo (itch.io) — no license file bundled; terms not independently verified.
+  <sub>https://guawoo.itch.io/card-game-layout-template</sub>
+- **Character Footsteps: Rock, Grass Pack 1** — Nebula Audio (itch.io) — no license file bundled; terms not independently verified.
+  <sub>https://nebula-audio.itch.io/character-footsteps-rock-grass-pack-1</sub>
+- **Dmocha's Bleeps Pack** — dmochas-assets (itch.io) — no license file bundled; terms not independently verified.
+  <sub>https://dmochas-assets.itch.io/dmochas-bleeps-pack</sub>
+- **16-Bit Fantasy & Adventure Music Pack** — Marllon Silva / xDeviruchi (itch.io / YouTube) — bundled `DOCUMENTATION & LICENSE.pdf` allows commercial and non-commercial use and modification, but **requires attribution**, worded exactly as: "Original music by Marllon Silva (xDeviruchi)".
+  <sub>https://xdeviruchi.itch.io/16-bit-fantasy-adventure-music-pack</sub>
+- **400 Sounds Pack** — ci (itch.io) — no license file bundled; terms not independently verified.
+  <sub>https://ci.itch.io/400-sounds-pack</sub>
+- **Basic Pixel Health Bar and Scroll Bar** — bdragon1727 (itch.io) — no license file bundled; terms not independently verified.
+  <sub>https://bdragon1727.itch.io/basic-pixel-health-bar-and-scroll-bar</sub>
+- **750 Effect and FX Pixel All** — bdragon1727 (itch.io) — no license file bundled. Not redistributed (excluded via `.gitignore`).
+  <sub>https://bdragon1727.itch.io/750-effect-and-fx-pixel-all</sub>
+- **Falling Leaf FX** — rs-pixel-store (itch.io) — listed as free for commercial use with optional credit at time of download; no bundled license file remains locally to re-verify against.
+  <sub>https://rs-pixel-store.itch.io/falling-leaf-fx</sub>
+- **Wind Sound Effect** — neptune-ringgs (itch.io) — listed as free for commercial use with optional credit at time of download; no bundled license file remains locally to re-verify against.
+  <sub>https://neptune-ringgs.itch.io/wind-sound-effect</sub>
+- **Mona Font** — MonadABXY — bundled `LICENSE/mona.txt` contains the full SIL Open Font License 1.1 text.
+  <sub>https://github.com/MonadABXY/mona-font</sub>
+- **RPG UI Pack** — franuka (itch.io) — bundled `License and details.txt` allows commercial and non-commercial use, credit appreciated but not required, no redistribution/resale. Paid pack, not redistributed (excluded via `.gitignore`).
+  <sub>https://franuka.itch.io/rpg-ui-pack</sub>
+- **UI User Interface Pack (Medieval)** — ToffeeCraft (itch.io) — no license file bundled. Paid pack, not redistributed (excluded via `.gitignore`).
+  <sub>https://toffeecraft.itch.io/ui-user-interface-pack-medieval</sub>
 
-![Yusuf's item shop UI](docs/screenshots/yusuf_item_shop.webp)
-_Yusuf's item shop — potions and a gift item, bought with quantity steppers._
-
-![Kasim's weapon shop UI showing tiered swords](docs/screenshots/kasim_weapon_shop.webp)
-_Kasim's weapon shop — tiered equipment (wood/bone/gold) across paginated pages._
-
-**Cards & battle**
-
-![Spellbook card collection page](docs/screenshots/spellbook_collection.webp)
-_Spellbook collection view, showing owned tier-1 cards and current skill points._
-
-![Casting 마력탄 (Magic Bolt) against a mummy in battle](docs/screenshots/battle_magic_bolt.webp)
-_A battle in progress: 5-card hand, weapon-overheat gauges, and a damage popup._
-
-![Casting 마나 회복 (Mana Draught) with its swirl VFX](docs/screenshots/battle_mana_restore.webp)
-_Per-card VFX: a mana-restore swirl plays around the player on cast._
-
-**More combat cutscenes**
-
-![삼중나선 cast on an orc](docs/screenshots/battle_orc_triple_helix.gif)
-_삼중나선 (Triple Helix) — a multi-hit tier-3 physical cutscene, vs. an orc._
-
-![시공균열 cast on a skeleton](docs/screenshots/battle_skeleton_time_rift.gif)
-_시공균열 (Time Rift) — a tier-3 magic cutscene, vs. a skeleton._
-
-## Scope notes
-
-Basic systems (movement, dialogue, state management, save/load) were built
-and validated first. Once that foundation held up, I deliberately expanded
-the combat system — card deck, weapon overheat gauges, equipment tiers,
-skill-point unlocks — as a further exercise in designing more complex,
-interdependent state, rather than stopping at the minimum needed to prove
-the concept.
-
-Maps and battle backgrounds are still visually minimal — the project's
-focus is system design, not visual art, so art direction was deliberately
-deprioritized. Ideas beyond current scope (additional classes, larger side
-content) are tracked as a post-v1.0 roadmap in
-[docs/world.md](docs/world.md) rather than added mid-development.
+Vignette shader sourced from [godotshaders.com](https://godotshaders.com), CC0 licensed.
