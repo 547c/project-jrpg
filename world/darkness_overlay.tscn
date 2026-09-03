@@ -10,7 +10,7 @@ shader_parameter/player_pos = Vector2(576, 324)
 shader_parameter/inner_radius = 120.0
 shader_parameter/outer_radius = 330.0
 shader_parameter/glow_radius = 85.0
-shader_parameter/glow_strength = 0.45
+shader_parameter/glow_strength = 1.0
 shader_parameter/glow_color = Color(0.55, 0.78, 1, 1)
 shader_parameter/glow_tint_strength = 0.2
 

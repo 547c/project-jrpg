@@ -14,7 +14,7 @@ uniform float outer_radius = 330.0; // 이 바깥은 완전한 검은색
 // 기여가 자연히 0이 되게 하므로, 셰이더에서 개수를 따로 분기하지 않는다
 uniform vec2 glow_positions[MAX_GLOWS];
 uniform float glow_radius = 90.0;
-uniform float glow_strength : hint_range(0.0, 1.0) = 0.55;
+uniform float glow_strength : hint_range(0.0, 1.0) = 1.0;
 uniform vec3 glow_color : source_color = vec3(0.55, 0.78, 1.0);
 uniform float glow_tint_strength : hint_range(0.0, 1.0) = 0.35;
 
