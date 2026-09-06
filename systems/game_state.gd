@@ -1,5 +1,7 @@
 extends Node
 
+const CompanionData = preload("res://battle/companion_data.gd")
+
 # 플래그 값이 실제로 바뀔 때 방출되는 단일 시그널 (대화/NPC 등이 구독해 자동 반응)
 signal flag_changed(flag_name: String, value)
 
@@ -39,6 +41,9 @@ signal battle_deck_changed
 
 # NPC 호감도가 실제로 바뀔 때 방출 (npc_id, 새 값). 대화 톤/게이팅이 이 값을 참조한다
 signal affinity_changed(npc_id: String, new_value: int)
+
+# 파티 구성(합류/이탈)이 바뀔 때 방출 (필드 팔로워/전투 HUD가 구독해 갱신)
+signal companions_changed
 
 # 골드(flags 딕셔너리와 별개의 독립 필드 — set_flag 경로를 타지 않음)
 var gold: int = 0
@@ -81,6 +86,14 @@ const MAX_BATTLE_DECK_SIZE := 15
 # 강한 카드 한 종류로 덱을 도배하는 걸 막아 손패 다양성을 유지하려는 것
 const MAX_COPIES_PER_CARD := 2
 var battle_deck: Array = []
+
+# 지금 파티에 있는 동료 id 목록 (순서가 파티 슬롯). 리크루트 여부(flags의 "companion_X_recruited")와
+# 별개다 — "영입했는가"는 되돌릴 수 없는 스토리 사실이고, "지금 파티에 있는가"는 일시적으로 빠질 수
+# 있어서 둘을 하나로 합치면 나중에 이탈 장면이 생겼을 때 세이브 마이그레이션이 필요해진다
+var active_companions: Array = []
+
+# 동료별 잔여 HP (companion_id -> hp). 플레이어처럼 전투 사이에도 유지되는 영속 값이다
+var companion_hp: Dictionary = {}
 
 # --- 엔딩 도감(영구 기록) ---
 # 지금까지 도달한 엔딩 id 모음. 슬롯 세이브와 성격이 다른 "계정 단위 영구 기록"이라
@@ -157,6 +170,7 @@ const DEFAULT_FLAGS: Dictionary = {
 	# 카드 잠금해제에 쓰는 자원. 레벨업(_apply_level_up)마다 SKILL_POINTS_PER_LEVEL만큼 들어온다.
 	# 어떤 카드를 풀었는지는 개수가 아니라 목록이라 flags에 담기 어색해서 unlocked_cards로 따로 뺐다
 	"skill_points": 0,
+	"companion_yusuf_recruited": false, # 유서프가 파티에 합류한 적이 있는가 (되돌릴 수 없는 스토리 사실)
 }
 
 # 씬 전환에도 유지되는 게임 상태. DEFAULT_FLAGS를 복사해 시작한다
@@ -266,6 +280,7 @@ func reset_progress() -> void:
 	# 덱은 비워서 "아직 안 건드림" 상태로 되돌린다 (StarterDeck이 다시 자동 구성하게 됨)
 	battle_deck.clear()
 	battle_deck_changed.emit()
+	reset_companions()
 	# seen_endings(엔딩 도감)는 의도적으로 건드리지 않는다 — 새 게임을 시작해도 유지되는 영구 기록
 
 
@@ -545,6 +560,47 @@ func restore_affinity(data: Dictionary) -> void:
 		affinity[String(key)] = int(data[key])
 	for npc_id in affinity.keys():
 		affinity_changed.emit(npc_id, affinity[npc_id])
+
+
+# ── 동료(파티) ──────────────────────────────────────────────────────────────
+
+# 동료를 영입한다: 리크루트 플래그를 세우고 파티에 추가한다. 이미 영입된 동료를 다시 불러도
+# 안전하다(중복 추가 없음). 초기 HP는 처음 영입할 때만 최대치로 채운다
+func recruit_companion(companion_id: String) -> void:
+	set_flag("companion_%s_recruited" % companion_id, true)
+	if not active_companions.has(companion_id):
+		active_companions.append(companion_id)
+	if not companion_hp.has(companion_id):
+		companion_hp[companion_id] = CompanionData.COMPANIONS[companion_id]["max_hp"]
+	companions_changed.emit()
+
+
+func is_companion_recruited(companion_id: String) -> bool:
+	return get_flag("companion_%s_recruited" % companion_id)
+
+
+func get_active_companions() -> Array:
+	return active_companions.duplicate()
+
+
+# 세이브 복원: active_companions를 먼저 확정한 뒤, 그 목록에 있는 동료의 HP만 남긴다(파티에
+# 없는 id는 버림). 카탈로그의 max_hp가 나중에 바뀌어도 어긋나지 않도록 그 값으로 clamp한다
+func restore_companions(list: Array, hp_data: Dictionary) -> void:
+	active_companions = list.duplicate()
+	companion_hp.clear()
+	for companion_id in active_companions:
+		if not CompanionData.COMPANIONS.has(companion_id):
+			continue
+		var max_hp: int = CompanionData.COMPANIONS[companion_id]["max_hp"]
+		var hp: int = int(hp_data.get(companion_id, max_hp))
+		companion_hp[companion_id] = clampi(hp, 0, max_hp)
+	companions_changed.emit()
+
+
+func reset_companions() -> void:
+	active_companions.clear()
+	companion_hp.clear()
+	companions_changed.emit()
 
 
 # ── 방문한 대화 노드(seen) ──────────────────────────────────────────────────

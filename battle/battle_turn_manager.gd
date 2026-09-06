@@ -1,6 +1,9 @@
 class_name BattleTurnManager
 extends RefCounted
 
+const PlayerCombatant = preload("res://battle/player_combatant.gd")
+const CompanionState = preload("res://battle/companion_state.gd")
+
 # 카드 전투의 턴 진행을 총괄한다. Card/Deck/Hand/WeaponState/EnemyResistance를 하나로 엮어
 # "턴 시작 → 플레이어가 카드를 자유롭게 냄 → 턴 종료 → 적 턴 → 종료 판정 → 다음 턴"을 굴린다.
 #
@@ -42,6 +45,11 @@ var player_status := StatusEffects.new()
 
 # 이번 전투에 등장한 몬스터들 (1~3마리, 전부 같은 종류). 자리 순서가 곧 MonsterState.index다
 var monsters: Array[MonsterState] = []
+
+# 아군 진영 (0번은 항상 PlayerCombatant, 이후가 GameState.active_companions 순서의 CompanionState).
+# 아직 피격 대상 선택/자동 행동에는 쓰이지 않는다 — 그건 Phase 3 범위이고, 여기서는 배열만 갖춘다
+# (docs/companion_system_backend_plan.md §7)
+var party: Array = []
 
 var monster_type: String = "" # 그룹 전체가 같은 종류라 스칼라로 둔다
 var monster_data: Dictionary = {} # 그 종류의 스탯 표 (마리별 값은 MonsterState.monster_data로 접근)
@@ -99,6 +107,10 @@ func _init(monster_type_: String, variants: Array, cards: Array[Card]) -> void:
 	deck = Deck.new(cards)
 	hand = Hand.new()
 	weapon = WeaponState.new()
+
+	party.append(PlayerCombatant.new(player_status))
+	for companion_id in GameState.get_active_companions():
+		party.append(CompanionState.new(party.size(), companion_id))
 
 
 # 전투를 시작하고 첫 턴을 연다 (_init과 분리해 둬서, 바깥이 시그널을 먼저 연결한 뒤 시작할 수 있다).
