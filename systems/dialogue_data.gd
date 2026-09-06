@@ -1890,6 +1890,7 @@ const KAMIL_DIALOGUE: Array = [
 		"text": "알겠습니다. 부두에서 기다리고 있겠습니다.",
 		"is_decisive": false,
 		"set_flag_on_show": "boat_available", # 이 노드에 도달하는 순간 부두의 배가 이용 가능해짐
+		"recruit_companion": "yusuf", # 같은 시점에 유서프가 파티에 합류 (필드 팔로워로 전환)
 		"options": [],
 	},
 ]

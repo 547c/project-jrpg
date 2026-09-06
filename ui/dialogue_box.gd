@@ -199,6 +199,11 @@ func _show_node(node_id: String) -> void:
 	elif flag_on_show != "":
 		GameState.set_flag(flag_on_show, true)
 
+	# 이 노드에 도달한 순간 동료로 합류시킬 id (예: "yusuf")
+	var recruit_companion: String = node.get("recruit_companion", "")
+	if recruit_companion != "":
+		GameState.recruit_companion(recruit_companion)
+
 	# 이 노드에 "도달"한 순간 적용할 호감도 변화 (예: 속내를 털어놓는 대사에 도달한 것 자체가 효과를 가짐).
 	# 옵션 선택 시 효과(affinity_change)와 달리, 선택 없이 이어지는 서술형 노드에 쓰는 용도.
 	# once: true면 이 노드를 처음 볼 때만 적용하고, 재방문 시엔 건너뛴다(일상 대화 +1 등 1회성 효과용)

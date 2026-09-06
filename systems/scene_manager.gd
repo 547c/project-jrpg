@@ -1,6 +1,12 @@
 extends Node
 
 const PLAYER_SCENE: PackedScene = preload("res://player/player.tscn")
+const NPC_SCENE: PackedScene = preload("res://npc/npc.tscn")
+
+# 리크루트된 동료 id별로 팔로워에 붙일 스크립트. 새 동료가 늘어나면 여기 한 줄만 추가하면 된다
+const FOLLOWER_SCRIPTS: Dictionary = {
+	"yusuf": preload("res://npc/yusuf_follower.gd"),
+}
 const CUTSCENE_BOX_SCENE: PackedScene = preload("res://ui/cutscene_box.tscn")
 const CHAPTER_TITLE_CARD_SCENE: PackedScene = preload("res://ui/chapter_title_card.tscn")
 const VILLAGE_SCENE_PATH := "res://world/village.tscn"
@@ -68,6 +74,14 @@ var _player: Player
 var _is_changing_scene: bool = false
 var _transitions_suppressed: bool = false
 
+# 리크루트된 동료의 팔로워 노드 (companion_id -> NPC). 플레이어처럼 이 매니저가 들고 있다가
+# 씬이 바뀔 때마다 다시 그 씬으로 옮겨 붙인다 (_attach_player_to_scene과 같은 이유)
+var _followers: Dictionary = {}
+
+
+func _ready() -> void:
+	GameState.companions_changed.connect(_sync_companion_followers)
+
 # 전투 진입 시 저장해두는 복귀 컨텍스트 (승리 시 이 좌표/씬으로 정확히 되돌아간다)
 var _battle_return_path: String = ""
 var _battle_return_position: Vector2 = Vector2.ZERO
@@ -105,6 +119,7 @@ func start_game() -> void:
 	get_tree().root.add_child(new_scene)
 	get_tree().current_scene = new_scene
 	_attach_player_to_scene()
+	_sync_companion_followers()
 
 	var show_opening: bool = not GameState.get_flag("seen_opening")
 	if show_opening:
@@ -225,6 +240,36 @@ func _attach_player_to_scene() -> void:
 	# 같은 프레임 안에서 더 나중에 큐에 들어간 이 호출도 지연되므로, 그 레이어가 실제로 생긴 뒤에
 	# 경계를 계산하게 된다
 	_apply_camera_limits.call_deferred()
+
+
+# GameState.active_companions에 맞춰 팔로워 노드를 만들고 현재 씬에 붙인다. 새로 리크루트된
+# 동료는 여기서 생성되고, 이미 있는 팔로워는 _attach_player_to_scene과 같은 방식으로 씬만 옮겨 붙인다
+# (companions_changed 시그널 + 매 씬 전환마다 호출되므로 두 경우 모두 이 함수 하나로 처리된다)
+func _sync_companion_followers() -> void:
+	if _player == null:
+		return
+
+	for companion_id in GameState.get_active_companions():
+		if _followers.has(companion_id) or not FOLLOWER_SCRIPTS.has(companion_id):
+			continue
+		var follower = NPC_SCENE.instantiate()
+		follower.set_script(FOLLOWER_SCRIPTS[companion_id])
+		follower.global_position = _player.global_position
+		add_child(follower)
+		_followers[companion_id] = follower
+
+	var scene := get_tree().current_scene
+	var use_y_sort: bool = scene is Node2D and (scene as Node2D).y_sort_enabled
+	var desired_parent: Node = scene if use_y_sort else self
+
+	for follower in _followers.values():
+		if follower.get_parent() != desired_parent:
+			var world_position: Vector2 = follower.global_position
+			follower.get_parent().remove_child(follower)
+			desired_parent.add_child(follower)
+			follower.global_position = world_position
+		follower.z_index = CHARACTER_BAND_Z_INDEX if use_y_sort else PLAYER_OVERLAY_Z_INDEX
+		follower.resync_shadow()
 
 
 # 현재 씬의 TileMap/TileMapLayer 사용 범위(없으면 Background)를 기준으로 카메라 이동 한계를 설정
@@ -403,6 +448,7 @@ func _apply_scene_change(scene_path: String, spawn_point_name: String, use_exact
 	get_tree().root.add_child(new_scene)
 	get_tree().current_scene = new_scene
 	_attach_player_to_scene() # Y-Sort 씬이면 그 밑으로 옮겨 나무/NPC와 함께 정렬되게 한다
+	_sync_companion_followers()
 
 	# 전환한 구역의 방문 여부를 GameState에 기록
 	_record_visited(scene_path)
