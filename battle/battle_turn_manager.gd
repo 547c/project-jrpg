@@ -28,6 +28,11 @@ signal companion_attack_resolved(companion_index: int, target_index: int, damage
 # 마나가 바닥나 공격 대신 숨을 고른 몬스터. mana_gained/hp_gained는 실제로 회복된 양
 # (hp_gained가 0이면 이번엔 체력 회복이 안 붙은 것)
 signal monster_recovered(index: int, mana_gained: int, hp_gained: int)
+# 마나가 바닥나 공격 대신 숨을 고른 동료. monster_recovered와 같은 규약
+signal companion_recovered(index: int, mana_gained: int, hp_gained: int)
+# 동료 패시브(파티 전체 회복)가 발동함. source_index는 발동시킨 동료의 party 배열 자리 번호,
+# results는 party 배열 순서대로 {"index": int, "hp": int, "mana": int} (실제 회복량, 죽은 자리는 제외)
+signal party_passive_healed(source_index: int, results: Array)
 signal monster_defeated(index: int) # 마리 하나가 쓰러짐 (전투는 아직 안 끝났을 수 있음)
 # 버프/디버프가 새로 걸렸을 때 (target_index가 -1이면 플레이어 자신)
 signal status_applied(target_index: int, kind: int, magnitude: int, rounds: int)
@@ -630,16 +635,22 @@ func end_turn() -> void:
 
 
 # 동료 전원이 각자 한 번씩 자동으로 공격한다 (조작 없음, 쉬는 턴 없음 — Q8 확정).
-# 대상은 살아있는 몬스터 중 가중치 없이 무작위로 고른다. 몬스터가 전멸하면 남은 동료는 공격하지 않는다
+# 대상은 살아있는 몬스터 중 가중치 없이 무작위로 고른다. 몬스터가 전멸하면 남은 동료는 공격하지 않는다.
+# 마나가 바닥난 동료는 공격 대신 그 턴을 회복에 쓴다 (_resolve_enemy_turn이 몬스터에게 하는 것과 같은 방식 — §7)
 func _resolve_companion_turn() -> void:
 	for i in range(1, party.size()):
 		var companion = party[i]
 		if not companion.is_alive():
 			continue
+		if not companion.can_attack():
+			var gained: Dictionary = companion.recover()
+			companion_recovered.emit(i, gained["mana"], gained["hp"])
+			continue
 		var alive := alive_monsters()
 		if alive.is_empty():
 			return
 		var target: MonsterState = alive[randi() % alive.size()]
+		companion.spend_attack_mana()
 		var dealt := target.take_damage(companion.roll_attack_damage())
 		companion_attack_resolved.emit(i, target.index, dealt)
 		if not target.is_alive():
@@ -711,7 +722,36 @@ func _resolve_enemy_turn() -> void:
 	_tick_status_rounds()
 	for i in range(1, party.size()):
 		party[i].tick_round()
-		party[i].consume_passive_trigger() # 발동 판정만 확인 — 실제 효과는 Phase 4
+		if party[i].consume_passive_trigger():
+			_trigger_party_passive_heal(i)
+
+
+# 동료 패시브(§7 "파티 전체 5턴 회복") 발동 효과: 살아있는 파티원 전원의 체력/마력을 각각
+# 최대치의 10%씩 회복한다. 플레이어는 기존 마나회복 카드와 같은 GameState 헬퍼를 재사용하고,
+# 동료는 CompanionState.heal/restore_mana로 같은 비율을 적용한다
+const PARTY_PASSIVE_HEAL_FRACTION := 0.1
+
+func _trigger_party_passive_heal(source_index: int) -> void:
+	var results: Array = []
+	for i in range(party.size()):
+		var member = party[i]
+		if not member.is_alive():
+			continue
+		if i == 0:
+			var hp_before: int = GameState.get_flag("player_hp")
+			var mana_before: int = GameState.get_flag("player_mana")
+			GameState.heal_player_partial(PARTY_PASSIVE_HEAL_FRACTION)
+			GameState.restore_mana_partial(PARTY_PASSIVE_HEAL_FRACTION)
+			results.append({
+				"index": 0,
+				"hp": GameState.get_flag("player_hp") - hp_before,
+				"mana": GameState.get_flag("player_mana") - mana_before,
+			})
+		else:
+			var hp_healed: int = member.heal(int(round(member.max_hp * PARTY_PASSIVE_HEAL_FRACTION)))
+			var mana_healed: int = member.restore_mana(int(round(member.max_mana * PARTY_PASSIVE_HEAL_FRACTION)))
+			results.append({"index": i, "hp": hp_healed, "mana": mana_healed})
+	party_passive_healed.emit(source_index, results)
 
 
 # 살아있는 파티원이 하나도 없는지 (몬스터 반격 도중 파티 전멸 여부를 매 마리 공격 전에 확인하는 데 쓰인다)

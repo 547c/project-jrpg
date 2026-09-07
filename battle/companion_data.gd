@@ -15,9 +15,22 @@ const COMPANIONS: Dictionary = {
 		"max_hp": 30, # 플레이스홀더, Phase 4에서 확정
 		"damage_min": 4, # 플레이스홀더, Phase 4에서 확정
 		"damage_max": 6, # 플레이스홀더, Phase 4에서 확정
+		# 몬스터 마나 리듬(MonsterState)을 거의 그대로 이식 — 필드명과 값 전부 몬스터 쪽 상수를
+		# 참고한 플레이스홀더 (docs/companion_system_options.md §7)
+		"mana": {
+			"max_mana": 100, # 플레이스홀더 — MonsterState.MANA_MAX 참고
+			"attack_cost_min": 25, # 플레이스홀더 — MonsterState.ATTACK_COST_MIN 참고
+			"attack_cost_max": 40, # 플레이스홀더 — MonsterState.ATTACK_COST_MAX 참고
+			"low_mana_threshold": 25, # 플레이스홀더 — MonsterState.LOW_MANA_THRESHOLD 참고
+			"recover_mana_min": 40, # 플레이스홀더 — MonsterState.RECOVER_MANA_MIN 참고
+			"recover_mana_max": 60, # 플레이스홀더 — MonsterState.RECOVER_MANA_MAX 참고
+			"recover_hp_chance": 0.3, # 플레이스홀더 — MonsterState.RECOVER_HP_CHANCE 참고
+			"recover_hp_fraction_min": 0.05, # 플레이스홀더 — MonsterState.RECOVER_HP_FRACTION_MIN 참고
+			"recover_hp_fraction_max": 0.10, # 플레이스홀더 — MonsterState.RECOVER_HP_FRACTION_MAX 참고
+		},
 		"passive": {
 			"period": 5, # 플레이스홀더, Phase 4에서 확정 (N턴마다 발동)
-			"kind": "RECOVER", # 플레이스홀더 — 마나 또는 체력 소량 회복
+			"kind": "RECOVER", # 파티 전체 체력/마력 10%씩 회복 (§7)
 			"amount": 0, # 플레이스홀더, Phase 4에서 확정
 		},
 		"active": {

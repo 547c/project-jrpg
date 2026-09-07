@@ -750,6 +750,7 @@ var _ally_sprites: Array[AnimatedSprite2D] = []
 var _ally_shadows: Array[Polygon2D] = []
 var _ally_card_panels: Array[Control] = []
 var _ally_hp_bars: Array[ProgressBar] = []
+var _ally_mana_bars: Array[ProgressBar] = []
 var _ally_status_badges: Array[Label] = []
 # 매니저가 "쓰러졌다"고 알려준 뒤 아직 사망 연출을 재생하지 않은 자리 번호들.
 # 시그널은 매니저 안에서 동기적으로 날아오는데 연출은 카드 연출이 끝난 뒤에 이어야 해서 버퍼에 모은다
@@ -1018,6 +1019,8 @@ func start_with(monster_type: String, variants: Array) -> void:
 	_manager.card_played.connect(_on_card_played)
 	_manager.enemy_attack_resolved.connect(_on_enemy_attack_resolved)
 	_manager.companion_attack_resolved.connect(_on_companion_attack_resolved)
+	_manager.companion_recovered.connect(_on_companion_recovered)
+	_manager.party_passive_healed.connect(_on_party_passive_healed)
 	_manager.monster_recovered.connect(_on_monster_recovered)
 	_manager.monster_defeated.connect(_on_monster_defeated)
 	_manager.player_defeated.connect(_on_player_defeated)
@@ -1034,6 +1037,9 @@ func start_with(monster_type: String, variants: Array) -> void:
 		var companion = _manager.party[i]
 		_ally_hp_bars[i].max_value = companion.max_hp
 		_ally_hp_bars[i].value = companion.hp
+		if i < _ally_mana_bars.size():
+			_ally_mana_bars[i].max_value = companion.max_mana
+			_ally_mana_bars[i].value = companion.mana
 
 	_player_gold_label.text = str(GameState.gold)
 	_monster_gold_label.text = "%d~%d" % [_monster_data["gold_min"], _monster_data["gold_max"]]
@@ -1166,6 +1172,25 @@ func _on_monster_recovered(index: int, mana_gained: int, hp_gained: int) -> void
 		"attacker": index,
 		"mana": mana_gained,
 		"hp": hp_gained,
+	})
+
+
+# 마나가 바닥나 숨을 고른 동료. _on_monster_recovered와 같은 버퍼링 방식
+func _on_companion_recovered(index: int, mana_gained: int, hp_gained: int) -> void:
+	_enemy_attacks.append({
+		"action": "companion_recover",
+		"companion": index,
+		"mana": mana_gained,
+		"hp": hp_gained,
+	})
+
+
+# 동료 패시브(파티 전체 회복)가 발동함. 같은 버퍼에 쌓아 진행 순서를 지킨다
+func _on_party_passive_healed(source_index: int, results: Array) -> void:
+	_enemy_attacks.append({
+		"action": "party_passive_heal",
+		"source": source_index,
+		"results": results,
 	})
 
 
@@ -2003,9 +2028,14 @@ func _animate_enemy_turn() -> void:
 				await _animate_monster_recover(action)
 			"companion_attack":
 				await _animate_companion_attack(action)
+			"companion_recover":
+				await _animate_companion_recover(action)
+			"party_passive_heal":
+				await _animate_party_passive_heal(action)
 			_:
 				await _animate_single_enemy_attack(action)
 		_refresh_monster_mana_bars()
+		_refresh_ally_mana_bars()
 
 
 # 동료 한 명의 공격 연출: 최소한으로 메시지 + 데미지 팝업 + 몬스터 HP바 갱신만 한다
@@ -2025,6 +2055,48 @@ func _animate_companion_attack(action: Dictionary) -> void:
 		monster_name, _object_particle(monster_name), damage,
 	]
 	await _wait(0.35)
+
+
+# 마나가 바닥나 숨을 고른 동료의 연출. 몬스터 회복 연출(_animate_monster_recover)만큼
+# 화려할 필요는 없어 VFX 없이 메시지 + 팝업 정도로 최소한만 보여준다
+func _animate_companion_recover(action: Dictionary) -> void:
+	var companion_index: int = action["companion"]
+	var mana_gained: int = action["mana"]
+	var hp_gained: int = action["hp"]
+	var sprite := _ally_sprite_at(companion_index)
+	var name_: String = _manager.party[companion_index].display_name
+
+	_show_popup(sprite.position, "+%d MP" % mana_gained, MANA_COLOR)
+	if hp_gained > 0:
+		_show_popup(sprite.position + Vector2(0, -26), "+%d" % hp_gained, HEAL_COLOR)
+		_animate_hp_bar(_ally_hp_bars[companion_index], _party_member_hp(companion_index))
+		_message.text = tr("%s 마력을 회복했다! (체력도 %d 회복)") % [name_, hp_gained]
+	else:
+		_message.text = tr("%s 마력을 회복했다!") % name_
+	await _wait(0.5)
+
+
+# 동료 패시브(파티 전체 5턴 회복) 발동 연출: 메시지 하나 + 각자 위에 회복량 팝업만 최소한으로 보여준다
+func _animate_party_passive_heal(action: Dictionary) -> void:
+	var source_index: int = action["source"]
+	var results: Array = action["results"]
+	var source_name: String = _manager.party[source_index].display_name
+
+	_message.text = tr("%s의 패시브 발동! 파티 전체 체력/마력 회복!") % source_name
+	for result in results:
+		var i: int = result["index"]
+		var hp_healed: int = result["hp"]
+		var mana_healed: int = result["mana"]
+		var sprite := _ally_sprite_at(i)
+		if hp_healed > 0:
+			_show_popup(sprite.position, "+%d" % hp_healed, HEAL_COLOR)
+		if mana_healed > 0:
+			_show_popup(sprite.position + Vector2(0, -26), "+%d MP" % mana_healed, MANA_COLOR)
+		_animate_hp_bar(_ally_hp_bars[i], _party_member_hp(i))
+
+	_update_mana_bar()
+	_refresh_ally_mana_bars()
+	await _wait(0.6)
 
 
 # "을/를" 목적격 조사 (_subject_particle의 목적격 버전 — 받침 있으면 "을", 없으면 "를")
@@ -2072,6 +2144,14 @@ func _refresh_monster_mana_bars() -> void:
 	for monster in _manager.monsters:
 		if monster.index < _monster_mana_bars.size():
 			_monster_mana_bars[monster.index].value = monster.mana
+
+
+# 동료 마나바를 현재 값으로 맞춘다 (0번 플레이어는 _update_mana_bar()가 따로 처리하므로 제외)
+func _refresh_ally_mana_bars() -> void:
+	if _manager == null:
+		return
+	for i in range(1, _ally_mana_bars.size()):
+		_ally_mana_bars[i].value = _manager.party[i].mana
 
 
 # 몬스터 한 마리의 공격 연출
@@ -2232,6 +2312,7 @@ func _refresh_all() -> void:
 	# 직접 그려 넣기 때문에, 연출이 끝난 뒤 한 번은 실제 소유자 값으로 되돌려 놔야 어긋남이 남지 않는다
 	_refresh_monster_hp_bars()
 	_refresh_monster_mana_bars()
+	_refresh_ally_mana_bars()
 	_refresh_flee_button()
 
 
@@ -2905,12 +2986,14 @@ func _setup_sprites() -> void:
 
 # 아군 스프라이트/그림자/카드를 준비한다. 0번(플레이어)은 기존 노드를 그대로 쓰고,
 # 동료는 GameState.get_active_companions() 순서대로 플레이어 노드를 복제해 만든다.
-# 동료는 마나도 골드도 없으므로 복제된 카드에서 그 항목만 숨긴다
+# 동료는 골드가 없으므로 복제된 카드에서 그 항목만 숨긴다. 마나는 동료 데이터에 "mana"가
+# 있는 경우에만 보여준다 — 앞으로 추가될 동료가 마나가 없다면 이 조건 하나로 자연히 숨겨진다
 func _setup_allies() -> void:
 	_ally_sprites = [_player_sprite]
 	_ally_shadows = [_player_shadow]
 	_ally_card_panels = [_player_card]
 	_ally_hp_bars = [_player_hp_bar]
+	_ally_mana_bars = [_player_mana_bar]
 
 	for companion_id in GameState.get_active_companions():
 		var data: Dictionary = CompanionData.COMPANIONS[companion_id]
@@ -2928,16 +3011,26 @@ func _setup_allies() -> void:
 
 		(card.get_node("Portrait") as TextureRect).texture = frames.get_frame_texture("idle", 0)
 		(card.get_node("HPBarLabel") as Label).text = "HP: %d/%d" % [data["max_hp"], data["max_hp"]]
-		card.get_node("ManaBar").visible = false
-		card.get_node("ManaBarLabel").visible = false
 		card.get_node("GoldIcon").visible = false
 		card.get_node("GoldLabel").visible = false
 		card.modulate = Color.WHITE
+
+		var mana_bar := card.get_node("ManaBar") as ProgressBar
+		var mana_bar_label := card.get_node("ManaBarLabel") as Label
+		if data.has("mana"):
+			var max_mana: int = data["mana"]["max_mana"]
+			mana_bar.max_value = max_mana
+			mana_bar.value = max_mana
+			mana_bar_label.text = "Mana: %d/%d" % [max_mana, max_mana]
+		else:
+			mana_bar.visible = false
+			mana_bar_label.visible = false
 
 		_ally_sprites.append(sprite)
 		_ally_shadows.append(shadow)
 		_ally_card_panels.append(card)
 		_ally_hp_bars.append(card.get_node("HPBar") as ProgressBar)
+		_ally_mana_bars.append(mana_bar)
 
 
 # 노드를 복제해 같은 부모에 붙인다 (같은 씬 트리 위치 = 같은 z 순서/좌표계를 공유하도록).
