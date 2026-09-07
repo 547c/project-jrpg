@@ -23,6 +23,8 @@ signal weapon_switched(weapon: WeaponState.WeaponType)
 # (예전 단일 전투의 enemy_turn_resolved를 마리별로 쪼갠 것 — attacker_index가 누가 때렸는지,
 # target_index가 party 배열의 누가 맞았는지 알려준다. 0이면 플레이어)
 signal enemy_attack_resolved(attacker_index: int, target_index: int, damage_taken: int, dodged: bool, counter_damage: int)
+# 동료 한 명이 몬스터 한 마리를 공격한 결과 (party 배열 인덱스, target_index는 몬스터 자리 번호)
+signal companion_attack_resolved(companion_index: int, target_index: int, damage: int)
 # 마나가 바닥나 공격 대신 숨을 고른 몬스터. mana_gained/hp_gained는 실제로 회복된 양
 # (hp_gained가 0이면 이번엔 체력 회복이 안 붙은 것)
 signal monster_recovered(index: int, mana_gained: int, hp_gained: int)
@@ -40,7 +42,7 @@ const HAND_SIZE := 5
 # 있어도 지금은 플레이어만 맞는다 — 실제 값 전환은 아군 연출이 갖춰진 뒤(Phase 3-c)에 한다
 # (docs/companion_system_phase3_plan.md §3)
 const TARGET_WEIGHT_PLAYER := 2
-const TARGET_WEIGHT_COMPANION := 0
+const TARGET_WEIGHT_COMPANION := 1
 
 var deck: Deck
 var hand: Hand
@@ -573,6 +575,14 @@ func end_turn() -> void:
 	if battle_over:
 		return
 
+	_resolve_companion_turn()
+
+	# 동료 공격으로 몬스터가 전멸했으면 적 턴을 열지 않고 바로 승리 처리한다 —
+	# 안 그러면 이미 죽은 몬스터가 반격하는 모양이 된다
+	if all_monsters_defeated():
+		_finish_battle(false)
+		return
+
 	_resolve_enemy_turn()
 
 	if _is_party_wiped():
@@ -586,6 +596,23 @@ func end_turn() -> void:
 		return
 
 	_start_turn()
+
+
+# 동료 전원이 각자 한 번씩 자동으로 공격한다 (조작 없음, 쉬는 턴 없음 — Q8 확정).
+# 대상은 살아있는 몬스터 중 가중치 없이 무작위로 고른다. 몬스터가 전멸하면 남은 동료는 공격하지 않는다
+func _resolve_companion_turn() -> void:
+	for i in range(1, party.size()):
+		var companion = party[i]
+		if not companion.is_alive():
+			continue
+		var alive := alive_monsters()
+		if alive.is_empty():
+			return
+		var target: MonsterState = alive[randi() % alive.size()]
+		var dealt := target.take_damage(companion.roll_attack_damage())
+		companion_attack_resolved.emit(i, target.index, dealt)
+		if not target.is_alive():
+			monster_defeated.emit(target.index)
 
 
 # 적의 반격. 피해량 산출은 battle_scene.gd의 기존 방식(damage_min~damage_max 무작위)을 그대로 쓰고,
@@ -651,6 +678,9 @@ func _resolve_enemy_turn() -> void:
 	# 여기가 한 라운드의 끝이다 ("적 전원의 턴이 한 바퀴 돌았다"). 마리 수와 무관하게 한 번만
 	# 깎이므로, 다인전이라고 버프가 더 빨리 닳지 않는다
 	_tick_status_rounds()
+	for i in range(1, party.size()):
+		party[i].tick_round()
+		party[i].consume_passive_trigger() # 발동 판정만 확인 — 실제 효과는 Phase 4
 
 
 # 살아있는 파티원이 하나도 없는지 (몬스터 반격 도중 파티 전멸 여부를 매 마리 공격 전에 확인하는 데 쓰인다)

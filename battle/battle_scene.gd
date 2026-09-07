@@ -1016,6 +1016,7 @@ func start_with(monster_type: String, variants: Array) -> void:
 	_manager.turn_started.connect(_on_turn_started)
 	_manager.card_played.connect(_on_card_played)
 	_manager.enemy_attack_resolved.connect(_on_enemy_attack_resolved)
+	_manager.companion_attack_resolved.connect(_on_companion_attack_resolved)
 	_manager.monster_recovered.connect(_on_monster_recovered)
 	_manager.monster_defeated.connect(_on_monster_defeated)
 	_manager.player_defeated.connect(_on_player_defeated)
@@ -1143,6 +1144,16 @@ func _on_enemy_attack_resolved(attacker_index: int, target_index: int, damage_ta
 		"damage": damage_taken,
 		"dodged": dodged,
 		"counter": counter_damage,
+	})
+
+
+# 동료 한 명의 공격. 같은 버퍼에 쌓아 재생 순서를 지킨다 (동료 턴은 적 턴보다 먼저 일어난다)
+func _on_companion_attack_resolved(companion_index: int, target_index: int, damage: int) -> void:
+	_enemy_attacks.append({
+		"action": "companion_attack",
+		"companion": companion_index,
+		"target": target_index,
+		"damage": damage,
 	})
 
 
@@ -1866,11 +1877,43 @@ func _end_turn_flow() -> void:
 # 다인전에서는 살아있는 마리 수만큼 항목이 쌓여 있으므로, 공격한 순서대로 한 마리씩 재생한다
 func _animate_enemy_turn() -> void:
 	for action in _enemy_attacks:
-		if action.get("action", "attack") == "recover":
-			await _animate_monster_recover(action)
-		else:
-			await _animate_single_enemy_attack(action)
+		match action.get("action", "attack"):
+			"recover":
+				await _animate_monster_recover(action)
+			"companion_attack":
+				await _animate_companion_attack(action)
+			_:
+				await _animate_single_enemy_attack(action)
 		_refresh_monster_mana_bars()
+
+
+# 동료 한 명의 공격 연출: 최소한으로 메시지 + 데미지 팝업 + 몬스터 HP바 갱신만 한다
+# (동료가 몬스터에게 달려드는 돌진 애니메이션은 이후 폴리싱 범위)
+func _animate_companion_attack(action: Dictionary) -> void:
+	var companion_index: int = action["companion"]
+	var target_index: int = action["target"]
+	var damage: int = action["damage"]
+	var companion_name: String = _manager.party[companion_index].display_name
+	var monster_name := _monster_display_name(target_index)
+	var target_sprite := _monster_sprite_at(target_index)
+
+	_show_popup(target_sprite.position, "-%d" % damage, DAMAGE_COLOR)
+	_refresh_monster_hp_bars()
+	_message.text = tr("%s%s %s%s 공격! %d 피해!") % [
+		companion_name, _subject_particle(companion_name),
+		monster_name, _object_particle(monster_name), damage,
+	]
+	await _wait(0.35)
+
+
+# "을/를" 목적격 조사 (_subject_particle의 목적격 버전 — 받침 있으면 "을", 없으면 "를")
+func _object_particle(word: String) -> String:
+	if word.is_empty():
+		return "를"
+	var last := word.unicode_at(word.length() - 1)
+	if last < 0xAC00 or last > 0xD7A3:
+		return ""
+	return "을" if (last - 0xAC00) % 28 != 0 else "를"
 
 
 # 마나가 바닥난 몬스터가 숨을 고르는 연출: 제자리에서 마나 소용돌이가 감돌고, 체력까지 회복했다면
@@ -2045,6 +2088,13 @@ func _on_flee_pressed() -> void:
 	_player_gold_label.text = str(GameState.gold)
 
 	_message.text = tr("전투에서 도망쳤다! (골드 %d 소모)") % penalty
+
+	# 도망쳐도 동료가 입은 피해는 그대로 남는다 — CompanionState.hp는 전투 한정 값이라
+	# 여기서 GameState.companion_hp에 다시 써주지 않으면 다음 전투에서 다시 만빵으로 시작해버린다
+	for i in range(1, _manager.party.size()):
+		var companion = _manager.party[i]
+		GameState.companion_hp[companion.companion_id] = companion.hp
+
 	await _wait(0.4)
 	SceneManager.flee_battle()
 
