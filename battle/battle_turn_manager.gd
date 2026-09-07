@@ -33,6 +33,8 @@ signal companion_recovered(index: int, mana_gained: int, hp_gained: int)
 # 동료 패시브(파티 전체 회복)가 발동함. source_index는 발동시킨 동료의 party 배열 자리 번호,
 # results는 party 배열 순서대로 {"index": int, "hp": int, "mana": int} (실제 회복량, 죽은 자리는 제외)
 signal party_passive_healed(source_index: int, results: Array)
+# 동료 액티브(마력장벽 등) 사용. companion_index는 party 배열 자리 번호, mana_spent는 실제 소모량
+signal companion_active_used(companion_index: int, mana_spent: int)
 signal monster_defeated(index: int) # 마리 하나가 쓰러짐 (전투는 아직 안 끝났을 수 있음)
 # 버프/디버프가 새로 걸렸을 때 (target_index가 -1이면 플레이어 자신)
 signal status_applied(target_index: int, kind: int, magnitude: int, rounds: int)
@@ -71,6 +73,11 @@ var monster_data: Dictionary = {} # 그 종류의 스탯 표 (마리별 값은 M
 var turn_number: int = 0
 var battle_over: bool = false
 
+# 전투 시작 후 적 턴이 몇 번 완전히 끝났는지. 유서프 액티브의 "3턴 지나야 사용 가능" 1회성
+# 게이트 판정에 쓴다 (docs/companion_system_options.md §7) — turn_number는 "지금 몇 번째 턴인가"라
+# 이 용도로는 헷갈려서 별도로 둔다
+var rounds_completed: int = 0
+
 # 방금 낸 카드가 마리별로 입힌 실제 피해 (자리 번호 -> 피해량). 피해가 0인 대상은 담지 않는다.
 # 광역기는 여러 자리가 채워지고 단일 대상 카드는 한 자리만 채워지므로, 연출은 이걸 그대로 훑어
 # 몬스터마다 제 숫자를 띄우면 된다 (0 피해에 "-0"을 띄우지 않는 기존 규칙도 그대로 유지된다)
@@ -94,6 +101,10 @@ var _free_next_card: bool = false
 var _pending_defense: int = 0
 var _pending_dodge: bool = false
 var _pending_counter: int = 0 # 반격(COUNTER) 카드로 예약해둔 반격 피해량. 0이면 반격 대기 아님
+# 마력장벽(액티브) 사용 시 파티 전원에게 붙는 "다음 적 턴 피해 N% 감소". 위 셋과 같은 규약으로
+# 적 턴을 해결하면 무조건 0으로 되돌아간다 — 다만 방어/피하기/반격과 달리 "첫 공격 한 방"이
+# 아니라 그 적 턴에 오는 공격 전부에 적용된다 (비율 감소는 방어처럼 소모되는 총량이 아니라서)
+var _pending_damage_reduction_fraction: float = 0.0
 
 
 # monster_type_은 BattleData.MONSTERS의 키("ORC" 등), variants는 등장할 마리 수만큼의 시각 변종
@@ -281,6 +292,26 @@ func switch_weapon(to: WeaponState.WeaponType) -> bool:
 	if not weapon.switch_weapon(to):
 		return false
 	weapon_switched.emit(to)
+	return true
+
+
+# companion_index 자리 동료가 지금 액티브를 쓸 수 있는지 (party 배열 인덱스, 0=플레이어는 항상 false)
+func can_use_companion_active(companion_index: int) -> bool:
+	if battle_over or companion_index <= 0 or companion_index >= party.size():
+		return false
+	return party[companion_index].can_use_active(rounds_completed)
+
+
+# 동료 액티브를 실제로 발동한다: 조건을 다시 확인하고(더블클릭 등으로 두 번 들어와도 안전),
+# 마나를 소모한 뒤 파티 전체에 "다음 적 턴 피해 감소"를 건다
+func use_companion_active(companion_index: int) -> bool:
+	if not can_use_companion_active(companion_index):
+		return false
+	var companion = party[companion_index]
+	var cost: int = companion.active_mana_cost()
+	companion.spend_mana(cost)
+	_pending_damage_reduction_fraction = float(companion.data["active"]["damage_reduction_fraction"])
+	companion_active_used.emit(companion_index, cost)
 	return true
 
 
@@ -716,9 +747,11 @@ func _resolve_enemy_turn() -> void:
 	_pending_defense = 0
 	_pending_dodge = false
 	_pending_counter = 0
+	_pending_damage_reduction_fraction = 0.0
 
 	# 여기가 한 라운드의 끝이다 ("적 전원의 턴이 한 바퀴 돌았다"). 마리 수와 무관하게 한 번만
 	# 깎이므로, 다인전이라고 버프가 더 빨리 닳지 않는다
+	rounds_completed += 1
 	_tick_status_rounds()
 	for i in range(1, party.size()):
 		party[i].tick_round()
@@ -791,6 +824,10 @@ func _pick_attack_target() -> int:
 # 동료를 때리는 공격은 이 카드들을 소모하지 않고 그대로 지나간다
 func _resolve_single_attack(attacker: MonsterState, target_index: int) -> void:
 	var raw_damage := calculate_monster_attack_damage(attacker)
+	# 마력장벽의 % 감소를 먼저 적용한 뒤, 아래에서 플레이어의 고정값 방어(_pending_defense)를 뺀다 —
+	# 순서를 반대로 하면 방어가 이미 깎은 만큼에 %를 또 곱하게 돼 방어의 값어치가 뒤바뀐다
+	if _pending_damage_reduction_fraction > 0.0:
+		raw_damage = int(round(raw_damage * (1.0 - _pending_damage_reduction_fraction)))
 	var target = party[target_index]
 	var targeting_player := target_index == 0
 

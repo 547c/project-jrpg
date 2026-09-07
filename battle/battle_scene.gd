@@ -561,6 +561,12 @@ const MONSTER_MANA_BAR_RECT := Rect2(80, 27, 145, 9)
 const MONSTER_MANA_BAR_BG := Color(0.08, 0.07, 0.13, 0.85)
 const MONSTER_MANA_BAR_FILL := Color(0.45, 0.38, 0.9, 1.0)
 
+# ── 동료 액티브 버튼 (HUD 카드 안, 동료는 골드가 없어 비는 자리를 재활용) ──────────
+const ALLY_ACTIVE_BUTTON_RECT := Rect2(80, 47, 145, 20)
+const ALLY_ACTIVE_BUTTON_BG := Color(0.35, 0.28, 0.55, 1.0)
+const ALLY_ACTIVE_BUTTON_DISABLED_BG := Color(0.2, 0.19, 0.22, 0.9)
+const ALLY_ACTIVE_BADGE_SIZE := Vector2(18, 18)
+
 # ── 피격 시 화면 가장자리 붉은 물듦 ─────────────────────────────────────────
 # 화면 전체를 덮는 HitFlash와 달리 가장자리만 물들여야 해서, 가운데가 투명하고 바깥으로 갈수록
 # 붉어지는 방사형 그라디언트를 코드로 만들어 쓴다 (셰이더 없이 GradientTexture2D의 radial 채우기).
@@ -752,6 +758,10 @@ var _ally_card_panels: Array[Control] = []
 var _ally_hp_bars: Array[ProgressBar] = []
 var _ally_hp_labels: Array[Label] = []
 var _ally_mana_bars: Array[ProgressBar] = []
+# 액티브 스킬 버튼/카운트다운 배지. data["active"]가 있는 동료만 생성되고, 없는 자리는 null
+# (0번 플레이어는 액티브가 없으니 항상 null) — _refresh_active_buttons()가 null을 건너뛴다
+var _ally_active_buttons: Array[Button] = []
+var _ally_active_badges: Array[Label] = []
 var _ally_status_badges: Array[Label] = []
 # 매니저가 "쓰러졌다"고 알려준 뒤 아직 사망 연출을 재생하지 않은 자리 번호들.
 # 시그널은 매니저 안에서 동기적으로 날아오는데 연출은 카드 연출이 끝난 뒤에 이어야 해서 버퍼에 모은다
@@ -1022,6 +1032,7 @@ func start_with(monster_type: String, variants: Array) -> void:
 	_manager.companion_attack_resolved.connect(_on_companion_attack_resolved)
 	_manager.companion_recovered.connect(_on_companion_recovered)
 	_manager.party_passive_healed.connect(_on_party_passive_healed)
+	_manager.companion_active_used.connect(_on_companion_active_used)
 	_manager.monster_recovered.connect(_on_monster_recovered)
 	_manager.monster_defeated.connect(_on_monster_defeated)
 	_manager.player_defeated.connect(_on_player_defeated)
@@ -1041,6 +1052,8 @@ func start_with(monster_type: String, variants: Array) -> void:
 		if i < _ally_mana_bars.size():
 			_ally_mana_bars[i].max_value = companion.max_mana
 			_ally_mana_bars[i].value = companion.mana
+
+	_refresh_active_buttons()
 
 	_player_gold_label.text = str(GameState.gold)
 	_monster_gold_label.text = "%d~%d" % [_monster_data["gold_min"], _monster_data["gold_max"]]
@@ -2166,6 +2179,42 @@ func _update_ally_hp_text() -> void:
 		_ally_hp_labels[i].text = "HP: %d/%d" % [companion.hp, companion.max_hp]
 
 
+# 동료 액티브 버튼/카운트다운 배지를 지금 상태에 맞춰 갱신한다:
+# 게이트 턴 전 = 회색 + 카운트다운 배지, 게이트는 지났지만 마나 부족 = 회색(배지 없음),
+# 조건 충족 = 클릭 가능
+func _refresh_active_buttons() -> void:
+	if _manager == null:
+		return
+	for i in range(1, _ally_active_buttons.size()):
+		var button := _ally_active_buttons[i]
+		if button == null:
+			continue
+		var companion = _manager.party[i]
+		var badge := _ally_active_badges[i]
+		var turns_left: int = int(companion.data["active"]["unlock_turn"]) - _manager.rounds_completed
+		if turns_left > 0:
+			badge.text = str(turns_left)
+			badge.visible = true
+			button.disabled = true
+		else:
+			badge.visible = false
+			button.disabled = not _manager.can_use_companion_active(i)
+
+
+func _on_active_button_pressed(party_index: int) -> void:
+	if not _is_interactive() or _manager == null:
+		return
+	_manager.use_companion_active(party_index)
+
+
+# 마력장벽 등 동료 액티브 사용 결과. 카드 연출만큼 화려할 필요는 없어 메시지 + 상태 갱신 정도로 그친다
+func _on_companion_active_used(companion_index: int, _mana_spent: int) -> void:
+	var name_: String = _manager.party[companion_index].display_name
+	_message.text = tr("%s%s 마력장벽을 펼쳤다!") % [name_, _subject_particle(name_)]
+	_refresh_ally_mana_bars()
+	_refresh_active_buttons()
+
+
 # 몬스터 한 마리의 공격 연출
 func _animate_single_enemy_attack(attack: Dictionary) -> void:
 	var attacker_index: int = attack["attacker"]
@@ -2326,6 +2375,7 @@ func _refresh_all() -> void:
 	_refresh_monster_mana_bars()
 	_refresh_ally_mana_bars()
 	_update_ally_hp_text()
+	_refresh_active_buttons()
 	_refresh_flee_button()
 
 
@@ -2759,8 +2809,12 @@ func _set_inputs_enabled(enabled: bool) -> void:
 	if enabled:
 		_refresh_hand_buttons()
 		_refresh_flee_button()
+		_refresh_active_buttons()
 	else:
 		_flee_button.disabled = true
+		for btn in _ally_active_buttons:
+			if btn != null:
+				btn.disabled = true
 
 
 # 현재 HP가 FLEE_HP_THRESHOLD 미만이면 도망가기 버튼을 비활성(회색) 처리
@@ -3008,8 +3062,11 @@ func _setup_allies() -> void:
 	_ally_hp_bars = [_player_hp_bar]
 	_ally_hp_labels = [_player_hp_bar_label]
 	_ally_mana_bars = [_player_mana_bar]
+	_ally_active_buttons = [null]
+	_ally_active_badges = [null]
 
 	for companion_id in GameState.get_active_companions():
+		var party_index := _ally_hp_bars.size()
 		var data: Dictionary = CompanionData.COMPANIONS[companion_id]
 		var sprite := _clone_sibling(_player_sprite) as AnimatedSprite2D
 		var shadow := _clone_sibling(_player_shadow) as Polygon2D
@@ -3041,12 +3098,68 @@ func _setup_allies() -> void:
 			mana_bar.visible = false
 			mana_bar_label.visible = false
 
+		var active_button: Button = null
+		var active_badge: Label = null
+		if data.has("active"):
+			active_button = _make_active_button(card, data["active"])
+			active_button.pressed.connect(_on_active_button_pressed.bind(party_index))
+			active_badge = _make_active_countdown_badge(card)
+
 		_ally_sprites.append(sprite)
 		_ally_shadows.append(shadow)
 		_ally_card_panels.append(card)
+		_ally_active_buttons.append(active_button)
+		_ally_active_badges.append(active_badge)
 		_ally_hp_bars.append(card.get_node("HPBar") as ProgressBar)
 		_ally_hp_labels.append(hp_label)
 		_ally_mana_bars.append(mana_bar)
+
+
+# 동료 카드에 액티브 버튼을 만들어 붙인다. 동료는 골드가 없어 그 자리(GoldIcon/GoldLabel)가
+# 비므로 재활용한다. 활성/비활성 색만 다르고 나머지는 _refresh_active_buttons()가 매 턴 갱신한다
+func _make_active_button(card: Control, active_data: Dictionary) -> Button:
+	var bg := StyleBoxFlat.new()
+	bg.bg_color = ALLY_ACTIVE_BUTTON_BG
+	bg.set_corner_radius_all(3)
+	var disabled_bg := StyleBoxFlat.new()
+	disabled_bg.bg_color = ALLY_ACTIVE_BUTTON_DISABLED_BG
+	disabled_bg.set_corner_radius_all(3)
+
+	var button := Button.new()
+	button.name = "ActiveButton"
+	button.position = ALLY_ACTIVE_BUTTON_RECT.position
+	button.size = ALLY_ACTIVE_BUTTON_RECT.size
+	button.text = tr(active_data["name"])
+	button.tooltip_text = tr(active_data["description"])
+	button.disabled = true
+	button.add_theme_font_size_override("font_size", 12)
+	button.add_theme_color_override("font_color", Color.WHITE)
+	button.add_theme_stylebox_override("normal", bg)
+	button.add_theme_stylebox_override("hover", bg)
+	button.add_theme_stylebox_override("pressed", bg)
+	button.add_theme_stylebox_override("disabled", disabled_bg)
+	card.add_child(button)
+	return button
+
+
+# 액티브 버튼 위에 겹쳐 띄우는 "사용 가능까지 남은 턴 수" 배지. _refresh_active_buttons()가
+# 게이트를 통과하기 전까지만 숫자를 채워 보여주고, 통과하면 숨긴다
+func _make_active_countdown_badge(card: Control) -> Label:
+	var badge := Label.new()
+	badge.name = "ActiveCountdownBadge"
+	badge.visible = false
+	badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	badge.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	badge.add_theme_font_size_override("font_size", 12)
+	badge.add_theme_color_override("font_color", Color.WHITE)
+	badge.add_theme_color_override("font_outline_color", Color.BLACK)
+	badge.add_theme_constant_override("outline_size", 3)
+	var rect := ALLY_ACTIVE_BUTTON_RECT
+	badge.position = Vector2(rect.end.x - ALLY_ACTIVE_BADGE_SIZE.x, rect.position.y - ALLY_ACTIVE_BADGE_SIZE.y * 0.5)
+	badge.size = ALLY_ACTIVE_BADGE_SIZE
+	card.add_child(badge)
+	return badge
 
 
 # 노드를 복제해 같은 부모에 붙인다 (같은 씬 트리 위치 = 같은 z 순서/좌표계를 공유하도록).

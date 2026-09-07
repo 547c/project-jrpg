@@ -34,9 +34,13 @@ const COMPANIONS: Dictionary = {
 			"amount": 0, # 플레이스홀더, Phase 4에서 확정
 		},
 		"active": {
-			"cooldown": 3, # 플레이스홀더, Phase 4에서 확정
-			"kind": "MANA_BARRIER", # 다음 턴 받는 데미지 방어/경감
-			"amount": 0, # 플레이스홀더, Phase 4에서 확정
+			"name": "마력장벽",
+			"description": "파티 전체 다음 턴 피해 30% 감소 (마나 20% 소모)",
+			# 전투 시작 후 이 라운드 수가 지나야 사용 가능 — 반복 쿨다운이 아니라 1회성 게이트,
+			# 그 뒤로는 마나만 있으면 계속 사용 가능 (docs/companion_system_options.md §7)
+			"unlock_turn": 3,
+			"mana_cost_fraction": 0.2, # 사용 시 소모하는 마나 비율 — §7
+			"damage_reduction_fraction": 0.3, # 파티 전원에게 붙는 "다음 적 턴 피해 감소" 비율 — §7
 		},
 	},
 }

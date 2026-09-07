@@ -22,7 +22,6 @@ var status: StatusEffects
 var max_mana: int = 0
 var mana: int = 0
 
-var active_cooldown: int = 0
 var passive_counter: int = 0
 
 
@@ -100,18 +99,28 @@ func recover() -> Dictionary:
 	return {"mana": mana - mana_before, "hp": healed}
 
 
-func can_use_active() -> bool:
-	return is_alive() and active_cooldown <= 0
+# 액티브 사용 시 소모할 마나량 (max_mana의 mana_cost_fraction 비율, 반올림)
+func active_mana_cost() -> int:
+	return int(round(max_mana * float(data["active"]["mana_cost_fraction"])))
 
 
-func start_active_cooldown() -> void:
-	active_cooldown = data["active"]["cooldown"]
+# 액티브를 지금 쓸 수 있는지 — 전투 시작 후 unlock_turn 라운드가 지났고(1회성 게이트, 그 뒤로는
+# 쿨다운 없음), 비용을 치를 마나가 남아 있어야 한다 (docs/companion_system_options.md §7)
+func can_use_active(rounds_completed: int) -> bool:
+	return is_alive() and rounds_completed >= int(data["active"]["unlock_turn"]) and mana >= active_mana_cost()
+
+
+func spend_mana(amount: int) -> int:
+	if amount <= 0:
+		return 0
+	var before := mana
+	mana = max(0, mana - amount)
+	return before - mana
 
 
 # 라운드 하나가 끝날 때 호출 (BattleTurnManager._resolve_enemy_turn과 같은 주기).
-# 쿨다운을 줄이고 패시브 카운터를 올린다 — 실제 발동 판정은 consume_passive_trigger()가 한다
+# 패시브 카운터를 올린다 — 실제 발동 판정은 consume_passive_trigger()가 한다
 func tick_round() -> void:
-	active_cooldown = max(0, active_cooldown - 1)
 	passive_counter += 1
 
 
