@@ -15,7 +15,7 @@ const UiTranslator := preload("res://systems/ui_translator.gd")
 #
 # HUD/일시정지 억제를 위해 "battle_box" 그룹에 등록한다.
 
-const PLAYER_SPRITE_PATH := "res://assets/graphics/Pixel Crawler - Free Pack/Entities/Characters/Body_A/Animations/Idle_Base/Idle_Up-Sheet.png"
+const PLAYER_SPRITE_PATH := "res://assets/graphics/Pixel Crawler - Free Pack/Entities/Characters/Body_A/Animations/Idle_Base/Idle_Side-Sheet.png"
 const PLAYER_FRAME_SIZE := 64
 const FRAME_COUNT := 4
 const IDLE_FPS := 4.0
@@ -548,6 +548,11 @@ const MONSTER_CARD_MARGIN := 24.0 # 카드 열과 몬스터 스프라이트 사�
 # 쓰러진 몬스터의 HUD 카드에 씌우는 색조 (지우지 않고 흐리게 남겨 자리 번호가 계속 맞게)
 const DEFEATED_CARD_MODULATE := Color(0.45, 0.45, 0.5, 0.75)
 
+# 동료는 플레이어보다 한 걸음씩 더 뒤(왼쪽 위)로 쌓인다 — 몬스터가 오른쪽 한계에서 왼쪽으로
+# 쌓이는 것의 좌우 대칭. 카드는 PlayerCard(높이 75) 바로 아래에 MonsterCard와 같은 간격으로 쌓는다
+const ALLY_OFFSET_STEP := Vector2(-90.0, -40.0)
+const ALLY_CARD_TOP := 97.0
+
 # ── 몬스터 마나바 (HUD 카드 안, HP바 바로 아래) ──────────────────────────────
 # HP바처럼 정교할 필요는 없고 "줄었다/찼다"만 읽히면 되므로, .tscn을 고치는 대신 코드로 만들어
 # 붙인다 (0번 카드에 붙여두면 나머지 카드는 duplicate()로 그대로 물려받는다).
@@ -695,6 +700,7 @@ const BANNER_BUTTON_FEEDBACK_DURATION := 0.08
 @onready var _player_mana_bar: ProgressBar = $View/HUD/PlayerCard/ManaBar
 @onready var _player_mana_bar_label: Label = $View/HUD/PlayerCard/ManaBarLabel
 @onready var _player_gold_label: Label = $View/HUD/PlayerCard/GoldLabel
+@onready var _player_card: Control = $View/HUD/PlayerCard
 # 아래 MonsterCard 계열 참조는 전부 "0번 몬스터"의 것이다. 마리 수만큼 복제한 나머지 카드는
 # _monster_card_panels/_monster_hp_bars 배열로 접근한다 (0번은 이 노드들과 같은 객체)
 @onready var _monster_card: Control = $View/HUD/MonsterCard
@@ -737,6 +743,14 @@ var _monster_mana_bars: Array[ProgressBar] = []
 var _edge_flash: TextureRect
 # 마리별 idle 프레임 안에서 실제 그림이 시작되는 y (저항 배지를 머리 위에 붙일 때 쓰는 보정값)
 var _monster_art_tops: Array[float] = []
+
+# 아군 진영. index는 party 배열과 1:1 대응(0=플레이어). 0번은 기존 노드를 그대로 담고,
+# 1번부터는 동료를 _clone_sibling()으로 복제한다 — 몬스터 쪽과 같은 방식
+var _ally_sprites: Array[AnimatedSprite2D] = []
+var _ally_shadows: Array[Polygon2D] = []
+var _ally_card_panels: Array[Control] = []
+var _ally_hp_bars: Array[ProgressBar] = []
+var _ally_status_badges: Array[Label] = []
 # 매니저가 "쓰러졌다"고 알려준 뒤 아직 사망 연출을 재생하지 않은 자리 번호들.
 # 시그널은 매니저 안에서 동기적으로 날아오는데 연출은 카드 연출이 끝난 뒤에 이어야 해서 버퍼에 모은다
 var _pending_deaths: Array[int] = []
@@ -995,6 +1009,7 @@ func start_with(monster_type: String, variants: Array) -> void:
 	MusicManager.play("Battle 1")
 
 	_setup_sprites()
+	_setup_allies()
 	_layout_actors()
 
 	_manager = BattleTurnManager.new(monster_type, _variants, StarterDeck.build())
@@ -1012,6 +1027,11 @@ func start_with(monster_type: String, variants: Array) -> void:
 	_refresh_monster_mana_bars()
 	_player_hp_bar.max_value = GameState.get_flag("player_max_hp")
 	_player_hp_bar.value = GameState.get_flag("player_hp")
+
+	for i in range(1, _ally_hp_bars.size()):
+		var companion = _manager.party[i]
+		_ally_hp_bars[i].max_value = companion.max_hp
+		_ally_hp_bars[i].value = companion.hp
 
 	_player_gold_label.text = str(GameState.gold)
 	_monster_gold_label.text = "%d~%d" % [_monster_data["gold_min"], _monster_data["gold_max"]]
@@ -2703,6 +2723,43 @@ func _setup_sprites() -> void:
 		_status_badges.append(_make_status_badge())
 
 
+# 아군 스프라이트/그림자/카드를 준비한다. 0번(플레이어)은 기존 노드를 그대로 쓰고,
+# 동료는 GameState.get_active_companions() 순서대로 플레이어 노드를 복제해 만든다.
+# 동료는 마나도 골드도 없으므로 복제된 카드에서 그 항목만 숨긴다
+func _setup_allies() -> void:
+	_ally_sprites = [_player_sprite]
+	_ally_shadows = [_player_shadow]
+	_ally_card_panels = [_player_card]
+	_ally_hp_bars = [_player_hp_bar]
+
+	for companion_id in GameState.get_active_companions():
+		var data: Dictionary = CompanionData.COMPANIONS[companion_id]
+		var sprite := _clone_sibling(_player_sprite) as AnimatedSprite2D
+		var shadow := _clone_sibling(_player_shadow) as Polygon2D
+		var card := _clone_sibling(_player_card) as Control
+
+		var frames: SpriteFrames = data["battle_sprite_frames"]
+		sprite.sprite_frames = frames
+		sprite.scale = Vector2.ONE * float(data["battle_scale"])
+		sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		sprite.offset = Vector2.ZERO
+		sprite.modulate = Color.WHITE
+		sprite.play("idle")
+
+		(card.get_node("Portrait") as TextureRect).texture = frames.get_frame_texture("idle", 0)
+		(card.get_node("HPBarLabel") as Label).text = "HP: %d/%d" % [data["max_hp"], data["max_hp"]]
+		card.get_node("ManaBar").visible = false
+		card.get_node("ManaBarLabel").visible = false
+		card.get_node("GoldIcon").visible = false
+		card.get_node("GoldLabel").visible = false
+		card.modulate = Color.WHITE
+
+		_ally_sprites.append(sprite)
+		_ally_shadows.append(shadow)
+		_ally_card_panels.append(card)
+		_ally_hp_bars.append(card.get_node("HPBar") as ProgressBar)
+
+
 # 노드를 복제해 같은 부모에 붙인다 (같은 씬 트리 위치 = 같은 z 순서/좌표계를 공유하도록).
 # 마리 수가 늘어난 만큼만 호출되므로 0번 원본은 그대로 남는다
 func _clone_sibling(source: Node) -> Node:
@@ -2829,15 +2886,35 @@ func _layout_actors() -> void:
 	# 가리지 않도록 배우를 위쪽으로 배치한다. 나무 판자 배경이 사라져 UI가 배경 위에 떠 있으므로,
 	# 겹치면 바로 티가 난다
 	var vp := get_viewport().get_visible_rect().size
-	_player_sprite.position = Vector2(vp.x * 0.22, vp.y * 0.40)
+	_layout_allies(vp)
+	_layout_monsters(vp)
+
+
+# 아군을 배치한다. 0번(플레이어)은 기존 고정 위치를 그대로 쓰고, 동료는 몬스터 배치의 좌우
+# 대칭 개념으로 플레이어보다 한 걸음씩 더 뒤(왼쪽 위)에 세운다. 발 위치는 CharacterShadow의
+# 기존 측정 로직을 그대로 재사용한다 (동료마다 프레임 여백이 달라 손으로 잰 상수를 못 씀)
+func _layout_allies(vp: Vector2) -> void:
+	_ally_sprites[0].position = Vector2(vp.x * 0.22, vp.y * 0.40)
 
 	# 그림자는 "프레임 아래쪽"이 아니라 실제로 잰 발 위치에 맞춘다 (PLAYER_FOOT_FROM_CENTER 주석 참고).
 	# 크기도 캐릭터 실제 폭에 비례시켜, 스케일을 바꿔도 그림자가 따로 놀지 않게 한다
-	var player_foot := _player_sprite.position + Vector2(0, PLAYER_FOOT_FROM_CENTER * PLAYER_SCALE)
+	var player_foot := _ally_sprites[0].position + Vector2(0, PLAYER_FOOT_FROM_CENTER * PLAYER_SCALE)
 	var player_shadow_rx := PLAYER_BODY_WIDTH * PLAYER_SCALE * 0.62
-	_setup_shadow(_player_shadow, player_foot, player_shadow_rx, player_shadow_rx * 0.3)
+	_setup_shadow(_ally_shadows[0], player_foot, player_shadow_rx, player_shadow_rx * 0.3)
 
-	_layout_monsters(vp)
+	for i in range(1, _ally_sprites.size()):
+		var sprite := _ally_sprites[i]
+		sprite.position = _ally_sprites[0].position + ALLY_OFFSET_STEP * i
+
+		var art := CharacterShadow._measure_art(sprite)
+		if art.size.x > 0.0:
+			var foot := Vector2(art.get_center().x, art.end.y)
+			var shadow_rx := art.size.x * 0.62
+			_setup_shadow(_ally_shadows[i], foot, shadow_rx, shadow_rx * 0.3)
+
+		var card := _ally_card_panels[i]
+		card.offset_top = ALLY_CARD_TOP + (i - 1) * (MONSTER_CARD_HEIGHT + MONSTER_CARD_GAP)
+		card.offset_bottom = card.offset_top + MONSTER_CARD_HEIGHT
 
 
 # 몬스터들을 오른쪽에 가로로 나란히 세우고, 각자의 그림자/저항배지/HUD 카드를 그 자리에 맞춘다.
@@ -2900,6 +2977,14 @@ func _monster_sprite_at(index: int) -> AnimatedSprite2D:
 	if index < 0 or index >= _monster_sprites.size():
 		return _monster_sprite
 	return _monster_sprites[index]
+
+
+# index 자리의 아군 스프라이트 (party 배열 인덱스, 0=플레이어). 범위를 벗어나면 플레이어로 떨어뜨린다.
+# 아직 어디서도 호출되지 않는다 — 몬스터 공격을 실제로 여기로 리다이렉트하는 건 3-d-2 범위
+func _ally_sprite_at(index: int) -> AnimatedSprite2D:
+	if index < 0 or index >= _ally_sprites.size():
+		return _player_sprite
+	return _ally_sprites[index]
 
 
 # ── 마리별 조회 헬퍼 ────────────────────────────────────────────────────────
