@@ -15,6 +15,12 @@ const RUN_STRENGTH := 0.5 # 0.35는 거의 안 느껴진다는 피드백을 받�
 var _tween: Tween
 var _running: bool = false
 
+# 두 출처(플레이어/동료)가 각자 달리기 여부를 독립적으로 알려줄 수 있어, 실제 효과는 둘 중
+# 하나라도 켜져 있으면(OR) 켜진다 — 동료가 플레이어를 따라잡느라 빠르게 움직일 때도 같은
+# 화면 효과를 쓰기 위함 (npc/companion_follower.gd)
+var _player_running: bool = false
+var _companion_running: bool = false
+
 
 func _ready() -> void:
 	_rect.material.set_shader_parameter("strength", 0.0)
@@ -24,6 +30,18 @@ func _ready() -> void:
 # 달리기 시작/종료에 맞춰 강도를 서서히 올리고/내린다. 매 프레임 부르지 말고
 # "달리는 중이냐"가 실제로 바뀐 순간에만 호출할 것 (player.gd가 그렇게 쓴다)
 func set_running(running: bool) -> void:
+	_player_running = running
+	_refresh()
+
+
+# player.gd의 set_running()과 같은 역할이지만 동료 쪽 출처용
+func set_companion_running(running: bool) -> void:
+	_companion_running = running
+	_refresh()
+
+
+func _refresh() -> void:
+	var running := _player_running or _companion_running
 	if running == _running:
 		return
 	_running = running

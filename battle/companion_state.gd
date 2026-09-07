@@ -7,6 +7,8 @@ const CompanionData = preload("res://battle/companion_data.gd")
 # 뺐다 — 근거는 docs/companion_system_backend_plan.md §2. 마나 리듬은 Phase 4에서 액티브 스킬
 # 비용을 위해 다시 들여왔다 (docs/companion_system_options.md §7).
 # HP는 전투 사이에도 유지되는 영속 값이라(§8 Q1), 생성 시 GameState.companion_hp에서 이어받는다.
+# 마나도 Phase 4c부터 같은 방식(GameState.companion_mana)으로 이어받는다 — 안 그러면 모닥불로
+# 채워둔 마나가 다음 전투 시작과 동시에 만빵으로 리셋돼 회복이 의미가 없어진다.
 
 var index: int = 0
 var companion_id: String = ""
@@ -32,7 +34,7 @@ func _init(index_: int, companion_id_: String) -> void:
 	max_hp = data["max_hp"]
 	hp = clampi(int(GameState.companion_hp.get(companion_id_, max_hp)), 0, max_hp)
 	max_mana = int(data["mana"]["max_mana"])
-	mana = max_mana
+	mana = clampi(int(GameState.companion_mana.get(companion_id_, max_mana)), 0, max_mana)
 	status = StatusEffects.new()
 	display_name = tr(data["name"])
 

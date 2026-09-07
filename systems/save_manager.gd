@@ -44,6 +44,7 @@ func save_game(slot: int) -> bool:
 		"active_sub_quest": GameState.active_sub_quest,
 		"active_companions": GameState.active_companions,
 		"companion_hp": GameState.companion_hp,
+		"companion_mana": GameState.companion_mana,
 		# --- 슬롯 목록 미리보기용 (복원엔 안 쓰임) ---
 		"objective_text": GameState.get_objective_text(),
 		"progress": GameState.get_flag("progress"),
@@ -82,7 +83,7 @@ func load_game(slot: int) -> bool:
 	# 검사해 걸러내기 때문. 덱 구성 이전 세이브에는 이 키가 없고, 그때는 빈 덱 = 자동 구성이 된다
 	GameState.restore_battle_deck(data.get("battle_deck", []))
 	GameState.restore_sub_quests(data.get("bounty_board", []), data.get("active_sub_quest", {}))
-	GameState.restore_companions(data.get("active_companions", []), data.get("companion_hp", {}))
+	GameState.restore_companions(data.get("active_companions", []), data.get("companion_hp", {}), data.get("companion_mana", {}))
 
 	var position := _dict_to_vector2(data.get("player_position", {}))
 	SceneManager.ensure_player_exists()

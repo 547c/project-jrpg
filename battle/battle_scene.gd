@@ -2351,11 +2351,12 @@ func _on_flee_pressed() -> void:
 
 	_message.text = tr("전투에서 도망쳤다! (골드 %d 소모)") % penalty
 
-	# 도망쳐도 동료가 입은 피해는 그대로 남는다 — CompanionState.hp는 전투 한정 값이라
-	# 여기서 GameState.companion_hp에 다시 써주지 않으면 다음 전투에서 다시 만빵으로 시작해버린다
+	# 도망쳐도 동료가 입은 피해/소모한 마나는 그대로 남는다 — CompanionState는 전투 한정 값이라
+	# 여기서 GameState에 다시 써주지 않으면 다음 전투에서 다시 만빵으로 시작해버린다
 	for i in range(1, _manager.party.size()):
 		var companion = _manager.party[i]
 		GameState.companion_hp[companion.companion_id] = companion.hp
+		GameState.companion_mana[companion.companion_id] = companion.mana
 
 	await _wait(0.4)
 	SceneManager.flee_battle()
@@ -2914,13 +2915,15 @@ func _finish_victory() -> void:
 	_update_mana_bar()
 
 	# 동료도 플레이어와 같은 비율로 회복 (다운 상태였어도 최소 1은 보장) — Phase 1의 companion_hp가
-	# 전투 사이에도 유지되는 영속값이라, 여기서 바로 GameState에 다시 써줘야 다음 전투에 반영된다
+	# 전투 사이에도 유지되는 영속값이라, 여기서 바로 GameState에 다시 써줘야 다음 전투에 반영된다.
+	# 마나는 승리 보너스로 회복시키진 않지만(그건 4c 범위 밖), 전투 중 소모/회복된 값은 그대로 이어가야 한다
 	for i in range(1, _manager.party.size()):
 		var companion = _manager.party[i]
 		companion.heal(int(round(companion.max_hp * VICTORY_HEAL_FRACTION)))
 		if companion.hp <= 0:
 			companion.hp = 1
 		GameState.companion_hp[companion.companion_id] = companion.hp
+		GameState.companion_mana[companion.companion_id] = companion.mana
 
 	var defeated_label: String = tr(_monster_data["name"])
 	if defeated_count > 1:

@@ -95,6 +95,10 @@ var active_companions: Array = []
 # 동료별 잔여 HP (companion_id -> hp). 플레이어처럼 전투 사이에도 유지되는 영속 값이다
 var companion_hp: Dictionary = {}
 
+# 동료별 잔여 마나 (companion_id -> mana). companion_hp와 완전히 같은 패턴 —
+# 없으면 모닥불 회복(Phase 4c)이 의미가 없어진다(매 전투 시작 시 마나가 그냥 만빵으로 리셋되므로)
+var companion_mana: Dictionary = {}
+
 # --- 엔딩 도감(영구 기록) ---
 # 지금까지 도달한 엔딩 id 모음. 슬롯 세이브와 성격이 다른 "계정 단위 영구 기록"이라
 # SaveManager의 슬롯 파일이 아니라 전용 파일(ENDING_RECORDS_PATH)에 따로 저장하고,
@@ -572,6 +576,8 @@ func recruit_companion(companion_id: String) -> void:
 		active_companions.append(companion_id)
 	if not companion_hp.has(companion_id):
 		companion_hp[companion_id] = CompanionData.COMPANIONS[companion_id]["max_hp"]
+	if not companion_mana.has(companion_id):
+		companion_mana[companion_id] = CompanionData.COMPANIONS[companion_id]["mana"]["max_mana"]
 	companions_changed.emit()
 
 
@@ -583,23 +589,28 @@ func get_active_companions() -> Array:
 	return active_companions.duplicate()
 
 
-# 세이브 복원: active_companions를 먼저 확정한 뒤, 그 목록에 있는 동료의 HP만 남긴다(파티에
-# 없는 id는 버림). 카탈로그의 max_hp가 나중에 바뀌어도 어긋나지 않도록 그 값으로 clamp한다
-func restore_companions(list: Array, hp_data: Dictionary) -> void:
+# 세이브 복원: active_companions를 먼저 확정한 뒤, 그 목록에 있는 동료의 HP/마나만 남긴다(파티에
+# 없는 id는 버림). 카탈로그의 max_hp/max_mana가 나중에 바뀌어도 어긋나지 않도록 그 값으로 clamp한다
+func restore_companions(list: Array, hp_data: Dictionary, mana_data: Dictionary = {}) -> void:
 	active_companions = list.duplicate()
 	companion_hp.clear()
+	companion_mana.clear()
 	for companion_id in active_companions:
 		if not CompanionData.COMPANIONS.has(companion_id):
 			continue
 		var max_hp: int = CompanionData.COMPANIONS[companion_id]["max_hp"]
 		var hp: int = int(hp_data.get(companion_id, max_hp))
 		companion_hp[companion_id] = clampi(hp, 0, max_hp)
+		var max_mana: int = CompanionData.COMPANIONS[companion_id]["mana"]["max_mana"]
+		var mana: int = int(mana_data.get(companion_id, max_mana))
+		companion_mana[companion_id] = clampi(mana, 0, max_mana)
 	companions_changed.emit()
 
 
 func reset_companions() -> void:
 	active_companions.clear()
 	companion_hp.clear()
+	companion_mana.clear()
 	companions_changed.emit()
 
 

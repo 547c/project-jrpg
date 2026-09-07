@@ -2,6 +2,7 @@ class_name Campfire
 extends Area2D
 
 const UiTranslator := preload("res://systems/ui_translator.gd")
+const CompanionData := preload("res://battle/companion_data.gd")
 
 # NPC(npc.gd)와 동일한 상호작용 패턴: 범위 안에서 [E]를 누르면 DialogueBox로 쉬어갈지 묻는다.
 # "예"를 끝까지 확인(닫기)하면 체력을 모두 회복한다.
@@ -126,7 +127,18 @@ func _start_dialogue() -> void:
 func _on_dialogue_ended(last_node_id: String) -> void:
 	if last_node_id == "campfire_rest":
 		GameState.heal_player_full()
+		_rest_companions()
 		_play_heal_effect()
 
 	if _player_in_range:
 		_interact_prompt.show()
+
+
+# 살아있는 동료 전원의 체력/마나를 최대치로 채운다 (Phase 1 Q3, docs/companion_system_options.md §7).
+# 쓰러진 동료(HP 0)는 모닥불로 부활하는 기능이 스펙에 없어 그대로 둔다
+func _rest_companions() -> void:
+	for companion_id in GameState.get_active_companions():
+		if int(GameState.companion_hp.get(companion_id, 0)) <= 0:
+			continue
+		GameState.companion_hp[companion_id] = CompanionData.COMPANIONS[companion_id]["max_hp"]
+		GameState.companion_mana[companion_id] = CompanionData.COMPANIONS[companion_id]["mana"]["max_mana"]
