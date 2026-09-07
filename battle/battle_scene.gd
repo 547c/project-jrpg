@@ -1915,31 +1915,33 @@ func _animate_single_enemy_attack(attack: Dictionary) -> void:
 	var attacker_index: int = attack["attacker"]
 	var attacker_sprite := _monster_sprite_at(attacker_index)
 	var attacker_name := _monster_display_name(attacker_index)
+	var target_index: int = attack["target"]
+	var target_sprite := _ally_sprite_at(target_index)
 
 	# 달려들었다가 → 결과 연출 → 제자리로. 회피/방어/반격으로 막힌 경우에도 "달려들긴 했다"는
 	# 그림이 남아야 해서, 결과와 무관하게 돌진과 복귀는 항상 일어난다
-	var charge_origin := await _enemy_charge(attacker_sprite, attacker_index)
-	await _animate_enemy_attack_result(attack, attacker_sprite, attacker_name)
+	var charge_origin := await _enemy_charge(attacker_sprite, attacker_index, target_sprite)
+	await _animate_enemy_attack_result(attack, attacker_sprite, attacker_name, target_index, target_sprite)
 	_enemy_return(attacker_sprite, charge_origin)
 
 
-# 몬스터가 플레이어 코앞까지 달려든다. 잔상은 이동과 나란히 재생돼야 궤적처럼 보이므로 await 없이 던진다.
-# 출발 위치를 돌려줘 호출부가 나중에 정확히 그 자리로 되돌릴 수 있게 한다
-func _enemy_charge(sprite: AnimatedSprite2D, index: int) -> Vector2:
+# 몬스터가 target(피격 대상)의 코앞까지 달려든다. 잔상은 이동과 나란히 재생돼야 궤적처럼 보이므로
+# await 없이 던진다. 출발 위치를 돌려줘 호출부가 나중에 정확히 그 자리로 되돌릴 수 있게 한다
+func _enemy_charge(sprite: AnimatedSprite2D, index: int, target: AnimatedSprite2D) -> Vector2:
 	var start := sprite.position
-	var to_player := _player_sprite.position - start
-	var distance := to_player.length()
+	var to_target := target.position - start
+	var distance := to_target.length()
 	if distance < 1.0:
 		return start
 
-	var direction := to_player / distance
-	var player_half_width := PLAYER_BODY_WIDTH * PLAYER_SCALE * 0.5
-	var stop_distance: float = clamp(distance - _monster_half_width(index) - player_half_width - ENEMY_CHARGE_GAP, 0.0, distance)
-	var target := start + direction * stop_distance
+	var direction := to_target / distance
+	var target_half_width := CharacterShadow._measure_art(target).size.x * 0.5
+	var stop_distance: float = clamp(distance - _monster_half_width(index) - target_half_width - ENEMY_CHARGE_GAP, 0.0, distance)
+	var target_pos := start + direction * stop_distance
 
-	_spawn_dash_afterimages(sprite, start, target, ENEMY_CHARGE_TINT)
+	_spawn_dash_afterimages(sprite, start, target_pos, ENEMY_CHARGE_TINT)
 	var tween := create_tween()
-	tween.tween_property(sprite, "position", target, ENEMY_CHARGE_IN_DURATION)
+	tween.tween_property(sprite, "position", target_pos, ENEMY_CHARGE_IN_DURATION)
 	await tween.finished
 	return start
 
@@ -1952,12 +1954,12 @@ func _enemy_return(sprite: AnimatedSprite2D, origin: Vector2) -> void:
 
 # 돌진이 닿은 뒤의 결과 연출 (반격/회피/완전방어/피격 중 하나).
 # 돌진·복귀와 분리해 둬서, 어떤 결과로 갈라지든 앞뒤 동작은 한 곳에서만 관리된다
-func _animate_enemy_attack_result(attack: Dictionary, attacker_sprite: AnimatedSprite2D, attacker_name: String) -> void:
+func _animate_enemy_attack_result(attack: Dictionary, attacker_sprite: AnimatedSprite2D, attacker_name: String, target_index: int, target_sprite: AnimatedSprite2D) -> void:
 	# 반격: 공격을 받아넘긴 뒤 곧바로 그 몬스터를 때린다. 피해 적용은 매니저가 이미 끝냈으므로
-	# 여기서는 적 HP바/숫자를 그 결과에 맞춰 따라가게만 한다 (플레이어는 피해를 안 받는다)
+	# 여기서는 적 HP바/숫자를 그 결과에 맞춰 따라가게만 한다 (맞는 쪽은 피해를 안 받는다)
 	var counter: int = attack["counter"]
 	if counter > 0:
-		_show_popup(_player_sprite.position, tr("반격!"), GUARD_COLOR)
+		_show_popup(target_sprite.position, tr("반격!"), GUARD_COLOR)
 		await _wait(0.2)
 		_shake_actors()
 		_flash_hit(attacker_sprite)
@@ -1969,28 +1971,35 @@ func _animate_enemy_attack_result(attack: Dictionary, attacker_sprite: AnimatedS
 		return
 
 	if attack["dodged"]:
-		_show_popup(_player_sprite.position, tr("회피!"), DODGE_COLOR)
+		_show_popup(target_sprite.position, tr("회피!"), DODGE_COLOR)
 		_message.text = tr("%s의 공격을 피했다!") % attacker_name
 		await _wait(0.3)
 		return
 
 	var damage: int = attack["damage"]
 	if damage <= 0:
-		_show_popup(_player_sprite.position, tr("막았다!"), GUARD_COLOR)
+		_show_popup(target_sprite.position, tr("막았다!"), GUARD_COLOR)
 		_message.text = tr("%s의 공격을 완전히 막아냈다!") % attacker_name
 		await _wait(0.3)
 		return
 
 	# 실제로 얻어맞은 경우에만 풀세트 연출: 흔들림 + 몬스터 종류별 타격 이펙트 + 가장자리 붉은 물듦.
-	# 이펙트를 플레이어 위에 띄우는 이유는 "적이 나를 때렸다"의 결과가 내 몸에서 터져야 읽히기 때문
+	# 이펙트를 맞은 쪽 위에 띄우는 이유는 "적이 때렸다"의 결과가 그 몸에서 터져야 읽히기 때문
 	_shake_actors()
-	_flash_hit(_player_sprite)
-	_play_enemy_attack_vfx(_player_sprite.position)
+	_flash_hit(target_sprite)
+	_play_enemy_attack_vfx(target_sprite.position)
 	_play_edge_flash()
-	_show_popup(_player_sprite.position, "-%d" % damage, DAMAGE_COLOR)
-	_animate_hp_bar(_player_hp_bar, GameState.get_flag("player_hp"))
+	_show_popup(target_sprite.position, "-%d" % damage, DAMAGE_COLOR)
+	_animate_hp_bar(_ally_hp_bars[target_index], _party_member_hp(target_index))
 	_message.text = tr("%s의 공격! %d 피해!") % [attacker_name, damage]
 	await _wait(0.35)
+
+
+# target_index 자리 파티원의 현재 HP (0=플레이어는 GameState, 나머지는 CompanionState)
+func _party_member_hp(target_index: int) -> int:
+	if target_index == 0:
+		return GameState.get_flag("player_hp")
+	return _manager.party[target_index].hp
 
 
 # 이번 전투 몬스터 종류에 배정된 공격 이펙트를 pos에 재생한다 (사운드도 함께).
