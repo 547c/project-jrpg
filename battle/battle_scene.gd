@@ -1115,10 +1115,11 @@ func _on_card_played(_card: Card, _damage_dealt: int) -> void:
 
 # 적 턴에는 살아있는 마리 수만큼 이 콜백이 순서대로 날아온다 — 연출은 _animate_enemy_turn()이
 # 나중에 이 목록을 순서대로 재생한다 (시그널은 매니저 안에서 동기적으로 전부 끝난 뒤에야 제어가 돌아온다)
-func _on_enemy_attack_resolved(attacker_index: int, damage_taken: int, dodged: bool, counter_damage: int) -> void:
+func _on_enemy_attack_resolved(attacker_index: int, target_index: int, damage_taken: int, dodged: bool, counter_damage: int) -> void:
 	_enemy_attacks.append({
 		"action": "attack",
 		"attacker": attacker_index,
+		"target": target_index,
 		"damage": damage_taken,
 		"dodged": dodged,
 		"counter": counter_damage,

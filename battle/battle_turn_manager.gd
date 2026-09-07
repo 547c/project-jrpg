@@ -19,9 +19,10 @@ const CompanionState = preload("res://battle/companion_state.gd")
 signal turn_started(turn_number: int)
 signal card_played(card: Card, damage_dealt: int) # 데미지 카드가 아니면 damage_dealt는 0
 signal weapon_switched(weapon: WeaponState.WeaponType)
-# 몬스터 한 마리가 플레이어를 때린 결과. 다인전에서는 살아있는 마리 수만큼 순차로 발생한다
-# (예전 단일 전투의 enemy_turn_resolved를 마리별로 쪼갠 것 — attacker_index가 누가 때렸는지 알려준다)
-signal enemy_attack_resolved(attacker_index: int, damage_taken: int, dodged: bool, counter_damage: int)
+# 몬스터 한 마리가 파티원 한 명을 때린 결과. 다인전에서는 살아있는 마리 수만큼 순차로 발생한다
+# (예전 단일 전투의 enemy_turn_resolved를 마리별로 쪼갠 것 — attacker_index가 누가 때렸는지,
+# target_index가 party 배열의 누가 맞았는지 알려준다. 0이면 플레이어)
+signal enemy_attack_resolved(attacker_index: int, target_index: int, damage_taken: int, dodged: bool, counter_damage: int)
 # 마나가 바닥나 공격 대신 숨을 고른 몬스터. mana_gained/hp_gained는 실제로 회복된 양
 # (hp_gained가 0이면 이번엔 체력 회복이 안 붙은 것)
 signal monster_recovered(index: int, mana_gained: int, hp_gained: int)
@@ -34,6 +35,12 @@ signal player_defeated
 signal enemy_defeated # 살아있는 몬스터가 하나도 남지 않음 = 전투 승리
 
 const HAND_SIZE := 5
+
+# 적 공격 대상을 고르는 가중치 (party 배열 인덱스 기준, 0=플레이어). 동료는 아직 0으로 잠가둬서
+# 있어도 지금은 플레이어만 맞는다 — 실제 값 전환은 아군 연출이 갖춰진 뒤(Phase 3-c)에 한다
+# (docs/companion_system_phase3_plan.md §3)
+const TARGET_WEIGHT_PLAYER := 2
+const TARGET_WEIGHT_COMPANION := 0
 
 var deck: Deck
 var hand: Hand
@@ -621,16 +628,16 @@ func _resolve_enemy_turn() -> void:
 	for monster in monsters:
 		if not monster.is_alive():
 			continue
-		# 앞선 몬스터의 공격으로 이미 쓰러졌으면 남은 몬스터는 때리지 않는다 —
-		# 죽은 플레이어를 계속 때리는 연출이 이어지지 않게
-		if GameState.get_flag("player_hp") <= 0:
+		# 앞선 몬스터의 공격으로 파티 전원이 쓰러졌으면 남은 몬스터는 때리지 않는다 —
+		# 죽은 파티원을 계속 때리는 연출이 이어지지 않게
+		if _is_party_wiped():
 			break
 
 		# 마나가 남아 있으면 공격, 바닥났으면 그 턴은 숨고르기(회복).
 		# 판단은 마리마다 따로 하므로 다인전에서는 "둘은 때리고 하나는 회복하는" 턴도 나온다
 		if monster.can_attack():
 			monster.spend_attack_mana()
-			_resolve_single_attack(monster)
+			_resolve_single_attack(monster, _pick_attack_target())
 		else:
 			var gained := monster.recover()
 			monster_recovered.emit(monster.index, gained["mana"], gained["hp"])
@@ -646,13 +653,48 @@ func _resolve_enemy_turn() -> void:
 	_tick_status_rounds()
 
 
-# 몬스터 한 마리의 공격을 해결한다. 피하기/반격은 여기서 소모되므로, 뒤이어 공격하는 몬스터는
-# 그 보호를 받지 못한다 (위 _resolve_enemy_turn 주석의 "뻥튀기 방지" 규칙)
-func _resolve_single_attack(attacker: MonsterState) -> void:
-	var raw_damage := calculate_monster_attack_damage(attacker)
+# 살아있는 파티원이 하나도 없는지 (몬스터 반격 도중 파티 전멸 여부를 매 마리 공격 전에 확인하는 데 쓰인다)
+func _is_party_wiped() -> bool:
+	for member in party:
+		if member.is_alive():
+			return false
+	return true
 
-	var countering := _pending_counter > 0
-	var dodging := _pending_dodge
+
+# 살아있는 파티원 중 하나를 가중치 랜덤으로 고른다 (party 배열 인덱스를 반환).
+# 몬스터마다 새로 추첨하므로, 같은 턴 안에서도 마리별로 다른 대상을 때릴 수 있다
+func _pick_attack_target() -> int:
+	var candidates: Array[int] = []
+	var total_weight := 0
+	for i in range(party.size()):
+		if not party[i].is_alive():
+			continue
+		candidates.append(i)
+		total_weight += TARGET_WEIGHT_PLAYER if i == 0 else TARGET_WEIGHT_COMPANION
+
+	if total_weight <= 0: # 살아있는 후보가 전부 가중치 0일 때의 안전망 (지금은 사실상 도달 안 함)
+		return candidates[randi() % candidates.size()]
+
+	var roll := randi() % total_weight
+	for i in candidates:
+		var weight := TARGET_WEIGHT_PLAYER if i == 0 else TARGET_WEIGHT_COMPANION
+		if roll < weight:
+			return i
+		roll -= weight
+	return candidates[-1]
+
+
+# 몬스터 한 마리의 공격을 해결한다. 피하기/반격은 여기서 소모되므로, 뒤이어 공격하는 몬스터는
+# 그 보호를 받지 못한다 (위 _resolve_enemy_turn 주석의 "뻥튀기 방지" 규칙).
+# 방어/피하기/반격은 플레이어를 지키는 카드라 target이 플레이어(0번)일 때만 적용된다 —
+# 동료를 때리는 공격은 이 카드들을 소모하지 않고 그대로 지나간다
+func _resolve_single_attack(attacker: MonsterState, target_index: int) -> void:
+	var raw_damage := calculate_monster_attack_damage(attacker)
+	var target = party[target_index]
+	var targeting_player := target_index == 0
+
+	var countering := targeting_player and _pending_counter > 0
+	var dodging := targeting_player and _pending_dodge
 
 	var damage_taken := 0
 	var counter_damage := 0
@@ -666,13 +708,15 @@ func _resolve_single_attack(attacker: MonsterState) -> void:
 	elif dodging:
 		_pending_dodge = false # 첫 공격에 소모
 	else:
-		var absorbed: int = min(_pending_defense, raw_damage)
-		_pending_defense -= absorbed
+		var absorbed := 0
+		if targeting_player:
+			absorbed = min(_pending_defense, raw_damage)
+			_pending_defense -= absorbed
 		damage_taken = raw_damage - absorbed
 		if damage_taken > 0:
-			GameState.damage_player(damage_taken)
+			target.take_damage(damage_taken)
 
-	enemy_attack_resolved.emit(attacker.index, damage_taken, dodging, counter_damage)
+	enemy_attack_resolved.emit(attacker.index, target_index, damage_taken, dodging, counter_damage)
 
 
 func _finish_battle(player_lost: bool) -> void:
