@@ -23,6 +23,8 @@ enum Kind {
 	ATTACK_DOWN,   # 주는 피해 감소 (몬스터에게 거는 디버프)
 	DEFENSE_DOWN,  # 받는 피해 증가 (몬스터 방어력 약화)
 	RESIST_DOWN,   # 속성 저항의 감쇄 폭 자체를 완화 (몬스터 저항 약화)
+	DAMAGE_REDUCTION, # 받는 피해 감소 (마력장벽 등 파티 전체 버프) — 실제 계산은 카드와 달리
+	                  # BattleTurnManager._pending_damage_reduction_fraction이 하고, 이건 배지 표시 전용
 }
 
 # 화면/로그에 쓸 짧은 이름
@@ -31,6 +33,7 @@ const KIND_LABEL := {
 	Kind.ATTACK_DOWN: "공격력↓",
 	Kind.DEFENSE_DOWN: "방어력↓",
 	Kind.RESIST_DOWN: "저항↓",
+	Kind.DAMAGE_REDUCTION: "받는피해↓",
 }
 
 # ── 상태이상 묶음 (한 카드가 여러 종류를 동시에 거는 경우) ──────────────────

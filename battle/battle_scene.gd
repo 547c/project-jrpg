@@ -758,10 +758,12 @@ var _ally_card_panels: Array[Control] = []
 var _ally_hp_bars: Array[ProgressBar] = []
 var _ally_hp_labels: Array[Label] = []
 var _ally_mana_bars: Array[ProgressBar] = []
+var _ally_mana_labels: Array[Label] = []
 # 액티브 스킬 버튼/카운트다운 배지. data["active"]가 있는 동료만 생성되고, 없는 자리는 null
 # (0번 플레이어는 액티브가 없으니 항상 null) — _refresh_active_buttons()가 null을 건너뛴다
 var _ally_active_buttons: Array[Button] = []
 var _ally_active_badges: Array[Label] = []
+# 동료 위에 뜨는 버프/디버프 배지 (0번 플레이어는 _player_status_badge를 따로 쓰므로 항상 null)
 var _ally_status_badges: Array[Label] = []
 # 매니저가 "쓰러졌다"고 알려준 뒤 아직 사망 연출을 재생하지 않은 자리 번호들.
 # 시그널은 매니저 안에서 동기적으로 날아오는데 연출은 카드 연출이 끝난 뒤에 이어야 해서 버퍼에 모은다
@@ -2161,12 +2163,16 @@ func _refresh_monster_mana_bars() -> void:
 			_monster_mana_bars[monster.index].value = monster.mana
 
 
-# 동료 마나바를 현재 값으로 맞춘다 (0번 플레이어는 _update_mana_bar()가 따로 처리하므로 제외)
+# 동료 마나바와 숫자 텍스트를 현재 값으로 맞춘다 (0번 플레이어는 _update_mana_bar()가 따로
+# 처리하므로 제외). HP 쪽과 같은 버그(막대는 갱신되는데 숫자만 고정)가 있었던 자리 — 텍스트를
+# 따로 빼지 않고 여기 묶어둬야 호출부마다 갱신을 잊을 일이 없다
 func _refresh_ally_mana_bars() -> void:
 	if _manager == null:
 		return
 	for i in range(1, _ally_mana_bars.size()):
-		_ally_mana_bars[i].value = _manager.party[i].mana
+		var companion = _manager.party[i]
+		_ally_mana_bars[i].value = companion.mana
+		_ally_mana_labels[i].text = "Mana: %d/%d" % [companion.mana, companion.max_mana]
 
 
 # 동료 카드의 HP 숫자 텍스트를 실제 값으로 맞춘다 (_update_monster_hp_text()의 동료판).
@@ -2207,12 +2213,20 @@ func _on_active_button_pressed(party_index: int) -> void:
 	_manager.use_companion_active(party_index)
 
 
-# 마력장벽 등 동료 액티브 사용 결과. 카드 연출만큼 화려할 필요는 없어 메시지 + 상태 갱신 정도로 그친다
+# 마력장벽 등 동료 액티브 사용 결과. 카드 연출만큼 화려할 필요는 없어 기존 마나 이펙트(BUFF_ATTACK_SELF와
+# 같은 것)를 파티 전원 위에 한 번씩 재생하는 정도로 그친다 — 걸렸다는 게 눈에 보이기만 하면 된다
 func _on_companion_active_used(companion_index: int, _mana_spent: int) -> void:
 	var name_: String = _manager.party[companion_index].display_name
 	_message.text = tr("%s%s 마력장벽을 펼쳤다!") % [name_, _subject_particle(name_)]
+
+	SFXPlayer.play(VFX_SFX["mana"])
+	for i in range(_manager.party.size()):
+		if _manager.party[i].is_alive():
+			_spawn_vfx_sprite("mana", _ally_sprite_at(i).position)
+
 	_refresh_ally_mana_bars()
 	_refresh_active_buttons()
+	_refresh_status_badges()
 
 
 # 몬스터 한 마리의 공격 연출
@@ -2377,6 +2391,9 @@ func _refresh_all() -> void:
 	_refresh_ally_mana_bars()
 	_update_ally_hp_text()
 	_refresh_active_buttons()
+	# 상태이상은 카드를 낸 순간에만 갱신되고 있었다 — 라운드가 지나 풀렸을 때도 배지가 사라지게
+	# 매 턴 여기서도 한 번 더 맞춰준다(마력장벽의 받는피해↓ 배지도 이 경로로 사라진다)
+	_refresh_status_badges()
 	_refresh_flee_button()
 
 
@@ -2767,6 +2784,14 @@ func _refresh_status_badges() -> void:
 		var foot := sprite.position + Vector2(0, _monster_foot_offset(monster.index))
 		_apply_status_badge(badge, monster.status, foot, false)
 
+	for i in range(1, _ally_status_badges.size()):
+		var badge := _ally_status_badges[i]
+		var companion = _manager.party[i]
+		if not companion.is_alive():
+			badge.visible = false
+			continue
+		_apply_status_badge(badge, companion.status, _ally_sprite_at(i).position, true)
+
 
 # 배지 하나에 상태이상 요약을 채운다. 여러 개가 걸려 있으면 줄바꿈으로 쌓아 보여준다
 func _apply_status_badge(badge: Label, status: StatusEffects, anchor: Vector2, is_player: bool) -> void:
@@ -2777,8 +2802,9 @@ func _apply_status_badge(badge: Label, status: StatusEffects, anchor: Vector2, i
 	var lines := status.describe_all()
 	badge.text = "
 ".join(lines)
-	# 버프만 걸렸으면 초록, 하나라도 디버프가 있으면 주황 (지금은 종류가 둘뿐이라 이 정도로 충분하다)
-	badge.add_theme_color_override("font_color", BUFF_COLOR if status.has(StatusEffects.Kind.ATTACK_UP) else DEBUFF_COLOR)
+	# 순수 이로운 효과(공격력↑, 마력장벽의 받는피해↓)면 초록, 하나라도 디버프가 있으면 주황
+	var is_buff := status.has(StatusEffects.Kind.ATTACK_UP) or status.has(StatusEffects.Kind.DAMAGE_REDUCTION)
+	badge.add_theme_color_override("font_color", BUFF_COLOR if is_buff else DEBUFF_COLOR)
 	badge.visible = true
 
 	# 라벨은 좌상단 기준이라 폭/높이만큼 밀어 중앙 정렬한다.
@@ -3065,8 +3091,10 @@ func _setup_allies() -> void:
 	_ally_hp_bars = [_player_hp_bar]
 	_ally_hp_labels = [_player_hp_bar_label]
 	_ally_mana_bars = [_player_mana_bar]
+	_ally_mana_labels = [_player_mana_bar_label]
 	_ally_active_buttons = [null]
 	_ally_active_badges = [null]
+	_ally_status_badges = [null]
 
 	for companion_id in GameState.get_active_companions():
 		var party_index := _ally_hp_bars.size()
@@ -3113,9 +3141,11 @@ func _setup_allies() -> void:
 		_ally_card_panels.append(card)
 		_ally_active_buttons.append(active_button)
 		_ally_active_badges.append(active_badge)
+		_ally_status_badges.append(_make_status_badge())
 		_ally_hp_bars.append(card.get_node("HPBar") as ProgressBar)
 		_ally_hp_labels.append(hp_label)
 		_ally_mana_bars.append(mana_bar)
+		_ally_mana_labels.append(mana_bar_label)
 
 
 # 동료 카드에 액티브 버튼을 만들어 붙인다. 동료는 골드가 없어 그 자리(GoldIcon/GoldLabel)가

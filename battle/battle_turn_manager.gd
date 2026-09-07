@@ -303,14 +303,25 @@ func can_use_companion_active(companion_index: int) -> bool:
 
 
 # 동료 액티브를 실제로 발동한다: 조건을 다시 확인하고(더블클릭 등으로 두 번 들어와도 안전),
-# 마나를 소모한 뒤 파티 전체에 "다음 적 턴 피해 감소"를 건다
+# 마나를 소모한 뒤 파티 전체에 "다음 적 턴 피해 감소"를 건다.
+# 마나가 남아 있는 한 몇 번이든 다시 낼 수 있는 조건(can_use_active)과 별개로, 한 번 쓰면
+# CompanionState.active_used_this_round가 그 라운드가 끝날 때까지(tick_round) 재사용을 막는다 —
+# 안 그러면 연타할 때마다 마나만 반복해서 깎이고 효과는 last-write로 덮어써질 뿐이라 낭비다
 func use_companion_active(companion_index: int) -> bool:
 	if not can_use_companion_active(companion_index):
 		return false
 	var companion = party[companion_index]
 	var cost: int = companion.active_mana_cost()
 	companion.spend_mana(cost)
-	_pending_damage_reduction_fraction = float(companion.data["active"]["damage_reduction_fraction"])
+	companion.active_used_this_round = true
+	var fraction := float(companion.data["active"]["damage_reduction_fraction"])
+	_pending_damage_reduction_fraction = fraction
+
+	var magnitude := int(round(fraction * 100))
+	for member in party:
+		if member.is_alive():
+			member.status.apply(StatusEffects.Kind.DAMAGE_REDUCTION, magnitude, 1)
+
 	companion_active_used.emit(companion_index, cost)
 	return true
 
@@ -612,6 +623,10 @@ func _tick_status_rounds() -> void:
 	for monster in monsters:
 		for kind in monster.status.tick_round():
 			status_expired.emit(monster.index, int(kind))
+	# 동료도 카드로 상태이상을 받을 수 있으니(_apply_ally_effect) 플레이어/몬스터와 같이 여기서 깎아야
+	# 한다 — 안 그러면 한 번 걸린 버프가 라운드가 지나도 안 풀린다
+	for i in range(1, party.size()):
+		party[i].status.tick_round()
 
 
 # 장비의 피해 보너스. "카드 색깔이 지금 장착한 무기와 일치할 때"만 그 무기의 등급 보너스가 붙는다

@@ -106,9 +106,17 @@ func active_mana_cost() -> int:
 	return int(round(max_mana * float(data["active"]["mana_cost_fraction"])))
 
 
+# 이번 라운드에 이미 액티브를 썼는지 — 마나만 남아 있으면 몇 번이든 다시 쓸 수 있는 조건과
+# 별개로 라운드당 한 번으로 막는 용도. tick_round()에서 매 라운드 풀린다
+var active_used_this_round: bool = false
+
+
 # 액티브를 지금 쓸 수 있는지 — 전투 시작 후 unlock_turn 라운드가 지났고(1회성 게이트, 그 뒤로는
-# 쿨다운 없음), 비용을 치를 마나가 남아 있어야 한다 (docs/companion_system_options.md §7)
+# 쿨다운 없음), 비용을 치를 마나가 남아 있고, 이번 라운드에 아직 안 썼어야 한다
+# (docs/companion_system_options.md §7)
 func can_use_active(rounds_completed: int) -> bool:
+	if active_used_this_round:
+		return false
 	return is_alive() and rounds_completed >= int(data["active"]["unlock_turn"]) and mana >= active_mana_cost()
 
 
@@ -121,9 +129,11 @@ func spend_mana(amount: int) -> int:
 
 
 # 라운드 하나가 끝날 때 호출 (BattleTurnManager._resolve_enemy_turn과 같은 주기).
-# 패시브 카운터를 올린다 — 실제 발동 판정은 consume_passive_trigger()가 한다
+# 패시브 카운터를 올리고, 액티브를 다시 쓸 수 있게 라운드 사용 기록을 푼다 —
+# 실제 패시브 발동 판정은 consume_passive_trigger()가 한다
 func tick_round() -> void:
 	passive_counter += 1
+	active_used_this_round = false
 
 
 # 패시브 발동 주기에 도달했으면 카운터를 리셋하고 true를 반환한다
