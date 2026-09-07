@@ -299,6 +299,12 @@ func _apply_card_effect(card: Card, target_index: int) -> int:
 	# (대상 계산 안에서 굴리면 광역 도박 카드가 마리마다 따로 굴려진다 — damage_traits.gd 주석 참고)
 	_rolled_damage_multiplier = DamageTraits.roll_random_multiplier(card.damage_trait)
 
+	# 힐/셀프버프는 몬스터가 아니라 파티원(0=플레이어, 1+=동료)을 겨냥하므로 완전히 다른 인덱스
+	# 공간이다 — resolve_target_indices()(몬스터 전용)를 타지 않고 여기서 바로 갈라야 한다
+	if _is_ally_effect(card):
+		_apply_ally_effect(card, target_index)
+		return 0
+
 	var targets := resolve_target_indices(card, target_index)
 	if targets.is_empty():
 		# 때릴 대상이 없어도(전멸 직후 등) 자기 자신에게 거는 효과는 그대로 적용돼야 한다
@@ -343,9 +349,6 @@ func _apply_card_effect_to_target(card: Card, target_index: int) -> int:
 	match card.effect:
 		Card.EffectType.DAMAGE:
 			return _damage_monster(card, target_index)
-		Card.EffectType.BUFF_ATTACK_SELF:
-			# 자기 자신에게 거는 버프라 대상 자리 번호와 무관하게 항상 플레이어(-1)에게 건다
-			apply_status(-1, StatusEffects.Kind.ATTACK_UP, card.value, card.secondary_value)
 		Card.EffectType.DEBUFF_ATTACK_ENEMY:
 			var debuff_target := get_monster(target_index)
 			if debuff_target == null or not debuff_target.is_alive():
@@ -354,10 +357,6 @@ func _apply_card_effect_to_target(card: Card, target_index: int) -> int:
 				apply_status(debuff_target.index, StatusEffects.Kind.ATTACK_DOWN, card.value, card.secondary_value)
 		Card.EffectType.STATUS_PACKAGE:
 			apply_status_package(card, target_index)
-		Card.EffectType.HEAL_HP:
-			var max_hp: int = GameState.get_flag("player_max_hp")
-			if max_hp > 0:
-				GameState.heal_player_partial(float(card.value) / max_hp)
 		Card.EffectType.RESTORE_MANA:
 			var max_mana: int = GameState.get_flag("player_max_mana")
 			if max_mana > 0:
@@ -381,6 +380,38 @@ func _apply_card_effect_to_target(card: Card, target_index: int) -> int:
 			if both_max_mana > 0:
 				GameState.restore_mana_partial(float(card.secondary_value) / both_max_mana)
 	return 0
+
+
+# 이 카드가 party 배열(0=플레이어, 1+=동료)을 겨냥하는 종류인지 — 순수 체력회복과 셀프버프만
+# 해당한다. 마나회복류는 동료에게 마나 개념이 없어 계속 자기 전용이고, STATUS_PACKAGE는
+# 묶음 표가 적을 겨냥하는지로 갈린다(적 대상 묶음이면 false, 그대로 기존 몬스터 경로를 탄다)
+func _is_ally_effect(card: Card) -> bool:
+	match card.effect:
+		Card.EffectType.HEAL_HP, Card.EffectType.BUFF_ATTACK_SELF:
+			return true
+		Card.EffectType.STATUS_PACKAGE:
+			return not StatusEffects.package_targets_enemy(card.status_package)
+		_:
+			return false
+
+
+# 힐/셀프버프 카드를 party 배열 기준 대상에게 적용한다. 대상이 유효하지 않으면(범위 밖,
+# 이미 쓰러짐) 플레이어(0번)로 떨어뜨린다
+func _apply_ally_effect(card: Card, target_index: int) -> void:
+	var index := target_index
+	if index < 0 or index >= party.size() or not party[index].is_alive():
+		index = 0
+	var target = party[index]
+
+	match card.effect:
+		Card.EffectType.HEAL_HP:
+			target.heal(card.value)
+		Card.EffectType.BUFF_ATTACK_SELF:
+			target.status.apply(StatusEffects.Kind.ATTACK_UP, card.value, card.secondary_value)
+			status_applied.emit(index, int(StatusEffects.Kind.ATTACK_UP), card.value, card.secondary_value)
+		Card.EffectType.STATUS_PACKAGE:
+			for kind in target.status.apply_package(card.status_package, card.secondary_value):
+				status_applied.emit(index, int(kind), target.status.get_magnitude(kind), card.secondary_value)
 
 
 # 데미지 카드 처리: 카드의 기본 위력(value)에 장비 보너스를 더한 뒤, 그 값을 "그 대상의" 저항

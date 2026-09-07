@@ -758,6 +758,7 @@ var _pending_deaths: Array[int] = []
 # 타겟 선택 대기 중인 카드와, 그때 각 몬스터 밑/위에 띄우는 표시 노드들.
 # 표시는 Actors의 자식이라 화면 흔들림에도 몬스터와 함께 따라간다
 var _pending_target_card: Card = null
+var _targeting_ally: bool = false # true면 지금 고르는 대상이 몬스터가 아니라 파티원(힐/셀프버프)
 var _target_markers: Array[Node2D] = []
 # 맥동/까딱임 트윈. 노드를 지우기 전에 반드시 먼저 죽여야 한다 —
 # 루프 트윈이 살아있는 채로 대상 노드를 free하면 "Infinite loop detected" 오류가 난다
@@ -1223,26 +1224,52 @@ func _is_interactive() -> bool:
 # 살아있는 몬스터가 하나뿐이면 고를 여지가 없으므로 선택 UI를 건너뛴다 — 1:1 전투의 조작감이
 # 다인전 도입 전과 완전히 똑같이 유지된다
 func _needs_target(card: Card) -> bool:
-	if not _targets_an_enemy(card):
+	var category := _target_category(card)
+	if category == TargetCategory.SELF:
 		return false
 	# 광역기는 대상이 "살아있는 전원"으로 이미 정해져 있어 고를 것이 없다
 	if card.is_aoe:
 		return false
+	if category == TargetCategory.ALLY:
+		# 살아있는 동료가 하나도 없으면(플레이어 혼자) 고를 여지가 없다 — 기존 1인 전투와 동일하게
+		return _alive_ally_count() > 1
 	return _manager != null and _manager.alive_monsters().size() > 1
 
 
-# 이 카드가 "적 하나"를 겨냥하는 종류인지. 대상 선택이 필요한지를 가르는 기준이며,
-# 자기 자신에게 거는 효과(회복/방어/피하기/반격/자기버프)는 여기서 전부 걸러진다.
+func _alive_ally_count() -> int:
+	if _manager == null:
+		return 0
+	var count := 0
+	for member in _manager.party:
+		if member.is_alive():
+			count += 1
+	return count
+
+
+enum TargetCategory { ENEMY, SELF, ALLY }
+
+# 이 카드가 누구를 겨냥하는 종류인지. ENEMY(적 하나) / SELF(방어·피하기·반격·마나회복류 —
+# 대상 선택 없이 항상 자기 자신) / ALLY(순수 체력회복·셀프버프 — 동료도 고를 수 있음).
 # 새 효과 타입을 추가할 때 이 목록에 넣을지만 정하면 타겟팅 UI가 알아서 따라온다
-func _targets_an_enemy(card: Card) -> bool:
+func _target_category(card: Card) -> TargetCategory:
 	match card.effect:
 		Card.EffectType.DAMAGE, Card.EffectType.DEBUFF_ATTACK_ENEMY:
-			return true
+			return TargetCategory.ENEMY
 		Card.EffectType.STATUS_PACKAGE:
-			# 묶음이 적을 겨냥하는지 자기 자신인지는 묶음 표가 안다 (자기버프 묶음이 생겨도 여기 그대로)
-			return StatusEffects.package_targets_enemy(card.status_package)
+			# 묶음이 적을 겨냥하는지 자기 자신인지는 묶음 표가 안다
+			return TargetCategory.ENEMY if StatusEffects.package_targets_enemy(card.status_package) else TargetCategory.ALLY
+		Card.EffectType.HEAL_HP, Card.EffectType.BUFF_ATTACK_SELF:
+			return TargetCategory.ALLY
 		_:
-			return false
+			return TargetCategory.SELF
+
+
+func _targets_an_enemy(card: Card) -> bool:
+	return _target_category(card) == TargetCategory.ENEMY
+
+
+func _targets_an_ally(card: Card) -> bool:
+	return _target_category(card) == TargetCategory.ALLY
 
 
 # ── 타겟 선택 ──────────────────────────────────────────────────────────────
@@ -1253,9 +1280,15 @@ func _begin_targeting(card: Card) -> void:
 	_clear_target_markers()
 	_pending_target_card = card
 	_mode = Mode.TARGETING
+	_targeting_ally = _targets_an_ally(card)
 
-	for monster in _manager.alive_monsters():
-		_target_markers.append(_build_target_marker(monster.index))
+	if _targeting_ally:
+		for i in range(_manager.party.size()):
+			if _manager.party[i].is_alive():
+				_target_markers.append(_build_ally_target_marker(i))
+	else:
+		for monster in _manager.alive_monsters():
+			_target_markers.append(_build_target_marker(monster.index))
 
 	_message.text = tr("%s — 대상을 선택하세요.\n(빈 곳 클릭 · 우클릭 · ESC로 취소)") % tr(card.card_name)
 	_refresh_hand_buttons()
@@ -1316,7 +1349,7 @@ func _input(event: InputEvent) -> void:
 	# 둘은 보통 같지만, 이벤트가 실제 커서와 따로 전달되는 경우(입력 주입/터치/리매핑)에는 갈라져서
 	# 엉뚱한 곳을 짚게 된다
 	var local: Vector2 = _actors.get_global_transform_with_canvas().affine_inverse() * event.position
-	var picked := _monster_at_point(local)
+	var picked := _ally_at_point(local) if _targeting_ally else _monster_at_point(local)
 	if picked >= 0:
 		_confirm_target(picked)
 		get_viewport().set_input_as_handled()
@@ -1402,6 +1435,80 @@ func _build_target_marker(index: int) -> Node2D:
 	return root
 
 
+# local_point가 어느 파티원(party 배열 인덱스)의 선택 영역 안에 있는지 (없으면 -1)
+func _ally_at_point(local_point: Vector2) -> int:
+	if _manager == null:
+		return -1
+	for i in range(_manager.party.size()):
+		if _manager.party[i].is_alive() and _ally_target_hit_rect(i).has_point(local_point):
+			return i
+	return -1
+
+
+func _ally_target_hit_rect(index: int) -> Rect2:
+	var sprite := _ally_sprite_at(index)
+	var art := CharacterShadow._measure_art(sprite)
+	var half_width := maxf(art.size.x * 0.5, TARGET_RING_RX)
+	var top := art.position.y - TARGET_ARROW_GAP - TARGET_ARROW_HEIGHT
+	var bottom := art.end.y + TARGET_RING_RY
+	return Rect2(art.get_center().x - half_width, top, half_width * 2.0, bottom - top)
+
+
+# 아군 하나의 선택 표시. _build_target_marker와 같은 모양이지만, 발/머리 위치를 몬스터처럼
+# 미리 계산된 표(_monster_art_tops) 대신 CharacterShadow._measure_art()로 직접 잰다 —
+# 동료마다 시트 여백이 달라 손으로 잰 상수를 못 쓴다 (3-d에서 배치할 때 쓴 것과 같은 방법)
+func _build_ally_target_marker(index: int) -> Node2D:
+	var sprite := _ally_sprite_at(index)
+	var art := CharacterShadow._measure_art(sprite)
+
+	var root := Node2D.new()
+	root.z_index = 1
+	_actors.add_child(root)
+
+	var foot := Vector2(art.get_center().x, art.end.y)
+	var points := PackedVector2Array()
+	for i in range(24):
+		var a := TAU * i / 24.0
+		points.append(Vector2(cos(a) * TARGET_RING_RX, sin(a) * TARGET_RING_RY))
+
+	var fill := Polygon2D.new()
+	fill.polygon = points
+	fill.color = TARGET_RING_FILL
+	fill.position = foot
+	root.add_child(fill)
+
+	var outline := Line2D.new()
+	outline.points = points
+	outline.closed = true
+	outline.width = TARGET_RING_LINE_WIDTH
+	outline.default_color = TARGET_RING_LINE
+	outline.position = foot
+	root.add_child(outline)
+
+	var arrow := Polygon2D.new()
+	arrow.polygon = PackedVector2Array([
+		Vector2(-TARGET_ARROW_HALF_WIDTH, -TARGET_ARROW_HEIGHT),
+		Vector2(TARGET_ARROW_HALF_WIDTH, -TARGET_ARROW_HEIGHT),
+		Vector2(0, 0),
+	])
+	arrow.color = TARGET_ARROW_COLOR
+	arrow.position = Vector2(art.get_center().x, art.position.y - TARGET_ARROW_GAP)
+	root.add_child(arrow)
+
+	var ring_tween := create_tween().set_loops()
+	ring_tween.tween_property(outline, "modulate:a", TARGET_RING_PULSE_ALPHA, TARGET_RING_PULSE_DURATION)
+	ring_tween.tween_property(outline, "modulate:a", 1.0, TARGET_RING_PULSE_DURATION)
+	_target_marker_tweens.append(ring_tween)
+
+	var arrow_tween := create_tween().set_loops()
+	var arrow_base := arrow.position
+	arrow_tween.tween_property(arrow, "position", arrow_base + Vector2(0, TARGET_ARROW_BOB), TARGET_ARROW_BOB_DURATION)
+	arrow_tween.tween_property(arrow, "position", arrow_base, TARGET_ARROW_BOB_DURATION)
+	_target_marker_tweens.append(arrow_tween)
+
+	return root
+
+
 # 선택 표시를 전부 걷어낸다. 트윈을 먼저 죽이고 나서 노드를 지우는 순서를 반드시 지킬 것
 # (루프 트윈이 살아있는 대상을 free하면 Godot이 "Infinite loop detected"로 멈춘다)
 func _clear_target_markers() -> void:
@@ -1426,29 +1533,40 @@ func _play_card_flow(card: Card, target_index: int = -1) -> void:
 
 	var hp_before: int = GameState.get_flag("player_hp")
 	var mana_before: int = GameState.get_flag("player_mana")
-	# play_card()에 넘기는 값과 연출이 가리키는 대상이 반드시 같아야 하므로,
-	# 매니저를 부르기 "전에" 대상을 확정해 양쪽에 같은 값을 쓴다
-	var target := _manager.get_monster(target_index)
-	if target == null or not target.is_alive():
-		target = _manager.get_auto_target()
-	var resolved_index := target.index if target != null else 0
-	var monster_hp_before: int = target.hp if target != null else 0
-	target_index = resolved_index
+	var monster_hp_before := 0
+	var ally_hp_before := 0
 
-	# 이 카드가 실제로 때릴 대상들(광역이면 전원)과 그 시점의 체력을 기록해 둔다.
-	# 대상 판정은 매니저와 같은 함수를 써서 "때린 대상"과 "이펙트가 뜨는 대상"이 갈라지지 않게 하고,
-	# 체력은 연출이 마리별 실제 감소량을 계산하는 데 쓴다 (오버킬이어도 팝업 합계가 HP바와 맞는다)
-	_card_targets = _manager.resolve_target_indices(card, target_index)
-	_hp_before_by_index.clear()
-	for index in _card_targets:
-		_hp_before_by_index[index] = _monster_hp_of(index)
+	if _targets_an_ally(card):
+		# 힐/셀프버프는 몬스터가 아니라 party 배열(0=플레이어, 1+=동료)을 겨냥한다 —
+		# 완전히 다른 인덱스 공간이라 몬스터 쪽 대상 확정 로직을 타지 않는다
+		if target_index < 0 or target_index >= _manager.party.size() or not _manager.party[target_index].is_alive():
+			target_index = 0
+		ally_hp_before = _party_member_hp(target_index)
+		_card_targets = []
+		_hp_before_by_index.clear()
+	else:
+		# play_card()에 넘기는 값과 연출이 가리키는 대상이 반드시 같아야 하므로,
+		# 매니저를 부르기 "전에" 대상을 확정해 양쪽에 같은 값을 쓴다
+		var target := _manager.get_monster(target_index)
+		if target == null or not target.is_alive():
+			target = _manager.get_auto_target()
+		target_index = target.index if target != null else 0
+		monster_hp_before = target.hp if target != null else 0
+
+		# 이 카드가 실제로 때릴 대상들(광역이면 전원)과 그 시점의 체력을 기록해 둔다.
+		# 대상 판정은 매니저와 같은 함수를 써서 "때린 대상"과 "이펙트가 뜨는 대상"이 갈라지지 않게 하고,
+		# 체력은 연출이 마리별 실제 감소량을 계산하는 데 쓴다 (오버킬이어도 팝업 합계가 HP바와 맞는다)
+		_card_targets = _manager.resolve_target_indices(card, target_index)
+		_hp_before_by_index.clear()
+		for index in _card_targets:
+			_hp_before_by_index[index] = _monster_hp_of(index)
 
 	if not _manager.play_card(card, target_index):
 		_mode = Mode.ACTION
 		await _refresh_all()
 		return
 
-	await _animate_card(card, hp_before, mana_before, monster_hp_before, target_index)
+	await _animate_card(card, hp_before, mana_before, monster_hp_before, target_index, ally_hp_before)
 
 	await _refresh_all()
 
@@ -1479,7 +1597,7 @@ func _play_card_flow(card: Card, target_index: int = -1) -> void:
 # target_index는 이 카드가 때릴 몬스터의 자리 번호 (피해 카드가 아니면 쓰이지 않는다).
 # 전용 컷신 5종도 이 값을 그대로 넘겨받아, 순간이동/낙하 지점 같은 위치 계산과 팝업/HP바를
 # 전부 "플레이어가 고른 그 몬스터" 기준으로 잡는다
-func _animate_card(card: Card, hp_before: int, mana_before: int, monster_hp_before: int, target_index: int = 0) -> void:
+func _animate_card(card: Card, hp_before: int, mana_before: int, monster_hp_before: int, target_index: int = 0, ally_hp_before: int = 0) -> void:
 	var target_sprite := _monster_sprite_at(target_index)
 	match card.effect:
 		Card.EffectType.DAMAGE:
@@ -1594,11 +1712,12 @@ func _animate_card(card: Card, hp_before: int, mana_before: int, monster_hp_befo
 			_play_damage_trait_feedback()
 			await _wait(0.35)
 		Card.EffectType.HEAL_HP:
-			var healed: int = GameState.get_flag("player_hp") - hp_before
-			_flash_hit(_player_sprite)
-			_play_card_vfx(card, _player_sprite)
-			_show_popup(_player_sprite.position, "+%d" % healed, HEAL_COLOR)
-			_animate_hp_bar(_player_hp_bar, GameState.get_flag("player_hp"))
+			var heal_sprite := _ally_sprite_at(target_index)
+			var healed: int = _party_member_hp(target_index) - ally_hp_before
+			_flash_hit(heal_sprite)
+			_play_card_vfx(card, heal_sprite)
+			_show_popup(heal_sprite.position, "+%d" % healed, HEAL_COLOR)
+			_animate_hp_bar(_ally_hp_bars[target_index], _party_member_hp(target_index))
 			_message.text = tr("%s — 체력 %d 회복!") % [tr(card.card_name), healed]
 			await _wait(0.4)
 		Card.EffectType.RESTORE_MANA:
@@ -1642,10 +1761,11 @@ func _animate_card(card: Card, hp_before: int, mana_before: int, monster_hp_befo
 			_message.text = tr("%s — 체력 %d, 마나 %d 회복!") % [tr(card.card_name), healed, mana_restored]
 			await _wait(0.4)
 		Card.EffectType.BUFF_ATTACK_SELF:
-			# 자기 자신에게 거는 버프 — 플레이어 위에 이펙트를 띄우고 배지를 갱신한다
+			# 자기 자신(또는 고른 동료)에게 거는 버프 — 그 위에 이펙트를 띄우고 배지를 갱신한다
+			var buff_sprite := _ally_sprite_at(target_index)
 			SFXPlayer.play(VFX_SFX["mana"])
-			_spawn_vfx_sprite("mana", _player_sprite.position)
-			_show_popup(_player_sprite.position, tr("공격력 +%d%%") % card.value, BUFF_COLOR)
+			_spawn_vfx_sprite("mana", buff_sprite.position)
+			_show_popup(buff_sprite.position, tr("공격력 +%d%%") % card.value, BUFF_COLOR)
 			_refresh_status_badges()
 			_message.text = tr("%s — %d라운드 동안 공격력 +%d%%!") % [tr(card.card_name), card.secondary_value, card.value]
 			await _wait(0.45)
@@ -1666,19 +1786,20 @@ func _animate_card(card: Card, hp_before: int, mana_before: int, monster_hp_befo
 			_message.text = tr("%s — 다음에 내는 카드 1장의 코스트가 0이 된다.") % tr(card.card_name)
 			await _wait(0.4)
 		Card.EffectType.STATUS_PACKAGE:
-			await _play_status_package_effect(card)
+			await _play_status_package_effect(card, target_index)
 
 
 # 상태이상 묶음 카드의 연출. 대상이 하나든 전원이든 _card_targets를 그대로 훑으므로
 # 광역 묶음(봉인)과 단일 묶음(무력화)이 같은 경로를 쓴다
-func _play_status_package_effect(card: Card) -> void:
+func _play_status_package_effect(card: Card, target_index: int = 0) -> void:
 	var summary := StatusEffects.describe_package(card.status_package)
 	var to_self := not StatusEffects.package_targets_enemy(card.status_package)
 
 	SFXPlayer.play(VFX_SFX["defend"])
 	if to_self:
-		_spawn_vfx_sprite("mana", _player_sprite.position)
-		_show_popup(_player_sprite.position, summary, BUFF_COLOR)
+		var sprite := _ally_sprite_at(target_index)
+		_spawn_vfx_sprite("mana", sprite.position)
+		_show_popup(sprite.position, summary, BUFF_COLOR)
 	else:
 		for index in _card_targets:
 			var sprite := _monster_sprite_at(index)
