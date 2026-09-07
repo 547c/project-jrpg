@@ -1174,8 +1174,11 @@ func _on_card_pressed(index: int) -> void:
 	_play_card_flow(card)
 
 
-# 조작을 받을 수 있는 상태인지 (평소 + 타겟 선택 중). 연출 중(BUSY)이거나 전투가 끝났으면(OVER) 아니다
+# 조작을 받을 수 있는 상태인지 (평소 + 타겟 선택 중). 연출 중(BUSY)이거나 전투가 끝났으면(OVER) 아니다.
+# 플레이어가 다운(HP 0)됐으면 동료가 싸우고 있어도 조작 대상이 없으므로 관전만 한다
 func _is_interactive() -> bool:
+	if GameState.get_flag("player_hp") <= 0:
+		return false
 	return _mode == Mode.ACTION or _mode == Mode.TARGETING
 
 
@@ -1825,6 +1828,11 @@ func _end_turn_flow() -> void:
 		return
 
 	await _play_pending_deaths()
+
+	# 플레이어가 다운됐으면 낼 카드가 없으니(손패 소진과 같은 자리) 입력을 열지 않고 바로 다음 턴으로 넘긴다
+	if GameState.get_flag("player_hp") <= 0:
+		await _end_turn_flow()
+		return
 
 	# 적 반격 연출이 인포창을 덮어썼으므로, 이제 새 턴 안내(+이번 턴 저항)를 다시 띄운다
 	_show_turn_message()
@@ -2551,9 +2559,20 @@ func _finish_victory() -> void:
 	GameState.add_xp(total_xp)
 
 	GameState.heal_player_partial(VICTORY_HEAL_FRACTION)
+	if GameState.get_flag("player_hp") <= 0:
+		GameState.set_flag("player_hp", 1)
 	_animate_hp_bar(_player_hp_bar, GameState.get_flag("player_hp"))
 	_update_player_hp_text()
 	_update_mana_bar()
+
+	# 동료도 플레이어와 같은 비율로 회복 (다운 상태였어도 최소 1은 보장) — Phase 1의 companion_hp가
+	# 전투 사이에도 유지되는 영속값이라, 여기서 바로 GameState에 다시 써줘야 다음 전투에 반영된다
+	for i in range(1, _manager.party.size()):
+		var companion = _manager.party[i]
+		companion.heal(int(round(companion.max_hp * VICTORY_HEAL_FRACTION)))
+		if companion.hp <= 0:
+			companion.hp = 1
+		GameState.companion_hp[companion.companion_id] = companion.hp
 
 	var defeated_label: String = tr(_monster_data["name"])
 	if defeated_count > 1:

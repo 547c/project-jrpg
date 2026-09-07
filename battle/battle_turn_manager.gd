@@ -575,7 +575,7 @@ func end_turn() -> void:
 
 	_resolve_enemy_turn()
 
-	if GameState.get_flag("player_hp") <= 0:
+	if _is_party_wiped():
 		_finish_battle(true)
 		return
 
