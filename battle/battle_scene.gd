@@ -750,6 +750,7 @@ var _ally_sprites: Array[AnimatedSprite2D] = []
 var _ally_shadows: Array[Polygon2D] = []
 var _ally_card_panels: Array[Control] = []
 var _ally_hp_bars: Array[ProgressBar] = []
+var _ally_hp_labels: Array[Label] = []
 var _ally_mana_bars: Array[ProgressBar] = []
 var _ally_status_badges: Array[Label] = []
 # 매니저가 "쓰러졌다"고 알려준 뒤 아직 사망 연출을 재생하지 않은 자리 번호들.
@@ -2036,6 +2037,7 @@ func _animate_enemy_turn() -> void:
 				await _animate_single_enemy_attack(action)
 		_refresh_monster_mana_bars()
 		_refresh_ally_mana_bars()
+		_update_ally_hp_text()
 
 
 # 동료 한 명의 공격 연출: 최소한으로 메시지 + 데미지 팝업 + 몬스터 HP바 갱신만 한다
@@ -2152,6 +2154,16 @@ func _refresh_ally_mana_bars() -> void:
 		return
 	for i in range(1, _ally_mana_bars.size()):
 		_ally_mana_bars[i].value = _manager.party[i].mana
+
+
+# 동료 카드의 HP 숫자 텍스트를 실제 값으로 맞춘다 (_update_monster_hp_text()의 동료판).
+# _setup_allies()에서 한 번 채운 뒤로 갱신되지 않던 것을 고침 — HPBar 자체는 트윈으로 이미 정상 갱신됨
+func _update_ally_hp_text() -> void:
+	if _manager == null:
+		return
+	for i in range(1, _ally_hp_labels.size()):
+		var companion = _manager.party[i]
+		_ally_hp_labels[i].text = "HP: %d/%d" % [companion.hp, companion.max_hp]
 
 
 # 몬스터 한 마리의 공격 연출
@@ -2313,6 +2325,7 @@ func _refresh_all() -> void:
 	_refresh_monster_hp_bars()
 	_refresh_monster_mana_bars()
 	_refresh_ally_mana_bars()
+	_update_ally_hp_text()
 	_refresh_flee_button()
 
 
@@ -2993,6 +3006,7 @@ func _setup_allies() -> void:
 	_ally_shadows = [_player_shadow]
 	_ally_card_panels = [_player_card]
 	_ally_hp_bars = [_player_hp_bar]
+	_ally_hp_labels = [_player_hp_bar_label]
 	_ally_mana_bars = [_player_mana_bar]
 
 	for companion_id in GameState.get_active_companions():
@@ -3010,7 +3024,8 @@ func _setup_allies() -> void:
 		sprite.play("idle")
 
 		(card.get_node("Portrait") as TextureRect).texture = frames.get_frame_texture("idle", 0)
-		(card.get_node("HPBarLabel") as Label).text = "HP: %d/%d" % [data["max_hp"], data["max_hp"]]
+		var hp_label := card.get_node("HPBarLabel") as Label
+		hp_label.text = "HP: %d/%d" % [data["max_hp"], data["max_hp"]]
 		card.get_node("GoldIcon").visible = false
 		card.get_node("GoldLabel").visible = false
 		card.modulate = Color.WHITE
@@ -3030,6 +3045,7 @@ func _setup_allies() -> void:
 		_ally_shadows.append(shadow)
 		_ally_card_panels.append(card)
 		_ally_hp_bars.append(card.get_node("HPBar") as ProgressBar)
+		_ally_hp_labels.append(hp_label)
 		_ally_mana_bars.append(mana_bar)
 
 
