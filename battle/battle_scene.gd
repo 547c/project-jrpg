@@ -199,6 +199,9 @@ const VFX_SFX := {
 	"enemy_mummy": "res://assets/sfx/400 Sounds pack/Combat and Gore/crunch_quick.wav",
 }
 
+const CARD_RESERVE_SFX := "res://assets/sfx/400 Sounds pack/Card and Board/card_fan.wav"
+const CARD_CANCEL_SFX := "res://assets/sfx/400 Sounds pack/UI/click_double_off.wav"
+
 # 카드 이름 -> VFX 키 강제 지정. DAMAGE처럼 같은 효과·색을 공유하는 카드들도 이 표에 있으면
 # _vfx_key_for_card()가 효과 기반 기본값(physical/magic) 대신 이 값을 쓴다 — 이름에 매달아 두는 건
 # Card에 별도 id 필드가 없어서다. 카드 이름을 바꿀 계획이 생기면 이 표도 같이 고쳐야 한다
@@ -471,9 +474,8 @@ const JUDGMENT_IMPACT_SFX := [
 const HAND_BUTTON_COUNT := 5
 
 # 턴 진행 상태: ACTION=플레이어 입력 대기, BUSY=연출 재생 중(입력 무시), OVER=전투 종료
-# ACTION: 평소 조작 가능 / BUSY: 연출 재생 중 / OVER: 승패 확정 /
-# TARGETING: 피해 카드를 고른 뒤 "누구를 때릴지" 클릭을 기다리는 중 (몬스터가 2마리 이상일 때만 들어간다)
-enum Mode { ACTION, BUSY, OVER, TARGETING }
+# ACTION: 평소 조작 가능 / BUSY: 연출 재생 중 / OVER: 승패 확정
+enum Mode { ACTION, BUSY, OVER }
 
 # ── 무기 과열 게이지 / 적 저항 / 카드 배경·프레임·아이콘용 에셋 (조사 리포트에서 확정한 매핑) ──
 # GUI/06.png의 대각선 게이지 스프라이트 시트: 색상 행마다 5프레임(0/25/50/75/100%)이 가로로 나열되어
@@ -554,7 +556,6 @@ const MONSTER_GAP := 8.0 # 옆 몬스터와 벌릴 최소 간격(아래 MONSTER_
 const MONSTER_HUDDLE_FACTOR := 0.45
 # HUD 몬스터 카드(.tscn의 MonsterCard) 치수. 세로로 쌓을 위치를 계산하는 데 쓴다
 const MONSTER_CARD_HEIGHT := 34.0 # 한 마리 줄 높이 (미니 HP/마나바 두 줄)
-const MONSTER_CARD_TOP := 34.0 # 액자 나뭇잎 테두리 안쪽에서 시작
 const MONSTER_CARD_GAP := 6.0
 # 몬스터 줄은 통합 패널보다 한참 아래(발밑 기준)에 서 있어서 패널 폭만큼 비워둘 필요가 없다 —
 # 화면 오른쪽 끝에서 이만큼만 띄운다 (플레이어는 왼쪽 22% 지점 고정, 몬스터는 여기서부터
@@ -563,16 +564,12 @@ const MONSTER_EDGE_MARGIN := 56.0
 # 나뭇잎 액자(BGbox_07A)의 9슬라이스 테두리가 잡아먹는 두께. 액자 아래끝을 마지막 줄에서
 # 이만큼 더 내려야 덩굴 장식이 내용물을 물지 않는다
 const PANEL_FRAME_PAD := 22.0
-# 동료 카드는 몬스터 카드보다 높다 — 플레이어/동료는 HP·마나바를 인게임 HUD와 같은 큰 슬라이더로
-# 그리기 때문이다 (몬스터 쪽은 세 줄을 쌓아야 해서 같은 그림의 1x 버전을 쓴다)
-const ALLY_CARD_HEIGHT := 48.0
 # 쓰러진 몬스터의 HUD 카드에 씌우는 색조 (지우지 않고 흐리게 남겨 자리 번호가 계속 맞게)
 const DEFEATED_CARD_MODULATE := Color(0.45, 0.45, 0.5, 0.75)
 
 # 동료는 플레이어보다 한 걸음씩 더 뒤(왼쪽 위)로 쌓인다 — 몬스터가 오른쪽 한계에서 왼쪽으로
 # 쌓이는 것의 좌우 대칭. 카드는 PlayerCard 바로 아래에 MonsterCard와 같은 간격으로 쌓는다
 const ALLY_OFFSET_STEP := Vector2(-90.0, -40.0)
-const ALLY_CARD_TOP := 88.0
 
 # ── 숲 배경 위 서 있는 자리 ────────────────────────────────────────────────
 # 배경이 단색 바닥이던 시절엔 스프라이트 "중심"의 화면 비율로 자리를 잡았는데, 숲 그림에서는
@@ -750,6 +747,7 @@ const BANNER_BUTTON_FEEDBACK_DURATION := 0.08
 @onready var _monster_hp_bar: ProgressBar = $View/HUD/MonsterCard/HPBar
 @onready var _monster_hp_bar_label: Label = $View/HUD/MonsterCard/HPBarLabel
 @onready var _message: Label = $View/HUD/BottomBar/InfoPanel/InfoRow/MessageLabel
+@onready var _round_panel: Panel = $View/HUD/RoundPanel
 @onready var _round_label: Label = $View/HUD/RoundPanel/RoundRow/RoundLabel
 @onready var _deck_count_label: Label = $View/HUD/RoundPanel/RoundRow/DeckCountLabel
 @onready var _discard_count_label: Label = $View/HUD/RoundPanel/RoundRow/DiscardCountLabel
@@ -790,6 +788,9 @@ var _monster_mana_bars: Array[ProgressBar] = []
 var _edge_flash: TextureRect
 # 마리별 idle 프레임 안에서 실제 그림이 시작되는 y (저항 배지를 머리 위에 붙일 때 쓰는 보정값)
 var _monster_art_tops: Array[float] = []
+# 마리별로 머리 위에 이미 쌓여 있는 HUD(저항 배지+HP/마나바)의 가장 위쪽 y. 예약 표식이 그 위를
+# 가리지 않고 한 단 더 올라가 앉으려면 이 값이 필요하다 (_layout_monsters가 채워 넣는다)
+var _monster_hud_top: Array[float] = []
 
 # 아군 진영. index는 party 배열과 1:1 대응(0=플레이어). 0번은 기존 노드를 그대로 담고,
 # 1번부터는 동료를 _clone_sibling()으로 복제한다 — 몬스터 쪽과 같은 방식
@@ -810,15 +811,36 @@ var _ally_status_badges: Array[Label] = []
 # 시그널은 매니저 안에서 동기적으로 날아오는데 연출은 카드 연출이 끝난 뒤에 이어야 해서 버퍼에 모은다
 var _pending_deaths: Array[int] = []
 
-# 타겟 선택 대기 중인 카드와, 그때 각 몬스터 밑/위에 띄우는 표시 노드들.
-# 표시는 Actors의 자식이라 화면 흔들림에도 몬스터와 함께 따라간다
-var _pending_target_card: Card = null
-var _targeting_ally: bool = false # true면 지금 고르는 대상이 몬스터가 아니라 파티원(힐/셀프버프)
-var _target_markers: Array[Node2D] = []
-# 맥동/까딱임 트윈. 노드를 지우기 전에 반드시 먼저 죽여야 한다 —
-# 루프 트윈이 살아있는 채로 대상 노드를 free하면 "Infinite loop detected" 오류가 난다
-# (_clear_impact_marker에서 한 번 겪은 문제라 같은 순서를 지킨다)
-var _target_marker_tweens: Array[Tween] = []
+# ── 드래그 타겟팅 ───────────────────────────────────────────────────────────
+# 손패에서 카드를 끌어다 적/바닥에 놓으면 "예약"된다. 누르자마자 드래그로 치지 않고 임계값을 넘겨야
+# 시작하는데, 그래야 살짝 흔들린 클릭이 곧바로 예약으로 이어지지 않는다
+const DRAG_START_THRESHOLD := 8.0
+var _drag_index: int = -1 # 끌고 있는 손패 칸 (-1이면 드래그 중 아님)
+var _drag_active: bool = false # 임계값을 넘어 실제 드래그로 승격됐는지
+var _drag_press_pos := Vector2.ZERO
+var _drag_pos := Vector2.ZERO # 지금 커서 위치 (Actors 로컬 좌표)
+var _drag_hover_index: int = -1 # 지금 커서가 올라가 있는 대상 자리 (없으면 -1)
+var _drag_arrow: Line2D
+var _drag_arrow_head: Polygon2D
+# 드래그를 시작한 순간의 "마우스 - 카드 좌상단" 오프셋. 드래그하는 내내 이 간격을 유지해야
+# 카드를 처음 쥔 그 지점이 계속 커서 밑에 붙어 있는 것처럼 보인다
+var _drag_grab_offset := Vector2.ZERO
+# 지금 드래그 중인 카드가 손에서 뽑혀 커서를 따라가는 중인지. 화살표로 겨누는 카드는 false로 두고
+# 제자리에 고정해야, 카드가 조준 대상 위로 올라와 화살표/반짝임을 가리는 일이 없다
+var _drag_card_follows: bool = false
+# 지금 화살표로 겨눠 붉게 반짝이는 몬스터 자리 (없으면 -1). 하나만 켜 두면 되므로 트윈도 하나만 든다
+var _drag_highlight_index: int = -1
+var _drag_highlight_tween: Tween
+
+# 예약된 카드마다 대상 밑에 띄우는 작은 표식. 광역/자기대상 카드는 대상이 없어 필드 한가운데의
+# 공용 자리(_reservation_tray_anchor)에 나란히 쌓는다
+var _reservation_markers: Array[Control] = []
+
+# 라운드 양피지 밑에 예약 순서대로 늘어놓는 카드 대기열 ("카드 -> 카드 -> ..."). 실행 순서를 한눈에
+# 보여주고, 칸 위에 마우스를 올리면 X가 떠 눌러서 취소(→ 손패로 되돌림)할 수 있다
+var _play_queue_row: HBoxContainer
+# 연출 중(BUSY)에는 이 대기열도 눌러 취소할 수 없어야 하므로 _set_inputs_enabled와 같은 값을 든다
+var _battle_inputs_enabled: bool = true
 
 var _mode: int = Mode.BUSY
 
@@ -847,6 +869,8 @@ var _card_tier_glow_tweens: Array[Tween] = []
 # HandArea는 컨테이너가 아니라 평범한 Control이라 자식 위치를 다시 정렬하지 않으므로,
 # .tscn에 적힌 offset이 곧 최종 위치이고 _ready() 시점에 읽어도 안전하다
 var _card_base_positions: Array[Vector2] = []
+# 부채꼴 손패의 카드별 고정 회전값. 드래그 중엔 회전을 0으로 풀었다가 되돌려야 하므로 함께 기억해둔다
+var _card_base_rotations: Array[float] = []
 
 # _build_battle_ui_resources()가 한 번 채워 넣는 캐시 (게이지 프레임 텍스처, 스킬/저항 아이콘, 카드 앞뒤 텍스처)
 var _sword_gauge_frames: Array[Texture2D] = []
@@ -869,7 +893,7 @@ var _last_drawn_turn_number: int = 0
 
 # 매니저 시그널로 받은 "방금 무슨 일이 있었는지"를 담아두는 버퍼. 시그널은 매니저 안에서 동기적으로
 # 발생하는데 연출은 그 뒤에 이어서 재생해야 하므로, 콜백은 기록만 하고 실제 애니메이션은
-# _play_card_flow()/_end_turn_flow()가 담당한다
+# _resolve_one_reservation()/_end_turn_flow()가 담당한다
 # 진행 중인 화면 흔들림 트윈 (_shake_actors가 겹쳐 호출될 때 이전 것을 죽이기 위해 들고 있는다)
 var _shake_tween: Tween
 # 몬스터별 돌진/복귀 위치 트윈 (자리 번호 -> Tween). 겹쳐 걸리는 걸 막아야 돌아오는 도중에 또
@@ -906,6 +930,7 @@ func _ready() -> void:
 		wrapper.pivot_offset = Vector2(CARD_SIZE.x / 2.0, CARD_SIZE.y)
 		_card_wrappers.append(wrapper)
 		_card_base_positions.append(wrapper.position)
+		_card_base_rotations.append(wrapper.rotation)
 		_card_frames.append(wrapper.get_node("Frame") as TextureRect)
 		_card_icons.append(wrapper.get_node("Icon") as TextureRect)
 		_card_names.append(wrapper.get_node("NameLabel") as Label)
@@ -927,7 +952,7 @@ func _ready() -> void:
 
 		var btn := wrapper.get_node("Button") as Button
 		_hand_buttons.append(btn)
-		btn.pressed.connect(_on_card_pressed.bind(i))
+		btn.button_down.connect(_on_card_drag_begin.bind(i))
 		# 호버 판정은 카드 전체를 덮는 Button이 이미 하고 있으므로 그 시그널을 그대로 빌려 쓴다
 		btn.mouse_entered.connect(_on_card_hover.bind(i, true))
 		btn.mouse_exited.connect(_on_card_hover.bind(i, false))
@@ -941,6 +966,8 @@ func _ready() -> void:
 	_wire_banner_button_feedback(_end_turn_button)
 	_wire_banner_button_feedback(_flee_button)
 	_wire_banner_button_feedback(_close_button)
+
+	_ensure_play_queue_row()
 
 
 # 과열 게이지 프레임, 카드 스킬/저항 아이콘, 카드 프레임 스타일박스를 한 번만 잘라서 캐시해둔다
@@ -1109,6 +1136,7 @@ func start_with(monster_type: String, variants: Array) -> void:
 
 	_refresh_active_buttons()
 	_update_round_panel()
+	_refresh_play_queue()
 
 	_close_button.visible = false
 	_main_column.visible = true
@@ -1280,22 +1308,519 @@ func _on_player_defeated() -> void:
 # 손패 버튼 클릭: 해당 슬롯의 카드를 낸다 (낼 수 없는 카드면 버튼이 이미 비활성이라 눌리지 않음).
 # 대상을 골라야 하는 카드면 바로 내지 않고 타겟 선택 모드로 들어간다.
 # 타겟 선택 중에 다른 카드를 눌러도 여기로 들어오는데, 그때는 고른 카드가 새 카드로 갈아끼워진다
-func _on_card_pressed(index: int) -> void:
+# ── 드래그로 카드 예약하기 ─────────────────────────────────────────────────
+# 카드를 누른 채 끌면 화살표가 따라오고, 대상 위에서 놓으면 그 카드가 "예약"된다 (효과는 턴종료 때).
+# 광역/자기대상 카드는 겨눌 대상이 없어 필드 아무 데나 놓으면 된다
+func _on_card_drag_begin(index: int) -> void:
 	if not _is_interactive() or _manager == null:
 		return
 	if index >= _manager.hand.cards.size():
 		return
+	if not _manager.can_play_card(_manager.hand.cards[index]):
+		return
+	_drag_index = index
+	_drag_active = false
+	_drag_press_pos = _screen_to_actors(get_viewport().get_mouse_position())
+	_drag_pos = _drag_press_pos
+
+
+func _handle_drag_input(event: InputEvent) -> void:
+	if event is InputEventMouseMotion:
+		_drag_pos = _screen_to_actors(event.position)
+		if not _drag_active and _drag_press_pos.distance_to(_drag_pos) >= DRAG_START_THRESHOLD:
+			_drag_active = true
+			# 화살표로 겨누는 카드(적 하나/동료 하나)는 카드를 그 자리에 고정해둬야 화살표와 조준
+			# 대상이 카드에 가려지지 않는다. 겨눌 대상이 없는 카드(광역/자기 자신)만 손에서 뽑혀
+			# 커서를 따라간다 — 어차피 화살표가 없어 가릴 것도 없다
+			var drag_card: Card = _manager.hand.cards[_drag_index] if _manager != null and _drag_index < _manager.hand.cards.size() else null
+			_drag_card_follows = drag_card != null and not _card_is_targeted(drag_card)
+			if _drag_card_follows:
+				_begin_card_drag_visual(_drag_index, event.position)
+			else:
+				_reset_card_hover(_drag_index)
+		if _drag_active:
+			_update_drag_visuals()
+			if _drag_card_follows:
+				_update_dragged_card_position(event.position)
+		return
+
+	if event is InputEventMouseButton and not event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		_drag_pos = _screen_to_actors(event.position)
+		var dropped := _drag_active
+		_finish_drag()
+		if dropped:
+			get_viewport().set_input_as_handled()
+		return
+
+	if event.is_action_pressed("ui_cancel"):
+		_finish_drag(true)
+		get_viewport().set_input_as_handled()
+
+
+# 드래그를 끝낸다. cancelled면 예약하지 않고 그냥 손패로 되돌린다.
+# 드래그로 카드를 손에서 뽑아 커서를 따라 움직였다면(_begin_card_drag_visual), 어느 경로로 끝나든
+# 그 칸의 회전/위치/크기를 부채꼴 제자리로 되돌려야 한다 — 실패해서 되돌아가는 카드든, 성공해서
+# 다음 populate가 새 카드 내용을 채워 넣을 칸이든 마찬가지다
+func _finish_drag(cancelled: bool = false) -> void:
+	var index := _drag_index
+	var was_active := _drag_active
+	_drag_index = -1
+	_drag_active = false
+	_drag_card_follows = false
+	_drag_hover_index = -1
+	_clear_drag_arrow()
+	_clear_drag_highlight()
+
+	if not was_active:
+		return
+
+	if cancelled or _manager == null or index >= _manager.hand.cards.size():
+		_reset_card_hover(index)
+		return
+
 	var card: Card = _manager.hand.cards[index]
-	if not _manager.can_play_card(card):
+	var target := _drop_target_for(card, _drag_pos)
+	if target == DROP_INVALID:
+		_message.text = tr("적을 겨냥해서 놓아야 한다.")
+		_reset_card_hover(index)
 		return
 
-	if _needs_target(card):
-		_begin_targeting(card)
+	if not _manager.reserve_card(card, target):
+		_reset_card_hover(index)
 		return
 
-	# 대상이 필요 없는 카드(회복/방어/피하기/반격 등)는 고르는 절차 없이 즉시 발동한다
-	_cancel_targeting()
-	_play_card_flow(card)
+	SFXPlayer.play(CARD_RESERVE_SFX)
+	_message.text = tr("%s 예약 — 턴을 종료하면 순서대로 발동한다.") % tr(card.card_name)
+	_reset_card_hover(index)
+	_refresh_reservation_markers()
+	_refresh_play_queue()
+	_refresh_all()
+
+
+const DROP_INVALID := -99
+
+# 이 드롭 지점이 어떤 대상을 가리키는지. 단일 대상 카드는 그 대상 위에 놓아야만 유효하고,
+# 광역/자기대상 카드는 손패 위쪽(필드) 어디든 놓으면 된다 (반환 -1 = 대상 없음)
+func _drop_target_for(card: Card, point: Vector2) -> int:
+	if not _dropped_in_field(point):
+		return DROP_INVALID
+
+	var category := _target_category(card)
+	if card.is_aoe or category == TargetCategory.SELF:
+		return -1
+
+	if category == TargetCategory.ALLY:
+		var ally := _ally_at_point(point)
+		# 동료가 없거나 빈 곳에 놓았으면 플레이어 자신에게 건다 (기존 클릭 방식과 같은 기본값)
+		return ally if ally >= 0 else 0
+
+	var monster := _monster_at_point(point)
+	return monster if monster >= 0 else DROP_INVALID
+
+
+# 손패 영역보다 위(= 전장)에 놓았는지. 카드를 제자리에 도로 떨어뜨린 경우를 예약으로 치지 않는다
+func _dropped_in_field(point: Vector2) -> bool:
+	var screen := _actors.get_global_transform_with_canvas() * point
+	return screen.y < get_viewport().get_visible_rect().size.y - FIELD_DROP_BOTTOM_MARGIN
+
+
+const FIELD_DROP_BOTTOM_MARGIN := 130.0
+
+
+func _screen_to_actors(screen_point: Vector2) -> Vector2:
+	return _actors.get_global_transform_with_canvas().affine_inverse() * screen_point
+
+
+# ── 드래그 화살표 ───────────────────────────────────────────────────────────
+const DRAG_ARROW_VALID := Color(0.95, 0.28, 0.25, 0.95)
+const DRAG_ARROW_IDLE := Color(0.85, 0.82, 0.78, 0.55)
+const DRAG_ARROW_ALLY := Color(0.45, 0.9, 0.5, 0.95)
+
+func _update_drag_visuals() -> void:
+	var card: Card = _manager.hand.cards[_drag_index] if _drag_index < _manager.hand.cards.size() else null
+	if card == null:
+		return
+
+	var category := _target_category(card)
+	var aims_at_enemy := not card.is_aoe and category == TargetCategory.ENEMY
+	var aims_at_ally := not card.is_aoe and category == TargetCategory.ALLY
+
+	_drag_hover_index = -1
+	if aims_at_enemy:
+		_drag_hover_index = _monster_at_point(_drag_pos)
+	elif aims_at_ally:
+		_drag_hover_index = _ally_at_point(_drag_pos)
+
+	# 겨눌 대상이 없는 카드(광역/자기 자신)는 화살표 없이 그냥 내려놓는 것이라 선을 그리지 않는다
+	if not (aims_at_enemy or aims_at_ally):
+		_clear_drag_arrow()
+		_clear_drag_highlight()
+		return
+
+	_ensure_drag_arrow()
+	var tip := _drag_pos
+	if _drag_hover_index >= 0:
+		# 대상 위에 올라가면 화살촉이 그 대상에게 딱 붙어, 지금 누구를 겨누는지가 분명해진다
+		tip = _monster_sprite_at(_drag_hover_index).position if aims_at_enemy else _ally_sprite_at(_drag_hover_index).position
+
+	var color := DRAG_ARROW_IDLE
+	if _drag_hover_index >= 0:
+		color = DRAG_ARROW_ALLY if aims_at_ally else DRAG_ARROW_VALID
+
+	_draw_drag_arrow(_card_anchor_point(_drag_index), tip, color)
+	# 적을 겨누는 화살표일 때만 그 적을 붉게 반짝여, 지금 조준 중인 게 누구인지 한눈에 보이게 한다
+	_set_drag_highlight(_drag_hover_index if aims_at_enemy else -1)
+
+
+# 카드 슬롯의 위쪽 가운데 (화살표가 카드에서 뻗어나오는 것처럼 보이게)
+func _card_anchor_point(index: int) -> Vector2:
+	var rect := _card_wrappers[index].get_global_rect()
+	return _screen_to_actors(Vector2(rect.get_center().x, rect.position.y))
+
+
+const DRAG_LIFT_SCALE := 1.08
+
+# 드래그가 임계값을 넘어 실제로 시작되는 순간: 부채꼴 회전을 풀고 살짝 들어 올린 뒤, 지금 쥔
+# 지점(마우스 - 카드 좌상단)을 기억해둔다. 이후로는 이 오프셋을 그대로 유지하며 커서를 따라가므로
+# 카드를 처음 잡은 바로 그 자리가 계속 손가락 밑에 붙어 있는 것처럼 보인다
+func _begin_card_drag_visual(index: int, mouse_screen_pos: Vector2) -> void:
+	var wrapper := _card_wrappers[index]
+	wrapper.rotation = 0.0
+	wrapper.scale = Vector2.ONE * DRAG_LIFT_SCALE
+	wrapper.z_index = 50
+	_drag_grab_offset = mouse_screen_pos - wrapper.global_position
+
+
+func _update_dragged_card_position(mouse_screen_pos: Vector2) -> void:
+	if _drag_index < 0 or _drag_index >= _card_wrappers.size():
+		return
+	_card_wrappers[_drag_index].global_position = mouse_screen_pos - _drag_grab_offset
+
+
+func _ensure_drag_arrow() -> void:
+	if _drag_arrow != null and is_instance_valid(_drag_arrow):
+		return
+	_drag_arrow = Line2D.new()
+	_drag_arrow.width = 7.0
+	_drag_arrow.z_index = 20 # 몬스터 위, HUD 아래
+	_drag_arrow.joint_mode = Line2D.LINE_JOINT_ROUND
+	_drag_arrow.begin_cap_mode = Line2D.LINE_CAP_ROUND
+	_drag_arrow.end_cap_mode = Line2D.LINE_CAP_ROUND
+	_actors.add_child(_drag_arrow)
+
+	_drag_arrow_head = Polygon2D.new()
+	_drag_arrow_head.z_index = 20
+	_drag_arrow_head.polygon = PackedVector2Array([Vector2(0, -17), Vector2(14, 11), Vector2(-14, 11)])
+	_actors.add_child(_drag_arrow_head)
+
+
+# 카드에서 대상까지 살짝 휘어지는 곡선 + 끝의 화살촉. 직선보다 곡선이 "던지는 궤적"처럼 읽힌다
+func _draw_drag_arrow(from: Vector2, to: Vector2, color: Color) -> void:
+	var control := from.lerp(to, 0.5) + Vector2(0, -min(from.distance_to(to) * 0.35, 190.0))
+	var points := PackedVector2Array()
+	var steps := 18
+	for i in range(steps + 1):
+		var t := float(i) / steps
+		var a := from.lerp(control, t)
+		var b := control.lerp(to, t)
+		points.append(a.lerp(b, t))
+	_drag_arrow.points = points
+	_drag_arrow.default_color = color
+
+	var tail: Vector2 = points[points.size() - 2]
+	_drag_arrow_head.position = to
+	_drag_arrow_head.rotation = (to - tail).angle() + PI * 0.5
+	_drag_arrow_head.color = color
+
+
+func _clear_drag_arrow() -> void:
+	if _drag_arrow != null and is_instance_valid(_drag_arrow):
+		_drag_arrow.queue_free()
+	if _drag_arrow_head != null and is_instance_valid(_drag_arrow_head):
+		_drag_arrow_head.queue_free()
+	_drag_arrow = null
+	_drag_arrow_head = null
+
+
+# ── 드래그 중 조준 대상 반짝임 ───────────────────────────────────────────────
+# 너무 새빨갛지 않게, 흰색과 은은한 붉은기 사이를 오가며 "지금 이 녀석을 겨누고 있다"만 자연스레 알려준다
+const DRAG_HIGHLIGHT_TINT := Color(1.3, 0.65, 0.6, 1.0)
+const DRAG_HIGHLIGHT_DURATION := 0.35
+
+func _set_drag_highlight(index: int) -> void:
+	if index == _drag_highlight_index:
+		return
+	_clear_drag_highlight()
+	_drag_highlight_index = index
+	if index < 0:
+		return
+	var sprite := _monster_sprite_at(index)
+	_drag_highlight_tween = create_tween()
+	_drag_highlight_tween.set_loops()
+	_drag_highlight_tween.tween_property(sprite, "modulate", DRAG_HIGHLIGHT_TINT, DRAG_HIGHLIGHT_DURATION).set_trans(Tween.TRANS_SINE)
+	_drag_highlight_tween.tween_property(sprite, "modulate", Color.WHITE, DRAG_HIGHLIGHT_DURATION).set_trans(Tween.TRANS_SINE)
+
+
+func _clear_drag_highlight() -> void:
+	if _drag_highlight_tween != null and is_instance_valid(_drag_highlight_tween):
+		_drag_highlight_tween.kill()
+	_drag_highlight_tween = null
+	if _drag_highlight_index >= 0:
+		_monster_sprite_at(_drag_highlight_index).modulate = Color.WHITE
+	_drag_highlight_index = -1
+
+
+# ── 예약 표식 ───────────────────────────────────────────────────────────────
+const RESERVE_MARKER_SIZE := Vector2(30, 30)
+const RESERVE_MARKER_PITCH := 34.0
+const RESERVE_MARKER_HEAD_GAP := 12.0
+const RESERVE_MARKER_BG := Color(0.1, 0.08, 0.12, 0.85)
+const RESERVE_MARKER_BORDER := Color(0.95, 0.82, 0.45, 0.95)
+
+# 예약된 카드를 "누구에게 걸렸는지" 읽히는 자리에 작은 아이콘으로 늘어놓는다:
+# 단일 대상은 그 대상 머리 위, 자기 자신에게 거는 카드(방어/피하기 등)는 플레이어 머리 위,
+# 광역기는 몬스터 무리 전체의 머리 위 가운데 — 겨눈 곳과 표식 자리가 어긋나지 않게.
+# 발밑이 아니라 머리 위로 두는 건 손패 카드와 겹치거나 하단 패널에 가려 안 보이던 문제 때문이고,
+# 몬스터는 이미 그 자리에 저항 배지/HP·마나바가 있어서 그보다 한 단 더 위(_monster_hud_top)에 앉힌다
+func _refresh_reservation_markers() -> void:
+	for marker in _reservation_markers:
+		if is_instance_valid(marker):
+			marker.queue_free()
+	_reservation_markers.clear()
+	if _manager == null:
+		return
+
+	var by_monster: Dictionary = {}
+	var by_ally: Dictionary = {}
+	var aoe_cards: Array = []
+	for entry in _manager.reserved:
+		var card: Card = entry["card"]
+		var target: int = entry["target_index"]
+		var category := _target_category(card)
+		if card.is_aoe:
+			aoe_cards.append(card)
+		elif category == TargetCategory.SELF or target < 0:
+			by_ally.get_or_add(0, []).append(card) # 자기 자신에게 거는 카드는 플레이어 자리로
+		elif category == TargetCategory.ALLY:
+			by_ally.get_or_add(target, []).append(card)
+		else:
+			by_monster.get_or_add(target, []).append(card)
+
+	for index in by_monster:
+		var sprite := _monster_sprite_at(index)
+		var top_y := _monster_hud_top_at(index)
+		_spawn_reservation_row(by_monster[index],
+			Vector2(sprite.position.x, top_y - RESERVE_MARKER_HEAD_GAP - RESERVE_MARKER_SIZE.y * 0.5))
+
+	for index in by_ally:
+		_spawn_reservation_row(by_ally[index], _ally_reserve_anchor(index))
+
+	if not aoe_cards.is_empty():
+		_spawn_reservation_row(aoe_cards, _enemy_group_anchor())
+
+
+# 플레이어는 머리 위에 상태이상 배지가 이미 크게 자리 잡고 있어(PLAYER_STATUS_BADGE_GAP) 그보다도
+# 더 위여야 하고, 동료는 배지 자리가 좁은 대신(COMPANION_STATUS_BADGE_GAP) 그만큼만 더 올리면 된다
+const ALLY_RESERVE_HEAD_GAP := 96.0
+const PLAYER_RESERVE_HEAD_GAP := 132.0
+
+func _ally_reserve_anchor(index: int) -> Vector2:
+	var gap: float = PLAYER_RESERVE_HEAD_GAP if index == 0 else ALLY_RESERVE_HEAD_GAP
+	return _ally_sprite_at(index).position + Vector2(0, -gap)
+
+
+# 살아있는 몬스터들의 가운데, 다 함께 이미 쌓인 HUD보다도 위 — 광역기 예약이 "이 무리 전체"를
+# 겨냥한다는 게 보이는 자리. 마리마다 쌓인 높이가 달라도 가장 높이 쌓인 쪽 기준으로 잡아 가리지 않는다
+func _enemy_group_anchor() -> Vector2:
+	var vp := get_viewport().get_visible_rect().size
+	var alive := _manager.alive_monsters()
+	if alive.is_empty():
+		return Vector2(vp.x * 0.75, vp.y * 0.3)
+
+	var sum_x := 0.0
+	var highest_top := INF
+	for monster in alive:
+		sum_x += _monster_sprite_at(monster.index).position.x
+		highest_top = minf(highest_top, _monster_hud_top_at(monster.index))
+	return Vector2(sum_x / alive.size(), highest_top - RESERVE_MARKER_HEAD_GAP - RESERVE_MARKER_SIZE.y * 0.5)
+
+
+# index 몬스터 머리 위에 이미 쌓인 HUD(저항 배지+HP/마나바)의 가장 위쪽 y. _layout_monsters가
+# 실행되기 전(레이아웃 준비 전) 같은 예외적인 경우엔 발밑 기준으로 대략값을 돌려준다
+func _monster_hud_top_at(index: int) -> float:
+	if index >= 0 and index < _monster_hud_top.size():
+		return _monster_hud_top[index]
+	return _monster_sprite_at(index).position.y - _monster_foot_offset(index) * 2.0
+
+
+func _spawn_reservation_row(cards: Array, anchor: Vector2) -> void:
+	var total_width := RESERVE_MARKER_PITCH * (cards.size() - 1)
+	for i in range(cards.size()):
+		var marker := _build_reservation_marker(cards[i])
+		marker.position = Vector2(
+			anchor.x - total_width * 0.5 + RESERVE_MARKER_PITCH * i - RESERVE_MARKER_SIZE.x * 0.5,
+			anchor.y - RESERVE_MARKER_SIZE.y * 0.5)
+		_reservation_markers.append(marker)
+
+
+func _build_reservation_marker(card: Card) -> Control:
+	var style := StyleBoxFlat.new()
+	style.bg_color = RESERVE_MARKER_BG
+	style.border_color = RESERVE_MARKER_BORDER
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(4)
+
+	var panel := Panel.new()
+	panel.size = RESERVE_MARKER_SIZE
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	panel.z_index = 13
+	panel.add_theme_stylebox_override("panel", style)
+	panel.tooltip_text = tr(card.card_name)
+	_actors.add_child(panel)
+
+	var icon := TextureRect.new()
+	icon.texture = _skill_icon_for(card)
+	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	icon.position = Vector2(4, 4)
+	icon.size = RESERVE_MARKER_SIZE - Vector2(8, 8)
+	panel.add_child(icon)
+	return panel
+
+
+# ── 카드 대기열 (라운드 양피지 밑) ───────────────────────────────────────────
+const PLAY_QUEUE_TOP_GAP := 8.0
+const PLAY_QUEUE_ROW_HEIGHT := 40.0
+const PLAY_QUEUE_ICON_SIZE := Vector2(34, 34)
+const PLAY_QUEUE_ARROW_COLOR := Color(0.85, 0.82, 0.78, 0.9)
+const PLAY_QUEUE_CANCEL_TINT := Color(0.95, 0.35, 0.3, 1.0)
+
+# 대기열을 담을 그릇을 한 번만 만들어둔다. 양피지 폭(252)에 매이지 않고 카드 수만큼 자유롭게
+# 늘어나야 해서, 화면 폭 전체를 차지하는 투명한 Control 안에 HBoxContainer를 두고 가운데 정렬만
+# 맡긴다 — RoundRow가 RoundPanel 안에서 alignment=1로 가운데 정렬하는 것과 같은 방식
+func _ensure_play_queue_row() -> void:
+	if _play_queue_row != null:
+		return
+
+	var host := Control.new()
+	host.name = "PlayQueueRow"
+	host.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	host.anchor_left = 0.0
+	host.anchor_right = 1.0
+	host.offset_left = 0.0
+	host.offset_right = 0.0
+	host.offset_top = _round_panel.offset_bottom + PLAY_QUEUE_TOP_GAP
+	host.offset_bottom = host.offset_top + PLAY_QUEUE_ROW_HEIGHT
+	_hud.add_child(host)
+
+	_play_queue_row = HBoxContainer.new()
+	_play_queue_row.anchor_left = 0.0
+	_play_queue_row.anchor_right = 1.0
+	_play_queue_row.anchor_top = 0.0
+	_play_queue_row.anchor_bottom = 1.0
+	_play_queue_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	_play_queue_row.add_theme_constant_override("separation", 8)
+	_play_queue_row.mouse_filter = Control.MOUSE_FILTER_PASS
+	host.add_child(_play_queue_row)
+
+
+# 예약 순서 그대로 "카드 -> 카드 -> ..."를 늘어놓는다. 실행되거나 취소된 카드는 reserved에서
+# 바로 빠지므로, 이 함수는 그때그때 reserved를 그대로 훑어 다시 그리기만 하면 된다
+func _refresh_play_queue() -> void:
+	_ensure_play_queue_row()
+	for child in _play_queue_row.get_children():
+		child.queue_free()
+
+	if _manager == null or _manager.reserved.is_empty():
+		_play_queue_row.get_parent().visible = false
+		return
+	_play_queue_row.get_parent().visible = true
+
+	for i in range(_manager.reserved.size()):
+		if i > 0:
+			var arrow := Label.new()
+			arrow.text = "→"
+			arrow.add_theme_color_override("font_color", PLAY_QUEUE_ARROW_COLOR)
+			arrow.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+			_play_queue_row.add_child(arrow)
+		_play_queue_row.add_child(_build_play_queue_item(i))
+
+
+# 대기열 칸 하나: 평소엔 카드 아이콘, 마우스를 올리면 아이콘이 흐려지고 그 위에 X가 떠 "눌러서
+# 취소"라는 게 보인다. 취소하면 치른 비용(마나/체력/무기 게이지)이 그대로 환불되고 손패로 돌아간다
+func _build_play_queue_item(index: int) -> Control:
+	var entry: Dictionary = _manager.reserved[index]
+	var card: Card = entry["card"]
+
+	var style := StyleBoxFlat.new()
+	style.bg_color = RESERVE_MARKER_BG
+	style.border_color = RESERVE_MARKER_BORDER
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(4)
+	var style_hover: StyleBoxFlat = style.duplicate() as StyleBoxFlat
+	style_hover.border_color = PLAY_QUEUE_CANCEL_TINT
+
+	var btn := Button.new()
+	btn.custom_minimum_size = PLAY_QUEUE_ICON_SIZE
+	btn.add_theme_stylebox_override("normal", style)
+	btn.add_theme_stylebox_override("hover", style_hover)
+	btn.add_theme_stylebox_override("pressed", style_hover)
+	btn.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
+	btn.tooltip_text = tr(card.card_name)
+	btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	btn.disabled = not _battle_inputs_enabled
+	btn.pressed.connect(_on_play_queue_cancel.bind(index))
+
+	var icon := TextureRect.new()
+	icon.texture = _skill_icon_for(card)
+	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	icon.anchor_right = 1.0
+	icon.anchor_bottom = 1.0
+	icon.offset_left = 3
+	icon.offset_top = 3
+	icon.offset_right = -3
+	icon.offset_bottom = -3
+	btn.add_child(icon)
+
+	var cancel_label := Label.new()
+	cancel_label.text = "×"
+	cancel_label.add_theme_color_override("font_color", PLAY_QUEUE_CANCEL_TINT)
+	cancel_label.add_theme_font_size_override("font_size", 20)
+	cancel_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	cancel_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	cancel_label.anchor_right = 1.0
+	cancel_label.anchor_bottom = 1.0
+	cancel_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	cancel_label.visible = false
+	btn.add_child(cancel_label)
+
+	btn.mouse_entered.connect(func() -> void:
+		icon.modulate.a = 0.25
+		cancel_label.visible = true
+	)
+	btn.mouse_exited.connect(func() -> void:
+		icon.modulate.a = 1.0
+		cancel_label.visible = false
+	)
+
+	return btn
+
+
+func _on_play_queue_cancel(index: int) -> void:
+	if _manager == null or not _is_interactive():
+		return
+	if not _manager.cancel_reservation(index):
+		return
+	SFXPlayer.play(CARD_CANCEL_SFX)
+	_message.text = tr("예약을 취소했다 — 카드가 손패로 돌아왔다.")
+	_refresh_reservation_markers()
+	_refresh_play_queue()
+	_refresh_all()
 
 
 # 조작을 받을 수 있는 상태인지 (평소 + 타겟 선택 중). 연출 중(BUSY)이거나 전투가 끝났으면(OVER) 아니다.
@@ -1303,39 +1828,7 @@ func _on_card_pressed(index: int) -> void:
 func _is_interactive() -> bool:
 	if GameState.get_flag("player_hp") <= 0:
 		return false
-	return _mode == Mode.ACTION or _mode == Mode.TARGETING
-
-
-# 이 카드가 "누구를 때릴지" 고를 필요가 있는지.
-#
-# 기준은 카드 색깔이 아니라 효과다 — 대상이 갈리는 건 "적에게 피해를 주는가"이지 물리/마법 여부가
-# 아니기 때문이다. 회복/마나회복/체력마나회복은 자기 자신에게, 방어/피하기/반격은 "다음 적 공격"에
-# 거는 상태라 어느 것도 고를 대상이 없다. 반격은 되받아칠 상대가 공격해온 몬스터로 이미 정해져 있다
-# (BattleTurnManager._resolve_single_attack).
-#
-# 살아있는 몬스터가 하나뿐이면 고를 여지가 없으므로 선택 UI를 건너뛴다 — 1:1 전투의 조작감이
-# 다인전 도입 전과 완전히 똑같이 유지된다
-func _needs_target(card: Card) -> bool:
-	var category := _target_category(card)
-	if category == TargetCategory.SELF:
-		return false
-	# 광역기는 대상이 "살아있는 전원"으로 이미 정해져 있어 고를 것이 없다
-	if card.is_aoe:
-		return false
-	if category == TargetCategory.ALLY:
-		# 살아있는 동료가 하나도 없으면(플레이어 혼자) 고를 여지가 없다 — 기존 1인 전투와 동일하게
-		return _alive_ally_count() > 1
-	return _manager != null and _manager.alive_monsters().size() > 1
-
-
-func _alive_ally_count() -> int:
-	if _manager == null:
-		return 0
-	var count := 0
-	for member in _manager.party:
-		if member.is_alive():
-			count += 1
-	return count
+	return _mode == Mode.ACTION
 
 
 enum TargetCategory { ENEMY, SELF, ALLY }
@@ -1364,90 +1857,18 @@ func _targets_an_ally(card: Card) -> bool:
 	return _target_category(card) == TargetCategory.ALLY
 
 
-# ── 타겟 선택 ──────────────────────────────────────────────────────────────
-
-# 카드를 손에 든 채 "누구를 때릴지" 고르는 상태로 들어간다. 이미 다른 카드로 고르는 중이었다면
-# 그 선택은 버리고 새 카드 기준으로 다시 시작한다
-func _begin_targeting(card: Card) -> void:
-	_clear_target_markers()
-	_pending_target_card = card
-	_mode = Mode.TARGETING
-	_targeting_ally = _targets_an_ally(card)
-
-	if _targeting_ally:
-		for i in range(_manager.party.size()):
-			if _manager.party[i].is_alive():
-				_target_markers.append(_build_ally_target_marker(i))
-	else:
-		for monster in _manager.alive_monsters():
-			_target_markers.append(_build_target_marker(monster.index))
-
-	_message.text = tr("%s — 대상을 선택하세요.\n(빈 곳 클릭 · 우클릭 · ESC로 취소)") % tr(card.card_name)
-	_refresh_hand_buttons()
+# 화살표로 겨누는 카드인지 (적 하나 또는 동료 하나). 광역/자기 자신 카드는 겨눌 대상이 없어
+# 화살표도 안 뜨므로 false — _handle_drag_input이 이걸로 "카드를 손에서 뽑아 따라가게 할지"를 가른다
+func _card_is_targeted(card: Card) -> bool:
+	if card.is_aoe:
+		return false
+	return _target_category(card) != TargetCategory.SELF
 
 
-# 타겟 선택을 물린다. 카드는 아직 손에 남아 있으므로 잃는 것은 없다
-func _cancel_targeting() -> void:
-	if _mode != Mode.TARGETING:
-		return
-	_clear_target_markers()
-	_pending_target_card = null
-	_mode = Mode.ACTION
-	_show_turn_message()
-	_refresh_hand_buttons()
-
-
-# 고른 몬스터에게 대기 중이던 카드를 낸다
-func _confirm_target(index: int) -> void:
-	var card := _pending_target_card
-	_clear_target_markers()
-	_pending_target_card = null
-	_mode = Mode.ACTION # _play_card_flow가 곧바로 BUSY로 바꾼다
-	if card != null:
-		_play_card_flow(card, index)
-
-
-# 타겟 선택 중 마우스/키보드 입력 처리.
-#
-# [입력을 소비하는 기준] 몬스터를 실제로 골랐거나 취소 키를 눌렀을 때만 소비한다. 빈 곳 좌클릭은
-# 취소만 하고 소비하지 않는데, 그래야 "손패의 다른 카드를 클릭"이 한 번의 클릭으로 처리된다 —
-# _input이 먼저 돌아 선택을 취소하고, 이어서 그 클릭이 카드 버튼까지 전달돼 새 카드로 다시 고르게 된다.
-# (Godot 입력 순서: _input → Control GUI → _unhandled_input)
+# 드래그 중이 아닐 때의 전역 입력은 지금 쓰지 않는다 — 카드 사용은 전부 드래그(_handle_drag_input)로 간다
 func _input(event: InputEvent) -> void:
-	if _mode != Mode.TARGETING:
-		return
-
-	if event.is_action_pressed("ui_cancel"):
-		_cancel_targeting()
-		get_viewport().set_input_as_handled()
-		return
-
-	if not (event is InputEventMouseButton) or not event.pressed:
-		return
-
-	if event.button_index == MOUSE_BUTTON_RIGHT:
-		_cancel_targeting()
-		get_viewport().set_input_as_handled()
-		return
-
-	if event.button_index != MOUSE_BUTTON_LEFT:
-		return
-
-	# 몬스터들은 CanvasLayer(View) 안의 Actors 밑에 있으므로, 뷰포트 좌표를 그대로 비교하면 어긋난다.
-	# get_global_transform_with_canvas()가 캔버스 레이어 변환까지 포함한 "Actors 로컬 → 화면" 변환이라,
-	# 그 역변환으로 클릭 지점을 Actors 로컬 좌표로 되돌린다.
-	#
-	# 커서 위치(get_local_mouse_position)가 아니라 "이 이벤트가 들고 온 좌표"를 쓰는 게 중요하다 —
-	# 둘은 보통 같지만, 이벤트가 실제 커서와 따로 전달되는 경우(입력 주입/터치/리매핑)에는 갈라져서
-	# 엉뚱한 곳을 짚게 된다
-	var local: Vector2 = _actors.get_global_transform_with_canvas().affine_inverse() * event.position
-	var picked := _ally_at_point(local) if _targeting_ally else _monster_at_point(local)
-	if picked >= 0:
-		_confirm_target(picked)
-		get_viewport().set_input_as_handled()
-		return
-
-	_cancel_targeting() # 빈 곳을 눌렀으면 취소만 하고 클릭은 흘려보낸다(위 주석 참고)
+	if _drag_index >= 0:
+		_handle_drag_input(event)
 
 
 # local_point가 어느 몬스터의 선택 영역 안에 있는지 (없으면 -1).
@@ -1471,61 +1892,6 @@ func _target_hit_rect(index: int) -> Rect2:
 	return Rect2(sprite.position.x - half_width, top, half_width * 2.0, bottom - top)
 
 
-# 몬스터 하나의 선택 표시(발밑 원 + 머리 위 화살표)를 만들어 Actors에 붙이고, 맥동/까딱임을 걸어둔다
-func _build_target_marker(index: int) -> Node2D:
-	var sprite := _monster_sprite_at(index)
-	var frame_size: float = _variants[index].get("idle_frame_size", BattleData.MOB_IDLE_FRAME_SIZE) if index < _variants.size() else BattleData.MOB_IDLE_FRAME_SIZE
-
-	var root := Node2D.new()
-	root.z_index = 1 # 몬스터보다 앞에 그려 원이 발에 가리지 않게
-	_actors.add_child(root)
-
-	# 발밑 원: 반투명 채움 + 또렷한 테두리 (그림자와 같은 타원 계산)
-	var foot := sprite.position + Vector2(0, frame_size * MONSTER_SCALE * 0.5 - 4.0)
-	var points := PackedVector2Array()
-	for i in range(24):
-		var a := TAU * i / 24.0
-		points.append(Vector2(cos(a) * TARGET_RING_RX, sin(a) * TARGET_RING_RY))
-
-	var fill := Polygon2D.new()
-	fill.polygon = points
-	fill.color = TARGET_RING_FILL
-	fill.position = foot
-	root.add_child(fill)
-
-	var outline := Line2D.new()
-	outline.points = points
-	outline.closed = true
-	outline.width = TARGET_RING_LINE_WIDTH
-	outline.default_color = TARGET_RING_LINE
-	outline.position = foot
-	root.add_child(outline)
-
-	# 머리 위 화살표 (몬스터를 가리키도록 아래를 향한 삼각형)
-	var art_top := sprite.position.y - frame_size * MONSTER_SCALE * 0.5 + _monster_art_tops[index] * MONSTER_SCALE
-	var arrow := Polygon2D.new()
-	arrow.polygon = PackedVector2Array([
-		Vector2(-TARGET_ARROW_HALF_WIDTH, -TARGET_ARROW_HEIGHT),
-		Vector2(TARGET_ARROW_HALF_WIDTH, -TARGET_ARROW_HEIGHT),
-		Vector2(0, 0),
-	])
-	arrow.color = TARGET_ARROW_COLOR
-	arrow.position = Vector2(sprite.position.x, art_top - TARGET_ARROW_GAP)
-	root.add_child(arrow)
-
-	var ring_tween := create_tween().set_loops()
-	ring_tween.tween_property(outline, "modulate:a", TARGET_RING_PULSE_ALPHA, TARGET_RING_PULSE_DURATION)
-	ring_tween.tween_property(outline, "modulate:a", 1.0, TARGET_RING_PULSE_DURATION)
-	_target_marker_tweens.append(ring_tween)
-
-	var arrow_tween := create_tween().set_loops()
-	var arrow_base := arrow.position
-	arrow_tween.tween_property(arrow, "position", arrow_base + Vector2(0, TARGET_ARROW_BOB), TARGET_ARROW_BOB_DURATION)
-	arrow_tween.tween_property(arrow, "position", arrow_base, TARGET_ARROW_BOB_DURATION)
-	_target_marker_tweens.append(arrow_tween)
-
-	return root
-
 
 # local_point가 어느 파티원(party 배열 인덱스)의 선택 영역 안에 있는지 (없으면 -1)
 func _ally_at_point(local_point: Vector2) -> int:
@@ -1546,149 +1912,6 @@ func _ally_target_hit_rect(index: int) -> Rect2:
 	return Rect2(art.get_center().x - half_width, top, half_width * 2.0, bottom - top)
 
 
-# 아군 하나의 선택 표시. _build_target_marker와 같은 모양이지만, 발/머리 위치를 몬스터처럼
-# 미리 계산된 표(_monster_art_tops) 대신 CharacterShadow._measure_art()로 직접 잰다 —
-# 동료마다 시트 여백이 달라 손으로 잰 상수를 못 쓴다 (3-d에서 배치할 때 쓴 것과 같은 방법)
-func _build_ally_target_marker(index: int) -> Node2D:
-	var sprite := _ally_sprite_at(index)
-	var art := CharacterShadow._measure_art(sprite)
-
-	var root := Node2D.new()
-	root.z_index = 1
-	_actors.add_child(root)
-
-	var foot := Vector2(art.get_center().x, art.end.y)
-	var points := PackedVector2Array()
-	for i in range(24):
-		var a := TAU * i / 24.0
-		points.append(Vector2(cos(a) * TARGET_RING_RX, sin(a) * TARGET_RING_RY))
-
-	var fill := Polygon2D.new()
-	fill.polygon = points
-	fill.color = TARGET_RING_FILL
-	fill.position = foot
-	root.add_child(fill)
-
-	var outline := Line2D.new()
-	outline.points = points
-	outline.closed = true
-	outline.width = TARGET_RING_LINE_WIDTH
-	outline.default_color = TARGET_RING_LINE
-	outline.position = foot
-	root.add_child(outline)
-
-	var arrow := Polygon2D.new()
-	arrow.polygon = PackedVector2Array([
-		Vector2(-TARGET_ARROW_HALF_WIDTH, -TARGET_ARROW_HEIGHT),
-		Vector2(TARGET_ARROW_HALF_WIDTH, -TARGET_ARROW_HEIGHT),
-		Vector2(0, 0),
-	])
-	arrow.color = TARGET_ARROW_COLOR
-	arrow.position = Vector2(art.get_center().x, art.position.y - TARGET_ARROW_GAP)
-	root.add_child(arrow)
-
-	var ring_tween := create_tween().set_loops()
-	ring_tween.tween_property(outline, "modulate:a", TARGET_RING_PULSE_ALPHA, TARGET_RING_PULSE_DURATION)
-	ring_tween.tween_property(outline, "modulate:a", 1.0, TARGET_RING_PULSE_DURATION)
-	_target_marker_tweens.append(ring_tween)
-
-	var arrow_tween := create_tween().set_loops()
-	var arrow_base := arrow.position
-	arrow_tween.tween_property(arrow, "position", arrow_base + Vector2(0, TARGET_ARROW_BOB), TARGET_ARROW_BOB_DURATION)
-	arrow_tween.tween_property(arrow, "position", arrow_base, TARGET_ARROW_BOB_DURATION)
-	_target_marker_tweens.append(arrow_tween)
-
-	return root
-
-
-# 선택 표시를 전부 걷어낸다. 트윈을 먼저 죽이고 나서 노드를 지우는 순서를 반드시 지킬 것
-# (루프 트윈이 살아있는 대상을 free하면 Godot이 "Infinite loop detected"로 멈춘다)
-func _clear_target_markers() -> void:
-	for tween in _target_marker_tweens:
-		if tween != null and tween.is_valid():
-			tween.kill()
-	_target_marker_tweens.clear()
-
-	for marker in _target_markers:
-		if is_instance_valid(marker):
-			marker.queue_free()
-	_target_markers.clear()
-
-
-# 카드 한 장을 내고 그 결과를 연출로 보여준다. 규칙 적용은 전부 매니저가 이미 끝낸 상태이므로
-# 여기서는 HP/마나를 다시 건드리지 않고 화면만 따라간다
-# target_index는 플레이어가 고른 대상의 자리 번호. -1이면 자동으로 살아있는 첫 몬스터를 고른다
-# (대상을 고를 필요가 없는 카드이거나, 몬스터가 한 마리뿐이라 선택 UI를 건너뛴 경우)
-func _play_card_flow(card: Card, target_index: int = -1) -> void:
-	_mode = Mode.BUSY
-	_set_inputs_enabled(false)
-
-	var hp_before: int = GameState.get_flag("player_hp")
-	var mana_before: int = GameState.get_flag("player_mana")
-	var monster_hp_before := 0
-	var ally_hp_before := 0
-
-	if _targets_an_ally(card):
-		# 힐/셀프버프는 몬스터가 아니라 party 배열(0=플레이어, 1+=동료)을 겨냥한다 —
-		# 완전히 다른 인덱스 공간이라 몬스터 쪽 대상 확정 로직을 타지 않는다
-		if target_index < 0 or target_index >= _manager.party.size() or not _manager.party[target_index].is_alive():
-			target_index = 0
-		ally_hp_before = _party_member_hp(target_index)
-		_card_targets = []
-		_hp_before_by_index.clear()
-	else:
-		# play_card()에 넘기는 값과 연출이 가리키는 대상이 반드시 같아야 하므로,
-		# 매니저를 부르기 "전에" 대상을 확정해 양쪽에 같은 값을 쓴다
-		var target := _manager.get_monster(target_index)
-		if target == null or not target.is_alive():
-			target = _manager.get_auto_target()
-		target_index = target.index if target != null else 0
-		monster_hp_before = target.hp if target != null else 0
-
-		# 이 카드가 실제로 때릴 대상들(광역이면 전원)과 그 시점의 체력을 기록해 둔다.
-		# 대상 판정은 매니저와 같은 함수를 써서 "때린 대상"과 "이펙트가 뜨는 대상"이 갈라지지 않게 하고,
-		# 체력은 연출이 마리별 실제 감소량을 계산하는 데 쓴다 (오버킬이어도 팝업 합계가 HP바와 맞는다)
-		_card_targets = _manager.resolve_target_indices(card, target_index)
-		_hp_before_by_index.clear()
-		for index in _card_targets:
-			_hp_before_by_index[index] = _monster_hp_of(index)
-
-	if not _manager.play_card(card, target_index):
-		_mode = Mode.ACTION
-		await _refresh_all()
-		return
-
-	await _animate_card(card, hp_before, mana_before, monster_hp_before, target_index, ally_hp_before)
-
-	await _refresh_all()
-
-	if _outcome == "victory":
-		_finish_victory()
-		return
-
-	# 이번 카드로 일부만 쓰러졌으면(전멸은 아님) 여기서 그 마리들의 사망 연출을 재생한다
-	await _play_pending_deaths()
-
-	# 손패를 전부 소진했으면 "턴 종료"를 누를 일만 남으므로 대신 눌러준다.
-	# (어떤 조건에서 자동으로 넘기고 어떤 조건에서 안 넘기는지는 is_hand_exhausted() 주석 참고)
-	# 마지막 카드 연출이 끝나자마자 적이 달려들면 급하게 느껴져서, 안내 문구와 함께 한 박자 둔다
-	if _manager.is_hand_exhausted():
-		_message.text = tr("손패를 모두 사용했다 — 턴을 넘긴다.")
-		await _wait(0.5)
-		await _end_turn_flow()
-		return
-
-	_mode = Mode.ACTION
-	_set_inputs_enabled(true)
-
-
-# 카드 종류별 연출. 피해는 대상별로 "시전 전 체력 - 지금 체력"을 계산해 표시하고
-# (오버킬이어도 숫자가 HP바와 어긋나지 않는다), 회복량은 GameState 값의 전후 차이로 보여준다.
-# 이펙트/사운드는 여기서 카드별로 직접 부르지 않고 _vfx_key_for_card()로 종류를 정한 뒤
-# _play_card_vfx()에서 이펙트+사운드를 함께 재생한다 — 화면 흔들림만 DAMAGE에서 따로 켠다
-# target_index는 이 카드가 때릴 몬스터의 자리 번호 (피해 카드가 아니면 쓰이지 않는다).
-# 전용 컷신 5종도 이 값을 그대로 넘겨받아, 순간이동/낙하 지점 같은 위치 계산과 팝업/HP바를
-# 전부 "플레이어가 고른 그 몬스터" 기준으로 잡는다
 func _animate_card(card: Card, hp_before: int, mana_before: int, monster_hp_before: int, target_index: int = 0, ally_hp_before: int = 0) -> void:
 	var target_sprite := _monster_sprite_at(target_index)
 	match card.effect:
@@ -1937,6 +2160,54 @@ func _vfx_key_for_card(card: Card) -> String:
 			return ""
 
 
+# 예약 목록 맨 앞의 카드 한 장을 실제로 발동하고 그 연출을 끝까지 기다린다.
+# 연출에 필요한 "발동 직전" 수치는 매니저를 부르기 전에 여기서 미리 찍어둔다 (기존 카드 흐름과 같은 방식)
+func _resolve_one_reservation() -> void:
+	var entry: Dictionary = _manager.reserved[0]
+	var card: Card = entry["card"]
+	var target_index: int = entry["target_index"]
+
+	# 예약해둔 사이에 그 적이 쓰러졌으면 카드는 그냥 허공을 가른다 (다른 적으로 옮겨 가지 않는다)
+	if not _manager.reservation_is_valid(entry):
+		_manager.execute_next_reservation()
+		_message.text = tr("%s — 이미 쓰러진 적이라 허공을 갈랐다.") % tr(card.card_name)
+		_refresh_reservation_markers()
+		_refresh_play_queue()
+		await _refresh_all()
+		await _wait(0.45)
+		return
+
+	var hp_before: int = GameState.get_flag("player_hp")
+	var mana_before: int = GameState.get_flag("player_mana")
+	var monster_hp_before := 0
+	var ally_hp_before := 0
+
+	if _targets_an_ally(card):
+		if target_index < 0 or target_index >= _manager.party.size() or not _manager.party[target_index].is_alive():
+			target_index = 0
+		ally_hp_before = _party_member_hp(target_index)
+		_card_targets = []
+		_hp_before_by_index.clear()
+	else:
+		var target := _manager.get_monster(target_index)
+		if target == null or not target.is_alive():
+			target = _manager.get_auto_target()
+		target_index = target.index if target != null else 0
+		monster_hp_before = target.hp if target != null else 0
+		_card_targets = _manager.resolve_target_indices(card, target_index)
+		_hp_before_by_index.clear()
+		for index in _card_targets:
+			_hp_before_by_index[index] = _monster_hp_of(index)
+
+	_manager.execute_next_reservation()
+	_refresh_reservation_markers()
+	_refresh_play_queue()
+
+	await _animate_card(card, hp_before, mana_before, monster_hp_before, target_index, ally_hp_before)
+	await _refresh_all()
+	await _play_pending_deaths()
+
+
 # 반격이 실제로 적을 때리는 순간의 연출. 이때는 카드가 손을 떠난 뒤(적 턴)라 카드 객체가 없으므로,
 # 카드 기반인 _play_card_vfx() 대신 물리 타격 이펙트를 직접 재생한다.
 # 반격은 "때린 그 몬스터"를 되받아치므로(BattleTurnManager._resolve_single_attack), 위치는
@@ -2028,9 +2299,7 @@ func _launch_projectile(from: Vector2, to: Vector2, key: String, scale_mult: flo
 func _on_weapon_pressed() -> void:
 	if not _is_interactive() or _manager == null:
 		return
-	# 카드 말고 다른 행동을 하면 고르던 대상은 물린다 — 무기를 바꾸면 어떤 카드를 낼지 판단 자체가
-	# 달라지므로, 고른 카드를 그대로 들고 있는 쪽이 오히려 헷갈린다
-	_cancel_targeting()
+	_finish_drag(true)
 	var next_weapon = WeaponState.WeaponType.STAFF if _manager.weapon.equipped == WeaponState.WeaponType.SWORD else WeaponState.WeaponType.SWORD
 	if _manager.switch_weapon(next_weapon):
 		_message.text = tr("무기를 %s(으)로 바꿨다.") % _weapon_name(next_weapon)
@@ -2043,19 +2312,35 @@ func _on_weapon_pressed() -> void:
 func _on_end_turn_pressed() -> void:
 	if not _is_interactive() or _manager == null:
 		return
-	_cancel_targeting() # 고르던 대상이 있으면 물리고 턴을 넘긴다
 	_end_turn_flow()
 
 
+# 턴종료 = 한 라운드. 예약한 카드를 한 장씩 발동하고, 그때마다 몬스터가 한 번씩 응수한다.
+# 매니저는 규칙만 한 걸음씩 진행시키고(begin/execute/take/finish), 여기서는 그 사이사이에 연출을
+# 끼워 넣는다 — 그래서 "카드 → 반격 → 카드 → 반격"이 눈에 보이는 순서 그대로 재생된다
 func _end_turn_flow() -> void:
 	_mode = Mode.BUSY
 	_set_inputs_enabled(false)
+	_finish_drag(true)
 
+	# 1) 동료 행동 (예약 장수와 무관하게 라운드당 한 번)
 	_enemy_attacks.clear()
-
-	_manager.end_turn() # 적 반격 + 승패 판정 + (안 끝났으면) 다음 턴 시작까지 전부 여기서 일어남
-
+	_manager.begin_round_resolution()
 	await _animate_enemy_turn()
+
+	# 2) 예약한 카드 ↔ 몬스터 응수를 번갈아
+	while not _manager.battle_over and _manager.has_reservations():
+		await _resolve_one_reservation()
+		if _manager.battle_over:
+			break
+		_enemy_attacks.clear()
+		_manager.take_next_monster_action()
+		await _animate_enemy_turn()
+
+	# 3) 라운드 마무리 (상태이상 감소/동료 패시브/다음 턴 열기 — 전부 여기서 한 번씩만)
+	_manager.finish_round_resolution()
+	_refresh_reservation_markers()
+	_refresh_play_queue()
 
 	# 여기서 _refresh_all()이 새 턴의 손패 뒤집기 연출까지 통째로 기다린다 — 그래야 바로 아래
 	# _set_inputs_enabled(true)가 애니메이션 도중에 카드 내용을 앞당겨 드러내며 끼어들지 않는다
@@ -2438,7 +2723,7 @@ func _monster_display_name(index: int) -> String:
 func _on_flee_pressed() -> void:
 	if not _is_interactive() or _flee_button.disabled:
 		return
-	_cancel_targeting()
+	_finish_drag(true)
 	_mode = Mode.BUSY
 	_set_inputs_enabled(false)
 
@@ -2673,6 +2958,8 @@ func _flip_card_in(index: int) -> Tween:
 # 확대하지 않는다 — 다만 "벗어남"은 어떤 상태에서도 처리해, 확대된 채 커서만 빠져나가 카드가
 # 커진 상태로 굳는 일이 없게 한다 (호버 중에 카드가 비활성으로 바뀌는 경우가 실제로 있다)
 func _on_card_hover(index: int, hovering: bool) -> void:
+	if index == _drag_index:
+		return # 지금 이 칸을 드래그로 쥐고 있다 — 호버 트윈이 끼어들면 커서 추적과 서로 싸운다
 	if hovering and (_hand_buttons[index].disabled or not _is_interactive()):
 		return
 	_tween_card_hover(index, hovering)
@@ -2724,9 +3011,12 @@ func _on_banner_button_released(button: Button) -> void:
 # 호버 상태를 트윈 없이 즉시 되돌린다. 손패가 새로 깔리거나 칸이 비는 등 "그 카드가 더 이상 아까
 # 그 카드가 아닌" 순간에 불러, 확대/떠오름이 다음 카드로 잘못 이어지지 않게 한다
 func _reset_card_hover(index: int) -> void:
+	if index < 0 or index >= _card_wrappers.size():
+		return
 	var wrapper := _card_wrappers[index]
 	wrapper.scale = Vector2.ONE
 	wrapper.position = _card_base_positions[index]
+	wrapper.rotation = _card_base_rotations[index] # 드래그로 0으로 풀어뒀던 부채꼴 회전을 되돌린다
 	wrapper.z_index = 0
 
 
@@ -2933,6 +3223,7 @@ func _weapon_name(weapon: int) -> String:
 
 # 연출 중에는 모든 조작을 잠근다 (손패 버튼은 _refresh_hand_buttons가 _mode도 함께 반영)
 func _set_inputs_enabled(enabled: bool) -> void:
+	_battle_inputs_enabled = enabled
 	_weapon_button.disabled = not enabled
 	_end_turn_button.disabled = not enabled
 	for btn in _hand_buttons:
@@ -2947,6 +3238,10 @@ func _set_inputs_enabled(enabled: bool) -> void:
 		for btn in _ally_active_buttons:
 			if btn != null:
 				btn.disabled = true
+	if _play_queue_row != null:
+		for item in _play_queue_row.get_children():
+			if item is Button:
+				item.disabled = not enabled
 
 
 # 현재 HP가 FLEE_HP_THRESHOLD 미만이면 도망가기 버튼을 비활성(회색) 처리
@@ -3455,8 +3750,13 @@ func _layout_allies(vp: Vector2) -> void:
 			_setup_shadow(_ally_shadows[i], foot, shadow_rx, shadow_rx * 0.3)
 
 		var card := _ally_card_panels[i]
-		card.offset_top = ALLY_CARD_TOP + (i - 1) * (ALLY_CARD_HEIGHT + MONSTER_CARD_GAP)
-		card.offset_bottom = card.offset_top + ALLY_CARD_HEIGHT
+		# 0번(플레이어) 카드는 .tscn에 그려진 실제 위치/높이를 그대로 쓰므로, 그 밑에 쌓을 때도
+		# 상수로 박아둔 값이 아니라 플레이어 카드의 "지금 실제" 높이와 아래쪽 끝을 기준으로 잡는다 —
+		# 안 그러면 에디터에서 플레이어 카드 위치나 크기만 바꿨을 때 동료 줄이 따라가지 않고 겹친다
+		var card_height: float = _player_card.offset_bottom - _player_card.offset_top
+		var stack_top: float = _player_card.offset_bottom + MONSTER_CARD_GAP
+		card.offset_top = stack_top + (i - 1) * (card_height + MONSTER_CARD_GAP)
+		card.offset_bottom = card.offset_top + card_height
 
 	# 카드는 낱장 테두리가 없어졌으니(Background visible=false), 이 액자 하나가 전체를 감싸야
 	# "통합 패널"로 보인다 — 동료 수만큼 마지막 카드 아래까지 늘린다
@@ -3519,9 +3819,17 @@ func _layout_monsters(vp: Vector2) -> void:
 		_monster_field_hp_bars[i].position = Vector2(bar_x, hp_bar_top)
 		_monster_field_mana_bars[i].position = Vector2(bar_x, mana_bar_top)
 
-		# HUD 카드는 오른쪽 위에 세로로 쌓는다 (0번이 맨 위 = 스프라이트 왼쪽부터가 아니라 자리 순서 그대로)
+		if i >= _monster_hud_top.size():
+			_monster_hud_top.resize(i + 1)
+		_monster_hud_top[i] = hp_bar_top
+
+		# HUD 카드는 오른쪽 위에 세로로 쌓는다 (0번이 맨 위 = 스프라이트 왼쪽부터가 아니라 자리 순서 그대로).
+		# 시작점은 상수로 박아두지 않고 액자(_enemy_frame)의 "지금 실제" 위쪽 끝 + 테두리 여백으로
+		# 잡는다 — 에디터에서 액자만 옮기면 카드 줄이 상수값(옛 위치)에 남아 액자 테두리와
+		# 어긋나거나 몹이 늘어날 때 서로 겹치는 버그가 났었다 (동료 카드와 같은 문제, 같은 해법)
 		var card := _monster_card_panels[i]
-		card.offset_top = MONSTER_CARD_TOP + i * (MONSTER_CARD_HEIGHT + MONSTER_CARD_GAP)
+		var stack_top: float = _enemy_frame.offset_top + PANEL_FRAME_PAD
+		card.offset_top = stack_top + i * (MONSTER_CARD_HEIGHT + MONSTER_CARD_GAP)
 		card.offset_bottom = card.offset_top + MONSTER_CARD_HEIGHT
 
 	_enemy_frame.offset_bottom = _monster_card_panels[count - 1].offset_bottom + PANEL_FRAME_PAD
@@ -4011,7 +4319,7 @@ func _play_time_rift_cutscene(card: Card, _monster_hp_before: int, _target_index
 	# 7) 오버레이를 확실히 원상복귀시킨다.
 	# [주의] release_out.finished를 await하면 안 된다 — 이 트윈(0.22초)은 바로 위 여운 대기
 	# (0.45초)가 끝나기 훨씬 전에 이미 완료돼 있어서, 이미 발신된 시그널을 기다리다 코루틴이
-	# 영영 멈춘다. 실제로 그렇게 짜서 최종 메시지가 안 뜨고 _play_card_flow가 끝나지 않았다.
+	# 영영 멈춘다. 실제로 그렇게 짜서 최종 메시지가 안 뜨고 카드 흐름이 끝나지 않았다.
 	# 어차피 알파를 직접 0으로 되돌리므로 트윈 완료를 기다릴 이유도 없다
 	_hit_flash.color = Color(TIME_RIFT_FREEZE_COLOR.r, TIME_RIFT_FREEZE_COLOR.g, TIME_RIFT_FREEZE_COLOR.b, 0.0)
 

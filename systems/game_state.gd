@@ -330,9 +330,19 @@ func damage_player(amount: int) -> void:
 	set_flag("player_hp", max(0, get_flag("player_hp") - amount))
 
 
+# player_hp를 amount만큼 늘리되 최대치를 넘지 않게 함 (전투 카드 예약 취소 환불용 — damage_player의 반대)
+func heal_player(amount: int) -> void:
+	set_flag("player_hp", min(get_flag("player_max_hp"), get_flag("player_hp") + amount))
+
+
 # 마나를 amount만큼 소모하되 0 밑으로 내려가지 않게 함. 마나는 (현재) 재충전 수단이 없는 순수 소모 자원
 func spend_mana(amount: int) -> void:
 	set_flag("player_mana", max(0, get_flag("player_mana") - amount))
+
+
+# 마나를 amount만큼 늘리되 최대치를 넘지 않게 함 (전투 카드 예약 취소 환불용 — spend_mana의 반대)
+func restore_mana(amount: int) -> void:
+	set_flag("player_mana", min(get_flag("player_max_mana"), get_flag("player_mana") + amount))
 
 
 # 현재 마나로 amount만큼의 비용을 감당할 수 있는지 (스킬 사용 가능 여부 판정)

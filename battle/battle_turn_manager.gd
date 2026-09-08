@@ -97,7 +97,7 @@ var _rolled_damage_multiplier: float = 1.0
 var _free_next_card: bool = false
 
 # 방어/피하기 카드가 만드는 "다음 적 턴 한정" 임시 상태. 적 턴을 해결하는 즉시 소모되고 0/false로 돌아간다.
-# (스펙에 세부 규칙이 없어 아래처럼 설계했다 — 근거는 _resolve_enemy_turn() 주석 참고)
+# (스펙에 세부 규칙이 없어 아래처럼 설계했다 — 근거는 take_next_monster_action() 주석 참고)
 var _pending_defense: int = 0
 var _pending_dodge: bool = false
 var _pending_counter: int = 0 # 반격(COUNTER) 카드로 예약해둔 반격 피해량. 0이면 반격 대기 아님
@@ -105,6 +105,19 @@ var _pending_counter: int = 0 # 반격(COUNTER) 카드로 예약해둔 반격 �
 # 적 턴을 해결하면 무조건 0으로 되돌아간다 — 다만 방어/피하기/반격과 달리 "첫 공격 한 방"이
 # 아니라 그 적 턴에 오는 공격 전부에 적용된다 (비율 감소는 방어처럼 소모되는 총량이 아니라서)
 var _pending_damage_reduction_fraction: float = 0.0
+
+# ── 예약(드래그로 내려놓은 카드) ────────────────────────────────────────────
+# 카드는 드롭하는 즉시 효과가 나가지 않고 여기 쌓였다가, 턴종료 때 예약 순서대로 하나씩 실행된다.
+# 항목: {"card": Card, "target_index": int}  (광역/자기대상 카드는 target_index가 -1)
+#
+# 비용(마나/체력)과 무기 과열 게이지는 "예약하는 순간" 치른다. 실행 시점으로 미루면 5장을
+# 예약해놓고 마나가 모자라 중간에 조용히 실패하거나, 과열로 뒤쪽 카드가 막히는 상황이 생긴다 —
+# 예약할 때마다 can_play_card()로 걸러야 그 모순이 안 생긴다. 미뤄지는 건 "카드의 효과"뿐이다
+var reserved: Array[Dictionary] = []
+
+# 라운드로빈 포인터: 다음에 행동할 몬스터의 monsters 배열 인덱스. 라운드가 바뀌어도 이어진다 —
+# 카드를 적게 내면 뒷줄 몬스터가 영영 행동 못 하는 일이 없도록
+var _monster_turn_cursor: int = 0
 
 
 # monster_type_은 BattleData.MONSTERS의 키("ORC" 등), variants는 등장할 마리 수만큼의 시각 변종
@@ -251,15 +264,30 @@ func can_afford_hp(cost: int) -> bool:
 # 고른다 — 지금은 UI가 대상을 고를 방법이 없어 호출부가 전부 기본값으로 부르고, 타겟팅 UI가 붙는
 # 다음 단계에서 플레이어가 고른 값이 여기로 들어온다. 피해 카드가 아니면 이 값은 쓰이지 않는다
 func play_card(card: Card, target_index: int = -1) -> bool:
+	if not reserve_card(card, target_index):
+		return false
+	execute_reserved_at(reserved.size() - 1)
+	reserved.pop_back()
+	return true
+
+
+# 카드를 손패에서 빼 예약 목록에 넣는다. 비용/과열은 여기서 치르고, 카드 효과만 턴종료로 미룬다
+# (자세한 이유는 reserved 선언부 주석). 광역/자기대상 카드는 target_index를 -1로 넘기면 된다.
+# 게이지 변화량(sword_delta/staff_delta)도 함께 기록해두는데, cancel_reservation()이 이 예약 하나만
+# 콕 집어 되돌릴 때 register_card_use()/on_use_set_gauge가 뒤섞인 최종 변화량을 다시 계산할 필요 없이
+# 그대로 부호만 뒤집어 쓰면 되게 하기 위함이다
+func reserve_card(card: Card, target_index: int = -1) -> bool:
 	if not can_play_card(card):
 		return false
 
 	var mana_cost := get_effective_mana_cost(card)
 	var hp_cost := get_effective_hp_cost(card)
 	# 표식은 카드 종류를 가리지 않고 여기서 소모된다 — 원래 비용이 0인 카드(베기 등)에 걸렸다면
-	# 아무 이득 없이 그냥 사라진다. 효과 적용(_apply_card_effect)보다 먼저 꺼야 가속을 연달아 낼 때
-	# 두 번째 가속이 스스로 켠 표식을 그 자리에서 다시 소모해버리는 일이 없다
+	# 아무 이득 없이 그냥 사라진다
 	_free_next_card = false
+
+	var sword_before := weapon.get_gauge(WeaponState.WeaponType.SWORD)
+	var staff_before := weapon.get_gauge(WeaponState.WeaponType.STAFF)
 
 	GameState.spend_mana(mana_cost) # 비용이 0이면 그대로 통과
 	if hp_cost > 0:
@@ -270,19 +298,91 @@ func play_card(card: Card, target_index: int = -1) -> bool:
 	if card.on_use_set_gauge > 0:
 		weapon.set_both_gauges(card.on_use_set_gauge)
 
-	var damage_dealt := _apply_card_effect(card, target_index)
-
 	hand.cards.erase(card)
+	reserved.append({
+		"card": card,
+		"target_index": target_index,
+		"mana_cost": mana_cost,
+		"hp_cost": hp_cost,
+		"sword_delta": weapon.get_gauge(WeaponState.WeaponType.SWORD) - sword_before,
+		"staff_delta": weapon.get_gauge(WeaponState.WeaponType.STAFF) - staff_before,
+	})
+	return true
+
+
+func has_reservations() -> bool:
+	return not reserved.is_empty()
+
+
+# 아직 실행되지 않은 예약을 취소하고 카드를 손패로 돌려준다. reserved에는 발동된 카드가 남지 않으므로
+# (execute_next_reservation이 즉시 pop한다), 여기서 되돌릴 대상은 "치른 비용"뿐이다 — 마나/체력을
+# 환불하고, 예약 당시 기록해둔 게이지 변화량만큼 되돌린다. 손패 순서상 어디로 돌아가는지는 신경 쓰지
+# 않고 그냥 맨 뒤에 붙인다(다음 populate가 알아서 빈 칸에 채워 보여준다)
+func cancel_reservation(index: int) -> bool:
+	if index < 0 or index >= reserved.size():
+		return false
+
+	var entry: Dictionary = reserved[index]
+	GameState.restore_mana(entry["mana_cost"])
+	if entry["hp_cost"] > 0:
+		GameState.heal_player(entry["hp_cost"])
+	var sword := WeaponState.WeaponType.SWORD
+	var staff := WeaponState.WeaponType.STAFF
+	weapon.set_gauge(sword, weapon.get_gauge(sword) - entry["sword_delta"])
+	weapon.set_gauge(staff, weapon.get_gauge(staff) - entry["staff_delta"])
+
+	reserved.remove_at(index)
+	hand.cards.append(entry["card"])
+	return true
+
+
+# 예약된 카드가 실행 시점에도 유효한지. 단일 대상 공격 카드는 그 대상이 죽어 있으면 무효다
+# (다른 적으로 자동 이동시키지 않는다 — 플레이어가 겨눈 자리가 사라진 것이므로 그냥 허공을 가른다)
+func reservation_is_valid(entry: Dictionary) -> bool:
+	var card: Card = entry["card"]
+	if card.is_aoe:
+		return not all_monsters_defeated()
+	var target_index: int = entry["target_index"]
+	if target_index < 0:
+		return true # 자기 자신/파티를 겨냥하는 카드는 사라질 대상이 없다
+	if not _targets_enemy_side(card):
+		return true
+	var target := get_monster(target_index)
+	return target != null and target.is_alive()
+
+
+# 이 카드가 적 진영을 겨냥하는지 (예약 무효 판정에만 쓴다 — 회복/버프는 아군 쪽이라 무효가 없다)
+func _targets_enemy_side(card: Card) -> bool:
+	match card.effect:
+		Card.EffectType.DAMAGE, Card.EffectType.DEBUFF_ATTACK_ENEMY:
+			return true
+		Card.EffectType.STATUS_PACKAGE:
+			return StatusEffects.package_targets_enemy(card.status_package)
+		_:
+			return false
+
+
+# 예약 목록의 index번째 카드를 실제로 실행한다. 대상이 이미 쓰러졌으면 효과 없이 버리기만 한다.
+# 반환값: {"played": bool, "card": Card, "damage": int} — played=false면 허공을 갈랐다는 뜻
+func execute_reserved_at(index: int) -> Dictionary:
+	var entry: Dictionary = reserved[index]
+	var card: Card = entry["card"]
+	var valid := reservation_is_valid(entry)
+	var damage_dealt := 0
+
+	if valid:
+		damage_dealt = _apply_card_effect(card, entry["target_index"])
+
 	var moved: Array[Card] = [card]
 	deck.discard(moved)
 
-	card_played.emit(card, damage_dealt)
+	if valid:
+		card_played.emit(card, damage_dealt)
+		# 전투 종료는 "전멸"이어야 한다 — 한 마리가 쓰러져도 남은 몬스터가 있으면 계속 싸운다
+		if all_monsters_defeated():
+			_finish_battle(false)
 
-	# 전투 종료는 "전멸"이어야 한다 — 한 마리가 쓰러져도 남은 몬스터가 있으면 계속 싸운다
-	if all_monsters_defeated():
-		_finish_battle(false)
-
-	return true
+	return {"played": valid, "card": card, "damage": damage_dealt}
 
 
 # 무기 전환 (턴당 3회 제한은 WeaponState가 관리). 성공했을 때만 시그널을 쏘고 true를 반환
@@ -657,22 +757,64 @@ func end_turn() -> void:
 	if battle_over:
 		return
 
-	_resolve_companion_turn()
+	begin_round_resolution()
+	while not battle_over and has_reservations():
+		execute_next_reservation()
+		if battle_over:
+			break
+		take_next_monster_action()
+	finish_round_resolution()
 
-	# 동료 공격으로 몬스터가 전멸했으면 적 턴을 열지 않고 바로 승리 처리한다 —
-	# 안 그러면 이미 죽은 몬스터가 반격하는 모양이 된다
+
+# ── 라운드 해결 3단계 ──────────────────────────────────────────────────────
+# 연출이 붙는 battle_scene은 이 셋을 직접 불러 카드 한 장 / 몬스터 한 번 사이에 애니메이션을 끼워
+# 넣고, 연출이 필요 없는 호출부(테스트 등)는 위 end_turn()으로 한 번에 돌린다. 규칙은 한 곳에만 있다
+
+# 1) 라운드 시작: 동료들이 각자 한 번씩 행동한다 (예약 카드 수와 무관하게 라운드당 1회)
+func begin_round_resolution() -> void:
+	_resolve_companion_turn()
+	# 동료 공격으로 몬스터가 전멸했으면 카드 교환을 시작하지 않고 바로 승리 처리한다
 	if all_monsters_defeated():
 		_finish_battle(false)
+
+
+# 2) 예약 목록 맨 앞의 카드 한 장을 실행하고 목록에서 뺀다
+func execute_next_reservation() -> Dictionary:
+	if reserved.is_empty():
+		return {"played": false, "card": null, "damage": 0}
+	var result := execute_reserved_at(0)
+	reserved.pop_front()
+	return result
+
+
+# 3) 라운드 마무리: 임시 상태를 털고, 라운드 단위 카운터를 딱 한 번씩 굴린 뒤 다음 턴을 연다.
+# 카드를 몇 장 냈든(교환을 몇 번 했든) 이 함수는 턴종료 1회당 1번만 불린다 —
+# 저항 재추첨(_start_turn), 상태이상 감소, 동료 패시브 카운터가 교환 수만큼 빨라지면 안 되기 때문
+func finish_round_resolution() -> void:
+	if battle_over:
+		reserved.clear()
 		return
 
-	_resolve_enemy_turn()
+	# 임시 상태는 이번 라운드에서만 유효 — 결과와 무관하게 소모하고 초기화한다
+	_pending_defense = 0
+	_pending_dodge = false
+	_pending_counter = 0
+	_pending_damage_reduction_fraction = 0.0
+
+	rounds_completed += 1
+	_tick_status_rounds()
+	for i in range(1, party.size()):
+		party[i].tick_round()
+		if party[i].consume_passive_trigger():
+			_trigger_party_passive_heal(i)
+
+	reserved.clear()
 
 	if _is_party_wiped():
 		_finish_battle(true)
 		return
 
 	# 반격으로 적이 쓰러졌을 수 있다. 이 검사가 없으면 전멸한 상대로 다음 턴이 열린다
-	# (플레이어 턴에 카드로 죽인 경우는 play_card가 이미 처리하지만, 반격은 적 턴에 일어난다)
 	if all_monsters_defeated():
 		_finish_battle(false)
 		return
@@ -682,7 +824,7 @@ func end_turn() -> void:
 
 # 동료 전원이 각자 한 번씩 자동으로 공격한다 (조작 없음, 쉬는 턴 없음 — Q8 확정).
 # 대상은 살아있는 몬스터 중 가중치 없이 무작위로 고른다. 몬스터가 전멸하면 남은 동료는 공격하지 않는다.
-# 마나가 바닥난 동료는 공격 대신 그 턴을 회복에 쓴다 (_resolve_enemy_turn이 몬스터에게 하는 것과 같은 방식 — §7)
+# 마나가 바닥난 동료는 공격 대신 그 턴을 회복에 쓴다 (take_next_monster_action이 몬스터에게 하는 것과 같은 방식 — §7)
 func _resolve_companion_turn() -> void:
 	for i in range(1, party.size()):
 		var companion = party[i]
@@ -723,55 +865,46 @@ func _resolve_companion_turn() -> void:
 #    공용(NEUTRAL)이고, 공용 카드는 원래도 저항 대상이 아니며(EnemyResistance.resists) 무기 보너스도
 #    받지 않는다(_equipment_damage_bonus). 즉 카드로 직접 때렸을 때와 같은 계산 결과가 나온다.
 #
-# [다인전 설계 결정 — 동시가 아니라 "순차"] 살아있는 몬스터가 자리 순서대로 한 마리씩 공격한다.
-# 동시 처리(피해를 다 더해 한 번에 적용)와 견줘 순차를 택한 이유:
-#  - 방어/피하기/반격이 전부 "다음 한 방"을 전제로 만들어진 카드라, 동시 처리에서는 그 한 방이
-#    무엇인지 정의할 수 없다. 순차면 "먼저 오는 공격에 쓰인다"로 규칙이 자명해진다.
-#  - 화면 연출도 이미 "몬스터가 달려들어 때린다"는 1:1 모션(battle_scene의 _lunge)으로 되어 있어,
-#    순차 공격이 기존 연출을 마리별로 반복하는 것만으로 자연스럽게 확장된다.
-#  - 피해 총량은 어느 쪽이든 같지만, 순차면 플레이어가 "몇 마리에게 얼마씩 맞았는지"를 눈으로 읽는다.
+# [교환 규칙] 카드 한 장이 실행될 때마다 몬스터가 딱 한 번 응수한다. 여러 마리면 라운드로빈으로
+# 차례가 돌아가고(_monster_turn_cursor), 그 순서는 라운드를 넘어가도 이어진다 — 카드를 적게 내면
+# 뒷줄 몬스터가 영영 행동 못 하는 일이 없게. 쓰러진 마리는 건너뛴다.
 #
-# [방어/피하기/반격이 마리 수만큼 뻥튀기되지 않게 하는 규칙] 이게 순차 처리의 핵심 쟁점이라 명시한다:
-#  - 피하기/반격은 "가장 먼저 오는 공격 한 방"에만 쓰이고 그 자리에서 소모된다. 한 장으로 3마리
-#    공격을 전부 무효화하면 다인전이 오히려 1:1보다 쉬워지는 역전이 일어난다.
-#  - 방어는 "값만큼의 피해를 흡수하는 총량 풀"로 동작한다(각 공격마다 값을 다시 빼주는 게 아니라,
-#    흡수한 만큼 풀에서 깎인다). 그래서 방어 카드 한 장의 값어치가 상대 마리 수와 무관하게 일정하고,
-#    1마리 전투에서는 기존과 완전히 동일하게 동작한다(값 4로 5 피해를 받으면 1만 들어옴).
-#  - 반격은 "때린 그 몬스터"에게 되돌려준다 (자동 타겟이 아니라 공격자). 받아넘긴 상대를 되받아친다는
-#    카드 설명 그대로이고, 여러 마리 중 누구를 치는지도 이 규칙이면 헷갈릴 여지가 없다.
-func _resolve_enemy_turn() -> void:
-	for monster in monsters:
-		if not monster.is_alive():
-			continue
-		# 앞선 몬스터의 공격으로 파티 전원이 쓰러졌으면 남은 몬스터는 때리지 않는다 —
-		# 죽은 파티원을 계속 때리는 연출이 이어지지 않게
-		if _is_party_wiped():
-			break
+# [방어/피하기/반격이 마리 수만큼 뻥튀기되지 않게 하는 규칙]
+#  - 피하기/반격은 "가장 먼저 오는 공격 한 방"에만 쓰이고 그 자리에서 소모된다.
+#  - 방어는 "값만큼의 피해를 흡수하는 총량 풀"로 동작한다(흡수한 만큼 풀에서 깎인다).
+#  - 반격은 "때린 그 몬스터"에게 되돌려준다 (자동 타겟이 아니라 공격자).
+# 셋 다 라운드가 끝날 때 finish_round_resolution()에서 한꺼번에 털린다
+func take_next_monster_action() -> Dictionary:
+	if battle_over or _is_party_wiped():
+		return {"acted": false, "index": -1}
 
-		# 마나가 남아 있으면 공격, 바닥났으면 그 턴은 숨고르기(회복).
-		# 판단은 마리마다 따로 하므로 다인전에서는 "둘은 때리고 하나는 회복하는" 턴도 나온다
-		if monster.can_attack():
-			monster.spend_attack_mana()
-			_resolve_single_attack(monster, _pick_attack_target())
-		else:
-			var gained := monster.recover()
-			monster_recovered.emit(monster.index, gained["mana"], gained["hp"])
+	var actor := _next_monster_in_rotation()
+	if actor == null:
+		return {"acted": false, "index": -1}
 
-	# 임시 상태는 이번 적 턴에서만 유효 — 결과와 무관하게 소모하고 초기화한다
-	# (피하기/반격은 위에서 이미 첫 공격에 소모됐을 수 있고, 방어는 남은 풀이 여기서 버려진다)
-	_pending_defense = 0
-	_pending_dodge = false
-	_pending_counter = 0
-	_pending_damage_reduction_fraction = 0.0
+	# 마나가 남아 있으면 공격, 바닥났으면 그 차례는 숨고르기(회복)
+	if actor.can_attack():
+		actor.spend_attack_mana()
+		_resolve_single_attack(actor, _pick_attack_target())
+	else:
+		var gained := actor.recover()
+		monster_recovered.emit(actor.index, gained["mana"], gained["hp"])
 
-	# 여기가 한 라운드의 끝이다 ("적 전원의 턴이 한 바퀴 돌았다"). 마리 수와 무관하게 한 번만
-	# 깎이므로, 다인전이라고 버프가 더 빨리 닳지 않는다
-	rounds_completed += 1
-	_tick_status_rounds()
-	for i in range(1, party.size()):
-		party[i].tick_round()
-		if party[i].consume_passive_trigger():
-			_trigger_party_passive_heal(i)
+	return {"acted": true, "index": actor.index}
+
+
+# 라운드로빈 커서에서 시작해 처음 만나는 살아있는 몬스터를 돌려주고, 커서를 그 다음 자리로 넘긴다.
+# 전멸했으면 null
+func _next_monster_in_rotation() -> MonsterState:
+	if monsters.is_empty():
+		return null
+	for step in range(monsters.size()):
+		var index := (_monster_turn_cursor + step) % monsters.size()
+		var candidate := monsters[index]
+		if candidate.is_alive():
+			_monster_turn_cursor = (index + 1) % monsters.size()
+			return candidate
+	return null
 
 
 # 동료 패시브(§7 "파티 전체 5턴 회복") 발동 효과: 살아있는 파티원 전원의 체력/마력을 각각
@@ -834,7 +967,7 @@ func _pick_attack_target() -> int:
 
 
 # 몬스터 한 마리의 공격을 해결한다. 피하기/반격은 여기서 소모되므로, 뒤이어 공격하는 몬스터는
-# 그 보호를 받지 못한다 (위 _resolve_enemy_turn 주석의 "뻥튀기 방지" 규칙).
+# 그 보호를 받지 못한다 (위 take_next_monster_action 주석의 "뻥튀기 방지" 규칙).
 # 방어/피하기/반격은 플레이어를 지키는 카드라 target이 플레이어(0번)일 때만 적용된다 —
 # 동료를 때리는 공격은 이 카드들을 소모하지 않고 그대로 지나간다
 func _resolve_single_attack(attacker: MonsterState, target_index: int) -> void:

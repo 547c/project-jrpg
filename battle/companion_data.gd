@@ -45,7 +45,7 @@ const COMPANIONS: Dictionary = {
 			"icon": preload("res://assets/GUI/RPG UI Pack (Franuka)/Individual files/1x/Mini icons/Icon_10.png"),
 			# 전투 시작 후 이 라운드 수가 지나야 사용 가능 — 반복 쿨다운이 아니라 1회성 게이트,
 			# 그 뒤로는 마나만 있으면 계속 사용 가능 (docs/companion_system_options.md §7)
-			"unlock_turn": 3,
+			"unlock_turn": 2,
 			"mana_cost_fraction": 0.2, # 사용 시 소모하는 마나 비율 — §7
 			"damage_reduction_fraction": 0.3, # 파티 전원에게 붙는 "다음 적 턴 피해 감소" 비율 — §7
 		},

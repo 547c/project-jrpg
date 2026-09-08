@@ -111,6 +111,7 @@ func start_game() -> void:
 	var old_scene := get_tree().current_scene
 	if old_scene != null:
 		_detach_player_from_scene() # 씬과 함께 플레이어까지 해제되지 않도록 먼저 빼낸다
+		_detach_followers_from_scene() # 팔로워도 같은 이유로 먼저 빼낸다
 		get_tree().root.remove_child(old_scene)
 		old_scene.queue_free()
 
@@ -152,6 +153,13 @@ func return_to_title() -> void:
 		_detach_player_from_scene() # 씬과 이중으로 해제되지 않도록 먼저 빼낸 뒤 정리
 		_player.queue_free()
 		_player = null
+
+	# 팔로워도 이번 플레이 세션과 함께 정리한다. 여기서 딕셔너리를 비워두지 않으면 다음 start_game()의
+	# _sync_companion_followers()가 "이미 있다"고 착각해 새로 만들지 않고, 해제된 참조로 재생성을 건너뛴다
+	for follower in _followers.values():
+		if is_instance_valid(follower):
+			follower.queue_free()
+	_followers.clear()
 
 	var old_scene := get_tree().current_scene
 	if old_scene != null:
@@ -249,6 +257,13 @@ func _sync_companion_followers() -> void:
 	if _player == null:
 		return
 
+	# 어딘가에서 팔로워 노드가 그냥 해제돼버린 채로 남아 있으면(원래는 _detach_followers_from_scene()이
+	# 막아주지만, 혹시 놓친 경로가 있어도) 여기서 걸러내 아래 재생성/재부착 루프가 해제된 노드의
+	# get_parent()를 불러 통째로 죽는 일이 없게 한다
+	for id in _followers.keys().duplicate():
+		if not is_instance_valid(_followers[id]):
+			_followers.erase(id)
+
 	for companion_id in GameState.get_active_companions():
 		if _followers.has(companion_id) or not FOLLOWER_SCRIPTS.has(companion_id):
 			continue
@@ -319,6 +334,18 @@ func _detach_player_from_scene() -> void:
 	add_child(_player)
 
 
+# 팔로워 버전 _detach_player_from_scene(). Y-Sort 씬(마을 등)에서는 팔로워가 그 씬의 자식으로
+# 들어가 있는데(_sync_companion_followers), 이 상태에서 씬을 free하면 팔로워까지 함께 사라져
+# _followers 딕셔너리에 해제된 참조만 남는다 — 다음 _sync_companion_followers() 호출에서
+# "이미 해제된 노드"의 get_parent()를 부르다 크래시가 난다. 이 함수를 old_scene을 free하기
+# 직전에 반드시 같이 불러야 한다
+func _detach_followers_from_scene() -> void:
+	for follower in _followers.values():
+		if is_instance_valid(follower) and follower.get_parent() != self:
+			follower.get_parent().remove_child(follower)
+			add_child(follower)
+
+
 # 메인 씬이 트리에 들어온 뒤, 현재 씬의 "최초 스폰" 지점으로 플레이어를 이동하고 방문 플래그를 기록
 func _place_initial_player() -> void:
 	var current := get_tree().current_scene
@@ -377,6 +404,7 @@ func _apply_battle_enter() -> void:
 	var old_scene := get_tree().current_scene
 	if old_scene != null:
 		_detach_player_from_scene() # 전투 씬으로 넘어가는 동안 플레이어가 씬과 함께 사라지지 않게
+		_detach_followers_from_scene() # 팔로워도 같은 이유로 먼저 빼낸다 (안 그러면 Y-Sort 씬과 함께 사라진다)
 		get_tree().root.remove_child(old_scene)
 		old_scene.queue_free()
 
@@ -440,6 +468,7 @@ func _apply_scene_change(scene_path: String, spawn_point_name: String, use_exact
 	var old_scene := get_tree().current_scene
 	if old_scene != null:
 		_detach_player_from_scene() # 씬과 함께 플레이어까지 해제되지 않도록 먼저 빼낸다
+		_detach_followers_from_scene() # 팔로워도 같은 이유로 먼저 빼낸다
 		get_tree().root.remove_child(old_scene)
 		old_scene.queue_free()
 

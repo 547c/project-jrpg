@@ -128,7 +128,7 @@ func spend_mana(amount: int) -> int:
 	return before - mana
 
 
-# 라운드 하나가 끝날 때 호출 (BattleTurnManager._resolve_enemy_turn과 같은 주기).
+# 라운드 하나가 끝날 때 호출 (BattleTurnManager.finish_round_resolution과 같은 주기).
 # 패시브 카운터를 올리고, 액티브를 다시 쓸 수 있게 라운드 사용 기록을 푼다 —
 # 실제 패시브 발동 판정은 consume_passive_trigger()가 한다
 func tick_round() -> void:

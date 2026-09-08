@@ -9,7 +9,7 @@ extends RefCounted
 # 자기 대상의 것을 골라 읽는다.
 #
 # [라운드의 정의] "적 전원의 턴이 한 바퀴 도는 것"이 한 라운드다. 감소 시점은 적 턴이 전부 끝난
-# 직후 한 번(BattleTurnManager._resolve_enemy_turn 끝)이라, 몬스터가 몇 마리든 라운드가 도는
+# 직후 한 번(BattleTurnManager.finish_round_resolution)이라, 몬스터가 몇 마리든 라운드가 도는
 # 속도는 같다 — 마리 수에 따라 버프가 빨리 닳으면 다인전에서 버프 카드의 값어치가 달라져 버린다.
 #
 # [수치 표현] magnitude는 "퍼센트"(20 = 20%)로 저장하고, 배율이 필요한 쪽에서 1.0 ± magnitude/100으로

@@ -2,7 +2,6 @@
 
 [ext_resource type="Script" uid="uid://d3jlp6dbxcr5w" path="res://battle/battle_scene.gd" id="1_battle"]
 [ext_resource type="Texture2D" uid="uid://786qtn7r4ods" path="res://assets/graphics/Pixel Crawler - Free Pack/Entities/Characters/Body_A/Animations/Idle_Base/Idle_Down-Sheet.png" id="3_playersheet"]
-[ext_resource type="Texture2D" uid="uid://b2egwruie0i0f" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Title banners/BannerSmall_05A.png" id="4_banner"]
 [ext_resource type="Texture2D" uid="uid://blg1cibh7edqr" path="res://assets/숲_전투씬.png" id="5_forest"]
 [ext_resource type="Texture2D" uid="uid://b6kot438bmwkt" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Title banners/BannerSmall_06A.png" id="6_leafbanner"]
 [ext_resource type="Texture2D" uid="uid://bs4pkhhwoyatk" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Background boxes/BGbox_07A.png" id="7_leafbox"]
@@ -17,6 +16,30 @@
 [ext_resource type="Texture2D" uid="uid://bv6x32xema2m" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/1x/Sliders & Bars/Slider01_Box.png" id="16_bar_box_s"]
 [ext_resource type="Texture2D" uid="uid://k0ucw7tdttj0" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/1x/Sliders & Bars/Slider01_Bar02.png" id="17_bar_hp_s"]
 [ext_resource type="Texture2D" uid="uid://dkaynws613ouh" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/1x/Sliders & Bars/Slider01_Bar01.png" id="18_bar_mp_s"]
+[ext_resource type="Shader" uid="uid://bykkjrhfyq70d" path="res://battle/shaders/background_blur.gdshader" id="19_blurshader"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_bg_blur"]
+shader = ExtResource("19_blurshader")
+shader_parameter/blur_amount = 3.0
+shader_parameter/edge_margin = 0.22
+
+[sub_resource type="Gradient" id="Gradient_letterbox_top"]
+offsets = PackedFloat32Array(0, 0.65, 1)
+colors = PackedColorArray(0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_letterbox_top"]
+gradient = SubResource("Gradient_letterbox_top")
+width = 4
+fill_to = Vector2(0, 1)
+
+[sub_resource type="Gradient" id="Gradient_letterbox_bottom"]
+offsets = PackedFloat32Array(0, 0.35, 1)
+colors = PackedColorArray(0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_letterbox_bottom"]
+gradient = SubResource("Gradient_letterbox_bottom")
+width = 4
+fill_to = Vector2(0, 1)
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_leaf_panel"]
 texture = ExtResource("7_leafbox")
@@ -115,13 +138,6 @@ bg_color = Color(0, 0, 0, 0)
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_card_btn_hover"]
 bg_color = Color(1, 1, 1, 0.14)
 
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_button_banner"]
-texture = ExtResource("4_banner")
-texture_margin_left = 16.0
-texture_margin_top = 10.0
-texture_margin_right = 16.0
-texture_margin_bottom = 10.0
-
 [node name="BattleScene" type="Node2D" unique_id=876674391]
 script = ExtResource("1_battle")
 
@@ -166,6 +182,35 @@ color = Color(0, 0, 0, 0.28)
 texture_filter = 1
 scale = Vector2(1.1, 1.1)
 
+[node name="BackgroundBlur" type="ColorRect" parent="View" unique_id=1080425043]
+material = SubResource("ShaderMaterial_bg_blur")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="LetterboxTop" type="TextureRect" parent="View" unique_id=888016422]
+anchors_preset = -1
+anchor_right = 1.0
+anchor_bottom = 0.07
+grow_horizontal = 2
+mouse_filter = 2
+texture = SubResource("GradientTexture2D_letterbox_top")
+expand_mode = 1
+
+[node name="LetterboxBottom" type="TextureRect" parent="View" unique_id=1148730048]
+anchors_preset = -1
+anchor_top = 0.93
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+texture = SubResource("GradientTexture2D_letterbox_bottom")
+expand_mode = 1
+
 [node name="HUD" type="Control" parent="View" unique_id=1995357692]
 z_index = 25
 layout_mode = 3
@@ -179,9 +224,9 @@ mouse_filter = 2
 [node name="PartyFrame" type="Panel" parent="View/HUD" unique_id=905172315]
 layout_mode = 1
 offset_left = 12.0
-offset_top = 12.0
+offset_top = 60.0
 offset_right = 240.0
-offset_bottom = 158.0
+offset_bottom = 206.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxTexture_leaf_panel")
 
@@ -189,9 +234,9 @@ theme_override_styles/panel = SubResource("StyleBoxTexture_leaf_panel")
 layout_mode = 1
 anchors_preset = 0
 offset_left = 34.0
-offset_top = 34.0
+offset_top = 82.0
 offset_right = 218.0
-offset_bottom = 82.0
+offset_bottom = 130.0
 mouse_filter = 2
 
 [node name="Portrait" type="TextureRect" parent="View/HUD/PlayerCard" unique_id=2107059311]
@@ -266,9 +311,9 @@ anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
 offset_left = -210.0
-offset_top = 12.0
+offset_top = 60.0
 offset_right = -12.0
-offset_bottom = 170.0
+offset_bottom = 218.0
 grow_horizontal = 0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxTexture_leaf_panel")
@@ -279,9 +324,9 @@ anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
 offset_left = -188.0
-offset_top = 34.0
+offset_top = 82.0
 offset_right = -34.0
-offset_bottom = 68.0
+offset_bottom = 116.0
 grow_horizontal = 0
 mouse_filter = 2
 
@@ -341,9 +386,9 @@ anchors_preset = -1
 anchor_left = 0.5
 anchor_right = 0.5
 offset_left = -126.0
-offset_top = 12.0
+offset_top = 60.0
 offset_right = 126.0
-offset_bottom = 62.0
+offset_bottom = 110.0
 grow_horizontal = 2
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxTexture_parchment")
@@ -365,7 +410,6 @@ alignment = 1
 
 [node name="RoundLabel" type="Label" parent="View/HUD/RoundPanel/RoundRow" unique_id=1349091936]
 layout_mode = 2
-size_flags_vertical = 4
 theme_override_colors/font_color = Color(0.29, 0.16, 0.14, 1)
 theme_override_font_sizes/font_size = 15
 text = "라운드 1"
@@ -373,7 +417,6 @@ vertical_alignment = 1
 
 [node name="DeckCountLabel" type="Label" parent="View/HUD/RoundPanel/RoundRow" unique_id=2021839141]
 layout_mode = 2
-size_flags_vertical = 4
 theme_override_colors/font_color = Color(0.2, 0.32, 0.45, 1)
 theme_override_font_sizes/font_size = 13
 text = "덱 0"
@@ -381,22 +424,21 @@ vertical_alignment = 1
 
 [node name="DiscardCountLabel" type="Label" parent="View/HUD/RoundPanel/RoundRow" unique_id=2013255108]
 layout_mode = 2
-size_flags_vertical = 4
 theme_override_colors/font_color = Color(0.42, 0.27, 0.16, 1)
 theme_override_font_sizes/font_size = 13
 text = "버림 0"
 vertical_alignment = 1
 
-[node name="OrbLeftBall" type="TextureRect" parent="View/HUD"]
+[node name="OrbLeftBall" type="TextureRect" parent="View/HUD" unique_id=476403373]
 texture_filter = 2
 layout_mode = 1
 anchors_preset = -1
 anchor_left = 0.5
 anchor_right = 0.5
 offset_left = -187.0
-offset_top = 12.0
+offset_top = 60.0
 offset_right = -161.0
-offset_bottom = 38.0
+offset_bottom = 86.0
 grow_horizontal = 2
 scale = Vector2(1.9407037, 1.9361445)
 mouse_filter = 2
@@ -411,27 +453,27 @@ anchors_preset = -1
 anchor_left = 0.5
 anchor_right = 0.5
 offset_left = -218.0
-offset_top = -3.0
+offset_top = 45.0
 offset_right = -138.0
-offset_bottom = 77.0
+offset_bottom = 125.0
 grow_horizontal = 2
 mouse_filter = 2
 texture = ExtResource("9_demon_left")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="OrbRightBall" type="TextureRect" parent="View/HUD"]
+[node name="OrbRightBall" type="TextureRect" parent="View/HUD" unique_id=693572994]
 texture_filter = 2
 layout_mode = 1
 anchors_preset = -1
 anchor_left = 0.5
 anchor_right = 0.5
 offset_left = 136.0
-offset_top = 9.0
+offset_top = 57.0
 offset_right = 162.0
-offset_bottom = 35.0
+offset_bottom = 83.0
 grow_horizontal = 2
-scale = Vector2(1.9407037, 1.9361445)
+scale = Vector2(1.9407037, 2.2561448)
 mouse_filter = 2
 texture = ExtResource("12_orb_mp")
 expand_mode = 1
@@ -444,9 +486,9 @@ anchors_preset = -1
 anchor_left = 0.5
 anchor_right = 0.5
 offset_left = 138.0
-offset_top = -3.0
+offset_top = 45.0
 offset_right = 218.0
-offset_bottom = 77.0
+offset_bottom = 125.0
 grow_horizontal = 2
 mouse_filter = 2
 texture = ExtResource("10_demon_right")
@@ -459,7 +501,8 @@ anchors_preset = 12
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = -295.0
+offset_top = -340.0
+offset_bottom = -45.0
 grow_horizontal = 2
 grow_vertical = 0
 mouse_filter = 2
@@ -593,6 +636,8 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_top = 45.0
+offset_bottom = 45.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
