@@ -521,6 +521,17 @@ const RESIST_BADGE_MODULATE := {
 }
 const RESIST_BADGE_GAP := 14.0 # 몬스터 그림 꼭대기 위로 이만큼 띄운다 (실측 간격 약 8px)
 
+# ── 필드 개별 미니 HP/마나바 (몬스터 머리 위) ────────────────────────────────
+# 우상단 통합 패널과 별개로, 필드에서 "지금 이 마리가 얼마나 남았는지" 바로 보이게 하는 용도.
+# 저항 배지보다 한 단 더 위에 HP(빨강)-마나(보랏빛 파랑) 순으로 쌓는다
+const FIELD_MINI_BAR_SIZE := Vector2(40.0, 4.0)
+const FIELD_MINI_BAR_GAP := 2.0 # HP바와 마나바 사이 간격
+const FIELD_MINI_BAR_HEAD_GAP := 5.0 # 저항 배지 위로 띄우는 간격
+const FIELD_MINI_HP_BG := Color(0.08, 0.05, 0.05, 0.85)
+const FIELD_MINI_HP_FILL := Color(0.82, 0.32, 0.28, 1.0)
+const FIELD_MINI_MANA_BG := Color(0.08, 0.07, 0.13, 0.85)
+const FIELD_MINI_MANA_FILL := Color(0.45, 0.38, 0.9, 1.0)
+
 # ── 버프/디버프 배지 ────────────────────────────────────────────────────────
 # 전용 아이콘 에셋이 없어 짧은 텍스트("공격력↑ 20%")로 대신한다 — 저항 배지처럼 대상 위에 띄우되,
 # 정교한 아이콘 디자인은 나중에 다듬을 자리다 (StatusEffects.KIND_LABEL만 갈아끼우면 된다).
@@ -529,42 +540,61 @@ const RESIST_BADGE_GAP := 14.0 # 몬스터 그림 꼭대기 위로 이만큼 띄
 # 화면 가장자리와 우상단 HUD 카드에 끼여 읽기 어려웠다 — 아래쪽은 플레이어 줄까지 비어 있어 넉넉하다
 const STATUS_BADGE_GAP := 6.0
 const PLAYER_STATUS_BADGE_GAP := 62.0 # 플레이어는 머리 위 (위쪽에 가리는 UI가 없다)
+# 동료는 필드 자리가 자기 HUD 카드 바로 밑이라, 플레이어와 같은 간격을 쓰면 배지가 카드(특히
+# 액티브 버튼)를 덮어버린다. 카드 아래로 빠지는 선에서 최대한 가깝게 붙인 값
+const COMPANION_STATUS_BADGE_GAP := 20.0
 const STATUS_BADGE_FONT_SIZE := 11
 const BUFF_COLOR := Color(0.55, 0.95, 0.55, 1)
 const DEBUFF_COLOR := Color(1.0, 0.6, 0.45, 1)
 
 # ── 다인전 배치 ──────────────────────────────────────────────────────────────
-# 몬스터 줄의 세로 위치(뷰포트 높이 대비). 단일 전투 때 쓰던 값을 그대로 유지해, 1마리 전투의
-# 구도가 다인전 도입 전과 똑같이 보이게 한다
-const MONSTER_ROW_Y_FRACTION := 0.19
-const MONSTER_GAP := 16.0 # 옆 몬스터와 벌릴 최소 간격(스프라이트 폭에 더해진다)
-# HUD 몬스터 카드(.tscn의 MonsterCard) 치수. 세로로 쌓을 위치를 계산하는 데 쓰고,
-# 스프라이트가 카드 열을 침범하지 않게 하는 오른쪽 한계선도 이 폭에서 나온다
-const MONSTER_CARD_WIDTH := 231.0
-const MONSTER_CARD_HEIGHT := 75.0
-const MONSTER_CARD_TOP := 16.0
+const MONSTER_GAP := 8.0 # 옆 몬스터와 벌릴 최소 간격(아래 MONSTER_HUDDLE_FACTOR로 줄인 폭에 더해진다)
+# 프레임 폭을 그대로 다 더하면(예전 값) 3마리가 화면을 가로질러 한 줄로 늘어서 보였다. 플레이어/동료가
+# ALLY_OFFSET_STEP만큼 겹치듯 붙어 있는 것과 같은 느낌으로, 몬스터도 폭의 일부만 간격에 반영해 뭉쳐 보이게 한다
+const MONSTER_HUDDLE_FACTOR := 0.45
+# HUD 몬스터 카드(.tscn의 MonsterCard) 치수. 세로로 쌓을 위치를 계산하는 데 쓴다
+const MONSTER_CARD_HEIGHT := 34.0 # 한 마리 줄 높이 (미니 HP/마나바 두 줄)
+const MONSTER_CARD_TOP := 34.0 # 액자 나뭇잎 테두리 안쪽에서 시작
 const MONSTER_CARD_GAP := 6.0
-const MONSTER_CARD_MARGIN := 24.0 # 카드 열과 몬스터 스프라이트 사이 여백
+# 몬스터 줄은 통합 패널보다 한참 아래(발밑 기준)에 서 있어서 패널 폭만큼 비워둘 필요가 없다 —
+# 화면 오른쪽 끝에서 이만큼만 띄운다 (플레이어는 왼쪽 22% 지점 고정, 몬스터는 여기서부터
+# 왼쪽으로 쌓이므로 1~3마리 전부 오른쪽에 붙어 있는 진형이 된다)
+const MONSTER_EDGE_MARGIN := 56.0
+# 나뭇잎 액자(BGbox_07A)의 9슬라이스 테두리가 잡아먹는 두께. 액자 아래끝을 마지막 줄에서
+# 이만큼 더 내려야 덩굴 장식이 내용물을 물지 않는다
+const PANEL_FRAME_PAD := 22.0
+# 동료 카드는 몬스터 카드보다 높다 — 플레이어/동료는 HP·마나바를 인게임 HUD와 같은 큰 슬라이더로
+# 그리기 때문이다 (몬스터 쪽은 세 줄을 쌓아야 해서 같은 그림의 1x 버전을 쓴다)
+const ALLY_CARD_HEIGHT := 48.0
 # 쓰러진 몬스터의 HUD 카드에 씌우는 색조 (지우지 않고 흐리게 남겨 자리 번호가 계속 맞게)
 const DEFEATED_CARD_MODULATE := Color(0.45, 0.45, 0.5, 0.75)
 
 # 동료는 플레이어보다 한 걸음씩 더 뒤(왼쪽 위)로 쌓인다 — 몬스터가 오른쪽 한계에서 왼쪽으로
-# 쌓이는 것의 좌우 대칭. 카드는 PlayerCard(높이 75) 바로 아래에 MonsterCard와 같은 간격으로 쌓는다
+# 쌓이는 것의 좌우 대칭. 카드는 PlayerCard 바로 아래에 MonsterCard와 같은 간격으로 쌓는다
 const ALLY_OFFSET_STEP := Vector2(-90.0, -40.0)
-const ALLY_CARD_TOP := 97.0
+const ALLY_CARD_TOP := 88.0
 
-# ── 몬스터 마나바 (HUD 카드 안, HP바 바로 아래) ──────────────────────────────
-# HP바처럼 정교할 필요는 없고 "줄었다/찼다"만 읽히면 되므로, .tscn을 고치는 대신 코드로 만들어
-# 붙인다 (0번 카드에 붙여두면 나머지 카드는 duplicate()로 그대로 물려받는다).
-# 색은 HP(빨강)와 확실히 갈리는 보랏빛 파랑 — 플레이어 마나바(하늘색)와도 톤이 달라 헷갈리지 않는다
-const MONSTER_MANA_BAR_RECT := Rect2(80, 27, 145, 9)
-const MONSTER_MANA_BAR_BG := Color(0.08, 0.07, 0.13, 0.85)
-const MONSTER_MANA_BAR_FILL := Color(0.45, 0.38, 0.9, 1.0)
+# ── 숲 배경 위 서 있는 자리 ────────────────────────────────────────────────
+# 배경이 단색 바닥이던 시절엔 스프라이트 "중심"의 화면 비율로 자리를 잡았는데, 숲 그림에서는
+# 실제로 밟고 선 땅의 높이가 정해져 있어서 발바닥 기준으로 잡아야 한다. 프레임 크기가 32/64로
+# 제각각인 몬스터도 이렇게 해야 발이 같은 땅에 놓인다
+const ALLY_FOOT_Y_FRACTION := 0.76 # 플레이어가 밟는 앞쪽 풀밭
+const MONSTER_FOOT_Y_FRACTION := 0.72 # 몬스터 줄은 한 걸음 뒤쪽 땅 (쓰러진 통나무 앞 풀밭)
+# 몬스터도 동료들처럼 사선으로 겹쳐 세운다 (일렬로 세우면 진형이 납작해 보인다).
+# 뒤 번호일수록 오른쪽 뒤로 물러나므로 y가 위로 올라간다
+const MONSTER_DEPTH_STEP := Vector2(0.0, -20.0)
 
-# ── 동료 액티브 버튼 (HUD 카드 안, 동료는 골드가 없어 비는 자리를 재활용) ──────────
-const ALLY_ACTIVE_BUTTON_RECT := Rect2(80, 47, 145, 20)
+
+# ── 동료 액티브 버튼 (HUD 카드 줄의 오른쪽 끝) ──────────────────────────────
+# 이름을 텍스트로 늘어놓은 긴 막대였을 때는 아이콘이 있어도 "회색 텍스트박스"로만 보였다.
+# 이름/설명은 툴팁으로 옮기고 아이콘 하나만 남긴다. 초상화 위에 얹으면 동료 얼굴을 가려서
+# 바 오른쪽 끝(눈금이 거의 안 읽히는 자리)으로 뺐다
+const ALLY_ACTIVE_BUTTON_RECT := Rect2(158, 12, 24, 24)
 const ALLY_ACTIVE_BUTTON_BG := Color(0.35, 0.28, 0.55, 1.0)
 const ALLY_ACTIVE_BUTTON_DISABLED_BG := Color(0.2, 0.19, 0.22, 0.9)
+# 카드/몹 UI가 쓰는 픽셀아트 프레임 느낌을 흉내 내려고 테두리를 준다 (아이콘 도입 전엔 민무늬 배경뿐이었다)
+const ALLY_ACTIVE_BUTTON_BORDER := Color(0.72, 0.62, 0.95, 1.0)
+const ALLY_ACTIVE_BUTTON_DISABLED_BORDER := Color(0.4, 0.38, 0.42, 1.0)
 const ALLY_ACTIVE_BADGE_SIZE := Vector2(18, 18)
 
 # ── 피격 시 화면 가장자리 붉은 물듦 ─────────────────────────────────────────
@@ -589,8 +619,8 @@ const ENEMY_RECOVER_HOLD := 0.55 # 회복 연출을 보여주는 시간
 # 정지 지점 계산은 _flash_slash_dash_target과 같은 "두 스프라이트 테두리 사이 간격" 방식을 쓴다
 const ENEMY_CHARGE_GAP := 18.0
 const ENEMY_CHARGE_IN_DURATION := 0.16
-# 복귀는 던져두고(await 없이) 다음 연출로 넘어간다. 이 값이 아래 피격 연출의 대기 시간(최소 0.3초)보다
-# 짧아야, 다음 몬스터가 움직이기 전에 이미 제자리로 돌아가 있다
+# 복귀 트윈 재생 시간. _enemy_return()이 이 시간만큼 await로 끝까지 기다린 뒤에야 다음 공격으로
+# 넘어간다 (같은 몹이 대기 없이 바로 다시 공격하는 상황에서도 복귀가 끊기지 않게)
 const ENEMY_CHARGE_BACK_DURATION := 0.22
 const ENEMY_CHARGE_TINT := Color(1.0, 0.55, 0.55, 1.0) # 잔상 색 (붉게 물든 적의 궤적)
 
@@ -679,7 +709,9 @@ const FLIP_HALF_DURATION := 0.15 # 뒷면->접힘, 접힘->앞면 각 구간 길
 
 # ── 카드 마우스 호버 연출 ────────────────────────────────────────────────────
 const HOVER_SCALE := 1.15
-const HOVER_RISE := 14.0 # 확대와 함께 위로 떠오르는 픽셀 수
+# 숲 배경을 손패가 다 가리지 않도록 카드는 화면 밑에 깊이 박아두고 윗부분만 내놓는다.
+# 그래서 커서를 올렸을 때 떠오르는 양도 "카드가 통째로 올라올" 만큼 커야 한다
+const HOVER_RISE := 168.0
 const HOVER_DURATION := 0.12
 
 # ── 배너 스타일 버튼(턴 종료/무기 변경/도망가기) 호버/눌림 피드백 ──────────────
@@ -705,22 +737,28 @@ const BANNER_BUTTON_FEEDBACK_DURATION := 0.08
 @onready var _player_hp_bar_label: Label = $View/HUD/PlayerCard/HPBarLabel
 @onready var _player_mana_bar: ProgressBar = $View/HUD/PlayerCard/ManaBar
 @onready var _player_mana_bar_label: Label = $View/HUD/PlayerCard/ManaBarLabel
-@onready var _player_gold_label: Label = $View/HUD/PlayerCard/GoldLabel
 @onready var _player_card: Control = $View/HUD/PlayerCard
+# 플레이어+동료 카드들을 한 덩어리로 감싸는 액자. 카드 자체엔 더 이상 개별 테두리가 없고
+# (Background visible=false) 이 액자 하나가 "통합 패널"처럼 보이게 한다. 동료 수만큼 세로로
+# 늘어나야 해서 _layout_allies()가 매번 높이를 다시 잰다
+@onready var _party_frame: Panel = $View/HUD/PartyFrame
+@onready var _enemy_frame: Panel = $View/HUD/EnemyFrame
 # 아래 MonsterCard 계열 참조는 전부 "0번 몬스터"의 것이다. 마리 수만큼 복제한 나머지 카드는
 # _monster_card_panels/_monster_hp_bars 배열로 접근한다 (0번은 이 노드들과 같은 객체)
 @onready var _monster_card: Control = $View/HUD/MonsterCard
 @onready var _monster_portrait: TextureRect = $View/HUD/MonsterCard/Portrait
 @onready var _monster_hp_bar: ProgressBar = $View/HUD/MonsterCard/HPBar
 @onready var _monster_hp_bar_label: Label = $View/HUD/MonsterCard/HPBarLabel
-@onready var _monster_gold_label: Label = $View/HUD/MonsterCard/GoldLabel
 @onready var _message: Label = $View/HUD/BottomBar/InfoPanel/InfoRow/MessageLabel
+@onready var _round_label: Label = $View/HUD/RoundPanel/RoundRow/RoundLabel
+@onready var _deck_count_label: Label = $View/HUD/RoundPanel/RoundRow/DeckCountLabel
+@onready var _discard_count_label: Label = $View/HUD/RoundPanel/RoundRow/DiscardCountLabel
 @onready var _resist_badge: Sprite2D = $View/Actors/ResistBadge
 @onready var _main_column: Control = $View/HUD/BottomBar/MainControls
 @onready var _sword_gauge_rect: TextureRect = $View/HUD/BottomBar/MainControls/WeaponColumn/SwordGauge
 @onready var _staff_gauge_rect: TextureRect = $View/HUD/BottomBar/MainControls/WeaponColumn/StaffGauge
 @onready var _hand_row: Control = $View/HUD/BottomBar/MainControls/HandArea
-@onready var _weapon_button: Button = $View/HUD/BottomBar/MainControls/WeaponColumn/WeaponButton
+@onready var _weapon_button: Button = $View/HUD/BottomBar/MainControls/LeftButtons/WeaponButton
 @onready var _end_turn_button: Button = $View/HUD/BottomBar/MainControls/LeftButtons/EndTurnButton
 @onready var _flee_button: Button = $View/HUD/BottomBar/MainControls/LeftButtons/FleeButton
 @onready var _close_button: Button = $View/HUD/BottomBar/CloseButton
@@ -738,6 +776,9 @@ var _variant: Dictionary = {}
 var _monster_sprites: Array[AnimatedSprite2D] = []
 var _monster_shadows: Array[Polygon2D] = []
 var _resist_badges: Array[Sprite2D] = []
+# 필드에서 몬스터 머리 위에 뜨는 개별 미니 HP/마나바 (우상단 통합 패널과는 별개, 코드로 만들어 붙인다)
+var _monster_field_hp_bars: Array[ProgressBar] = []
+var _monster_field_mana_bars: Array[ProgressBar] = []
 # 마리별 버프/디버프 텍스트 배지 (_build_status_badges가 코드로 만들어 붙인다)
 var _status_badges: Array[Label] = []
 var _player_status_badge: Label
@@ -831,6 +872,13 @@ var _last_drawn_turn_number: int = 0
 # _play_card_flow()/_end_turn_flow()가 담당한다
 # 진행 중인 화면 흔들림 트윈 (_shake_actors가 겹쳐 호출될 때 이전 것을 죽이기 위해 들고 있는다)
 var _shake_tween: Tween
+# 몬스터별 돌진/복귀 위치 트윈 (자리 번호 -> Tween). 겹쳐 걸리는 걸 막아야 돌아오는 도중에 또
+# 돌진해 엉뚱한 자리를 "원래 자리"로 착각하는 일이 없다 (_kill_monster_position_tween 참고)
+var _monster_position_tweens: Dictionary = {}
+# 마리별 고정 진형 위치(_layout_monsters가 채워 넣는다). 돌진 복귀는 반드시 이 값으로 돌아가야 한다 —
+# 직전 돌진의 sprite.position을 "원래 자리"로 삼으면, 복귀 트윈이 다음 돌진에 중간에 끊겼을 때
+# 그 끊긴 위치가 새 "원래 자리"로 굳어버려 몬스터가 화면 여기저기로 흩어지는 버그가 났었다
+var _monster_home_positions: Array[Vector2] = []
 # 유성낙하의 낙하 지점 예고 마커와 그 맥동 트윈 (착지 순간 함께 정리한다)
 var _impact_marker: Polygon2D
 var _impact_marker_tween: Tween
@@ -853,7 +901,9 @@ func _ready() -> void:
 
 	for i in range(HAND_BUTTON_COUNT):
 		var wrapper := _hand_row.get_node("Card%d" % (i + 1)) as Control
-		wrapper.pivot_offset = CARD_SIZE / 2.0 # 뒤집기/호버 스케일이 카드 중심을 기준으로 일어나게
+		# 부채꼴로 편 손패는 카드 밑동을 손에 쥔 것처럼 아래쪽 중앙을 축으로 회전시켜야 위쪽(이름/글자)이
+		# 서로 벌어진다 — 가운데를 축으로 하면 회전해도 카드끼리 거리가 그대로라 부채 모양이 안 난다
+		wrapper.pivot_offset = Vector2(CARD_SIZE.x / 2.0, CARD_SIZE.y)
 		_card_wrappers.append(wrapper)
 		_card_base_positions.append(wrapper.position)
 		_card_frames.append(wrapper.get_node("Frame") as TextureRect)
@@ -1043,6 +1093,8 @@ func start_with(monster_type: String, variants: Array) -> void:
 	for i in range(_monster_hp_bars.size()):
 		_monster_hp_bars[i].max_value = _monster_data["max_hp"]
 		_monster_hp_bars[i].value = _monster_data["max_hp"]
+		_monster_field_hp_bars[i].max_value = _monster_data["max_hp"]
+		_monster_field_hp_bars[i].value = _monster_data["max_hp"]
 	_refresh_monster_mana_bars()
 	_player_hp_bar.max_value = GameState.get_flag("player_max_hp")
 	_player_hp_bar.value = GameState.get_flag("player_hp")
@@ -1056,9 +1108,7 @@ func start_with(monster_type: String, variants: Array) -> void:
 			_ally_mana_bars[i].value = companion.mana
 
 	_refresh_active_buttons()
-
-	_player_gold_label.text = str(GameState.gold)
-	_monster_gold_label.text = "%d~%d" % [_monster_data["gold_min"], _monster_data["gold_max"]]
+	_update_round_panel()
 
 	_close_button.visible = false
 	_main_column.visible = true
@@ -1096,6 +1146,7 @@ func _appear_text() -> String:
 
 func _on_turn_started(_turn_number: int) -> void:
 	_show_turn_message()
+	_update_round_panel()
 
 
 # "N번째 턴" 안내 + (저항이 걸린 턴이면) 저항 안내를 인포창에 띄운다.
@@ -2161,6 +2212,8 @@ func _refresh_monster_mana_bars() -> void:
 	for monster in _manager.monsters:
 		if monster.index < _monster_mana_bars.size():
 			_monster_mana_bars[monster.index].value = monster.mana
+		if monster.index < _monster_field_mana_bars.size():
+			_monster_field_mana_bars[monster.index].value = monster.mana
 
 
 # 동료 마나바와 숫자 텍스트를 현재 값으로 맞춘다 (0번 플레이어는 _update_mana_bar()가 따로
@@ -2183,6 +2236,15 @@ func _update_ally_hp_text() -> void:
 	for i in range(1, _ally_hp_labels.size()):
 		var companion = _manager.party[i]
 		_ally_hp_labels[i].text = "HP: %d/%d" % [companion.hp, companion.max_hp]
+
+
+# 상단 중앙 라운드/덱 패널 갱신
+func _update_round_panel() -> void:
+	if _manager == null:
+		return
+	_round_label.text = tr("라운드 %d") % _manager.turn_number
+	_deck_count_label.text = tr("덱 %d") % _manager.deck.draw_pile.size()
+	_discard_count_label.text = tr("버림 %d") % _manager.deck.discard_pile.size()
 
 
 # 동료 액티브 버튼/카운트다운 배지를 지금 상태에 맞춰 갱신한다:
@@ -2238,20 +2300,23 @@ func _animate_single_enemy_attack(attack: Dictionary) -> void:
 	var target_sprite := _ally_sprite_at(target_index)
 
 	# 달려들었다가 → 결과 연출 → 제자리로. 회피/방어/반격으로 막힌 경우에도 "달려들긴 했다"는
-	# 그림이 남아야 해서, 결과와 무관하게 돌진과 복귀는 항상 일어난다
-	var charge_origin := await _enemy_charge(attacker_sprite, attacker_index, target_sprite)
+	# 그림이 남아야 해서, 결과와 무관하게 돌진과 복귀는 항상 일어난다.
+	# 복귀까지 여기서 끝까지 기다린다 — 플레이어 다운 후 자동으로 턴이 연달아 넘어가는 구간에서는
+	# 같은 몹이 대기 시간 없이 바로 다시 공격할 수 있어서, 복귀를 던져만 두면(await 없이) 다음 돌진이
+	# 그 트윈을 죽여버려 몹이 목표 코앞에 멈춰 선 채 안 돌아오는 버그가 났었다
+	await _enemy_charge(attacker_sprite, attacker_index, target_sprite)
 	await _animate_enemy_attack_result(attack, attacker_sprite, attacker_name, target_index, target_sprite)
-	_enemy_return(attacker_sprite, charge_origin)
+	await _enemy_return(attacker_sprite, attacker_index)
 
 
 # 몬스터가 target(피격 대상)의 코앞까지 달려든다. 잔상은 이동과 나란히 재생돼야 궤적처럼 보이므로
-# await 없이 던진다. 출발 위치를 돌려줘 호출부가 나중에 정확히 그 자리로 되돌릴 수 있게 한다
-func _enemy_charge(sprite: AnimatedSprite2D, index: int, target: AnimatedSprite2D) -> Vector2:
+# await 없이 던진다
+func _enemy_charge(sprite: AnimatedSprite2D, index: int, target: AnimatedSprite2D) -> void:
 	var start := sprite.position
 	var to_target := target.position - start
 	var distance := to_target.length()
 	if distance < 1.0:
-		return start
+		return
 
 	var direction := to_target / distance
 	var target_half_width := CharacterShadow._measure_art(target).size.x * 0.5
@@ -2259,16 +2324,34 @@ func _enemy_charge(sprite: AnimatedSprite2D, index: int, target: AnimatedSprite2
 	var target_pos := start + direction * stop_distance
 
 	_spawn_dash_afterimages(sprite, start, target_pos, ENEMY_CHARGE_TINT)
+	_kill_monster_position_tween(index)
 	var tween := create_tween()
 	tween.tween_property(sprite, "position", target_pos, ENEMY_CHARGE_IN_DURATION)
+	_monster_position_tweens[index] = tween
 	await tween.finished
-	return start
 
 
-# 돌진했던 몬스터를 원래 자리로 되돌린다 (await 없이 던져둔다 — 위 상수 주석 참고)
-func _enemy_return(sprite: AnimatedSprite2D, origin: Vector2) -> void:
+# 아직 안 끝난 복귀 트윈이 남아 있는 채로 그 몬스터가 다시 돌진하면(연속 턴이 빠르게 넘어갈 때
+# 실제로 벌어진다) 새로 걸기 전에 이전 것부터 죽여야 한다 (_shake_actors()와 같은 패턴)
+func _kill_monster_position_tween(index: int) -> void:
+	if not _monster_position_tweens.has(index):
+		return
+	var tween: Tween = _monster_position_tweens[index]
+	if tween != null and tween.is_valid():
+		tween.kill()
+
+
+# 돌진했던 몬스터를 원래 자리로 되돌린다. 직전 돌진의 위치가 아니라 _layout_monsters가 잡아둔
+# 고정 진형 좌표로 돌아가므로, 복귀 트윈이 다음 돌진에 끊겨도(_kill_monster_position_tween)
+# 기준점 자체는 절대 오염되지 않는다. 끝까지 기다렸다가 리턴한다(호출부 주석 참고)
+func _enemy_return(sprite: AnimatedSprite2D, index: int) -> void:
+	if index < 0 or index >= _monster_home_positions.size():
+		return
+	_kill_monster_position_tween(index)
 	var tween := create_tween()
-	tween.tween_property(sprite, "position", origin, ENEMY_CHARGE_BACK_DURATION)
+	tween.tween_property(sprite, "position", _monster_home_positions[index], ENEMY_CHARGE_BACK_DURATION)
+	_monster_position_tweens[index] = tween
+	await tween.finished
 
 
 # 돌진이 닿은 뒤의 결과 연출 (반격/회피/완전방어/피격 중 하나).
@@ -2361,7 +2444,6 @@ func _on_flee_pressed() -> void:
 
 	var penalty: int = min(randi_range(FLEE_GOLD_PENALTY_MIN, FLEE_GOLD_PENALTY_MAX), GameState.gold)
 	GameState.spend_gold(penalty)
-	_player_gold_label.text = str(GameState.gold)
 
 	_message.text = tr("전투에서 도망쳤다! (골드 %d 소모)") % penalty
 
@@ -2384,6 +2466,7 @@ func _refresh_all() -> void:
 	_refresh_status_icons()
 	_update_mana_bar()
 	_update_player_hp_text()
+	_update_round_panel()
 	# 마리별 HP바를 매니저의 실제 값으로 다시 맞춘다. 컷신들이 중간 단계 수치(3연타의 1/3씩 등)를
 	# 직접 그려 넣기 때문에, 연출이 끝난 뒤 한 번은 실제 소유자 값으로 되돌려 놔야 어긋남이 남지 않는다
 	_refresh_monster_hp_bars()
@@ -2750,6 +2833,28 @@ func _refresh_status_icons() -> void:
 	_refresh_status_badges()
 
 
+# 몬스터 머리 위 미니 HP/마나바 한 줄을 만들어 Actors에 붙인다 (배지와 같은 이유로 Actors 자식)
+func _make_field_mini_bar(bg_color: Color, fill_color: Color, max_val: float) -> ProgressBar:
+	var bg := StyleBoxFlat.new()
+	bg.bg_color = bg_color
+	bg.set_corner_radius_all(1)
+	var fill := StyleBoxFlat.new()
+	fill.bg_color = fill_color
+	fill.set_corner_radius_all(1)
+
+	var bar := ProgressBar.new()
+	bar.show_percentage = false
+	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bar.add_theme_stylebox_override("background", bg)
+	bar.add_theme_stylebox_override("fill", fill)
+	bar.size = FIELD_MINI_BAR_SIZE
+	bar.max_value = max_val
+	bar.value = max_val
+	bar.z_index = 5
+	_actors.add_child(bar)
+	return bar
+
+
 # 버프/디버프 배지 하나를 만들어 Actors에 붙인다 (Actors 자식이라 화면 흔들림도 함께 따라간다)
 func _make_status_badge() -> Label:
 	var label := Label.new()
@@ -2771,7 +2876,7 @@ func _refresh_status_badges() -> void:
 
 	if _player_status_badge == null:
 		_player_status_badge = _make_status_badge()
-	_apply_status_badge(_player_status_badge, _manager.player_status, _player_sprite.position, true)
+	_apply_status_badge(_player_status_badge, _manager.player_status, _player_sprite.position, true, PLAYER_STATUS_BADGE_GAP)
 
 	for monster in _manager.monsters:
 		if monster.index >= _status_badges.size():
@@ -2782,7 +2887,7 @@ func _refresh_status_badges() -> void:
 			continue
 		var sprite := _monster_sprite_at(monster.index)
 		var foot := sprite.position + Vector2(0, _monster_foot_offset(monster.index))
-		_apply_status_badge(badge, monster.status, foot, false)
+		_apply_status_badge(badge, monster.status, foot, false, STATUS_BADGE_GAP)
 
 	for i in range(1, _ally_status_badges.size()):
 		var badge := _ally_status_badges[i]
@@ -2790,11 +2895,11 @@ func _refresh_status_badges() -> void:
 		if not companion.is_alive():
 			badge.visible = false
 			continue
-		_apply_status_badge(badge, companion.status, _ally_sprite_at(i).position, true)
+		_apply_status_badge(badge, companion.status, _ally_sprite_at(i).position, true, COMPANION_STATUS_BADGE_GAP)
 
 
 # 배지 하나에 상태이상 요약을 채운다. 여러 개가 걸려 있으면 줄바꿈으로 쌓아 보여준다
-func _apply_status_badge(badge: Label, status: StatusEffects, anchor: Vector2, is_player: bool) -> void:
+func _apply_status_badge(badge: Label, status: StatusEffects, anchor: Vector2, is_player: bool, head_gap: float) -> void:
 	if status == null or status.is_empty():
 		badge.visible = false
 		return
@@ -2811,7 +2916,7 @@ func _apply_status_badge(badge: Label, status: StatusEffects, anchor: Vector2, i
 	# 플레이어는 머리 위(anchor=발 기준이 아니라 몸 중심), 몬스터는 발밑 아래에 띄운다
 	badge.reset_size()
 	var size := badge.size
-	var top := anchor.y - PLAYER_STATUS_BADGE_GAP - size.y if is_player else anchor.y + STATUS_BADGE_GAP
+	var top := anchor.y - head_gap - size.y if is_player else anchor.y + head_gap
 	badge.position = Vector2(anchor.x - size.x * 0.5, top)
 
 
@@ -2884,6 +2989,8 @@ func _refresh_monster_hp_bars() -> void:
 	for monster in _manager.monsters:
 		if monster.index < _monster_hp_bars.size():
 			_animate_hp_bar(_monster_hp_bars[monster.index], monster.hp)
+		if monster.index < _monster_field_hp_bars.size():
+			_animate_hp_bar(_monster_field_hp_bars[monster.index], monster.hp)
 	_update_monster_hp_text()
 
 
@@ -2926,7 +3033,6 @@ func _finish_victory() -> void:
 			dropped_items.append(dropped)
 
 	GameState.add_gold(total_gold)
-	_player_gold_label.text = str(GameState.gold)
 
 	# 경험치는 마리별로 더한 총합을 한 번에 준다 — add_xp()가 필요치를 넘긴 만큼 레벨을 올려주므로
 	# 여러 마리를 잡아 한 번에 두 레벨이 오르는 경우도 여기서 따로 처리할 게 없다.
@@ -3039,6 +3145,14 @@ func _setup_sprites() -> void:
 	_monster_hp_bars.clear()
 	_monster_hp_labels.clear()
 	_monster_art_tops.clear()
+	for bar in _monster_field_hp_bars:
+		if is_instance_valid(bar):
+			bar.queue_free()
+	_monster_field_hp_bars.clear()
+	for bar in _monster_field_mana_bars:
+		if is_instance_valid(bar):
+			bar.queue_free()
+	_monster_field_mana_bars.clear()
 
 	for i in range(_variants.size()):
 		var variant: Dictionary = _variants[i]
@@ -3065,9 +3179,7 @@ func _setup_sprites() -> void:
 		sprite.play("idle")
 
 		(card.get_node("Portrait") as TextureRect).texture = _build_portrait(idle_sheet, _monster_data["portrait_region"])
-		(card.get_node("GoldLabel") as Label).text = "%d~%d" % [_monster_data["gold_min"], _monster_data["gold_max"]]
 		card.modulate = Color.WHITE
-		_ensure_mana_bar(card)
 
 		_monster_sprites.append(sprite)
 		_monster_shadows.append(shadow)
@@ -3078,6 +3190,8 @@ func _setup_sprites() -> void:
 		_monster_mana_bars.append(card.get_node("ManaBar") as ProgressBar)
 		_monster_art_tops.append(_measure_art_top_offset(idle_sheet, idle_frame_size))
 		_status_badges.append(_make_status_badge())
+		_monster_field_hp_bars.append(_make_field_mini_bar(FIELD_MINI_HP_BG, FIELD_MINI_HP_FILL, 1.0))
+		_monster_field_mana_bars.append(_make_field_mini_bar(FIELD_MINI_MANA_BG, FIELD_MINI_MANA_FILL, MonsterState.MANA_MAX))
 
 
 # 아군 스프라이트/그림자/카드를 준비한다. 0번(플레이어)은 기존 노드를 그대로 쓰고,
@@ -3111,11 +3225,13 @@ func _setup_allies() -> void:
 		sprite.modulate = Color.WHITE
 		sprite.play("idle")
 
-		(card.get_node("Portrait") as TextureRect).texture = frames.get_frame_texture("idle", 0)
+		var portrait := card.get_node("Portrait") as TextureRect
+		if data.has("portrait_sheet"):
+			portrait.texture = _build_portrait(data["portrait_sheet"], data["portrait_region"])
+		else:
+			portrait.texture = frames.get_frame_texture("idle", 0)
 		var hp_label := card.get_node("HPBarLabel") as Label
 		hp_label.text = "HP: %d/%d" % [data["max_hp"], data["max_hp"]]
-		card.get_node("GoldIcon").visible = false
-		card.get_node("GoldLabel").visible = false
 		card.modulate = Color.WHITE
 
 		var mana_bar := card.get_node("ManaBar") as ProgressBar
@@ -3149,24 +3265,34 @@ func _setup_allies() -> void:
 
 
 # 동료 카드에 액티브 버튼을 만들어 붙인다. 동료는 골드가 없어 그 자리(GoldIcon/GoldLabel)가
-# 비므로 재활용한다. 활성/비활성 색만 다르고 나머지는 _refresh_active_buttons()가 매 턴 갱신한다
+# 비므로 재활용한다. 카드/몹 UI가 쓰는 "아이콘+테두리" 느낌을 흉내 내려고 data["active"]["icon"]을
+# 아이콘으로 쓰고 테두리를 두른다 — 없는 액티브(icon 필드 없음)는 기존처럼 글자만 나온다.
+# 활성/비활성 색만 다르고 나머지는 _refresh_active_buttons()가 매 턴 갱신한다
 func _make_active_button(card: Control, active_data: Dictionary) -> Button:
 	var bg := StyleBoxFlat.new()
 	bg.bg_color = ALLY_ACTIVE_BUTTON_BG
 	bg.set_corner_radius_all(3)
+	bg.border_color = ALLY_ACTIVE_BUTTON_BORDER
+	bg.set_border_width_all(2)
 	var disabled_bg := StyleBoxFlat.new()
 	disabled_bg.bg_color = ALLY_ACTIVE_BUTTON_DISABLED_BG
 	disabled_bg.set_corner_radius_all(3)
+	disabled_bg.border_color = ALLY_ACTIVE_BUTTON_DISABLED_BORDER
+	disabled_bg.set_border_width_all(2)
 
 	var button := Button.new()
 	button.name = "ActiveButton"
 	button.position = ALLY_ACTIVE_BUTTON_RECT.position
 	button.size = ALLY_ACTIVE_BUTTON_RECT.size
-	button.text = tr(active_data["name"])
-	button.tooltip_text = tr(active_data["description"])
+	# 이름은 텍스트로 안 넣는다 — 정사각 아이콘 버튼이라 글자를 넣으면 다시 비좁은 텍스트박스로
+	# 보인다. 이름/설명은 툴팁으로 확인한다
+	button.tooltip_text = "%s\n%s" % [tr(active_data["name"]), tr(active_data["description"])]
 	button.disabled = true
-	button.add_theme_font_size_override("font_size", 12)
-	button.add_theme_color_override("font_color", Color.WHITE)
+	if active_data.has("icon"):
+		button.icon = active_data["icon"]
+		button.expand_icon = true
+	button.add_theme_color_override("icon_disabled_color", Color(1, 1, 1, 0.6))
+	button.add_theme_constant_override("icon_max_width", 18)
 	button.add_theme_stylebox_override("normal", bg)
 	button.add_theme_stylebox_override("hover", bg)
 	button.add_theme_stylebox_override("pressed", bg)
@@ -3201,32 +3327,6 @@ func _clone_sibling(source: Node) -> Node:
 	var clone := source.duplicate()
 	source.get_parent().add_child(clone)
 	return clone
-
-
-# HUD 카드에 몬스터 마나바가 없으면 만들어 붙인다. 이미 있으면(복제로 딸려온 경우) 그대로 둔다 —
-# 0번 카드에 붙인 뒤 duplicate()하면 사본에도 이미 들어 있기 때문에 중복 생성을 막아야 한다
-func _ensure_mana_bar(card: Control) -> void:
-	if card.has_node("ManaBar"):
-		return
-
-	var bg := StyleBoxFlat.new()
-	bg.bg_color = MONSTER_MANA_BAR_BG
-	bg.set_corner_radius_all(2)
-	var fill := StyleBoxFlat.new()
-	fill.bg_color = MONSTER_MANA_BAR_FILL
-	fill.set_corner_radius_all(2)
-
-	var bar := ProgressBar.new()
-	bar.name = "ManaBar"
-	bar.show_percentage = false
-	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	bar.add_theme_stylebox_override("background", bg)
-	bar.add_theme_stylebox_override("fill", fill)
-	bar.position = MONSTER_MANA_BAR_RECT.position
-	bar.size = MONSTER_MANA_BAR_RECT.size
-	bar.max_value = MonsterState.MANA_MAX
-	bar.value = MonsterState.MANA_MAX
-	card.add_child(bar)
 
 
 # 화면 가장자리만 붉게 물드는 오버레이를 만들어 View에 붙인다 (가운데는 투명).
@@ -3329,7 +3429,10 @@ func _layout_actors() -> void:
 # 대칭 개념으로 플레이어보다 한 걸음씩 더 뒤(왼쪽 위)에 세운다. 발 위치는 CharacterShadow의
 # 기존 측정 로직을 그대로 재사용한다 (동료마다 프레임 여백이 달라 손으로 잰 상수를 못 씀)
 func _layout_allies(vp: Vector2) -> void:
-	_ally_sprites[0].position = Vector2(vp.x * 0.22, vp.y * 0.40)
+	# 발바닥이 숲 배경의 앞쪽 풀밭에 닿도록 중심 y를 역산한다 (ALLY_FOOT_Y_FRACTION 주석 참고)
+	_ally_sprites[0].position = Vector2(
+		vp.x * 0.22,
+		vp.y * ALLY_FOOT_Y_FRACTION - PLAYER_FOOT_FROM_CENTER * PLAYER_SCALE)
 
 	# 그림자는 "프레임 아래쪽"이 아니라 실제로 잰 발 위치에 맞춘다 (PLAYER_FOOT_FROM_CENTER 주석 참고).
 	# 크기도 캐릭터 실제 폭에 비례시켜, 스케일을 바꿔도 그림자가 따로 놀지 않게 한다
@@ -3337,9 +3440,13 @@ func _layout_allies(vp: Vector2) -> void:
 	var player_shadow_rx := PLAYER_BODY_WIDTH * PLAYER_SCALE * 0.62
 	_setup_shadow(_ally_shadows[0], player_foot, player_shadow_rx, player_shadow_rx * 0.3)
 
+	_ally_sprites[0].z_index = _ally_sprites.size()
+
 	for i in range(1, _ally_sprites.size()):
 		var sprite := _ally_sprites[i]
 		sprite.position = _ally_sprites[0].position + ALLY_OFFSET_STEP * i
+		# 뒤에 선 동료가 앞사람을 덮지 않게, 위로 물러난 순서대로 뒤로 깔린다
+		sprite.z_index = _ally_sprites.size() - i
 
 		var art := CharacterShadow._measure_art(sprite)
 		if art.size.x > 0.0:
@@ -3348,8 +3455,13 @@ func _layout_allies(vp: Vector2) -> void:
 			_setup_shadow(_ally_shadows[i], foot, shadow_rx, shadow_rx * 0.3)
 
 		var card := _ally_card_panels[i]
-		card.offset_top = ALLY_CARD_TOP + (i - 1) * (MONSTER_CARD_HEIGHT + MONSTER_CARD_GAP)
-		card.offset_bottom = card.offset_top + MONSTER_CARD_HEIGHT
+		card.offset_top = ALLY_CARD_TOP + (i - 1) * (ALLY_CARD_HEIGHT + MONSTER_CARD_GAP)
+		card.offset_bottom = card.offset_top + ALLY_CARD_HEIGHT
+
+	# 카드는 낱장 테두리가 없어졌으니(Background visible=false), 이 액자 하나가 전체를 감싸야
+	# "통합 패널"로 보인다 — 동료 수만큼 마지막 카드 아래까지 늘린다
+	var last_card: Control = _ally_card_panels[_ally_card_panels.size() - 1]
+	_party_frame.offset_bottom = last_card.offset_bottom + PANEL_FRAME_PAD
 
 
 # 몬스터들을 오른쪽에 가로로 나란히 세우고, 각자의 그림자/저항배지/HUD 카드를 그 자리에 맞춘다.
@@ -3366,34 +3478,53 @@ func _layout_monsters(vp: Vector2) -> void:
 	if count == 0:
 		return
 
-	var right_limit := vp.x - MONSTER_CARD_WIDTH - MONSTER_CARD_MARGIN
+	var right_limit := vp.x - MONSTER_EDGE_MARGIN
 	var widest := 0.0
 	for i in range(count):
 		var frame_size: float = _variants[i].get("idle_frame_size", BattleData.MOB_IDLE_FRAME_SIZE)
 		widest = maxf(widest, frame_size * MONSTER_SCALE)
-	var spacing := widest + MONSTER_GAP
+	var spacing := widest * MONSTER_HUDDLE_FACTOR + MONSTER_GAP
 
 	for i in range(count):
 		var sprite := _monster_sprites[i]
 		var frame_size: float = _variants[i].get("idle_frame_size", BattleData.MOB_IDLE_FRAME_SIZE)
 		var half_width := frame_size * MONSTER_SCALE * 0.5
-		# 마지막 마리가 오른쪽 한계에 붙고, 앞쪽 마리들이 왼쪽으로 spacing씩 물러난다
+		# 마지막 마리가 오른쪽 한계에 붙고, 앞쪽 마리들이 왼쪽으로 spacing씩 물러난다.
+		# 발 높이는 마리마다 프레임 크기가 달라도 같은 땅에 놓이도록 발바닥 기준으로 역산하고,
+		# 뒤 번호일수록 MONSTER_DEPTH_STEP만큼 뒤로 물러나 사선 진형이 된다
 		var x := right_limit - half_width - spacing * (count - 1 - i)
-		sprite.position = Vector2(x, vp.y * MONSTER_ROW_Y_FRACTION)
+		var foot_y := vp.y * MONSTER_FOOT_Y_FRACTION + MONSTER_DEPTH_STEP.y * i
+		sprite.position = Vector2(x, foot_y - _monster_foot_offset(i)) + Vector2(MONSTER_DEPTH_STEP.x * i, 0.0)
+		# 앞에 선(아래쪽) 마리가 뒤쪽 마리 위에 그려지도록
+		sprite.z_index = count - i
+		if i >= _monster_home_positions.size():
+			_monster_home_positions.resize(i + 1)
+		_monster_home_positions[i] = sprite.position
 
-		var foot := sprite.position + Vector2(0, frame_size * MONSTER_SCALE * 0.5 - 4.0)
-		_setup_shadow(_monster_shadows[i], foot, 40.0, 12.0)
+		var foot := sprite.position + Vector2(0, _monster_foot_offset(i))
+		_setup_shadow(_monster_shadows[i], foot, half_width * 0.8, half_width * 0.24)
 
 		# 적 저항 배지를 몬스터 머리 위에 띄운다. Actors의 자식이라 피격 흔들림도 몬스터와 함께 따라간다.
 		# 기준은 프레임 위쪽이 아니라 "실제로 그림이 시작되는 y"다 — 몬스터마다 프레임 안 여백이 제각각이라
 		# 프레임 기준으로 잡으면 배지가 머리에서 한참 떨어져 허공에 뜬다 (플레이어 그림자와 같은 이유)
 		var art_top := sprite.position.y - frame_size * MONSTER_SCALE * 0.5 + _monster_art_tops[i] * MONSTER_SCALE
-		_resist_badges[i].position = Vector2(sprite.position.x, art_top - RESIST_BADGE_GAP)
+		var badge_y := art_top - RESIST_BADGE_GAP
+		_resist_badges[i].position = Vector2(sprite.position.x, badge_y)
+
+		# 미니 HP/마나바는 저항 배지보다 한 단 더 위, HP가 위 마나가 아래로 쌓인다.
+		# ProgressBar는 좌상단 기준이라 폭의 절반만큼 왼쪽으로 밀어 중앙 정렬한다
+		var mana_bar_top := badge_y - FIELD_MINI_BAR_HEAD_GAP - FIELD_MINI_BAR_SIZE.y
+		var hp_bar_top := mana_bar_top - FIELD_MINI_BAR_GAP - FIELD_MINI_BAR_SIZE.y
+		var bar_x := sprite.position.x - FIELD_MINI_BAR_SIZE.x * 0.5
+		_monster_field_hp_bars[i].position = Vector2(bar_x, hp_bar_top)
+		_monster_field_mana_bars[i].position = Vector2(bar_x, mana_bar_top)
 
 		# HUD 카드는 오른쪽 위에 세로로 쌓는다 (0번이 맨 위 = 스프라이트 왼쪽부터가 아니라 자리 순서 그대로)
 		var card := _monster_card_panels[i]
 		card.offset_top = MONSTER_CARD_TOP + i * (MONSTER_CARD_HEIGHT + MONSTER_CARD_GAP)
 		card.offset_bottom = card.offset_top + MONSTER_CARD_HEIGHT
+
+	_enemy_frame.offset_bottom = _monster_card_panels[count - 1].offset_bottom + PANEL_FRAME_PAD
 
 
 # 타원형 그림자 폴리곤(반지름 rx*ry)을 만들어 지정 위치에 배치
@@ -3579,6 +3710,9 @@ func _play_pending_deaths() -> void:
 	for index in dying:
 		if index < _resist_badges.size():
 			_resist_badges[index].visible = false
+		if index < _monster_field_hp_bars.size():
+			_monster_field_hp_bars[index].visible = false
+			_monster_field_mana_bars[index].visible = false
 		await _play_monster_death(index)
 		if index < _monster_card_panels.size():
 			_monster_card_panels[index].modulate = DEFEATED_CARD_MODULATE

@@ -1,56 +1,101 @@
 [gd_scene format=3 uid="uid://bgd1xh8hlp0ts"]
 
 [ext_resource type="Script" uid="uid://d3jlp6dbxcr5w" path="res://battle/battle_scene.gd" id="1_battle"]
-[ext_resource type="Texture2D" uid="uid://fq726ml3dqoh" path="res://assets/GUI/MedievalUiMega/medieval.png" id="2_medieval"]
 [ext_resource type="Texture2D" uid="uid://786qtn7r4ods" path="res://assets/graphics/Pixel Crawler - Free Pack/Entities/Characters/Body_A/Animations/Idle_Base/Idle_Down-Sheet.png" id="3_playersheet"]
-[ext_resource type="Texture2D" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Title banners/BannerSmall_05A.png" id="4_banner"]
+[ext_resource type="Texture2D" uid="uid://b2egwruie0i0f" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Title banners/BannerSmall_05A.png" id="4_banner"]
+[ext_resource type="Texture2D" uid="uid://blg1cibh7edqr" path="res://assets/숲_전투씬.png" id="5_forest"]
+[ext_resource type="Texture2D" uid="uid://b6kot438bmwkt" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Title banners/BannerSmall_06A.png" id="6_leafbanner"]
+[ext_resource type="Texture2D" uid="uid://bs4pkhhwoyatk" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Background boxes/BGbox_07A.png" id="7_leafbox"]
+[ext_resource type="Texture2D" uid="uid://jnmhkjimr7ue" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Title banners/BannerSmall_02A.png" id="8_parchment"]
+[ext_resource type="Texture2D" uid="uid://duyi5mp1nsexy" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/1x/Resource orbs/DecoratedFrame1_Left.png" id="9_demon_left"]
+[ext_resource type="Texture2D" uid="uid://bb7hl145e3oiu" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/1x/Resource orbs/DecoratedFrame1_Right.png" id="10_demon_right"]
+[ext_resource type="Texture2D" uid="uid://blg37sf24obj5" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/1x/Resource orbs/Orb_HP.png" id="11_orb_hp"]
+[ext_resource type="Texture2D" uid="uid://bqpom5e36vqy5" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/1x/Resource orbs/Orb_MP.png" id="12_orb_mp"]
+[ext_resource type="Texture2D" uid="uid://e8og03pnui22" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Sliders & Bars/Slider01_Box.png" id="13_bar_box"]
+[ext_resource type="Texture2D" uid="uid://j2hl530i2swy" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Sliders & Bars/Slider01_Bar02.png" id="14_bar_hp"]
+[ext_resource type="Texture2D" uid="uid://drqvu51xlakgq" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/2x/Sliders & Bars/Slider01_Bar01.png" id="15_bar_mp"]
+[ext_resource type="Texture2D" uid="uid://bv6x32xema2m" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/1x/Sliders & Bars/Slider01_Box.png" id="16_bar_box_s"]
+[ext_resource type="Texture2D" uid="uid://k0ucw7tdttj0" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/1x/Sliders & Bars/Slider01_Bar02.png" id="17_bar_hp_s"]
+[ext_resource type="Texture2D" uid="uid://dkaynws613ouh" path="res://assets/GUI/RPG UI Pack (Franuka)/Individual files/1x/Sliders & Bars/Slider01_Bar01.png" id="18_bar_mp_s"]
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_player_card_frame"]
-atlas = ExtResource("2_medieval")
-region = Rect2(1, 67, 77, 25)
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_leaf_panel"]
+texture = ExtResource("7_leafbox")
+texture_margin_left = 26.0
+texture_margin_top = 26.0
+texture_margin_right = 26.0
+texture_margin_bottom = 26.0
+axis_stretch_horizontal = 2
+axis_stretch_vertical = 2
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_player_portrait"]
 atlas = ExtResource("3_playersheet")
 region = Rect2(23, 16, 18, 17)
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bar_bg"]
-bg_color = Color(0, 0, 0, 0)
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_slider_bg"]
+texture = ExtResource("13_bar_box")
+texture_margin_left = 10.0
+texture_margin_top = 8.0
+texture_margin_right = 10.0
+texture_margin_bottom = 6.0
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hp_fill"]
-bg_color = Color(0.82, 0.32, 0.28, 1)
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_slider_hp"]
+texture = ExtResource("14_bar_hp")
+texture_margin_left = 10.0
+texture_margin_top = 8.0
+texture_margin_right = 10.0
+texture_margin_bottom = 6.0
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mana_fill"]
-bg_color = Color(0.35, 0.55, 0.75, 1)
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_slider_mp"]
+texture = ExtResource("15_bar_mp")
+texture_margin_left = 10.0
+texture_margin_top = 8.0
+texture_margin_right = 10.0
+texture_margin_bottom = 6.0
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_gold_icon"]
-bg_color = Color(0.85, 0.7, 0.25, 1)
-corner_radius_top_left = 7
-corner_radius_top_right = 7
-corner_radius_bottom_right = 7
-corner_radius_bottom_left = 7
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_slider_bg_s"]
+texture = ExtResource("16_bar_box_s")
+texture_margin_left = 5.0
+texture_margin_top = 4.0
+texture_margin_right = 5.0
+texture_margin_bottom = 3.0
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_monster_card_frame"]
-atlas = ExtResource("2_medieval")
-region = Rect2(1, 3, 77, 25)
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_slider_hp_s"]
+texture = ExtResource("17_bar_hp_s")
+texture_margin_left = 5.0
+texture_margin_top = 4.0
+texture_margin_right = 5.0
+texture_margin_bottom = 3.0
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_info_panel"]
-bg_color = Color(0.09, 0.07, 0.06, 0.72)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.42, 0.31, 0.18, 0.85)
-corner_radius_top_left = 4
-corner_radius_top_right = 4
-corner_radius_bottom_right = 4
-corner_radius_bottom_left = 4
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_slider_mp_s"]
+texture = ExtResource("18_bar_mp_s")
+texture_margin_left = 5.0
+texture_margin_top = 4.0
+texture_margin_right = 5.0
+texture_margin_bottom = 3.0
 
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_button_banner"]
-texture = ExtResource("4_banner")
-texture_margin_left = 16.0
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_parchment"]
+texture = ExtResource("8_parchment")
+texture_margin_left = 24.0
+texture_margin_top = 6.0
+texture_margin_right = 24.0
+texture_margin_bottom = 14.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_leaf_button"]
+texture = ExtResource("6_leafbanner")
+texture_margin_left = 20.0
 texture_margin_top = 10.0
-texture_margin_right = 16.0
+texture_margin_right = 20.0
 texture_margin_bottom = 10.0
+axis_stretch_horizontal = 2
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_dimmed_button"]
+texture = ExtResource("6_leafbanner")
+texture_margin_left = 20.0
+texture_margin_top = 10.0
+texture_margin_right = 20.0
+texture_margin_bottom = 10.0
+axis_stretch_horizontal = 2
+modulate_color = Color(0.5, 0.48, 0.46, 1)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_flavor_box"]
 bg_color = Color(0.05, 0.04, 0.04, 0.55)
@@ -70,6 +115,13 @@ bg_color = Color(0, 0, 0, 0)
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_card_btn_hover"]
 bg_color = Color(1, 1, 1, 0.14)
 
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_button_banner"]
+texture = ExtResource("4_banner")
+texture_margin_left = 16.0
+texture_margin_top = 10.0
+texture_margin_right = 16.0
+texture_margin_bottom = 10.0
+
 [node name="BattleScene" type="Node2D" unique_id=876674391]
 script = ExtResource("1_battle")
 
@@ -85,26 +137,18 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="Sky" type="ColorRect" parent="View/Background" unique_id=1981319066]
+[node name="Forest" type="TextureRect" parent="View/Background" unique_id=1981319066]
+texture_filter = 2
 layout_mode = 1
-anchors_preset = -1
-anchor_right = 1.0
-anchor_bottom = 0.55
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-color = Color(0.6727904, 0.7911904, 0.6111264, 1)
-
-[node name="Ground" type="ColorRect" parent="View/Background" unique_id=1034695266]
-layout_mode = 1
-anchors_preset = -1
-anchor_top = 0.55
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-color = Color(0.33, 0.6, 0.29, 1)
+texture = ExtResource("5_forest")
+expand_mode = 1
+stretch_mode = 6
 
 [node name="PlayerShadow" type="Polygon2D" parent="View" unique_id=1425417216]
 color = Color(0, 0, 0, 0.28)
@@ -123,6 +167,7 @@ texture_filter = 1
 scale = Vector2(1.1, 1.1)
 
 [node name="HUD" type="Control" parent="View" unique_id=1995357692]
+z_index = 25
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -131,57 +176,54 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
+[node name="PartyFrame" type="Panel" parent="View/HUD" unique_id=905172315]
+layout_mode = 1
+offset_left = 12.0
+offset_top = 12.0
+offset_right = 240.0
+offset_bottom = 158.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxTexture_leaf_panel")
+
 [node name="PlayerCard" type="Control" parent="View/HUD" unique_id=1042604869]
 layout_mode = 1
 anchors_preset = 0
-offset_left = 16.0
-offset_top = 16.0
-offset_right = 247.0
-offset_bottom = 91.0
+offset_left = 34.0
+offset_top = 34.0
+offset_right = 218.0
+offset_bottom = 82.0
 mouse_filter = 2
-
-[node name="Background" type="TextureRect" parent="View/HUD/PlayerCard" unique_id=394399365]
-texture_filter = 1
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-texture = SubResource("AtlasTexture_player_card_frame")
-expand_mode = 1
 
 [node name="Portrait" type="TextureRect" parent="View/HUD/PlayerCard" unique_id=2107059311]
 texture_filter = 1
 layout_mode = 0
-offset_left = 4.0
 offset_top = 4.0
-offset_right = 71.0
-offset_bottom = 71.0
+offset_right = 40.0
+offset_bottom = 44.0
 mouse_filter = 2
 texture = SubResource("AtlasTexture_player_portrait")
 expand_mode = 1
 stretch_mode = 5
 
 [node name="HPBar" type="ProgressBar" parent="View/HUD/PlayerCard" unique_id=677966113]
+texture_filter = 1
 layout_mode = 0
-offset_left = 80.0
-offset_top = 6.0
-offset_right = 225.0
-offset_bottom = 24.0
-theme_override_styles/background = SubResource("StyleBoxFlat_bar_bg")
-theme_override_styles/fill = SubResource("StyleBoxFlat_hp_fill")
+offset_left = 46.0
+offset_right = 184.0
+offset_bottom = 26.0
+mouse_filter = 2
+theme_override_styles/background = SubResource("StyleBoxTexture_slider_bg")
+theme_override_styles/fill = SubResource("StyleBoxTexture_slider_hp")
 max_value = 1.0
 value = 1.0
 show_percentage = false
 
 [node name="HPBarLabel" type="Label" parent="View/HUD/PlayerCard" unique_id=524442279]
 layout_mode = 0
-offset_left = 80.0
-offset_top = 6.0
-offset_right = 225.0
-offset_bottom = 24.0
+offset_left = 46.0
+offset_top = 4.0
+offset_right = 184.0
+offset_bottom = 22.0
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 0.75)
 theme_override_constants/outline_size = 3
@@ -191,23 +233,25 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="ManaBar" type="ProgressBar" parent="View/HUD/PlayerCard" unique_id=1443076965]
+texture_filter = 1
 layout_mode = 0
-offset_left = 80.0
-offset_top = 28.0
-offset_right = 225.0
-offset_bottom = 42.0
-theme_override_styles/background = SubResource("StyleBoxFlat_bar_bg")
-theme_override_styles/fill = SubResource("StyleBoxFlat_mana_fill")
+offset_left = 46.0
+offset_top = 22.0
+offset_right = 184.0
+offset_bottom = 48.0
+mouse_filter = 2
+theme_override_styles/background = SubResource("StyleBoxTexture_slider_bg")
+theme_override_styles/fill = SubResource("StyleBoxTexture_slider_mp")
 max_value = 1.0
 value = 1.0
 show_percentage = false
 
 [node name="ManaBarLabel" type="Label" parent="View/HUD/PlayerCard" unique_id=76895655]
 layout_mode = 0
-offset_left = 80.0
-offset_top = 28.0
-offset_right = 225.0
-offset_bottom = 42.0
+offset_left = 46.0
+offset_top = 26.0
+offset_right = 184.0
+offset_bottom = 44.0
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 0.75)
 theme_override_constants/outline_size = 3
@@ -216,106 +260,198 @@ text = "Mana: 0/0"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="GoldIcon" type="Panel" parent="View/HUD/PlayerCard" unique_id=2077341763]
-layout_mode = 0
-offset_left = 80.0
-offset_top = 50.0
-offset_right = 94.0
-offset_bottom = 64.0
+[node name="EnemyFrame" type="Panel" parent="View/HUD" unique_id=144161492]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -210.0
+offset_top = 12.0
+offset_right = -12.0
+offset_bottom = 170.0
+grow_horizontal = 0
 mouse_filter = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_gold_icon")
-
-[node name="GoldLabel" type="Label" parent="View/HUD/PlayerCard" unique_id=1618226376]
-layout_mode = 0
-offset_left = 98.0
-offset_top = 47.0
-offset_right = 196.0
-offset_bottom = 70.0
-theme_override_colors/font_color = Color(0.95, 0.9, 0.6, 1)
-theme_override_font_sizes/font_size = 14
-text = "0"
-vertical_alignment = 1
+theme_override_styles/panel = SubResource("StyleBoxTexture_leaf_panel")
 
 [node name="MonsterCard" type="Control" parent="View/HUD" unique_id=382173193]
 layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -247.0
-offset_top = 16.0
-offset_right = -16.0
-offset_bottom = 91.0
+offset_left = -188.0
+offset_top = 34.0
+offset_right = -34.0
+offset_bottom = 68.0
 grow_horizontal = 0
 mouse_filter = 2
-
-[node name="Background" type="TextureRect" parent="View/HUD/MonsterCard" unique_id=2575171]
-texture_filter = 1
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-texture = SubResource("AtlasTexture_monster_card_frame")
-expand_mode = 1
 
 [node name="Portrait" type="TextureRect" parent="View/HUD/MonsterCard" unique_id=1171336521]
 texture_filter = 1
 layout_mode = 0
-offset_left = 4.0
-offset_top = 4.0
-offset_right = 71.0
-offset_bottom = 71.0
+offset_top = 2.0
+offset_right = 30.0
+offset_bottom = 32.0
 mouse_filter = 2
 expand_mode = 1
 stretch_mode = 5
 
 [node name="HPBar" type="ProgressBar" parent="View/HUD/MonsterCard" unique_id=1045443658]
+texture_filter = 1
 layout_mode = 0
-offset_left = 80.0
-offset_top = 6.0
-offset_right = 225.0
-offset_bottom = 24.0
-theme_override_styles/background = SubResource("StyleBoxFlat_bar_bg")
-theme_override_styles/fill = SubResource("StyleBoxFlat_hp_fill")
+offset_left = 34.0
+offset_right = 154.0
+offset_bottom = 17.0
+mouse_filter = 2
+theme_override_styles/background = SubResource("StyleBoxTexture_slider_bg_s")
+theme_override_styles/fill = SubResource("StyleBoxTexture_slider_hp_s")
 max_value = 1.0
 value = 1.0
 show_percentage = false
 
 [node name="HPBarLabel" type="Label" parent="View/HUD/MonsterCard" unique_id=1464587576]
 layout_mode = 0
-offset_left = 80.0
-offset_top = 6.0
-offset_right = 225.0
-offset_bottom = 24.0
+offset_left = 34.0
+offset_top = 1.0
+offset_right = 154.0
+offset_bottom = 16.0
 theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 0.75)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.8)
 theme_override_constants/outline_size = 3
-theme_override_font_sizes/font_size = 11
+theme_override_font_sizes/font_size = 10
 text = "HP: 0/0"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="GoldIcon" type="Panel" parent="View/HUD/MonsterCard" unique_id=1509590798]
+[node name="ManaBar" type="ProgressBar" parent="View/HUD/MonsterCard" unique_id=1509590798]
+texture_filter = 1
 layout_mode = 0
-offset_left = 80.0
-offset_top = 50.0
-offset_right = 94.0
-offset_bottom = 64.0
+offset_left = 34.0
+offset_top = 16.0
+offset_right = 154.0
+offset_bottom = 33.0
 mouse_filter = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_gold_icon")
+theme_override_styles/background = SubResource("StyleBoxTexture_slider_bg_s")
+theme_override_styles/fill = SubResource("StyleBoxTexture_slider_mp_s")
+value = 100.0
+show_percentage = false
 
-[node name="GoldLabel" type="Label" parent="View/HUD/MonsterCard" unique_id=1245545860]
-layout_mode = 0
-offset_left = 98.0
-offset_top = 47.0
-offset_right = 196.0
-offset_bottom = 70.0
-theme_override_colors/font_color = Color(0.95, 0.9, 0.6, 1)
-theme_override_font_sizes/font_size = 14
-text = "0~0"
+[node name="RoundPanel" type="Panel" parent="View/HUD" unique_id=1788126667]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -126.0
+offset_top = 12.0
+offset_right = 126.0
+offset_bottom = 62.0
+grow_horizontal = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxTexture_parchment")
+
+[node name="RoundRow" type="HBoxContainer" parent="View/HUD/RoundPanel" unique_id=621611552]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 6.0
+offset_right = -16.0
+offset_bottom = -13.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 14
+alignment = 1
+
+[node name="RoundLabel" type="Label" parent="View/HUD/RoundPanel/RoundRow" unique_id=1349091936]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_colors/font_color = Color(0.29, 0.16, 0.14, 1)
+theme_override_font_sizes/font_size = 15
+text = "라운드 1"
 vertical_alignment = 1
+
+[node name="DeckCountLabel" type="Label" parent="View/HUD/RoundPanel/RoundRow" unique_id=2021839141]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_colors/font_color = Color(0.2, 0.32, 0.45, 1)
+theme_override_font_sizes/font_size = 13
+text = "덱 0"
+vertical_alignment = 1
+
+[node name="DiscardCountLabel" type="Label" parent="View/HUD/RoundPanel/RoundRow" unique_id=2013255108]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_colors/font_color = Color(0.42, 0.27, 0.16, 1)
+theme_override_font_sizes/font_size = 13
+text = "버림 0"
+vertical_alignment = 1
+
+[node name="OrbLeftBall" type="TextureRect" parent="View/HUD"]
+texture_filter = 2
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -187.0
+offset_top = 12.0
+offset_right = -161.0
+offset_bottom = 38.0
+grow_horizontal = 2
+scale = Vector2(1.9407037, 1.9361445)
+mouse_filter = 2
+texture = ExtResource("11_orb_hp")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="OrbLeft" type="TextureRect" parent="View/HUD" unique_id=1625033096]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -218.0
+offset_top = -3.0
+offset_right = -138.0
+offset_bottom = 77.0
+grow_horizontal = 2
+mouse_filter = 2
+texture = ExtResource("9_demon_left")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="OrbRightBall" type="TextureRect" parent="View/HUD"]
+texture_filter = 2
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = 136.0
+offset_top = 9.0
+offset_right = 162.0
+offset_bottom = 35.0
+grow_horizontal = 2
+scale = Vector2(1.9407037, 1.9361445)
+mouse_filter = 2
+texture = ExtResource("12_orb_mp")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="OrbRight" type="TextureRect" parent="View/HUD" unique_id=131490759]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = 138.0
+offset_top = -3.0
+offset_right = 218.0
+offset_bottom = 77.0
+grow_horizontal = 2
+mouse_filter = 2
+texture = ExtResource("10_demon_right")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="BottomBar" type="Control" parent="View/HUD" unique_id=434415901]
 layout_mode = 1
@@ -329,38 +465,40 @@ grow_vertical = 0
 mouse_filter = 2
 
 [node name="InfoPanel" type="Panel" parent="View/HUD/BottomBar" unique_id=316256445]
-layout_mode = 0
-offset_left = 16.0
-offset_top = 30.0
-offset_right = 250.0
-offset_bottom = 140.0
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -244.0
+offset_top = 147.0
+offset_right = -20.0
+offset_bottom = 283.0
+grow_horizontal = 0
 mouse_filter = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_info_panel")
+theme_override_styles/panel = SubResource("StyleBoxTexture_leaf_panel")
 
 [node name="InfoRow" type="HBoxContainer" parent="View/HUD/BottomBar/InfoPanel" unique_id=630842827]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 8.0
-offset_top = 6.0
-offset_right = -8.0
-offset_bottom = -6.0
+offset_left = 24.0
+offset_top = 22.0
+offset_right = -24.0
+offset_bottom = -22.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-theme_override_constants/separation = 6
 
 [node name="MessageLabel" type="Label" parent="View/HUD/BottomBar/InfoPanel/InfoRow" unique_id=1905281793]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-theme_override_colors/font_color = Color(0.95, 0.93, 0.87, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 0.6)
-theme_override_constants/outline_size = 2
+theme_override_colors/font_color = Color(0.96, 0.93, 0.88, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.7)
+theme_override_constants/outline_size = 3
 theme_override_font_sizes/font_size = 13
-horizontal_alignment = 1
-vertical_alignment = 1
+text = "전투 시작!"
 autowrap_mode = 3
 
 [node name="MainControls" type="Control" parent="View/HUD/BottomBar" unique_id=1828766404]
@@ -374,74 +512,81 @@ mouse_filter = 2
 
 [node name="LeftButtons" type="VBoxContainer" parent="View/HUD/BottomBar/MainControls" unique_id=1744920610]
 layout_mode = 0
-offset_left = 16.0
-offset_top = 150.0
-offset_right = 250.0
-offset_bottom = 252.0
-theme_override_constants/separation = 10
+offset_left = 18.0
+offset_top = 147.0
+offset_right = 168.0
+offset_bottom = 283.0
+theme_override_constants/separation = 8
 
 [node name="EndTurnButton" type="Button" parent="View/HUD/BottomBar/MainControls/LeftButtons" unique_id=1182831449]
 texture_filter = 1
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_colors/font_color = Color(0.28, 0.18, 0.22, 1)
+theme_override_colors/font_color = Color(0.96, 0.93, 0.88, 1)
+theme_override_colors/font_disabled_color = Color(0.7, 0.68, 0.65, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.75)
+theme_override_constants/outline_size = 3
 theme_override_font_sizes/font_size = 14
-theme_override_styles/normal = SubResource("StyleBoxTexture_button_banner")
-theme_override_styles/hover = SubResource("StyleBoxTexture_button_banner")
-theme_override_styles/pressed = SubResource("StyleBoxTexture_button_banner")
+theme_override_styles/normal = SubResource("StyleBoxTexture_leaf_button")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_leaf_button")
+theme_override_styles/hover = SubResource("StyleBoxTexture_leaf_button")
+theme_override_styles/disabled = SubResource("StyleBoxTexture_dimmed_button")
 text = "턴 종료"
 
 [node name="FleeButton" type="Button" parent="View/HUD/BottomBar/MainControls/LeftButtons" unique_id=1794551139]
 texture_filter = 1
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_colors/font_color = Color(0.28, 0.18, 0.22, 1)
+theme_override_colors/font_color = Color(0.96, 0.93, 0.88, 1)
+theme_override_colors/font_disabled_color = Color(0.7, 0.68, 0.65, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.75)
+theme_override_constants/outline_size = 3
 theme_override_font_sizes/font_size = 14
-theme_override_styles/normal = SubResource("StyleBoxTexture_button_banner")
-theme_override_styles/hover = SubResource("StyleBoxTexture_button_banner")
-theme_override_styles/pressed = SubResource("StyleBoxTexture_button_banner")
+theme_override_styles/normal = SubResource("StyleBoxTexture_leaf_button")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_leaf_button")
+theme_override_styles/hover = SubResource("StyleBoxTexture_leaf_button")
+theme_override_styles/disabled = SubResource("StyleBoxTexture_dimmed_button")
 text = "도망가기"
+
+[node name="WeaponButton" type="Button" parent="View/HUD/BottomBar/MainControls/LeftButtons" unique_id=820116899]
+texture_filter = 1
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.96, 0.93, 0.88, 1)
+theme_override_colors/font_disabled_color = Color(0.7, 0.68, 0.65, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.75)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 14
+theme_override_styles/normal = SubResource("StyleBoxTexture_leaf_button")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_leaf_button")
+theme_override_styles/hover = SubResource("StyleBoxTexture_leaf_button")
+theme_override_styles/disabled = SubResource("StyleBoxTexture_dimmed_button")
+text = "무기: 검"
 
 [node name="WeaponColumn" type="Control" parent="View/HUD/BottomBar/MainControls" unique_id=312591004]
 anchors_preset = 0
-offset_left = 262.0
-offset_top = 20.0
-offset_right = 372.0
-offset_bottom = 252.0
+offset_left = 178.0
+offset_top = 147.0
+offset_right = 226.0
+offset_bottom = 283.0
 mouse_filter = 2
 
 [node name="SwordGauge" type="TextureRect" parent="View/HUD/BottomBar/MainControls/WeaponColumn" unique_id=1026456043]
 texture_filter = 1
 layout_mode = 0
-offset_left = 18.0
-offset_right = 46.0
-offset_bottom = 168.0
+offset_right = 20.0
+offset_bottom = 136.0
 mouse_filter = 2
 expand_mode = 1
-stretch_mode = 5
 
 [node name="StaffGauge" type="TextureRect" parent="View/HUD/BottomBar/MainControls/WeaponColumn" unique_id=259877537]
 texture_filter = 1
 layout_mode = 0
-offset_left = 64.0
-offset_right = 92.0
-offset_bottom = 168.0
+offset_left = 28.0
+offset_right = 48.0
+offset_bottom = 136.0
 mouse_filter = 2
 expand_mode = 1
-stretch_mode = 5
-
-[node name="WeaponButton" type="Button" parent="View/HUD/BottomBar/MainControls/WeaponColumn" unique_id=820116899]
-texture_filter = 1
-layout_mode = 0
-offset_top = 184.0
-offset_right = 110.0
-offset_bottom = 230.0
-theme_override_colors/font_color = Color(0.28, 0.18, 0.22, 1)
-theme_override_font_sizes/font_size = 13
-theme_override_styles/normal = SubResource("StyleBoxTexture_button_banner")
-theme_override_styles/hover = SubResource("StyleBoxTexture_button_banner")
-theme_override_styles/pressed = SubResource("StyleBoxTexture_button_banner")
-text = "무기: 검"
 
 [node name="HandArea" type="Control" parent="View/HUD/BottomBar/MainControls" unique_id=1462297779]
 layout_mode = 1
@@ -454,10 +599,14 @@ mouse_filter = 2
 
 [node name="Card1" type="Control" parent="View/HUD/BottomBar/MainControls/HandArea" unique_id=946570025]
 anchors_preset = 0
-offset_left = 390.0
-offset_top = 23.0
-offset_right = 528.0
-offset_bottom = 279.0
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -298.0
+offset_top = 205.0
+offset_right = -160.0
+offset_bottom = 461.0
+grow_horizontal = 2
+rotation = -0.2094
 mouse_filter = 2
 
 [node name="TierGlow" type="TextureRect" parent="View/HUD/BottomBar/MainControls/HandArea/Card1" unique_id=402179147]
@@ -643,10 +792,14 @@ theme_override_styles/disabled = SubResource("StyleBoxFlat_card_btn_normal")
 
 [node name="Card2" type="Control" parent="View/HUD/BottomBar/MainControls/HandArea" unique_id=245573032]
 anchors_preset = 0
-offset_left = 542.0
-offset_top = 23.0
-offset_right = 680.0
-offset_bottom = 279.0
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -188.0
+offset_top = 185.0
+offset_right = -50.0
+offset_bottom = 441.0
+grow_horizontal = 2
+rotation = -0.1047
 mouse_filter = 2
 
 [node name="TierGlow" type="TextureRect" parent="View/HUD/BottomBar/MainControls/HandArea/Card2" unique_id=2059920601]
@@ -832,10 +985,13 @@ theme_override_styles/disabled = SubResource("StyleBoxFlat_card_btn_normal")
 
 [node name="Card3" type="Control" parent="View/HUD/BottomBar/MainControls/HandArea" unique_id=693305624]
 anchors_preset = 0
-offset_left = 694.0
-offset_top = 23.0
-offset_right = 832.0
-offset_bottom = 279.0
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -78.0
+offset_top = 175.0
+offset_right = 60.0
+offset_bottom = 431.0
+grow_horizontal = 2
 mouse_filter = 2
 
 [node name="TierGlow" type="TextureRect" parent="View/HUD/BottomBar/MainControls/HandArea/Card3" unique_id=1160229803]
@@ -1021,10 +1177,14 @@ theme_override_styles/disabled = SubResource("StyleBoxFlat_card_btn_normal")
 
 [node name="Card4" type="Control" parent="View/HUD/BottomBar/MainControls/HandArea" unique_id=226957373]
 anchors_preset = 0
-offset_left = 846.0
-offset_top = 23.0
-offset_right = 984.0
-offset_bottom = 279.0
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = 32.0
+offset_top = 185.0
+offset_right = 170.0
+offset_bottom = 441.0
+grow_horizontal = 2
+rotation = 0.1047
 mouse_filter = 2
 
 [node name="TierGlow" type="TextureRect" parent="View/HUD/BottomBar/MainControls/HandArea/Card4" unique_id=350080248]
@@ -1210,10 +1370,14 @@ theme_override_styles/disabled = SubResource("StyleBoxFlat_card_btn_normal")
 
 [node name="Card5" type="Control" parent="View/HUD/BottomBar/MainControls/HandArea" unique_id=944693969]
 anchors_preset = 0
-offset_left = 998.0
-offset_top = 23.0
-offset_right = 1136.0
-offset_bottom = 279.0
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = 142.0
+offset_top = 205.0
+offset_right = 280.0
+offset_bottom = 461.0
+grow_horizontal = 2
+rotation = 0.2094
 mouse_filter = 2
 
 [node name="TierGlow" type="TextureRect" parent="View/HUD/BottomBar/MainControls/HandArea/Card5" unique_id=1259322645]
@@ -1401,15 +1565,19 @@ theme_override_styles/disabled = SubResource("StyleBoxFlat_card_btn_normal")
 visible = false
 texture_filter = 1
 layout_mode = 0
-offset_left = 16.0
-offset_top = 150.0
-offset_right = 250.0
-offset_bottom = 196.0
-theme_override_colors/font_color = Color(0.28, 0.18, 0.22, 1)
+offset_left = 18.0
+offset_top = 147.0
+offset_right = 168.0
+offset_bottom = 191.0
+theme_override_colors/font_color = Color(0.96, 0.93, 0.88, 1)
+theme_override_colors/font_disabled_color = Color(0.7, 0.68, 0.65, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.75)
+theme_override_constants/outline_size = 3
 theme_override_font_sizes/font_size = 14
-theme_override_styles/normal = SubResource("StyleBoxTexture_button_banner")
-theme_override_styles/hover = SubResource("StyleBoxTexture_button_banner")
-theme_override_styles/pressed = SubResource("StyleBoxTexture_button_banner")
+theme_override_styles/normal = SubResource("StyleBoxTexture_leaf_button")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_leaf_button")
+theme_override_styles/hover = SubResource("StyleBoxTexture_leaf_button")
+theme_override_styles/disabled = SubResource("StyleBoxTexture_dimmed_button")
 text = "닫기"
 
 [node name="HitFlash" type="ColorRect" parent="View" unique_id=1091884629]
