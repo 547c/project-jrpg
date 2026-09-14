@@ -36,6 +36,12 @@ signal party_passive_healed(source_index: int, results: Array)
 # 동료 액티브(마력장벽 등) 사용. companion_index는 party 배열 자리 번호, mana_spent는 실제 소모량
 signal companion_active_used(companion_index: int, mana_spent: int)
 signal monster_defeated(index: int) # 마리 하나가 쓰러짐 (전투는 아직 안 끝났을 수 있음)
+# 무기 하나가 과부하로 봉쇄됨 (WeaponState.WeaponType)
+signal weapon_overloaded(weapon: int)
+# 몬스터가 같은 속성에 적응했거나(adapted) 반대 속성에 맞아 적응이 깨짐(broken)
+signal monster_adapted(index: int, resistance_type: int, adapted: bool, broken: bool)
+# 스테이지 하나를 깼다 (남은 스테이지가 있을 때만 — 마지막 스테이지는 enemy_defeated로 간다)
+signal stage_cleared(stage_index: int, stage_count: int)
 # 버프/디버프가 새로 걸렸을 때 (target_index가 -1이면 플레이어 자신)
 signal status_applied(target_index: int, kind: int, magnitude: int, rounds: int)
 # 한 라운드가 끝나 상태이상이 풀렸을 때 (연출/로그가 "효과가 사라졌다"를 알릴 수 있게)
@@ -44,6 +50,10 @@ signal player_defeated
 signal enemy_defeated # 살아있는 몬스터가 하나도 남지 않음 = 전투 승리
 
 const HAND_SIZE := 5
+
+# 표식이 터지지 않은 채 버티는 라운드 수. 2라운드면 "이번 라운드 안에 전환하거나, 다음 라운드
+# 첫 수로 전환하거나" 정도의 여유라 전환을 계획에 넣게 만들면서도 무한정 쌓이지는 않는다
+const MARK_ROUNDS := 2
 
 # 적 공격 대상을 고르는 가중치 (party 배열 인덱스 기준, 0=플레이어). 동료는 아직 0으로 잠가둬서
 # 있어도 지금은 플레이어만 맞는다 — 실제 값 전환은 아군 연출이 갖춰진 뒤(Phase 3-c)에 한다
@@ -106,41 +116,53 @@ var _pending_counter: int = 0 # 반격(COUNTER) 카드로 예약해둔 반격 �
 # 아니라 그 적 턴에 오는 공격 전부에 적용된다 (비율 감소는 방어처럼 소모되는 총량이 아니라서)
 var _pending_damage_reduction_fraction: float = 0.0
 
-# ── 예약(드래그로 내려놓은 카드) ────────────────────────────────────────────
+# ── 예약 큐 (드래그로 내려놓은 카드 + 끼워 넣은 무기 전환) ────────────────
 # 카드는 드롭하는 즉시 효과가 나가지 않고 여기 쌓였다가, 턴종료 때 예약 순서대로 하나씩 실행된다.
-# 항목: {"card": Card, "target_index": int}  (광역/자기대상 카드는 target_index가 -1)
+# 항목은 두 종류다:
+#   {"kind": ENTRY_CARD, "card": Card, "target_index": int}  (광역/자기대상은 target_index = -1)
+#   {"kind": ENTRY_SWITCH, "weapon": WeaponState.WeaponType} (무기 전환도 큐에 놓는 한 수다)
 #
-# 비용(마나/체력)과 무기 과열 게이지는 "예약하는 순간" 치른다. 실행 시점으로 미루면 5장을
-# 예약해놓고 마나가 모자라 중간에 조용히 실패하거나, 과열로 뒤쪽 카드가 막히는 상황이 생긴다 —
-# 예약할 때마다 can_play_card()로 걸러야 그 모순이 안 생긴다. 미뤄지는 건 "카드의 효과"뿐이다
+# 비용(마나/체력)과 게이지는 "실행하는 순간" 치른다. 전환이 큐에 끼어들 수 있게 되면서 어느 무기
+# 게이지가 오를지가 순서에 따라 달라졌기 때문이다 — 예약 시점에 미리 걷으면 그 계산이 성립하지 않는다.
+# 대신 예약할 때마다 _plan_state()로 큐를 끝까지 굴려보고 "그 시점에 낼 수 있는 카드인가"를 검사해,
+# 큐 한복판에서 자원이 모자라 조용히 불발되는 일을 막는다
+const ENTRY_CARD := "card"
+const ENTRY_SWITCH := "switch"
+
 var reserved: Array[Dictionary] = []
 
-# 라운드로빈 포인터: 다음에 행동할 몬스터의 monsters 배열 인덱스. 라운드가 바뀌어도 이어진다 —
-# 카드를 적게 내면 뒷줄 몬스터가 영영 행동 못 하는 일이 없도록
-var _monster_turn_cursor: int = 0
+# 라운드 해결 중인지. 이 동안에는 "계획"이 아니라 지금 실제 값이 화면에 떠야 한다
+var _resolving: bool = false
+
+# ── 도발 (다음에 반격할 몬스터) ────────────────────────────────────────────
+# 라운드로빈을 대신한다: 방금 때린 놈이 곧바로 되받아친다. -1이면 이번 교환에는 반격이 없다
+# (겨눈 대상을 그 카드로 쓰러뜨린 경우 — 죽이면 그만큼 맞지 않는다는 게 이 규칙의 핵심 보상이다)
+var _pending_retaliator: int = -1
+var _last_provoked: int = -1
+
+# ── 스테이지 ───────────────────────────────────────────────────────────────
+var stages: Array[Dictionary] = []
+var stage_index: int = 0
+var stage_pending: bool = false # 스테이지를 깼고 보상 선택을 기다리는 중 (다음 턴은 아직 열리지 않는다)
+
+var _stage_modifiers: Dictionary = {} # 다음 스테이지 스폰/손패에 적용할 보상 대가
+var _stage_hand_delta: int = 0
+var _free_round_active: bool = false
+var _card_power_bonus: Dictionary = {} # card_name -> 추가 배율 (각인 — 이번 전투 내내 유지)
+
+# 지금 효과를 적용 중인 카드가 레드라인 보너스를 받는지 (_execute_card가 켰다 끈다)
+var _redline_active: bool = false
 
 
-# monster_type_은 BattleData.MONSTERS의 키("ORC" 등), variants는 등장할 마리 수만큼의 시각 변종
-# (BattleData.build_group_variants가 만든 것 — 배열 길이가 곧 마리 수다), cards는 이번 전투에 쓸 카드 목록.
-# Deck이 생성 시 알아서 섞으므로 여기서 따로 셔플하지 않는다.
-#
-# variants가 비어 있으면 변종 하나를 즉석에서 뽑아 1마리 전투로 만든다 — 헤드리스 테스트처럼
-# 필드를 거치지 않고 매니저만 직접 만드는 호출부가 마리 수를 신경 쓰지 않아도 되게 하기 위함
+# monster_type_은 BattleData.MONSTERS의 키("ORC" 등), variants는 필드에서 부딪힌 개체의 시각 변종
+# (0번만 쓴다 — 나머지 편성은 BattleStages가 스테이지별로 다시 뽑는다), cards는 이번 전투에 쓸 카드 목록.
+# Deck이 생성 시 알아서 섞으므로 여기서 따로 셔플하지 않는다
 func _init(monster_type_: String, variants: Array, cards: Array[Card]) -> void:
 	monster_type = monster_type_
 	monster_data = BattleData.MONSTERS[monster_type_]
 
-	var group: Array = variants
-	if group.is_empty():
-		group = [BattleData.pick_variant(monster_type_)]
-
-	for i in range(group.size()):
-		monsters.append(MonsterState.new(i, monster_type_, group[i]))
-
-	# 같은 종류가 여러 마리면 이름에 번호를 붙여 메시지에서 구분되게 한다 (한 마리면 그냥 "오크")
-	if monsters.size() > 1:
-		for monster in monsters:
-			monster.display_name = "%s %d" % [tr(monster.monster_data["name"]), monster.index + 1]
+	var first_variant: Dictionary = variants[0] if not variants.is_empty() else {}
+	stages = BattleStages.build_plan(monster_type_, first_variant)
 
 	deck = Deck.new(cards)
 	hand = Hand.new()
@@ -150,32 +172,151 @@ func _init(monster_type_: String, variants: Array, cards: Array[Card]) -> void:
 	for companion_id in GameState.get_active_companions():
 		party.append(CompanionState.new(party.size(), companion_id))
 
+	_spawn_stage(0)
+
+
+# 스테이지 하나의 몬스터들을 실제로 세운다. 직전 보상이 남긴 대가(_stage_modifiers)가 여기서
+# 마리 수/체력/공격력에 반영되고, 손패 증감과 "첫 라운드 무료"도 이 시점에 이번 스테이지 값으로 굳는다
+func _spawn_stage(index: int) -> void:
+	stage_index = index
+	monsters.clear()
+	_pending_retaliator = -1
+	_last_provoked = -1
+
+	var stage: Dictionary = stages[index]
+	var variants: Array = stage["variants"]
+	var elites: Array = stage["elites"]
+	var hp_mult := float(_stage_modifiers.get("next_hp_mult", 1.0))
+	var damage_mult := float(_stage_modifiers.get("next_damage_mult", 1.0))
+	if stages.size() > 1:
+		hp_mult *= BattleStages.hp_scale_for(index, monster_type)
+		damage_mult *= BattleStages.damage_scale_for(index, monster_type)
+	var count := clampi(variants.size() + int(_stage_modifiers.get("next_count_delta", 0)), 1, BattleStages.MAX_MONSTERS_PER_STAGE)
+	_stage_hand_delta = int(_stage_modifiers.get("next_hand_delta", 0))
+	_free_round_active = bool(_stage_modifiers.get("free_first_round", false))
+	_stage_modifiers = {}
+
+	for i in range(count):
+		var variant: Dictionary = variants[i] if i < variants.size() else BattleData.pick_variant(monster_type)
+		var elite: bool = bool(elites[i]) if i < elites.size() else false
+		monsters.append(MonsterState.new(i, monster_type, variant, elite, hp_mult, damage_mult))
+
+	# 같은 종류가 여러 마리면 이름에 번호를 붙여 메시지에서 구분되게 한다 (한 마리면 그냥 "오크")
+	if monsters.size() > 1:
+		for monster in monsters:
+			monster.display_name = "%s %d" % [monster.display_name, monster.index + 1]
+
+
+func stage_count() -> int:
+	return stages.size()
+
+
+func is_final_stage() -> bool:
+	return stage_index >= stages.size() - 1
+
+
+func current_stage_variants() -> Array:
+	var list: Array = []
+	for monster in monsters:
+		list.append(monster.variant)
+	return list
+
+
+func current_stage_elites() -> Array:
+	var list: Array = []
+	for monster in monsters:
+		list.append(monster.is_elite)
+	return list
+
+
+# 보상 선택을 마친 뒤 전투 씬이 부른다: 다음 스테이지를 세우고 새 턴을 연다
+func advance_stage() -> void:
+	if not stage_pending:
+		return
+	stage_pending = false
+	_spawn_stage(stage_index + 1)
+	_start_turn()
+
+
+# 고른 보상을 적용한다. 즉시 효과(회복/냉각/각인)는 여기서 바로 들어가고, 대가(다음 스테이지
+# 몬스터 강화/손패 감소 등)는 _stage_modifiers에 담아 뒀다가 _spawn_stage가 꺼내 쓴다
+func apply_stage_reward(offer: Dictionary) -> void:
+	var effect: Dictionary = offer.get("effect", {})
+
+	if effect.has("heal_fraction"):
+		GameState.heal_player_partial(float(effect["heal_fraction"]))
+	if effect.has("mana_full"):
+		GameState.restore_mana_partial(1.0)
+	if effect.has("hp_cost_fraction"):
+		var max_hp: int = GameState.get_flag("player_max_hp")
+		var cost := int(round(max_hp * float(effect["hp_cost_fraction"])))
+		# 보상을 고른 대가로 죽지는 않게 한다 (선택지 자체가 빈사일 땐 뜨지 않지만 이중 안전판)
+		var current_hp: int = GameState.get_flag("player_hp")
+		GameState.damage_player(mini(cost, maxi(0, current_hp - 1)))
+	if effect.has("cool_weapons"):
+		weapon.cool_everything()
+	if effect.has("card_power") and offer.has("card_name"):
+		var name_: String = offer["card_name"]
+		_card_power_bonus[name_] = float(_card_power_bonus.get(name_, 0.0)) + float(effect["card_power"])
+
+	for key in ["next_hp_mult", "next_damage_mult", "next_count_delta", "next_hand_delta", "free_first_round"]:
+		if effect.has(key):
+			_stage_modifiers[key] = effect[key]
+
+
+# 보상 선택지를 뽑을 때 쓰는 현재 상황 (BattleStages.roll_offers에 그대로 넘긴다)
+func stage_reward_context() -> Dictionary:
+	var max_hp: float = maxf(1.0, float(GameState.get_flag("player_max_hp")))
+	var max_mana: float = maxf(1.0, float(GameState.get_flag("player_max_mana")))
+	var next_count := 1
+	if stage_index + 1 < stages.size():
+		next_count = (stages[stage_index + 1]["variants"] as Array).size()
+
+	# 각인 대상은 "이번 전투 덱 안의 공격 카드" 중에서 고른다 — 손패에 지금 없어도 다음 스테이지에
+	# 다시 돌아올 카드라 이번 전투 내내 값어치가 있다
+	var names: Array[String] = []
+	for card in _all_battle_cards():
+		if card.effect == Card.EffectType.DAMAGE and not names.has(card.card_name):
+			names.append(card.card_name)
+
+	return {
+		"hp_ratio": float(GameState.get_flag("player_hp")) / max_hp,
+		"mana_ratio": float(GameState.get_flag("player_mana")) / max_mana,
+		"next_count": next_count,
+		"card_names": names,
+	}
+
+
+func _all_battle_cards() -> Array[Card]:
+	var all: Array[Card] = []
+	all.append_array(hand.cards)
+	all.append_array(deck.draw_pile)
+	all.append_array(deck.discard_pile)
+	for entry in reserved:
+		if entry["kind"] == ENTRY_CARD:
+			all.append(entry["card"])
+	return all
+
 
 # 전투를 시작하고 첫 턴을 연다 (_init과 분리해 둬서, 바깥이 시그널을 먼저 연결한 뒤 시작할 수 있다).
 # 시작 직전에 장비 보너스를 한 번 재계산해, 전투에 들어갈 때의 방패 최대 체력 보너스가
-# 확실히 player_max_hp에 반영된 상태로 싸우게 한다 (장착 시점에도 이미 반영되지만, 전투 진입을
-# 기준점으로 한 번 더 맞춰두면 어떤 경로로 들어와도 어긋나지 않는다)
+# 확실히 player_max_hp에 반영된 상태로 싸우게 한다
 func start() -> void:
 	GameState.refresh_equipment_bonuses()
 	_start_turn()
 
 
 # ── 턴 시작 ────────────────────────────────────────────────────────────────
-# 살아있는 몬스터마다 저항을 따로 굴리고, 무기 전환 횟수를 리셋하고, 손패를 5장으로 새로 채운다.
-# (남은 손패는 Hand.draw_new_hand()가 알아서 버린 더미로 보낸 뒤 새로 뽑는다)
-#
-# 저항을 마리별로 굴리는 이유는 그게 다인전의 핵심 압박이기 때문이다 — 한 마리는 물리 저항,
-# 옆은 마법 저항인 상황이 나오면 "어느 쪽부터 어떤 무기로 때릴지"를 매 턴 다시 판단해야 한다.
-# 쓰러진 몬스터는 굴리지 않는다 (죽은 뒤에도 저항 배지가 갱신되며 깜빡이지 않게)
+# 무기 전환 횟수를 리셋하고 손패를 새로 채운다. (남은 손패는 Hand.draw_new_hand()가 알아서
+# 버린 더미로 보낸 뒤 새로 뽑는다). 예전엔 여기서 마리별 저항을 무작위로 굴렸지만, 지금 저항은
+# 주사위가 아니라 플레이어가 때린 순서가 만든다 (EnemyResistance = 적응)
 func _start_turn() -> void:
 	turn_number += 1
-	for monster in monsters:
-		if monster.is_alive():
-			monster.resistance.roll_new_turn()
 	weapon.reset_turn()
 	# 가속은 "이번 턴" 한정이라 턴이 바뀌면 쓰지 않은 표식은 사라진다 (과열 게이지 리셋과 같은 자리)
 	_free_next_card = false
-	hand.draw_new_hand(deck, HAND_SIZE)
+	_pending_retaliator = -1
+	hand.draw_new_hand(deck, maxi(1, HAND_SIZE + _stage_hand_delta))
 	turn_started.emit(turn_number)
 
 
@@ -210,103 +351,136 @@ func all_monsters_defeated() -> bool:
 	return alive_monsters().is_empty()
 
 
-# ── 플레이어 행동 ──────────────────────────────────────────────────────────
+# ── 플레이어 행동 (계획) ───────────────────────────────────────────────────
 
-# 이 카드를 지금 낼 수 있는지. 손에 있어야 하고, 무기가 과부하가 아니어야 하고(WeaponState),
-# 마나와 체력 비용을 모두 감당할 수 있어야 한다. UI가 카드 버튼을 회색 처리할 때도 이 함수를 쓴다
+# 예약 큐를 끝까지 굴려본 "이 계획대로 갔을 때의 상태". 큐가 비어 있으면 지금 상태와 같다.
+# 라운드 해결 중에는 계획이 아니라 실제 값이 화면에 떠야 하므로 시뮬레이션을 건너뛴다.
+# 결과를 캐시하지 않는 이유: 마나/체력은 매니저 밖(승리 후 레벨업, 적 공격 등)에서도 바뀌어서 캐시가
+# 옛값을 들고 있다 화면에 틀린 계획을 띄운 적이 있다. 큐는 길어야 몇 칸이라 매번 굴려도 싸다
+func _plan_state() -> Dictionary:
+	var state := {
+		"mana": int(GameState.get_flag("player_mana")),
+		"hp": int(GameState.get_flag("player_hp")),
+		"weapon": weapon.copy(),
+		"free_next": _free_next_card,
+	}
+	if not _resolving:
+		for entry in reserved:
+			_apply_plan_entry(state, entry)
+	return state
+
+
+func _apply_plan_entry(state: Dictionary, entry: Dictionary) -> void:
+	var plan_weapon: WeaponState = state["weapon"]
+	if entry["kind"] == ENTRY_SWITCH:
+		plan_weapon.switch_weapon(entry["weapon"])
+		return
+
+	var card: Card = entry["card"]
+	var free: bool = bool(state["free_next"]) or _free_round_active
+	state["mana"] = maxi(0, int(state["mana"]) - (0 if free else card.get_mana_cost()))
+	state["hp"] = maxi(0, int(state["hp"]) - (0 if free else card.get_hp_cost()))
+	state["free_next"] = card.effect == Card.EffectType.FREE_NEXT_CARD
+	plan_weapon.register_card_use(card)
+	if card.on_use_set_gauge > 0:
+		plan_weapon.set_both_gauges(card.on_use_set_gauge)
+
+
+# 이 카드를 큐에 더 얹을 수 있는지. "지금 자원"이 아니라 "계획대로 갔을 때의 자원"으로 판단하는 게
+# 핵심이다 — 그래야 예약해둔 카드가 실행 도중 자원이 모자라 조용히 불발되는 일이 없다
 func can_play_card(card: Card) -> bool:
-	if battle_over or card == null:
+	if battle_over or stage_pending or card == null:
 		return false
 	if not hand.cards.has(card):
 		return false
-	if not weapon.can_use_card(card):
-		return false
-	# 가속이 걸려 있으면 비용이 0이므로, 원래는 못 낼 카드도 낼 수 있어야 한다 (UI 회색 처리도 같은 기준)
-	if not GameState.can_afford_mana(get_effective_mana_cost(card)):
-		return false
-	return can_afford_hp(get_effective_hp_cost(card))
+	return _can_afford_in(_plan_state(), card)
 
 
-# 지금 이 카드를 내는 데 실제로 들 비용. 가속(FREE_NEXT_CARD)이 걸려 있으면 카드 종류와 무관하게 0이다.
-# 판정(can_play_card)과 실제 지불(play_card)과 화면 표시(전투 씬의 비용 배지)가 전부 이 함수를 거쳐야
-# 셋이 어긋나지 않는다 — 배지에는 3이 적혀 있는데 실제로는 0이 나가는 식의 어긋남이 생기지 않게
+func _can_afford_in(state: Dictionary, card: Card) -> bool:
+	var plan_weapon: WeaponState = state["weapon"]
+	if not plan_weapon.can_use_card(card):
+		return false
+	var free: bool = bool(state["free_next"]) or _free_round_active
+	var mana_cost := 0 if free else card.get_mana_cost()
+	var hp_cost := 0 if free else card.get_hp_cost()
+	if int(state["mana"]) < mana_cost:
+		return false
+	if hp_cost > 0 and int(state["hp"]) <= hp_cost:
+		return false
+	return true
+
+
+# 지금 이 카드를 내는 데 실제로 들 비용. 판정과 실제 지불과 화면 배지가 전부 이 함수를 거쳐야
+# "배지엔 3이라고 적혀 있는데 실제로는 0이 나가는" 어긋남이 생기지 않는다
 func get_effective_mana_cost(card: Card) -> int:
-	return 0 if _free_next_card else card.get_mana_cost()
+	return 0 if _costs_are_free() else card.get_mana_cost()
 
 
 func get_effective_hp_cost(card: Card) -> int:
-	return 0 if _free_next_card else card.get_hp_cost()
+	return 0 if _costs_are_free() else card.get_hp_cost()
 
 
-# 다음 카드 한 장이 공짜인 상태인지 (전투 씬이 비용 배지를 0으로 바꿔 보여줄 때 쓴다)
+func _costs_are_free() -> bool:
+	return _free_round_active or bool(_plan_state()["free_next"])
+
+
 func is_next_card_free() -> bool:
-	return _free_next_card
+	return _costs_are_free()
 
 
-# 체력 비용을 치를 수 있는지. "남은 체력 > 비용"이라 비용을 내고도 최소 1은 남는다 —
-# 같으면(체력 == 비용) 카드를 내는 순간 체력이 0이 되어 자기 카드로 죽어버리므로 그 경우도 막는다.
-# 비용이 0인 카드는 체력과 무관하게 항상 통과한다
+# 화면이 보여줄 자원. 계획 중에는 "큐를 다 실행하고 난 뒤"의 값을 보여준다 — 지금 짜고 있는 계획의
+# 결과가 곧 이번 라운드의 결과라, 판단에 쓰이는 숫자는 그쪽이다
+func display_mana() -> int:
+	return int(_plan_state()["mana"])
+
+
+func display_hp() -> int:
+	return int(_plan_state()["hp"])
+
+
+func display_weapon() -> WeaponState:
+	return _plan_state()["weapon"]
+
+
 func can_afford_hp(cost: int) -> bool:
 	if cost <= 0:
 		return true
 	return GameState.get_flag("player_hp") > cost
 
 
-# 카드 한 장을 낸다. 낼 수 없는 상황이면 아무 일도 하지 않고 false를 반환한다.
-# 성공하면: 비용(마나/체력) 소모 → 과열 게이지 갱신 → 효과 적용 → 손패에서 버린 더미로 이동 →
-# card_played 방출. 카드는 손에 있는 한 자유로운 순서로 낼 수 있고, 5장을 다 쓰지 않고 end_turn()해도 된다.
-#
-# 비용을 효과보다 먼저 치르는 순서에 주의 — 체력을 회복하는 카드가 체력 비용을 갖는 경우
-# "먼저 내고 그 다음 회복"이 되어야 순서가 뒤집혀 이득이 나지 않는다.
-# 체력 비용으로 죽는 일은 can_play_card가 이미 막아둬서(can_afford_hp) 여기서 다시 확인하지 않는다.
-#
-# target_index는 피해 카드가 때릴 몬스터의 자리 번호다. -1(기본값)이면 자동 타겟(살아있는 첫 마리)을
-# 고른다 — 지금은 UI가 대상을 고를 방법이 없어 호출부가 전부 기본값으로 부르고, 타겟팅 UI가 붙는
-# 다음 단계에서 플레이어가 고른 값이 여기로 들어온다. 피해 카드가 아니면 이 값은 쓰이지 않는다
+# 카드 한 장을 그 자리에서 내고 끝낸다 (헤드리스 테스트/자동 전투용 — 화면 있는 전투는 예약을 쓴다)
 func play_card(card: Card, target_index: int = -1) -> bool:
 	if not reserve_card(card, target_index):
 		return false
-	execute_reserved_at(reserved.size() - 1)
-	reserved.pop_back()
-	return true
+	var entry: Dictionary = reserved.pop_back()
+	return bool(_execute_card(entry).get("played", false))
 
 
-# 카드를 손패에서 빼 예약 목록에 넣는다. 비용/과열은 여기서 치르고, 카드 효과만 턴종료로 미룬다
-# (자세한 이유는 reserved 선언부 주석). 광역/자기대상 카드는 target_index를 -1로 넘기면 된다.
-# 게이지 변화량(sword_delta/staff_delta)도 함께 기록해두는데, cancel_reservation()이 이 예약 하나만
-# 콕 집어 되돌릴 때 register_card_use()/on_use_set_gauge가 뒤섞인 최종 변화량을 다시 계산할 필요 없이
-# 그대로 부호만 뒤집어 쓰면 되게 하기 위함이다
+# 카드를 손패에서 빼 예약 큐에 넣는다 (비용은 실행 시점에 낸다)
 func reserve_card(card: Card, target_index: int = -1) -> bool:
 	if not can_play_card(card):
 		return false
-
-	var mana_cost := get_effective_mana_cost(card)
-	var hp_cost := get_effective_hp_cost(card)
-	# 표식은 카드 종류를 가리지 않고 여기서 소모된다 — 원래 비용이 0인 카드(베기 등)에 걸렸다면
-	# 아무 이득 없이 그냥 사라진다
-	_free_next_card = false
-
-	var sword_before := weapon.get_gauge(WeaponState.WeaponType.SWORD)
-	var staff_before := weapon.get_gauge(WeaponState.WeaponType.STAFF)
-
-	GameState.spend_mana(mana_cost) # 비용이 0이면 그대로 통과
-	if hp_cost > 0:
-		GameState.damage_player(hp_cost)
-	weapon.register_card_use(card)
-	# 게이지 강제 세팅 페널티는 누적(register_card_use) 뒤에 적용해야 한다 — 순서가 반대면
-	# 세팅한 값 위에 ±25가 덮여 카드가 약속한 값과 달라진다
-	if card.on_use_set_gauge > 0:
-		weapon.set_both_gauges(card.on_use_set_gauge)
-
 	hand.cards.erase(card)
-	reserved.append({
-		"card": card,
-		"target_index": target_index,
-		"mana_cost": mana_cost,
-		"hp_cost": hp_cost,
-		"sword_delta": weapon.get_gauge(WeaponState.WeaponType.SWORD) - sword_before,
-		"staff_delta": weapon.get_gauge(WeaponState.WeaponType.STAFF) - staff_before,
-	})
+	reserved.append({"kind": ENTRY_CARD, "card": card, "target_index": target_index})
+	return true
+
+
+# 무기 전환을 큐의 한 수로 끼워 넣는다. 전환은 카드가 아니라 "사이에 넣는 박자"라 몬스터의 응수를
+# 부르지 않고, 대신 걸려 있던 표식이 이때 전부 터진다 (템포 체인)
+func can_reserve_switch() -> bool:
+	if battle_over or stage_pending:
+		return false
+	return (_plan_state()["weapon"] as WeaponState).can_switch()
+
+
+func planned_equipped() -> WeaponState.WeaponType:
+	return (_plan_state()["weapon"] as WeaponState).equipped
+
+
+func reserve_switch() -> bool:
+	if not can_reserve_switch():
+		return false
+	reserved.append({"kind": ENTRY_SWITCH, "weapon": WeaponState.other_weapon(planned_equipped())})
 	return true
 
 
@@ -314,44 +488,73 @@ func has_reservations() -> bool:
 	return not reserved.is_empty()
 
 
-# 아직 실행되지 않은 예약을 취소하고 카드를 손패로 돌려준다. reserved에는 발동된 카드가 남지 않으므로
-# (execute_next_reservation이 즉시 pop한다), 여기서 되돌릴 대상은 "치른 비용"뿐이다 — 마나/체력을
-# 환불하고, 예약 당시 기록해둔 게이지 변화량만큼 되돌린다. 손패 순서상 어디로 돌아가는지는 신경 쓰지
-# 않고 그냥 맨 뒤에 붙인다(다음 populate가 알아서 빈 칸에 채워 보여준다)
+# 아직 실행되지 않은 예약을 취소한다. 비용은 실행할 때 내므로 되돌릴 자원이 없다 — 카드만 손패로
+# 돌려놓으면 끝이고, 뒤에 남은 예약들의 자원 계산은 _plan_state()가 알아서 다시 한다
 func cancel_reservation(index: int) -> bool:
 	if index < 0 or index >= reserved.size():
 		return false
-
 	var entry: Dictionary = reserved[index]
-	GameState.restore_mana(entry["mana_cost"])
-	if entry["hp_cost"] > 0:
-		GameState.heal_player(entry["hp_cost"])
-	var sword := WeaponState.WeaponType.SWORD
-	var staff := WeaponState.WeaponType.STAFF
-	weapon.set_gauge(sword, weapon.get_gauge(sword) - entry["sword_delta"])
-	weapon.set_gauge(staff, weapon.get_gauge(staff) - entry["staff_delta"])
-
 	reserved.remove_at(index)
-	hand.cards.append(entry["card"])
+	if entry["kind"] == ENTRY_CARD:
+		hand.cards.append(entry["card"])
 	return true
 
 
-# 예약된 카드가 실행 시점에도 유효한지. 단일 대상 공격 카드는 그 대상이 죽어 있으면 무효다
-# (다른 적으로 자동 이동시키지 않는다 — 플레이어가 겨눈 자리가 사라진 것이므로 그냥 허공을 가른다)
+# 예약 하나가 지금 이 순간 실행 가능한지 (실행 직전 판정 + UI의 불발 예고 표시에 함께 쓴다)
 func reservation_is_valid(entry: Dictionary) -> bool:
+	if entry.get("kind", ENTRY_CARD) == ENTRY_SWITCH:
+		return true
+	return _card_invalid_reason(entry) == ""
+
+
+# 큐 전체를 순서대로 굴려보며 각 수가 유효한지 (앞의 전환을 취소하면 뒤 카드가 봉쇄된 무기를
+# 가리키게 되는 식의 어긋남을 UI가 미리 빨갛게 보여줄 수 있도록)
+func queue_validity() -> Array[bool]:
+	var state := {
+		"mana": int(GameState.get_flag("player_mana")),
+		"hp": int(GameState.get_flag("player_hp")),
+		"weapon": weapon.copy(),
+		"free_next": _free_next_card,
+	}
+	var flags: Array[bool] = []
+	for entry in reserved:
+		if entry["kind"] == ENTRY_SWITCH:
+			flags.append((state["weapon"] as WeaponState).can_switch())
+		else:
+			flags.append(_can_afford_in(state, entry["card"]) and _target_still_valid(entry))
+		_apply_plan_entry(state, entry)
+	return flags
+
+
+# 불발 사유 ("" = 정상). 대상이 이미 쓰러졌거나, 큐가 도는 사이 자원/봉쇄 상황이 바뀐 경우다
+func _card_invalid_reason(entry: Dictionary) -> String:
+	var card: Card = entry["card"]
+	if not _target_still_valid(entry):
+		return "target"
+	if not weapon.can_use_card(card):
+		return "locked"
+	var free: bool = _free_next_card or _free_round_active
+	if not free and GameState.get_flag("player_mana") < card.get_mana_cost():
+		return "mana"
+	if not free and card.get_hp_cost() > 0 and GameState.get_flag("player_hp") <= card.get_hp_cost():
+		return "hp"
+	return ""
+
+
+# 겨눈 대상이 아직 살아 있는지. 단일 대상 공격 카드는 대상이 죽어 있으면 무효다
+# (다른 적으로 자동 이동시키지 않는다 — 플레이어가 겨눈 자리가 사라진 것이므로 그냥 허공을 가른다)
+func _target_still_valid(entry: Dictionary) -> bool:
 	var card: Card = entry["card"]
 	if card.is_aoe:
 		return not all_monsters_defeated()
 	var target_index: int = entry["target_index"]
-	if target_index < 0:
-		return true # 자기 자신/파티를 겨냥하는 카드는 사라질 대상이 없다
-	if not _targets_enemy_side(card):
+	if target_index < 0 or not _targets_enemy_side(card):
 		return true
 	var target := get_monster(target_index)
 	return target != null and target.is_alive()
 
 
-# 이 카드가 적 진영을 겨냥하는지 (예약 무효 판정에만 쓴다 — 회복/버프는 아군 쪽이라 무효가 없다)
+# 이 카드가 적 진영을 겨냥하는지 (불발 판정과 도발 대상 판정에 함께 쓴다)
 func _targets_enemy_side(card: Card) -> bool:
 	match card.effect:
 		Card.EffectType.DAMAGE, Card.EffectType.DEBUFF_ATTACK_ENEMY:
@@ -362,36 +565,198 @@ func _targets_enemy_side(card: Card) -> bool:
 			return false
 
 
-# 예약 목록의 index번째 카드를 실제로 실행한다. 대상이 이미 쓰러졌으면 효과 없이 버리기만 한다.
-# 반환값: {"played": bool, "card": Card, "damage": int} — played=false면 허공을 갈랐다는 뜻
-func execute_reserved_at(index: int) -> Dictionary:
-	var entry: Dictionary = reserved[index]
+# ── 실행 ───────────────────────────────────────────────────────────────────
+
+# 큐 맨 앞의 한 수를 실행한다. 반환값의 "provokes"가 false면 이 수 뒤에는 몬스터가 응수하지 않는다
+# (무기 전환이 그렇다 — 전환은 공짜 박자다)
+func execute_next_reservation() -> Dictionary:
+	if reserved.is_empty():
+		return {"kind": "none", "played": false, "card": null, "damage": 0, "provokes": false}
+	var entry: Dictionary = reserved.pop_front()
+	if entry["kind"] == ENTRY_SWITCH:
+		return _execute_switch(entry)
+	return _execute_card(entry)
+
+
+func _execute_switch(entry: Dictionary) -> Dictionary:
+	var target: WeaponState.WeaponType = entry["weapon"]
+	var switched := weapon.switch_weapon(target)
+	if switched:
+		weapon_switched.emit(target)
+	return {
+		"kind": ENTRY_SWITCH, "played": switched, "card": null, "damage": 0,
+		"weapon": int(target), "detonations": detonate_marks(), "provokes": false,
+	}
+
+
+func _execute_card(entry: Dictionary) -> Dictionary:
 	var card: Card = entry["card"]
-	var valid := reservation_is_valid(entry)
-	var damage_dealt := 0
+	var target_index: int = entry["target_index"]
 
-	if valid:
-		damage_dealt = _apply_card_effect(card, entry["target_index"])
-
-	var moved: Array[Card] = [card]
-	deck.discard(moved)
-
-	if valid:
-		card_played.emit(card, damage_dealt)
-		# 전투 종료는 "전멸"이어야 한다 — 한 마리가 쓰러져도 남은 몬스터가 있으면 계속 싸운다
+	var reason := _card_invalid_reason(entry)
+	if reason != "":
+		deck.discard([card] as Array[Card])
+		_pending_retaliator = _resolve_provoke(null, -1)
+		# 불발이어도 전멸 판정은 해야 한다 — 동료 공격 등으로 이미 다 쓰러져 있을 수 있다
 		if all_monsters_defeated():
-			_finish_battle(false)
+			_on_stage_wiped()
+		return {"kind": ENTRY_CARD, "played": false, "card": card, "damage": 0, "reason": reason, "provokes": true}
 
-	return {"played": valid, "card": card, "damage": damage_dealt}
+	var free: bool = _free_next_card or _free_round_active
+	var mana_cost := 0 if free else card.get_mana_cost()
+	var hp_cost := 0 if free else card.get_hp_cost()
+	_free_next_card = false
+
+	# 비용을 효과보다 먼저 치른다 — 체력을 회복하는 카드가 체력 비용을 갖는 경우 순서가 뒤집히면
+	# 회복분까지 비용으로 깎여 카드가 약속한 결과가 나오지 않는다
+	GameState.spend_mana(mana_cost)
+	if hp_cost > 0:
+		GameState.damage_player(hp_cost)
+
+	# 레드라인은 이 카드가 게이지를 올리기 "전" 값으로 판정한다 — 카드를 낸 결과로 달아오른 열은
+	# 다음 카드의 몫이어야 "75를 넘긴 채 한 장 더 지르는" 선택이 성립한다
+	var redline := weapon.is_redline_for_card(card)
+	var overloaded: Array[int] = []
+	if weapon.register_card_use(card):
+		overloaded.append(int(weapon.equipped))
+	if card.on_use_set_gauge > 0:
+		overloaded.append_array(weapon.set_both_gauges(card.on_use_set_gauge))
+	for overloaded_weapon in overloaded:
+		weapon_overloaded.emit(overloaded_weapon)
+
+	_redline_active = redline
+	var damage_dealt := _apply_card_effect(card, target_index)
+	_redline_active = false
+
+	deck.discard([card] as Array[Card])
+	card_played.emit(card, damage_dealt)
+
+	_pending_retaliator = _resolve_provoke(card, target_index)
+
+	if all_monsters_defeated():
+		_on_stage_wiped()
+
+	return {
+		"kind": ENTRY_CARD, "played": true, "card": card, "damage": damage_dealt,
+		"redline": redline, "overloaded": overloaded, "provokes": true,
+	}
 
 
-# 무기 전환 (턴당 3회 제한은 WeaponState가 관리). 성공했을 때만 시그널을 쏘고 true를 반환
+# 걸려 있는 표식을 전부 터뜨린다 (무기를 전환하는 순간). 표식 피해에는 속성이 없어 적응을 쌓지도
+# 깨지도 않는다 — 적응한 상대를 우회해 때리는 통로가 하나 열려 있는 셈이다
+func detonate_marks() -> Array:
+	var results: Array = []
+	for monster in monsters:
+		if not monster.is_alive():
+			continue
+		var power := monster.status.get_magnitude(StatusEffects.Kind.MARK)
+		if power <= 0:
+			continue
+		monster.status.remove(StatusEffects.Kind.MARK)
+		status_expired.emit(monster.index, int(StatusEffects.Kind.MARK))
+		results.append({"index": monster.index, "damage": monster.take_damage(power)})
+		if not monster.is_alive():
+			monster_defeated.emit(monster.index)
+
+	if not results.is_empty() and all_monsters_defeated():
+		_on_stage_wiped()
+	return results
+
+
+func has_marks() -> bool:
+	for monster in monsters:
+		if monster.is_alive() and monster.status.get_magnitude(StatusEffects.Kind.MARK) > 0:
+			return true
+	return false
+
+
+# ── 도발 ───────────────────────────────────────────────────────────────────
+
+# 이 카드 뒤에 반격할 몬스터 자리 번호. -1이면 이번 교환에는 반격이 없다.
+#
+# 도발은 "건드린 놈이 되받아친다"가 전부다. 그래서 아무 몬스터도 겨누지 않은 카드(방어/피하기/회복/
+# 자기버프)나 허공을 가른 불발은 누구도 도발하지 않아 반격이 없다. 예전처럼 이런 카드도 반격을 부르면
+# 피하기는 자기가 부른 반격을 자기가 막는 셈이라 아무 효과가 없는 카드가 되고, 방어도 스스로 맞을
+# 매를 사는 카드가 된다. 비공격 카드는 마나를 쓰고 피해를 주지 않으므로 그 자체로 이미 대가를 치른다
+func _resolve_provoke(card: Card, target_index: int) -> int:
+	if card == null or not _targets_enemy_side(card):
+		return -1
+
+	if card.is_aoe:
+		# 광역은 특정 대상이 없으니 살아남은 것 중 가장 약한 놈이 달려든다
+		var weakest := _lowest_hp_alive()
+		if weakest == null:
+			return -1
+		_last_provoked = weakest.index
+		return weakest.index
+
+	var target := get_monster(target_index)
+	if target == null or not target.is_alive():
+		return -1 # 겨눈 놈을 쓰러뜨렸다 — 죽이면 그만큼 맞지 않는다
+	_last_provoked = target.index
+	return target.index
+
+
+func _lowest_hp_alive() -> MonsterState:
+	var best: MonsterState = null
+	for monster in alive_monsters():
+		if best == null or monster.hp < best.hp:
+			best = monster
+	return best
+
+
+# 지금 계획대로라면 다음에 반격할 몬스터 (UI가 발밑에 표식을 그릴 때 쓴다). 없으면 -1
+func predicted_retaliator() -> int:
+	if _resolving:
+		return _pending_retaliator
+
+	for entry in reserved:
+		if entry["kind"] != ENTRY_CARD:
+			continue
+		var card: Card = entry["card"]
+		if not _targets_enemy_side(card):
+			continue
+		if card.is_aoe:
+			var weakest := _lowest_hp_alive()
+			return weakest.index if weakest != null else -1
+		var target := get_monster(entry["target_index"])
+		if target != null and target.is_alive():
+			return target.index
+	return -1
+
+
+# ── 스테이지 전환 ──────────────────────────────────────────────────────────
+
+# 이번 스테이지의 몬스터가 전멸했다. 남은 스테이지가 있으면 전투를 끝내지 않고 보상 선택을 기다린다
+func _on_stage_wiped() -> void:
+	if stage_pending or battle_over:
+		return # 한 라운드에 여러 경로(카드/표식/동료)로 들어와도 정리는 한 번만
+	if stage_index < stages.size() - 1:
+		stage_pending = true
+		# 아직 실행 안 된 예약은 비용을 치르지 않았으므로 그냥 손패로 돌려준다 (다음 스테이지
+		# 시작 시 어차피 새 손패를 뽑으므로 자연히 버린 더미로 들어간다)
+		_return_reservations_to_hand()
+		stage_cleared.emit(stage_index, stages.size())
+		return
+	_finish_battle(false)
+
+
+func _return_reservations_to_hand() -> void:
+	for entry in reserved:
+		if entry["kind"] == ENTRY_CARD:
+			hand.cards.append(entry["card"])
+	reserved.clear()
+
+
+# 무기 전환을 그 자리에서 실행한다 (턴당 3회 제한은 WeaponState가 관리).
+# 화면이 있는 전투는 이걸 직접 쓰지 않고 reserve_switch()로 큐에 넣는다
 func switch_weapon(to: WeaponState.WeaponType) -> bool:
 	if battle_over:
 		return false
 	if not weapon.switch_weapon(to):
 		return false
 	weapon_switched.emit(to)
+	detonate_marks()
 	return true
 
 
@@ -580,6 +945,16 @@ func _damage_monster(card: Card, target_index: int) -> int:
 
 	_apply_damage_trait(card, target, applied)
 
+	# 맞은 속성을 기억시킨다: 같은 속성으로 두 번 연속 맞으면 적응하고, 반대 속성이면 적응이 깨진다
+	var adaptation := target.resistance.register_hit(card.color)
+	if adaptation["adapted"] or adaptation["broken"]:
+		monster_adapted.emit(target.index, int(target.resistance.current), bool(adaptation["adapted"]), bool(adaptation["broken"]))
+
+	# 표식은 살아 있는 대상에게만 남는다 (쓰러진 뒤에 남겨봐야 터질 곳이 없다)
+	if card.switch_mark > 0 and target.is_alive():
+		target.status.apply(StatusEffects.Kind.MARK, card.switch_mark, MARK_ROUNDS)
+		status_applied.emit(target.index, int(StatusEffects.Kind.MARK), card.switch_mark, MARK_ROUNDS)
+
 	if not target.is_alive():
 		monster_defeated.emit(target.index)
 
@@ -649,6 +1024,13 @@ func calculate_card_damage(card: Card, target: MonsterState) -> int:
 
 	# 공격자 측 배율
 	raw *= player_status.get_increase_multiplier(StatusEffects.Kind.ATTACK_UP)
+	# 각인(스테이지 보상)으로 이번 전투 동안 벼려진 카드
+	raw *= 1.0 + float(_card_power_bonus.get(card.card_name, 0.0))
+	# 레드라인: 달궈진 무기를 든 채 그 무기 카드를 낼 때만. 적응보다 "앞"에 두어, 적응한 상대에게
+	# 레드라인을 쏟으면 보너스까지 같이 반감되게 했다(1.5 x 0.5 = 0.75배) — 뜨거울 때 누구를
+	# 때리느냐가 곧 판단거리가 된다
+	if _redline_active:
+		raw *= 1.0 + WeaponState.REDLINE_DAMAGE_BONUS
 
 	# 방어자 측 배율 — 저항 감쇄는 저항 약화 디버프만큼 완화된다
 	var resist_reduction := target.status.get_magnitude(StatusEffects.Kind.RESIST_DOWN)
@@ -666,7 +1048,8 @@ func calculate_card_damage(card: Card, target: MonsterState) -> int:
 func calculate_monster_attack_damage(attacker: MonsterState) -> int:
 	var rolled := randi_range(attacker.monster_data["damage_min"], attacker.monster_data["damage_max"])
 	var multiplier := attacker.status.get_decrease_multiplier(StatusEffects.Kind.ATTACK_DOWN)
-	return maxi(0, int(round(rolled * multiplier)))
+	# 엘리트/스테이지 보상 대가로 붙은 공격력 배율
+	return maxi(0, int(round(rolled * multiplier * attacker.damage_multiplier)))
 
 
 # ── 버프/디버프 ────────────────────────────────────────────────────────────
@@ -723,6 +1106,8 @@ func _tick_status_rounds() -> void:
 	for monster in monsters:
 		for kind in monster.status.tick_round():
 			status_expired.emit(monster.index, int(kind))
+		if monster.is_alive() and monster.resistance.tick_round():
+			monster_adapted.emit(monster.index, int(EnemyResistance.ResistanceType.NONE), false, true)
 	# 동료도 카드로 상태이상을 받을 수 있으니(_apply_ally_effect) 플레이어/몬스터와 같이 여기서 깎아야
 	# 한다 — 안 그러면 한 번 걸린 버프가 라운드가 지나도 안 풀린다
 	for i in range(1, party.size()):
@@ -752,17 +1137,18 @@ func _equipment_damage_bonus(card: Card) -> int:
 
 # ── 턴 종료 / 적 턴 ────────────────────────────────────────────────────────
 
-# 플레이어가 턴을 넘긴다. 적이 반격하고, 승패를 판정한 뒤, 아직 안 끝났으면 다음 턴을 자동으로 연다
+# 플레이어가 턴을 넘긴다 (연출 없는 호출부 전용 — 화면 있는 전투는 아래 3단계를 직접 부른다)
 func end_turn() -> void:
 	if battle_over:
 		return
 
 	begin_round_resolution()
-	while not battle_over and has_reservations():
-		execute_next_reservation()
-		if battle_over:
+	while not battle_over and not stage_pending and has_reservations():
+		var result := execute_next_reservation()
+		if battle_over or stage_pending:
 			break
-		take_next_monster_action()
+		if bool(result.get("provokes", true)):
+			take_next_monster_action()
 	finish_round_resolution()
 
 
@@ -772,25 +1158,19 @@ func end_turn() -> void:
 
 # 1) 라운드 시작: 동료들이 각자 한 번씩 행동한다 (예약 카드 수와 무관하게 라운드당 1회)
 func begin_round_resolution() -> void:
+	_resolving = true
 	_resolve_companion_turn()
-	# 동료 공격으로 몬스터가 전멸했으면 카드 교환을 시작하지 않고 바로 승리 처리한다
+	# 동료 공격으로 몬스터가 전멸했으면 카드 교환을 시작하지 않고 바로 스테이지/전투 정리로 넘어간다
 	if all_monsters_defeated():
-		_finish_battle(false)
-
-
-# 2) 예약 목록 맨 앞의 카드 한 장을 실행하고 목록에서 뺀다
-func execute_next_reservation() -> Dictionary:
-	if reserved.is_empty():
-		return {"played": false, "card": null, "damage": 0}
-	var result := execute_reserved_at(0)
-	reserved.pop_front()
-	return result
+		_on_stage_wiped()
 
 
 # 3) 라운드 마무리: 임시 상태를 털고, 라운드 단위 카운터를 딱 한 번씩 굴린 뒤 다음 턴을 연다.
 # 카드를 몇 장 냈든(교환을 몇 번 했든) 이 함수는 턴종료 1회당 1번만 불린다 —
-# 저항 재추첨(_start_turn), 상태이상 감소, 동료 패시브 카운터가 교환 수만큼 빨라지면 안 되기 때문
+# 상태이상 감소, 무기 봉쇄 해제, 동료 패시브 카운터가 교환 수만큼 빨라지면 안 되기 때문
 func finish_round_resolution() -> void:
+	_resolving = false
+
 	if battle_over:
 		reserved.clear()
 		return
@@ -803,21 +1183,30 @@ func finish_round_resolution() -> void:
 
 	rounds_completed += 1
 	_tick_status_rounds()
+	weapon.tick_round() # 과부하 봉쇄도 라운드 단위다
+	# "첫 라운드 카드 비용 0"(선제 보상)은 이 라운드로 끝난다
+	_free_round_active = false
 	for i in range(1, party.size()):
 		party[i].tick_round()
 		if party[i].consume_passive_trigger():
 			_trigger_party_passive_heal(i)
 
-	reserved.clear()
+	if not stage_pending:
+		_return_reservations_to_hand()
 
 	if _is_party_wiped():
 		_finish_battle(true)
 		return
 
+	# 스테이지를 깬 상태면 다음 턴은 보상 선택이 끝난 뒤(advance_stage)에 열린다
+	if stage_pending:
+		return
+
 	# 반격으로 적이 쓰러졌을 수 있다. 이 검사가 없으면 전멸한 상대로 다음 턴이 열린다
 	if all_monsters_defeated():
-		_finish_battle(false)
-		return
+		_on_stage_wiped()
+		if stage_pending or battle_over:
+			return
 
 	_start_turn()
 
@@ -865,9 +1254,10 @@ func _resolve_companion_turn() -> void:
 #    공용(NEUTRAL)이고, 공용 카드는 원래도 저항 대상이 아니며(EnemyResistance.resists) 무기 보너스도
 #    받지 않는다(_equipment_damage_bonus). 즉 카드로 직접 때렸을 때와 같은 계산 결과가 나온다.
 #
-# [교환 규칙] 카드 한 장이 실행될 때마다 몬스터가 딱 한 번 응수한다. 여러 마리면 라운드로빈으로
-# 차례가 돌아가고(_monster_turn_cursor), 그 순서는 라운드를 넘어가도 이어진다 — 카드를 적게 내면
-# 뒷줄 몬스터가 영영 행동 못 하는 일이 없게. 쓰러진 마리는 건너뛴다.
+# [교환 규칙] 카드 한 장이 실행될 때마다 몬스터가 딱 한 번 응수한다. 누가 응수하는지는 라운드로빈이
+# 아니라 도발이 정한다 — 방금 때린 놈이 곧바로 되받아치고(_resolve_provoke), 광역기는 살아남은
+# 것 중 가장 약한 놈이 달려든다. 겨눈 대상을 그 카드로 쓰러뜨렸으면 그 교환에는 응수가 없다.
+# 무기 전환은 카드가 아니므로 응수를 부르지 않는다.
 #
 # [방어/피하기/반격이 마리 수만큼 뻥튀기되지 않게 하는 규칙]
 #  - 피하기/반격은 "가장 먼저 오는 공격 한 방"에만 쓰이고 그 자리에서 소모된다.
@@ -875,11 +1265,11 @@ func _resolve_companion_turn() -> void:
 #  - 반격은 "때린 그 몬스터"에게 되돌려준다 (자동 타겟이 아니라 공격자).
 # 셋 다 라운드가 끝날 때 finish_round_resolution()에서 한꺼번에 털린다
 func take_next_monster_action() -> Dictionary:
-	if battle_over or _is_party_wiped():
+	if battle_over or stage_pending or _is_party_wiped():
 		return {"acted": false, "index": -1}
 
-	var actor := _next_monster_in_rotation()
-	if actor == null:
+	var actor := get_monster(_pending_retaliator)
+	if actor == null or not actor.is_alive():
 		return {"acted": false, "index": -1}
 
 	# 마나가 남아 있으면 공격, 바닥났으면 그 차례는 숨고르기(회복)
@@ -891,20 +1281,6 @@ func take_next_monster_action() -> Dictionary:
 		monster_recovered.emit(actor.index, gained["mana"], gained["hp"])
 
 	return {"acted": true, "index": actor.index}
-
-
-# 라운드로빈 커서에서 시작해 처음 만나는 살아있는 몬스터를 돌려주고, 커서를 그 다음 자리로 넘긴다.
-# 전멸했으면 null
-func _next_monster_in_rotation() -> MonsterState:
-	if monsters.is_empty():
-		return null
-	for step in range(monsters.size()):
-		var index := (_monster_turn_cursor + step) % monsters.size()
-		var candidate := monsters[index]
-		if candidate.is_alive():
-			_monster_turn_cursor = (index + 1) % monsters.size()
-			return candidate
-	return null
 
 
 # 동료 패시브(§7 "파티 전체 5턴 회복") 발동 효과: 살아있는 파티원 전원의 체력/마력을 각각

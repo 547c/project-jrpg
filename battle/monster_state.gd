@@ -20,7 +20,17 @@ var variant: Dictionary = {} # 이 개체가 표시할 시각 변종 (BattleData
 
 var max_hp: int = 0
 var hp: int = 0
-var resistance: EnemyResistance # 마리마다 독립적으로 굴린다 (한 마리가 물리 저항이어도 옆은 아닐 수 있음)
+var resistance: EnemyResistance # 마리마다 독립적으로 적응한다 (한 마리가 물리에 적응해도 옆은 아닐 수 있음)
+
+# ── 스테이지 보정 ──────────────────────────────────────────────────────────
+# 엘리트는 같은 종류의 강화판이다 (스프라이트도 커지고 색조가 붙는다 — 표시는 battle_scene 담당).
+# 스테이지 보상의 대가로 붙는 "다음 스테이지 몹 강화"도 같은 두 배율을 통해 들어온다
+const ELITE_HP_MULT := 1.7
+const ELITE_DAMAGE_MULT := 1.35
+const ELITE_REWARD_MULT := 2
+
+var is_elite: bool = false
+var damage_multiplier: float = 1.0
 
 # 이 몬스터에게 걸린 버프/디버프. 플레이어 쪽(BattleTurnManager.player_status)과 같은 클래스를 쓴다 —
 # "누구에게 걸렸는가"만 다르고 규칙은 같아서, 마리마다 하나씩 들고 있으면 그걸로 끝난다
@@ -35,10 +45,13 @@ var status: StatusEffects
 # 밸런스에 직접 손대지 않는다는 점이 중요하다: 피해량은 여전히 monster_data의 damage_min/max가
 # 정하고, 마나는 "이번 턴에 때리는가 마는가"만 가른다
 const MANA_MAX := 100
-const ATTACK_COST_MIN := 25
-const ATTACK_COST_MAX := 40
+# 도발로 "때린 놈이 반격"하게 되면서 한 마리가 연달아 응수하는 일이 잦아졌다. 공격 비용을 올려
+# 두어 번 때리면 숨을 고르게 해, 한 놈을 집중해서 치면 그놈이 지쳐 조용해지는 흐름을 만들었다
+# (static var인 건 밸런스 시뮬레이터가 스윕할 때 덮어쓰기 위해서다)
+static var ATTACK_COST_MIN := 40
+static var ATTACK_COST_MAX := 55
 # 이 값 미만이면 공격 대신 회복 턴. 공격 최소 비용과 같은 값이라 "다음 공격을 낼 수 없으면 쉰다"가 된다
-const LOW_MANA_THRESHOLD := 25
+static var LOW_MANA_THRESHOLD := 40
 const RECOVER_MANA_MIN := 40
 const RECOVER_MANA_MAX := 60
 # 회복 턴에 체력까지 함께 회복할 확률과 그 폭(최대 체력 대비)
@@ -57,16 +70,20 @@ var display_name: String = ""
 var rewarded: bool = false
 
 
-func _init(index_: int, monster_type_: String, variant_: Dictionary) -> void:
+func _init(index_: int, monster_type_: String, variant_: Dictionary, elite := false, hp_mult := 1.0, damage_mult := 1.0) -> void:
 	index = index_
 	monster_type = monster_type_
 	monster_data = BattleData.MONSTERS[monster_type_]
 	variant = variant_
-	max_hp = monster_data["max_hp"]
+	is_elite = elite
+	max_hp = int(round(monster_data["max_hp"] * hp_mult * (ELITE_HP_MULT if elite else 1.0)))
 	hp = max_hp
+	damage_multiplier = damage_mult * (ELITE_DAMAGE_MULT if elite else 1.0)
 	resistance = EnemyResistance.new()
 	status = StatusEffects.new()
 	display_name = tr(monster_data["name"])
+	if elite:
+		display_name = tr("정예 %s") % display_name
 
 
 func is_alive() -> bool:

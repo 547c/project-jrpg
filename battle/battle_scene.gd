@@ -521,6 +521,9 @@ const RESIST_BADGE_MODULATE := {
 	EnemyResistance.ResistanceType.MAGIC: Color(1, 1, 1, 1),
 	EnemyResistance.ResistanceType.NONE: Color(0.55, 0.55, 0.6, 0.5),
 }
+# "한 번 더 같은 속성으로 맞으면 적응한다"는 예고. 적응 완료(또렷함)와 무저항(회색) 사이의 중간 상태라
+# 색은 그대로 두고 반투명하게만 띄운다
+const RESIST_BADGE_PENDING_MODULATE := Color(1, 1, 1, 0.45)
 const RESIST_BADGE_GAP := 14.0 # 몬스터 그림 꼭대기 위로 이만큼 띄운다 (실측 간격 약 8px)
 
 # ── 필드 개별 미니 HP/마나바 (몬스터 머리 위) ────────────────────────────────
@@ -1095,16 +1098,19 @@ func _atlas(sheet: Texture2D, region: Rect2) -> AtlasTexture:
 func start_with(monster_type: String, variants: Array) -> void:
 	_monster_type = monster_type
 	_monster_data = BattleData.MONSTERS[monster_type]
-	_variants = variants if not variants.is_empty() else [BattleData.pick_variant(monster_type)]
-	_variant = _variants[0] # 컷신들이 읽는 임시 별칭 (0번 몬스터)
-
 	MusicManager.play("Battle 1")
+
+	# 이번 전투의 편성(몇 스테이지에 각 스테이지 몇 마리)은 매니저가 만든다. 화면은 그 결과를 읽어
+	# 세우는 쪽이라, 스프라이트보다 매니저를 먼저 만들어야 순서가 맞다
+	_manager = BattleTurnManager.new(monster_type, variants, StarterDeck.build())
+	_variants = _manager.current_stage_variants()
+	_variant = _variants[0] # 컷신들이 읽는 임시 별칭 (0번 몬스터)
 
 	_setup_sprites()
 	_setup_allies()
 	_layout_actors()
+	_apply_elite_visuals()
 
-	_manager = BattleTurnManager.new(monster_type, _variants, StarterDeck.build())
 	_manager.turn_started.connect(_on_turn_started)
 	_manager.card_played.connect(_on_card_played)
 	_manager.enemy_attack_resolved.connect(_on_enemy_attack_resolved)
@@ -1116,12 +1122,17 @@ func start_with(monster_type: String, variants: Array) -> void:
 	_manager.monster_defeated.connect(_on_monster_defeated)
 	_manager.player_defeated.connect(_on_player_defeated)
 	_manager.enemy_defeated.connect(_on_enemy_defeated)
+	_manager.weapon_overloaded.connect(_on_weapon_overloaded)
+	_manager.monster_adapted.connect(_on_monster_adapted)
 
+	# 엘리트는 최대 체력이 종류 기본값과 다르므로 마리별 값을 그대로 읽는다
 	for i in range(_monster_hp_bars.size()):
-		_monster_hp_bars[i].max_value = _monster_data["max_hp"]
-		_monster_hp_bars[i].value = _monster_data["max_hp"]
-		_monster_field_hp_bars[i].max_value = _monster_data["max_hp"]
-		_monster_field_hp_bars[i].value = _monster_data["max_hp"]
+		var spawned := _manager.get_monster(i)
+		var max_hp: int = spawned.max_hp if spawned != null else int(_monster_data["max_hp"])
+		_monster_hp_bars[i].max_value = max_hp
+		_monster_hp_bars[i].value = max_hp
+		_monster_field_hp_bars[i].max_value = max_hp
+		_monster_field_hp_bars[i].value = max_hp
 	_refresh_monster_mana_bars()
 	_player_hp_bar.max_value = GameState.get_flag("player_max_hp")
 	_player_hp_bar.value = GameState.get_flag("player_hp")
@@ -1203,19 +1214,52 @@ func _resistance_announcement() -> String:
 	var cut_percent := int(round((1.0 - EnemyResistance.RESIST_DAMAGE_MULTIPLIER) * 100.0))
 	var lines: Array[String] = []
 	for monster in _manager.alive_monsters():
-		var kind := ""
-		match monster.resistance.current:
-			EnemyResistance.ResistanceType.PHYSICAL:
-				kind = tr("물리")
-			EnemyResistance.ResistanceType.MAGIC:
-				kind = tr("마법")
-			_:
-				continue
 		var name_ := monster.display_name
 		var subject := name_ + _subject_particle(name_)
-		lines.append(tr("%s %s 면역을 얻었다! 데미지 %d%% 감소") % [subject, kind, cut_percent])
+		var adapted := _element_name(monster.resistance.current)
+		if adapted != "":
+			lines.append(tr("%s %s에 적응했다 — 데미지 %d%% 감소 (반대 속성으로 때리면 풀린다)") % [subject, adapted, cut_percent])
+			continue
+		var pending := _element_name(monster.resistance.pending_type())
+		if pending != "":
+			lines.append(tr("%s %s 공격에 익숙해지고 있다 — 한 번 더 맞으면 적응한다") % [subject, pending])
 
 	return "\n".join(lines)
+
+
+func _element_name(resistance_type: int) -> String:
+	match resistance_type:
+		EnemyResistance.ResistanceType.PHYSICAL:
+			return tr("물리")
+		EnemyResistance.ResistanceType.MAGIC:
+			return tr("마법")
+		_:
+			return ""
+
+
+# 무기가 과부하로 봉쇄된 순간 (레드라인을 넘겨 게이지가 100에 닿았다)
+func _on_weapon_overloaded(weapon: int) -> void:
+	_message.text = tr("%s이(가) 과부하! %d라운드 동안 못 쓴다.") % [_weapon_name(weapon), WeaponState.OVERLOAD_LOCK_ROUNDS]
+	# 로그는 바로 다음 카드 메시지에 덮이므로 화면 위에도 크게 한 번 띄운다
+	_show_popup(_player_sprite.position + Vector2(0, -96), tr("%s 과부하!") % _weapon_name(weapon), OVERLOAD_POPUP_COLOR)
+	SFXPlayer.play(VFX_SFX["defend"])
+	_screen_flash(Color(1.0, 0.5, 0.2, 0.25), 0.25)
+
+
+# 몬스터가 같은 속성 연속 피격으로 적응했거나, 반대 속성에 맞아 적응이 깨진 순간
+func _on_monster_adapted(index: int, resistance_type: int, adapted: bool, broken: bool) -> void:
+	if _manager == null or _manager.get_monster(index) == null:
+		return
+	var sprite := _monster_sprite_at(index)
+	if adapted:
+		_show_popup(sprite.position + Vector2(0, -34), tr("%s 적응!") % _element_name(resistance_type), ADAPT_POPUP_COLOR)
+	elif broken:
+		_show_popup(sprite.position + Vector2(0, -34), tr("적응 붕괴!"), BREAK_POPUP_COLOR)
+
+
+const ADAPT_POPUP_COLOR := Color(0.55, 0.75, 1.0)
+const OVERLOAD_POPUP_COLOR := Color(1.0, 0.4, 0.3)
+const BREAK_POPUP_COLOR := Color(1.0, 0.85, 0.4)
 
 
 # 한글 이름 뒤에 붙일 주격 조사를 고른다 (받침 있으면 "이", 없으면 "가").
@@ -1594,6 +1638,8 @@ func _refresh_reservation_markers() -> void:
 	var by_ally: Dictionary = {}
 	var aoe_cards: Array = []
 	for entry in _manager.reserved:
+		if entry["kind"] == BattleTurnManager.ENTRY_SWITCH:
+			continue # 전환은 겨누는 대상이 없다 (대기열 줄에만 ⇄로 뜬다)
 		var card: Card = entry["card"]
 		var target: int = entry["target_index"]
 		var category := _target_category(card)
@@ -1738,6 +1784,7 @@ func _refresh_play_queue() -> void:
 		return
 	_play_queue_row.get_parent().visible = true
 
+	var validity := _manager.queue_validity()
 	for i in range(_manager.reserved.size()):
 		if i > 0:
 			var arrow := Label.new()
@@ -1745,18 +1792,19 @@ func _refresh_play_queue() -> void:
 			arrow.add_theme_color_override("font_color", PLAY_QUEUE_ARROW_COLOR)
 			arrow.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 			_play_queue_row.add_child(arrow)
-		_play_queue_row.add_child(_build_play_queue_item(i))
+		_play_queue_row.add_child(_build_play_queue_item(i, i >= validity.size() or validity[i]))
 
 
 # 대기열 칸 하나: 평소엔 카드 아이콘, 마우스를 올리면 아이콘이 흐려지고 그 위에 X가 떠 "눌러서
 # 취소"라는 게 보인다. 취소하면 치른 비용(마나/체력/무기 게이지)이 그대로 환불되고 손패로 돌아간다
-func _build_play_queue_item(index: int) -> Control:
+func _build_play_queue_item(index: int, valid: bool = true) -> Control:
 	var entry: Dictionary = _manager.reserved[index]
-	var card: Card = entry["card"]
+	var is_switch: bool = entry["kind"] == BattleTurnManager.ENTRY_SWITCH
+	var card: Card = null if is_switch else entry["card"]
 
 	var style := StyleBoxFlat.new()
 	style.bg_color = RESERVE_MARKER_BG
-	style.border_color = RESERVE_MARKER_BORDER
+	style.border_color = RESERVE_MARKER_BORDER if valid else PLAY_QUEUE_CANCEL_TINT
 	style.set_border_width_all(2)
 	style.set_corner_radius_all(4)
 	var style_hover: StyleBoxFlat = style.duplicate() as StyleBoxFlat
@@ -1768,10 +1816,25 @@ func _build_play_queue_item(index: int) -> Control:
 	btn.add_theme_stylebox_override("hover", style_hover)
 	btn.add_theme_stylebox_override("pressed", style_hover)
 	btn.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
-	btn.tooltip_text = tr(card.card_name)
+	btn.tooltip_text = tr("무기 전환") if is_switch else tr(card.card_name)
 	btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	btn.disabled = not _battle_inputs_enabled
 	btn.pressed.connect(_on_play_queue_cancel.bind(index))
+
+	# 전환 칸은 카드 아이콘 대신 화살표 글자로 그린다 (카드가 아니라 "사이에 넣은 박자"라는 걸 구분)
+	if is_switch:
+		var swap := Label.new()
+		swap.text = "⇄"
+		swap.add_theme_font_size_override("font_size", 20)
+		swap.add_theme_color_override("font_color", Color(0.95, 0.88, 0.6))
+		swap.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		swap.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		swap.anchor_right = 1.0
+		swap.anchor_bottom = 1.0
+		swap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		btn.add_child(swap)
+		_wire_play_queue_hover(btn, swap)
+		return btn
 
 	var icon := TextureRect.new()
 	icon.texture = _skill_icon_for(card)
@@ -1787,6 +1850,12 @@ func _build_play_queue_item(index: int) -> Control:
 	icon.offset_bottom = -3
 	btn.add_child(icon)
 
+	_wire_play_queue_hover(btn, icon)
+	return btn
+
+
+# 칸 위에 마우스를 올리면 안쪽 그림이 흐려지고 X가 뜬다 (카드 칸과 전환 칸이 같은 방식으로 취소되게)
+func _wire_play_queue_hover(btn: Button, inner: Control) -> void:
 	var cancel_label := Label.new()
 	cancel_label.text = "×"
 	cancel_label.add_theme_color_override("font_color", PLAY_QUEUE_CANCEL_TINT)
@@ -1800,15 +1869,13 @@ func _build_play_queue_item(index: int) -> Control:
 	btn.add_child(cancel_label)
 
 	btn.mouse_entered.connect(func() -> void:
-		icon.modulate.a = 0.25
+		inner.modulate.a = 0.25
 		cancel_label.visible = true
 	)
 	btn.mouse_exited.connect(func() -> void:
-		icon.modulate.a = 1.0
+		inner.modulate.a = 1.0
 		cancel_label.visible = false
 	)
-
-	return btn
 
 
 func _on_play_queue_cancel(index: int) -> void:
@@ -2162,20 +2229,26 @@ func _vfx_key_for_card(card: Card) -> String:
 
 # 예약 목록 맨 앞의 카드 한 장을 실제로 발동하고 그 연출을 끝까지 기다린다.
 # 연출에 필요한 "발동 직전" 수치는 매니저를 부르기 전에 여기서 미리 찍어둔다 (기존 카드 흐름과 같은 방식)
-func _resolve_one_reservation() -> void:
+func _resolve_one_reservation() -> Dictionary:
 	var entry: Dictionary = _manager.reserved[0]
+
+	# 무기 전환도 큐의 한 수다 — 전환하면서 걸려 있던 표식이 전부 터진다 (템포 체인)
+	if entry["kind"] == BattleTurnManager.ENTRY_SWITCH:
+		return await _resolve_switch_entry()
+
 	var card: Card = entry["card"]
 	var target_index: int = entry["target_index"]
 
-	# 예약해둔 사이에 그 적이 쓰러졌으면 카드는 그냥 허공을 가른다 (다른 적으로 옮겨 가지 않는다)
+	# 예약해둔 사이에 대상이 쓰러졌거나 자원/봉쇄 상황이 바뀌었으면 그 카드는 불발된다
 	if not _manager.reservation_is_valid(entry):
-		_manager.execute_next_reservation()
-		_message.text = tr("%s — 이미 쓰러진 적이라 허공을 갈랐다.") % tr(card.card_name)
+		var reason := _manager._card_invalid_reason(entry)
+		var result := _manager.execute_next_reservation()
+		_message.text = tr("%s — %s") % [tr(card.card_name), _fizzle_text(reason)]
 		_refresh_reservation_markers()
 		_refresh_play_queue()
 		await _refresh_all()
 		await _wait(0.45)
-		return
+		return result
 
 	var hp_before: int = GameState.get_flag("player_hp")
 	var mana_before: int = GameState.get_flag("player_mana")
@@ -2199,13 +2272,65 @@ func _resolve_one_reservation() -> void:
 		for index in _card_targets:
 			_hp_before_by_index[index] = _monster_hp_of(index)
 
-	_manager.execute_next_reservation()
+	var result := _manager.execute_next_reservation()
 	_refresh_reservation_markers()
 	_refresh_play_queue()
 
 	await _animate_card(card, hp_before, mana_before, monster_hp_before, target_index, ally_hp_before)
+	if bool(result.get("redline", false)):
+		_show_popup(_player_sprite.position + Vector2(0, -70), tr("REDLINE +50%"), REDLINE_POPUP_COLOR)
 	await _refresh_all()
 	await _play_pending_deaths()
+	return result
+
+
+const REDLINE_POPUP_COLOR := Color(1.0, 0.6, 0.25)
+
+
+func _fizzle_text(reason: String) -> String:
+	match reason:
+		"locked":
+			return tr("무기가 과부하라 손이 멈췄다.")
+		"mana":
+			return tr("마나가 모자라 불발됐다.")
+		"hp":
+			return tr("체력이 모자라 손을 뗐다.")
+		_:
+			return tr("이미 쓰러진 적이라 허공을 갈랐다.")
+
+
+# 큐에 끼워 넣은 무기 전환 한 수: 무기를 바꾸고, 걸려 있던 표식을 전부 터뜨린다.
+# 전환은 몬스터의 응수를 부르지 않으므로 이 사이에 적이 끼어들지 않는다
+func _resolve_switch_entry() -> Dictionary:
+	var before: Array[int] = []
+	for monster in _manager.monsters:
+		before.append(monster.hp)
+
+	var result := _manager.execute_next_reservation()
+	_refresh_reservation_markers()
+	_refresh_play_queue()
+
+	SFXPlayer.play(VFX_SFX["defend"])
+	_message.text = tr("%s(으)로 바꿔 들었다.") % _weapon_name(int(result.get("weapon", 0)))
+
+	var detonations: Array = result.get("detonations", [])
+	if not detonations.is_empty():
+		_message.text += tr(" — 표식이 터진다!")
+		for hit in detonations:
+			var index: int = int(hit["index"])
+			var sprite := _monster_sprite_at(index)
+			_spawn_vfx_sprite("magic", sprite.position)
+			SFXPlayer.play(VFX_SFX["magic"])
+			_flash_hit(sprite)
+			_show_popup(sprite.position, "-%d" % int(hit["damage"]), DAMAGE_COLOR)
+			_set_monster_hp_display(index, _monster_hp_of(index))
+			await _wait(0.18)
+		_shake_actors()
+
+	await _refresh_all()
+	await _play_pending_deaths()
+	await _wait(0.2)
+	return result
 
 
 # 반격이 실제로 적을 때리는 순간의 연출. 이때는 카드가 손을 떠난 뒤(적 턴)라 카드 객체가 없으므로,
@@ -2300,11 +2425,14 @@ func _on_weapon_pressed() -> void:
 	if not _is_interactive() or _manager == null:
 		return
 	_finish_drag(true)
-	var next_weapon = WeaponState.WeaponType.STAFF if _manager.weapon.equipped == WeaponState.WeaponType.SWORD else WeaponState.WeaponType.SWORD
-	if _manager.switch_weapon(next_weapon):
-		_message.text = tr("무기를 %s(으)로 바꿨다.") % _weapon_name(next_weapon)
+	var next_weapon := WeaponState.other_weapon(_manager.planned_equipped())
+	if _manager.reserve_switch():
+		var mark_text := tr(" (걸린 표식이 터진다)") if _manager.has_marks() else ""
+		_message.text = tr("%s(으)로 전환을 예약했다.%s") % [_weapon_name(next_weapon), mark_text]
 	else:
 		_message.text = tr("이번 턴에는 더 이상 무기를 바꿀 수 없다.")
+	_refresh_reservation_markers()
+	_refresh_play_queue()
 	_refresh_all()
 
 
@@ -2328,19 +2456,35 @@ func _end_turn_flow() -> void:
 	_manager.begin_round_resolution()
 	await _animate_enemy_turn()
 
-	# 2) 예약한 카드 ↔ 몬스터 응수를 번갈아
-	while not _manager.battle_over and _manager.has_reservations():
-		await _resolve_one_reservation()
-		if _manager.battle_over:
+	# 2) 예약한 카드 ↔ 몬스터 응수를 번갈아. 무기 전환은 응수를 부르지 않으므로(provokes=false)
+	# 전환-카드를 이어 붙이면 그 사이에 적이 끼어들지 않는다 — 그게 템포 체인의 값어치다
+	while not _manager.battle_over and not _manager.stage_pending and _manager.has_reservations():
+		var result := await _resolve_one_reservation()
+		if _manager.battle_over or _manager.stage_pending:
 			break
+		if not bool(result.get("provokes", true)):
+			continue
 		_enemy_attacks.clear()
 		_manager.take_next_monster_action()
 		await _animate_enemy_turn()
 
-	# 3) 라운드 마무리 (상태이상 감소/동료 패시브/다음 턴 열기 — 전부 여기서 한 번씩만)
+	# 3) 라운드 마무리 (상태이상 감소/무기 봉쇄 해제/동료 패시브 — 전부 여기서 한 번씩만)
 	_manager.finish_round_resolution()
 	_refresh_reservation_markers()
 	_refresh_play_queue()
+
+	# 스테이지를 깼으면 전투는 아직 안 끝났다: 보상을 하나 고르고 다음 무리를 세운다
+	if _manager.stage_pending:
+		await _play_pending_deaths()
+		_collect_stage_rewards()
+		_message.text = tr("%d 스테이지를 돌파했다!") % (_manager.stage_index + 1)
+		await _wait(0.4)
+		await _show_stage_reward_screen()
+		await _advance_to_next_stage()
+		_show_turn_message()
+		_mode = Mode.ACTION
+		_set_inputs_enabled(true)
+		return
 
 	# 여기서 _refresh_all()이 새 턴의 손패 뒤집기 연출까지 통째로 기다린다 — 그래야 바로 아래
 	# _set_inputs_enabled(true)가 애니메이션 도중에 카드 내용을 앞당겨 드러내며 끼어들지 않는다
@@ -2527,7 +2671,10 @@ func _update_ally_hp_text() -> void:
 func _update_round_panel() -> void:
 	if _manager == null:
 		return
-	_round_label.text = tr("라운드 %d") % _manager.turn_number
+	if _manager.stage_count() > 1:
+		_round_label.text = tr("스테이지 %d/%d") % [_manager.stage_index + 1, _manager.stage_count()]
+	else:
+		_round_label.text = tr("라운드 %d") % _manager.turn_number
 	_deck_count_label.text = tr("덱 %d") % _manager.deck.draw_pile.size()
 	_discard_count_label.text = tr("버림 %d") % _manager.deck.discard_pile.size()
 
@@ -2763,6 +2910,7 @@ func _refresh_all() -> void:
 	# 매 턴 여기서도 한 번 더 맞춰준다(마력장벽의 받는피해↓ 배지도 이 경로로 사라진다)
 	_refresh_status_badges()
 	_refresh_flee_button()
+	_refresh_provoke_ring()
 
 
 # 손패 5칸을 현재 손패 내용으로 채운다. turn_number가 마지막으로 뒤집었던 턴과 다르면 "방금 새로
@@ -3094,7 +3242,9 @@ func _kill_tier_glow_tween(i: int) -> void:
 func _refresh_weapon_button() -> void:
 	if _manager == null:
 		return
-	_weapon_button.text = tr("무기: %s") % _weapon_name(_manager.weapon.equipped)
+	var planned: WeaponState = _manager.display_weapon()
+	_weapon_button.text = tr("무기: %s (%d)") % [_weapon_name(planned.equipped), planned.switches_left()]
+	_weapon_button.disabled = _weapon_button.disabled or not _manager.can_reserve_switch()
 
 
 # 무기 과열 게이지 바(검/지팡이)와 적 저항 아이콘을 갱신한다. 게이지는 0/25/50/75/100 중 가장 가까운
@@ -3102,8 +3252,10 @@ func _refresh_weapon_button() -> void:
 func _refresh_status_icons() -> void:
 	if _manager == null:
 		return
-	_sword_gauge_rect.texture = _sword_gauge_frames[_gauge_frame_index(_manager.weapon.sword_gauge)]
-	_staff_gauge_rect.texture = _staff_gauge_frames[_gauge_frame_index(_manager.weapon.staff_gauge)]
+	var shown: WeaponState = _manager.display_weapon()
+	_sword_gauge_rect.texture = _sword_gauge_frames[_gauge_frame_index(shown.sword_gauge)]
+	_staff_gauge_rect.texture = _staff_gauge_frames[_gauge_frame_index(shown.staff_gauge)]
+	_refresh_redline_labels(shown)
 
 	# 저항 배지는 "없음"일 때도 흐릿하게 항상 띄운다 — 아이콘이 사라졌다 나타났다 하면 플레이어가
 	# 저항 상태를 확인하려고 매번 같은 자리를 다시 찾아봐야 하기 때문.
@@ -3115,9 +3267,16 @@ func _refresh_status_icons() -> void:
 		if not monster.is_alive():
 			badge.visible = false
 			continue
+		# 적응한 속성은 또렷하게, "한 번 더 맞으면 적응" 예고는 같은 아이콘을 흐리게 띄운다 —
+		# 예고를 보고 무기를 바꿀 수 있어야 적응이 운이 아니라 대응 가능한 규칙이 된다
 		var resistance: int = monster.resistance.current
-		badge.texture = _resist_icon_textures.get(resistance)
-		badge.modulate = RESIST_BADGE_MODULATE.get(resistance, Color.WHITE)
+		var pending: int = monster.resistance.pending_type()
+		if resistance == EnemyResistance.ResistanceType.NONE and pending != EnemyResistance.ResistanceType.NONE:
+			badge.texture = _resist_icon_textures.get(pending)
+			badge.modulate = RESIST_BADGE_PENDING_MODULATE
+		else:
+			badge.texture = _resist_icon_textures.get(resistance)
+			badge.modulate = RESIST_BADGE_MODULATE.get(resistance, Color.WHITE)
 		badge.visible = badge.texture != null
 
 	_refresh_status_badges()
@@ -3257,9 +3416,15 @@ func _refresh_flee_button() -> void:
 func _update_mana_bar() -> void:
 	var mana: int = GameState.get_flag("player_mana")
 	var max_mana: int = GameState.get_flag("player_max_mana")
+	# 계획 중에는 "큐를 다 쓰고 나면 남을 마나"를 보여준다 — 지금 짜는 계획의 결과가 곧 이번
+	# 라운드의 결과라, 다음 카드를 얹을지 판단할 때 필요한 숫자는 그쪽이다
+	var planned := _manager.display_mana() if _manager != null else mana
 	_player_mana_bar.max_value = max_mana
-	_player_mana_bar.value = mana
-	_player_mana_bar_label.text = "Mana: %d/%d" % [mana, max_mana]
+	_player_mana_bar.value = planned
+	if planned != mana:
+		_player_mana_bar_label.text = "Mana: %d→%d/%d" % [mana, planned, max_mana]
+	else:
+		_player_mana_bar_label.text = "Mana: %d/%d" % [mana, max_mana]
 
 
 # 플레이어 HP바 위에 겹친 숫자 텍스트를 GameState 값으로 갱신
@@ -3311,21 +3476,12 @@ func _finish_victory() -> void:
 	# [지급 시점] 마리가 쓰러지는 즉시가 아니라 승리한 뒤에 몰아서 준다. 도중에 주면 2마리를 잡고
 	# 도망쳐도 보상이 남아, 도망(골드 소모 + HP 게이팅)이 오히려 이득인 상황이 생긴다 —
 	# "전투를 끝내야 보상"이라는 기존 규칙을 그대로 유지하는 쪽을 택했다
-	var total_gold := 0
-	var total_xp := 0
-	var dropped_items: Array[String] = []
-	var defeated_count := 0
-	for monster in _manager.monsters:
-		if monster.is_alive() or monster.rewarded:
-			continue
-		monster.rewarded = true
-		defeated_count += 1
-		_increment_defeat_counter()
-		total_gold += randi_range(monster.monster_data["gold_min"], monster.monster_data["gold_max"])
-		total_xp += int(monster.monster_data.get("xp", 0))
-		var dropped := _roll_equipment_drop()
-		if dropped != "":
-			dropped_items.append(dropped)
+	# 마지막 스테이지 몫까지 적립한 뒤, 전투 전체에서 쌓인 총합을 한 번에 지급한다
+	_collect_stage_rewards()
+	var total_gold := _earned_gold
+	var total_xp := _earned_xp
+	var dropped_items: Array[String] = _earned_items
+	var defeated_count := _earned_kills
 
 	GameState.add_gold(total_gold)
 
@@ -4021,6 +4177,7 @@ func _play_pending_deaths() -> void:
 		if index < _monster_field_hp_bars.size():
 			_monster_field_hp_bars[index].visible = false
 			_monster_field_mana_bars[index].visible = false
+		_hide_elite_label(index)
 		await _play_monster_death(index)
 		if index < _monster_card_panels.size():
 			_monster_card_panels[index].modulate = DEFEATED_CARD_MODULATE
@@ -4633,3 +4790,403 @@ func _lunge(attacker: Node2D, target_pos: Vector2) -> void:
 
 func _wait(seconds: float) -> void:
 	await get_tree().create_timer(seconds).timeout
+
+
+# ── 레드라인 / 과부하 게이지 표시 ───────────────────────────────────────────
+# 게이지가 레드라인(75%+)이면 그 무기 바가 주황으로 맥동하고, 과부하로 봉쇄되면 바가 어두워지며
+# 남은 라운드 수가 바 위에 뜬다. 숫자를 따로 띄우지 않아도 "지금 뜨겁다 / 지금 막혔다"가 보이게
+const REDLINE_GAUGE_MODULATE := Color(1.5, 0.85, 0.45, 1.0)
+const LOCKED_GAUGE_MODULATE := Color(0.4, 0.4, 0.45, 0.85)
+const GAUGE_PULSE_DURATION := 0.45
+
+var _gauge_lock_labels: Array[Label] = []
+var _gauge_pulse_tweens: Array[Tween] = [null, null]
+
+
+func _refresh_redline_labels(shown: WeaponState) -> void:
+	_ensure_gauge_lock_labels()
+	_apply_gauge_state(0, _sword_gauge_rect, shown, WeaponState.WeaponType.SWORD)
+	_apply_gauge_state(1, _staff_gauge_rect, shown, WeaponState.WeaponType.STAFF)
+
+
+func _ensure_gauge_lock_labels() -> void:
+	if not _gauge_lock_labels.is_empty():
+		return
+	for rect in [_sword_gauge_rect, _staff_gauge_rect]:
+		var label := Label.new()
+		label.add_theme_font_size_override("font_size", 13)
+		label.add_theme_color_override("font_color", Color(1, 0.55, 0.45))
+		label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 1))
+		label.add_theme_constant_override("outline_size", 6)
+		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		label.size = Vector2(20, 64)
+		label.position = Vector2(0, 36)
+		label.visible = false
+		rect.add_child(label)
+		_gauge_lock_labels.append(label)
+
+
+func _apply_gauge_state(slot: int, rect: TextureRect, state: WeaponState, weapon: int) -> void:
+	var lock_rounds := state.get_lock_rounds(weapon)
+	var label := _gauge_lock_labels[slot]
+	if lock_rounds > 0:
+		_set_gauge_pulse(slot, rect, false)
+		rect.modulate = LOCKED_GAUGE_MODULATE
+		label.text = tr("봉\n쇄\n%d") % lock_rounds
+		label.visible = true
+		return
+
+	label.visible = false
+	_set_gauge_pulse(slot, rect, state.is_redline(weapon))
+
+
+func _set_gauge_pulse(slot: int, rect: TextureRect, active: bool) -> void:
+	var running: Tween = _gauge_pulse_tweens[slot]
+	if active:
+		if running != null and running.is_valid():
+			return
+		var tween := create_tween().set_loops()
+		tween.tween_property(rect, "modulate", REDLINE_GAUGE_MODULATE, GAUGE_PULSE_DURATION).set_trans(Tween.TRANS_SINE)
+		tween.tween_property(rect, "modulate", Color.WHITE, GAUGE_PULSE_DURATION).set_trans(Tween.TRANS_SINE)
+		_gauge_pulse_tweens[slot] = tween
+		return
+
+	if running != null and running.is_valid():
+		running.kill()
+	_gauge_pulse_tweens[slot] = null
+	rect.modulate = Color.WHITE
+
+
+# ── 도발 표식 (다음에 반격할 몬스터) ────────────────────────────────────────
+# 라운드로빈이 사라지면서 "누가 다음에 때리는가"가 플레이어의 선택 결과가 됐으므로, 그 결과를
+# 발밑 고리로 항상 보여준다. 계획 중에는 큐의 첫 공격 카드가 겨눈 대상이 곧 이 고리의 주인이다
+const PROVOKE_RING_COLOR := Color(1.0, 0.4, 0.32, 0.9)
+const PROVOKE_RING_RX := 40.0
+const PROVOKE_RING_RY := 14.0
+
+var _provoke_ring: Line2D
+var _provoke_label: Label
+var _provoke_tween: Tween
+
+
+func _refresh_provoke_ring() -> void:
+	var index := _manager.predicted_retaliator() if _manager != null else -1
+	if _manager == null or _mode == Mode.OVER or index < 0 or index >= _monster_sprites.size():
+		if _provoke_ring != null:
+			_provoke_ring.visible = false
+			_provoke_label.visible = false
+		return
+
+	_ensure_provoke_ring()
+	var sprite := _monster_sprite_at(index)
+	var foot := sprite.position + Vector2(0, _monster_foot_offset(index))
+	_provoke_ring.position = foot
+	_provoke_ring.visible = true
+	_provoke_label.position = foot + Vector2(-32, PROVOKE_RING_RY + 2)
+	_provoke_label.visible = true
+
+
+func _ensure_provoke_ring() -> void:
+	if _provoke_ring != null and is_instance_valid(_provoke_ring):
+		return
+
+	_provoke_ring = Line2D.new()
+	_provoke_ring.closed = true
+	_provoke_ring.width = 3.0
+	_provoke_ring.default_color = PROVOKE_RING_COLOR
+	_provoke_ring.z_index = 11
+	var points := PackedVector2Array()
+	for i in range(24):
+		var angle := TAU * i / 24.0
+		points.append(Vector2(cos(angle) * PROVOKE_RING_RX, sin(angle) * PROVOKE_RING_RY))
+	_provoke_ring.points = points
+	_actors.add_child(_provoke_ring)
+
+	_provoke_label = Label.new()
+	_provoke_label.text = tr("다음 반격")
+	_provoke_label.add_theme_font_size_override("font_size", 11)
+	_provoke_label.add_theme_color_override("font_color", PROVOKE_RING_COLOR)
+	_provoke_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.9))
+	_provoke_label.add_theme_constant_override("outline_size", 4)
+	_provoke_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_provoke_label.size = Vector2(64, 14)
+	_provoke_label.z_index = 11
+	_provoke_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_actors.add_child(_provoke_label)
+
+	_provoke_tween = create_tween().set_loops()
+	_provoke_tween.tween_property(_provoke_ring, "modulate:a", 0.35, 0.6).set_trans(Tween.TRANS_SINE)
+	_provoke_tween.tween_property(_provoke_ring, "modulate:a", 1.0, 0.6).set_trans(Tween.TRANS_SINE)
+
+
+# ── 스테이지 보상 선택 화면 ─────────────────────────────────────────────────
+signal stage_reward_chosen(index: int)
+
+const REWARD_CARD_SIZE := Vector2(268, 190)
+const REWARD_CARD_GAP := 22.0
+const REWARD_BENEFIT_COLOR := Color(0.12, 0.42, 0.18)
+const REWARD_COST_COLOR := Color(0.6, 0.18, 0.14)
+const REWARD_TEXT_COLOR := Color(0.29, 0.16, 0.14)
+
+var _reward_overlay: Control
+
+
+# 스테이지를 깬 직후 3개 중 하나를 고르게 한다. 고를 때까지 여기서 기다린다 (전투 흐름 일시정지)
+func _show_stage_reward_screen() -> void:
+	var offers := BattleStages.roll_offers(_manager.stage_reward_context())
+	if offers.is_empty():
+		return
+
+	_build_reward_overlay(offers)
+	var picked: int = await stage_reward_chosen
+	_manager.apply_stage_reward(offers[picked])
+	_message.text = tr("%s을(를) 골랐다.") % tr(offers[picked]["title"])
+
+	if is_instance_valid(_reward_overlay):
+		_reward_overlay.queue_free()
+	_reward_overlay = null
+
+
+func _build_reward_overlay(offers: Array) -> void:
+	if _reward_overlay != null and is_instance_valid(_reward_overlay):
+		_reward_overlay.queue_free()
+
+	_reward_overlay = Control.new()
+	_reward_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_reward_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	_reward_overlay.z_index = 60
+	_hud.add_child(_reward_overlay)
+
+	var dim := ColorRect.new()
+	dim.color = Color(0, 0, 0, 0.6)
+	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dim.mouse_filter = Control.MOUSE_FILTER_STOP
+	_reward_overlay.add_child(dim)
+
+	var title := Label.new()
+	title.text = tr("%d 스테이지 돌파 — 하나를 가져간다") % (_manager.stage_index + 1)
+	title.add_theme_font_size_override("font_size", 22)
+	title.add_theme_color_override("font_color", Color(0.97, 0.92, 0.8))
+	title.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.9))
+	title.add_theme_constant_override("outline_size", 6)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.anchor_left = 0.0
+	title.anchor_right = 1.0
+	title.anchor_top = 0.5
+	title.anchor_bottom = 0.5
+	title.offset_top = -(REWARD_CARD_SIZE.y * 0.5) - 62.0
+	title.offset_bottom = title.offset_top + 30.0
+	_reward_overlay.add_child(title)
+
+	var row_width := REWARD_CARD_SIZE.x * offers.size() + REWARD_CARD_GAP * (offers.size() - 1)
+	for i in range(offers.size()):
+		var card := _build_reward_card(offers[i], i)
+		card.anchor_left = 0.5
+		card.anchor_right = 0.5
+		card.anchor_top = 0.5
+		card.anchor_bottom = 0.5
+		card.offset_left = -row_width * 0.5 + i * (REWARD_CARD_SIZE.x + REWARD_CARD_GAP)
+		card.offset_right = card.offset_left + REWARD_CARD_SIZE.x
+		card.offset_top = -REWARD_CARD_SIZE.y * 0.5
+		card.offset_bottom = REWARD_CARD_SIZE.y * 0.5
+		_reward_overlay.add_child(card)
+
+
+func _build_reward_card(offer: Dictionary, index: int) -> Control:
+	# 라운드 양피지/나뭇잎 버튼의 스타일박스를 그대로 빌려 써서 전투 화면의 나머지와 결을 맞춘다
+	var panel := Panel.new()
+	var parchment := _round_panel.get_theme_stylebox("panel")
+	if parchment != null:
+		panel.add_theme_stylebox_override("panel", parchment)
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	var title := Label.new()
+	title.text = tr(offer["title"])
+	title.add_theme_font_size_override("font_size", 20)
+	title.add_theme_color_override("font_color", REWARD_TEXT_COLOR)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.position = Vector2(12, 16)
+	title.size = Vector2(REWARD_CARD_SIZE.x - 24, 26)
+	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	panel.add_child(title)
+
+	var benefit := Label.new()
+	benefit.text = tr(offer["benefit"])
+	benefit.add_theme_font_size_override("font_size", 13)
+	benefit.add_theme_color_override("font_color", REWARD_BENEFIT_COLOR)
+	benefit.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	benefit.autowrap_mode = TextServer.AUTOWRAP_WORD
+	benefit.position = Vector2(16, 54)
+	benefit.size = Vector2(REWARD_CARD_SIZE.x - 32, 52)
+	benefit.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	panel.add_child(benefit)
+
+	var cost := Label.new()
+	cost.text = tr("대가 · %s") % tr(offer["cost"])
+	cost.add_theme_font_size_override("font_size", 12)
+	cost.add_theme_color_override("font_color", REWARD_COST_COLOR)
+	cost.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	cost.autowrap_mode = TextServer.AUTOWRAP_WORD
+	cost.position = Vector2(16, 112)
+	cost.size = Vector2(REWARD_CARD_SIZE.x - 32, 44)
+	cost.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	panel.add_child(cost)
+
+	var button := Button.new()
+	button.flat = true
+	button.set_anchors_preset(Control.PRESET_FULL_RECT)
+	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	button.pressed.connect(_on_reward_picked.bind(index))
+	button.mouse_entered.connect(func() -> void: panel.modulate = Color(1.12, 1.12, 1.08))
+	button.mouse_exited.connect(func() -> void: panel.modulate = Color.WHITE)
+	panel.add_child(button)
+	return panel
+
+
+func _on_reward_picked(index: int) -> void:
+	SFXPlayer.play(SFXPlayer.UI_CLICK_SOUND)
+	stage_reward_chosen.emit(index)
+
+
+# ── 스테이지 전환 ───────────────────────────────────────────────────────────
+
+# 보상까지 고른 뒤 다음 무리를 실제로 세운다. 매니저가 먼저 새 몬스터를 만들고, 화면은 그 결과를
+# 읽어 스프라이트/HUD 카드를 통째로 다시 만든다
+func _advance_to_next_stage() -> void:
+	await FadeOverlay.fade_out(STAGE_FADE_DURATION)
+
+	_manager.advance_stage()
+	_variants = _manager.current_stage_variants()
+	_variant = _variants[0]
+	_rebuild_monster_nodes()
+	_layout_actors()
+	_apply_elite_visuals()
+
+	for i in range(_monster_hp_bars.size()):
+		var monster := _manager.get_monster(i)
+		if monster == null:
+			continue
+		_monster_hp_bars[i].max_value = monster.max_hp
+		_monster_hp_bars[i].value = monster.hp
+		_monster_field_hp_bars[i].max_value = monster.max_hp
+		_monster_field_hp_bars[i].value = monster.hp
+	_refresh_monster_mana_bars()
+
+	_pending_deaths.clear()
+	_enemy_attacks.clear()
+	_refresh_reservation_markers()
+	_refresh_play_queue()
+	await _refresh_all()
+	_refresh_provoke_ring()
+
+	_message.text = tr("%d 스테이지 — %s") % [_manager.stage_index + 1, _appear_text()]
+	await FadeOverlay.fade_in(STAGE_FADE_DURATION)
+
+
+const STAGE_FADE_DURATION := 0.35
+
+
+# 이전 스테이지에서 복제해 만들어둔 몬스터 노드를 전부 정리하고 새 편성으로 다시 만든다.
+# 0번 자리는 .tscn에 원래 있던 노드라 살려두고(_setup_sprites가 그 노드를 재사용한다) 복제본만 지운다
+func _rebuild_monster_nodes() -> void:
+	for i in range(1, _monster_sprites.size()):
+		if is_instance_valid(_monster_sprites[i]):
+			_monster_sprites[i].queue_free()
+	for i in range(1, _monster_shadows.size()):
+		if is_instance_valid(_monster_shadows[i]):
+			_monster_shadows[i].queue_free()
+	for i in range(1, _resist_badges.size()):
+		if is_instance_valid(_resist_badges[i]):
+			_resist_badges[i].queue_free()
+	for i in range(1, _monster_card_panels.size()):
+		if is_instance_valid(_monster_card_panels[i]):
+			_monster_card_panels[i].queue_free()
+
+	# 0번 자리는 이전 스테이지의 사망 연출 상태(회전/투명도/숨김)가 남아 있을 수 있어 되돌린다
+	_monster_sprite.visible = true
+	_monster_sprite.rotation = 0.0
+	_monster_sprite.modulate = Color.WHITE
+	_monster_sprite.scale = Vector2.ONE * MONSTER_SCALE
+	_monster_shadow.visible = true
+	_monster_card.modulate = Color.WHITE
+	_monster_card.visible = true
+
+	_monster_mana_bars.clear()
+	_monster_position_tweens.clear()
+	_monster_home_positions.clear()
+	_setup_sprites()
+
+
+# 엘리트는 같은 스프라이트를 조금 키우고 붉은 금빛으로 물들여 한눈에 구분되게 한다
+const ELITE_SPRITE_SCALE := 1.25
+const ELITE_TINT := Color(1.45, 1.05, 0.6)
+const ELITE_LABEL_COLOR := Color(1.0, 0.82, 0.3)
+
+var _elite_labels: Array[Label] = []
+
+
+func _hide_elite_label(index: int) -> void:
+	for label in _elite_labels:
+		if is_instance_valid(label) and int(label.get_meta("monster_index", -1)) == index:
+			label.visible = false
+
+
+func _apply_elite_visuals() -> void:
+	if _manager == null:
+		return
+	for label in _elite_labels:
+		if is_instance_valid(label):
+			label.queue_free()
+	_elite_labels.clear()
+	for monster in _manager.monsters:
+		if monster.index >= _monster_sprites.size():
+			continue
+		var sprite := _monster_sprites[monster.index]
+		if monster.is_elite:
+			sprite.scale = Vector2.ONE * MONSTER_SCALE * ELITE_SPRITE_SCALE
+			sprite.modulate = ELITE_TINT
+			if monster.index < _monster_field_hp_bars.size():
+				var label := Label.new()
+				label.text = tr("정예")
+				label.add_theme_font_size_override("font_size", 11)
+				label.add_theme_color_override("font_color", ELITE_LABEL_COLOR)
+				label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.95))
+				label.add_theme_constant_override("outline_size", 4)
+				label.z_index = 12
+				label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+				var bar := _monster_field_hp_bars[monster.index]
+				label.position = bar.position + Vector2(-30, -6)
+				label.set_meta("monster_index", monster.index)
+				_actors.add_child(label)
+				_elite_labels.append(label)
+		else:
+			sprite.scale = Vector2.ONE * MONSTER_SCALE
+			sprite.modulate = Color.WHITE
+
+
+# ── 스테이지별 보상 적립 ────────────────────────────────────────────────────
+# 보상은 스테이지마다 그 자리에서 쌓아두고 마지막에 한 번에 지급한다 — 도중에 도망치면 아무것도
+# 얻지 못한다는 기존 규칙("전투를 끝내야 보상")을 스테이지 구조에서도 그대로 지키기 위함이다
+var _earned_gold: int = 0
+var _earned_xp: int = 0
+var _earned_items: Array[String] = []
+var _earned_kills: int = 0
+
+
+func _collect_stage_rewards() -> void:
+	if _manager == null:
+		return
+	for monster in _manager.monsters:
+		if monster.is_alive() or monster.rewarded:
+			continue
+		monster.rewarded = true
+		_earned_kills += 1
+		_increment_defeat_counter()
+		var multiplier := MonsterState.ELITE_REWARD_MULT if monster.is_elite else 1
+		_earned_gold += randi_range(monster.monster_data["gold_min"], monster.monster_data["gold_max"]) * multiplier
+		_earned_xp += int(monster.monster_data.get("xp", 0)) * multiplier
+		var dropped := _roll_equipment_drop()
+		if dropped != "":
+			_earned_items.append(dropped)

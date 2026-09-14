@@ -25,6 +25,9 @@ enum Kind {
 	RESIST_DOWN,   # 속성 저항의 감쇄 폭 자체를 완화 (몬스터 저항 약화)
 	DAMAGE_REDUCTION, # 받는 피해 감소 (마력장벽 등 파티 전체 버프) — 실제 계산은 카드와 달리
 	                  # BattleTurnManager._pending_damage_reduction_fraction이 하고, 이건 배지 표시 전용
+	# 무기를 전환하는 순간 magnitude만큼 터지는 표식 (템포 체인). magnitude가 퍼센트가 아니라
+	# "피해량"이라 다른 종류들과 단위가 다르다 — 표시 문구(describe_all)에서만 따로 갈라 준다
+	MARK,
 }
 
 # 화면/로그에 쓸 짧은 이름
@@ -34,6 +37,7 @@ const KIND_LABEL := {
 	Kind.DEFENSE_DOWN: "방어력↓",
 	Kind.RESIST_DOWN: "저항↓",
 	Kind.DAMAGE_REDUCTION: "받는피해↓",
+	Kind.MARK: "표식",
 }
 
 # ── 상태이상 묶음 (한 카드가 여러 종류를 동시에 거는 경우) ──────────────────
@@ -136,6 +140,11 @@ func has(kind: Kind) -> bool:
 	return _effects.has(kind)
 
 
+# 한 종류만 즉시 걷어낸다 (표식이 터질 때처럼 라운드가 남았는데 소모되는 경우)
+func remove(kind: Kind) -> void:
+	_effects.erase(kind)
+
+
 # 걸려 있는 수치(퍼센트). 없으면 0이라 호출부가 "없을 때"를 따로 분기하지 않아도 된다
 func get_magnitude(kind: Kind) -> int:
 	if not _effects.has(kind):
@@ -192,6 +201,9 @@ func describe_all() -> Array[String]:
 	var lines: Array[String] = []
 	for kind in _effects.keys():
 		var effect: Dictionary = _effects[kind]
+		if kind == Kind.MARK:
+			lines.append(tr("표식 %d (%d)") % [int(effect["magnitude"]), int(effect["rounds"])])
+			continue
 		var sign_text := "+" if kind == Kind.ATTACK_UP else "-"
 		lines.append(tr("%s %s%d%% (%d)") % [tr(KIND_LABEL[kind]), sign_text, int(effect["magnitude"]), int(effect["rounds"])])
 	return lines

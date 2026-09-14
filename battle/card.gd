@@ -126,6 +126,11 @@ const FULL_RESTORE_VALUE := 999
 # (판정은 BattleTurnManager.can_play_card가 담당)
 @export var hp_cost: int = 0
 
+# 0보다 크면 이 카드가 때린 대상에게 "표식"을 남긴다. 표식은 무기를 전환하는 순간 이 수치만큼
+# 터진다 (템포 체인). 즉 이 카드들은 전환을 전제로 계산해야 제값이 나오고, 전환 자체가 한 수가 된다.
+# 실제 폭발 처리는 BattleTurnManager.detonate_marks()에 있다
+@export var switch_mark: int = 0
+
 
 # 효과 종류와 수치로 카드 설명문을 자동으로 만든다 ("물리 피해 4", "체력 6 회복" 등).
 # 전투 손패의 카드 설명칸과 스펠북 컬렉션 목록이 같은 문장을 써야 하므로, 어느 한쪽 UI가 아니라
@@ -150,7 +155,9 @@ func _effect_text() -> String:
 			# 부가 성질이 붙은 카드는 그 규칙까지 적어야 카드만 보고 판단할 수 있다
 			var trait_text := DamageTraits.describe(damage_trait)
 			if trait_text != "":
-				return tr("%s + %s") % [base, trait_text]
+				base = tr("%s + %s") % [base, trait_text]
+			if switch_mark > 0:
+				base += tr("\n표식 %d (전환 시 폭발)") % switch_mark
 			return base
 		EffectType.HEAL_HP:
 			return tr("체력 %d 회복") % value

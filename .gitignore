@@ -19,3 +19,6 @@ logs/
 # AI 도구 관련 파일 — 포트폴리오 레포에 공개 안 함
 CLAUDE.md
 strip-coauthor.sh
+
+# 게임 폴더 아닌 회의록/키 파일 등이 실수로 git add . 에 딸려들어가는 걸 방지
+Claude outputs/
