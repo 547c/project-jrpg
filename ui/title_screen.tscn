@@ -1,39 +1,24 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene format=3 uid="uid://cgfl8c1klgs78"]
 
-[ext_resource type="Script" path="res://ui/title_screen.gd" id="1_title"]
-[ext_resource type="Texture2D" path="res://assets/GUI/MedievalUiMega/medieval.png" id="2_medieval"]
+[ext_resource type="Script" uid="uid://db3mhle2ouoe1" path="res://ui/title_screen.gd" id="1_title"]
+[ext_resource type="Texture2D" uid="uid://bwptrt4p4xfkh" path="res://assets/Orsia Title.png" id="2_bg"]
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_title_sign"]
-atlas = ExtResource("2_medieval")
-region = Rect2(84, 160, 71, 112)
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_flat"]
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_play_button"]
-atlas = ExtResource("2_medieval")
-region = Rect2(322, 3, 90, 27)
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_settings_panel"]
+bg_color = Color(0.1, 0.08, 0.14, 0.92)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.75, 0.65, 0.4, 0.9)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
 
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_play_normal"]
-texture = SubResource("AtlasTexture_play_button")
-
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_play_hover"]
-texture = SubResource("AtlasTexture_play_button")
-modulate_color = Color(1.18, 1.18, 1.18, 1)
-
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_play_pressed"]
-texture = SubResource("AtlasTexture_play_button")
-modulate_color = Color(0.82, 0.82, 0.82, 1)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_button_wood"]
-atlas = ExtResource("2_medieval")
-region = Rect2(656, 206, 63, 51)
-
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_button_normal"]
-texture = SubResource("AtlasTexture_button_wood")
-texture_margin_left = 14.0
-texture_margin_top = 14.0
-texture_margin_right = 14.0
-texture_margin_bottom = 14.0
-
-[node name="TitleScreen" type="Control"]
+[node name="TitleScreen" type="Control" unique_id=1694108479]
+layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -41,106 +26,190 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_title")
 
-[node name="Background" type="ColorRect" parent="."]
-anchors_preset = 15
+[node name="Background" type="ColorRect" parent="." unique_id=81569925]
+layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.08, 0.05, 0.03, 1)
 
-[node name="TitleFrame" type="TextureRect" parent="."]
-texture_filter = 1
-anchors_preset = 5
-anchor_left = 0.5
-anchor_right = 0.5
-offset_left = -106.5
-offset_top = 112.0
-offset_right = 106.5
-offset_bottom = 448.0
-texture = SubResource("AtlasTexture_title_sign")
+[node name="TextureRect" type="TextureRect" parent="Background" unique_id=255952480]
+layout_mode = 0
+offset_right = 1152.0
+offset_bottom = 648.0
+texture = ExtResource("2_bg")
 expand_mode = 1
-stretch_mode = 5
+stretch_mode = 6
 
-[node name="TitleLabel" type="Label" parent="TitleFrame"]
+[node name="PlayButton" type="Button" parent="." unique_id=1985055906]
+layout_mode = 0
+offset_left = 64.0
+offset_top = 251.0
+offset_right = 404.0
+offset_bottom = 289.0
+focus_mode = 0
+theme_override_colors/font_color = Color(0.96, 0.93, 0.85, 1)
+theme_override_colors/font_pressed_color = Color(0.85, 0.7, 0.3, 1)
+theme_override_colors/font_hover_color = Color(1, 0.85, 0.35, 1)
+theme_override_colors/font_outline_color = Color(0.05, 0.03, 0.02, 0.85)
+theme_override_constants/outline_size = 5
+theme_override_font_sizes/font_size = 26
+theme_override_styles/normal = SubResource("StyleBoxEmpty_flat")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_flat")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_flat")
+theme_override_styles/disabled = SubResource("StyleBoxEmpty_flat")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_flat")
+text = "게임 시작"
+alignment = 0
+
+[node name="LoadButton" type="Button" parent="." unique_id=402116560]
+layout_mode = 0
+offset_left = 64.0
+offset_top = 305.0
+offset_right = 344.0
+offset_bottom = 335.0
+focus_mode = 0
+theme_override_colors/font_color = Color(0.88, 0.84, 0.78, 1)
+theme_override_colors/font_pressed_color = Color(0.8, 0.65, 0.32, 1)
+theme_override_colors/font_hover_color = Color(0.95, 0.78, 0.4, 1)
+theme_override_colors/font_disabled_color = Color(0.55, 0.52, 0.5, 0.55)
+theme_override_colors/font_outline_color = Color(0.05, 0.03, 0.02, 0.8)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxEmpty_flat")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_flat")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_flat")
+theme_override_styles/disabled = SubResource("StyleBoxEmpty_flat")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_flat")
+text = "이어하기"
+alignment = 0
+
+[node name="LoadHint" type="Label" parent="." unique_id=277712609]
+layout_mode = 0
+offset_left = 64.0
+offset_top = 337.0
+offset_right = 344.0
+offset_bottom = 355.0
+theme_override_colors/font_color = Color(0.7, 0.66, 0.62, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.8)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 12
+text = "저장된 게임이 없습니다"
+
+[node name="SettingsButton" type="Button" parent="." unique_id=1330298471]
+layout_mode = 0
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -176.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = 44.0
+grow_horizontal = 0
+focus_mode = 0
+theme_override_colors/font_color = Color(0.85, 0.82, 0.76, 1)
+theme_override_colors/font_pressed_color = Color(0.8, 0.65, 0.32, 1)
+theme_override_colors/font_hover_color = Color(0.95, 0.78, 0.4, 1)
+theme_override_colors/font_outline_color = Color(0.05, 0.03, 0.02, 0.8)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 14
+theme_override_styles/normal = SubResource("StyleBoxEmpty_flat")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_flat")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_flat")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_flat")
+text = "설정"
+alignment = 2
+
+[node name="SettingsOverlay" type="Control" parent="." unique_id=-982127121]
+visible = false
+layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 18.0
-offset_top = 90.0
-offset_right = -18.0
-offset_bottom = -40.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_colors/font_color = Color(0.25, 0.15, 0.07, 1)
-theme_override_font_sizes/font_size = 24
-horizontal_alignment = 1
-vertical_alignment = 1
-autowrap_mode = 3
-text = "Project JRPG"
 
-[node name="PlayButton" type="Button" parent="."]
-texture_filter = 1
-anchors_preset = 5
-anchor_left = 0.5
-anchor_right = 0.5
-offset_left = -135.0
-offset_top = 470.0
-offset_right = 135.0
-offset_bottom = 528.0
-theme_override_styles/normal = SubResource("StyleBoxTexture_play_normal")
-theme_override_styles/hover = SubResource("StyleBoxTexture_play_hover")
-theme_override_styles/pressed = SubResource("StyleBoxTexture_play_pressed")
-
-[node name="LoadButton" type="Button" parent="."]
-texture_filter = 1
-anchors_preset = 5
-anchor_left = 0.5
-anchor_right = 0.5
-offset_left = -110.0
-offset_top = 540.0
-offset_right = 110.0
-offset_bottom = 584.0
-theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
-theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
-text = "불러오기"
-
-[node name="RecordButton" type="Button" parent="."]
-texture_filter = 1
-anchors_preset = 5
-anchor_left = 0.5
-anchor_right = 0.5
-offset_left = -110.0
-offset_top = 592.0
-offset_right = 110.0
-offset_bottom = 636.0
-theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
-theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
-text = "기록"
-
-[node name="LanguageButton" type="Button" parent="."]
-texture_filter = 1
-anchors_preset = 1
-anchor_left = 1.0
+[node name="Dim" type="ColorRect" parent="SettingsOverlay" unique_id=-2006863063]
+layout_mode = 1
+anchors_preset = 15
 anchor_right = 1.0
-offset_left = -150.0
-offset_top = 24.0
-offset_right = -24.0
-offset_bottom = 66.0
-grow_horizontal = 0
-theme_override_colors/font_color = Color(0.22, 0.09, 0.03, 1)
-theme_override_styles/normal = SubResource("StyleBoxTexture_button_normal")
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.6)
+
+[node name="Panel" type="Panel" parent="SettingsOverlay" unique_id=-440850088]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -120.0
+offset_top = -100.0
+offset_right = 120.0
+offset_bottom = 100.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_settings_panel")
+
+[node name="Title" type="Label" parent="SettingsOverlay/Panel" unique_id=1029384756]
+layout_mode = 0
+offset_top = 18.0
+offset_right = 240.0
+offset_bottom = 42.0
+theme_override_colors/font_color = Color(0.96, 0.93, 0.85, 1)
+theme_override_font_sizes/font_size = 18
+text = "설정"
+horizontal_alignment = 1
+
+[node name="LanguageButton" type="Button" parent="SettingsOverlay/Panel" unique_id=1862702199]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 58.0
+offset_right = 220.0
+offset_bottom = 86.0
+focus_mode = 0
+theme_override_colors/font_color = Color(0.88, 0.84, 0.78, 1)
+theme_override_colors/font_pressed_color = Color(0.8, 0.65, 0.32, 1)
+theme_override_colors/font_hover_color = Color(0.95, 0.78, 0.4, 1)
+theme_override_font_sizes/font_size = 16
+theme_override_styles/normal = SubResource("StyleBoxEmpty_flat")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_flat")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_flat")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_flat")
 text = "English"
 
-[node name="LoadHint" type="Label" parent="."]
-anchors_preset = 5
-anchor_left = 0.5
-anchor_right = 0.5
-offset_left = -120.0
-offset_top = 640.0
-offset_right = 120.0
-offset_bottom = 662.0
-theme_override_colors/font_color = Color(0.6, 0.55, 0.5, 1)
-theme_override_font_sizes/font_size = 12
-horizontal_alignment = 1
-text = "저장된 게임이 없습니다"
+[node name="RecordButton" type="Button" parent="SettingsOverlay/Panel" unique_id=2049321587]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 96.0
+offset_right = 220.0
+offset_bottom = 124.0
+focus_mode = 0
+theme_override_colors/font_color = Color(0.88, 0.84, 0.78, 1)
+theme_override_colors/font_pressed_color = Color(0.8, 0.65, 0.32, 1)
+theme_override_colors/font_hover_color = Color(0.95, 0.78, 0.4, 1)
+theme_override_font_sizes/font_size = 16
+theme_override_styles/normal = SubResource("StyleBoxEmpty_flat")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_flat")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_flat")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_flat")
+text = "기록"
+
+[node name="CloseButton" type="Button" parent="SettingsOverlay/Panel" unique_id=-84399403]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 150.0
+offset_right = 220.0
+offset_bottom = 176.0
+focus_mode = 0
+theme_override_colors/font_color = Color(0.68, 0.64, 0.6, 1)
+theme_override_colors/font_pressed_color = Color(0.8, 0.65, 0.32, 1)
+theme_override_colors/font_hover_color = Color(0.95, 0.78, 0.4, 1)
+theme_override_font_sizes/font_size = 14
+theme_override_styles/normal = SubResource("StyleBoxEmpty_flat")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_flat")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_flat")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_flat")
+text = "닫기"

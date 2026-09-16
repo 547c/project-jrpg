@@ -4,9 +4,12 @@ const UiTranslator := preload("res://systems/ui_translator.gd")
 
 @onready var _play_button: Button = $PlayButton
 @onready var _load_button: Button = $LoadButton
-@onready var _record_button: Button = $RecordButton
 @onready var _load_hint: Label = $LoadHint
-@onready var _language_button: Button = $LanguageButton
+@onready var _settings_button: Button = $SettingsButton
+@onready var _settings_overlay: Control = $SettingsOverlay
+@onready var _settings_close_button: Button = $SettingsOverlay/Panel/CloseButton
+@onready var _record_button: Button = $SettingsOverlay/Panel/RecordButton
+@onready var _language_button: Button = $SettingsOverlay/Panel/LanguageButton
 
 
 func _ready() -> void:
@@ -15,6 +18,8 @@ func _ready() -> void:
 	_load_button.pressed.connect(_on_load_pressed)
 	_record_button.pressed.connect(_on_record_pressed)
 	_language_button.pressed.connect(_on_language_pressed)
+	_settings_button.pressed.connect(_on_settings_pressed)
+	_settings_close_button.pressed.connect(_on_settings_close_pressed)
 	_refresh_language_button()
 
 	# 저장된 슬롯이 하나도 없으면 불러오기 버튼을 비활성화하고 안내를 표시
@@ -47,6 +52,16 @@ func _on_language_pressed() -> void:
 	SFXPlayer.play(SFXPlayer.UI_CLICK_SOUND)
 	LocaleManager.toggle_locale()
 	_refresh_language_button()
+
+
+func _on_settings_pressed() -> void:
+	SFXPlayer.play(SFXPlayer.UI_CLICK_SOUND)
+	_settings_overlay.visible = true
+
+
+func _on_settings_close_pressed() -> void:
+	SFXPlayer.play(SFXPlayer.UI_CLICK_SOUND)
+	_settings_overlay.visible = false
 
 
 func _refresh_language_button() -> void:
