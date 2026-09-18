@@ -2,6 +2,11 @@
 
 [ext_resource type="Script" uid="uid://db3mhle2ouoe1" path="res://ui/title_screen.gd" id="1_title"]
 [ext_resource type="Texture2D" uid="uid://bwptrt4p4xfkh" path="res://assets/Orsia Title.png" id="2_bg"]
+[ext_resource type="FontFile" uid="uid://ch1y0ap4lgmqg" path="res://assets/fonts/Mona/01 Main/Mona12.ttf" id="3_mona"]
+
+[sub_resource type="FontVariation" id="FontVariation_subtitle"]
+base_font = ExtResource("3_mona")
+variation_transform = Transform2D(1, 0.2, 0, 1, 0, 0)
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_flat"]
 
@@ -26,7 +31,16 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_title")
 
-[node name="Background" type="ColorRect" parent="." unique_id=81569925]
+[node name="ParallaxRoot" type="Control" parent="." unique_id=1537204981]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Background" type="ColorRect" parent="ParallaxRoot" unique_id=81569925]
 layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -34,7 +48,7 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.08, 0.05, 0.03, 1)
 
-[node name="TextureRect" type="TextureRect" parent="Background" unique_id=255952480]
+[node name="TextureRect" type="TextureRect" parent="ParallaxRoot/Background" unique_id=255952480]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -45,7 +59,21 @@ texture = ExtResource("2_bg")
 expand_mode = 1
 stretch_mode = 6
 
-[node name="PlayButton" type="Button" parent="." unique_id=1985055906]
+[node name="Subtitle" type="Label" parent="ParallaxRoot" unique_id=1204637718]
+layout_mode = 0
+offset_left = 357.0
+offset_top = 223.0
+offset_right = 757.0
+offset_bottom = 257.0
+theme_override_colors/font_color = Color(0.84, 0.8, 0.74, 0.9)
+theme_override_colors/font_outline_color = Color(0.05, 0.03, 0.02, 0.8)
+theme_override_constants/outline_size = 5
+theme_override_fonts/font = SubResource("FontVariation_subtitle")
+theme_override_font_sizes/font_size = 26
+text = "The Last Vein"
+vertical_alignment = 1
+
+[node name="PlayButton" type="Button" parent="ParallaxRoot" unique_id=1985055906]
 layout_mode = 0
 offset_left = 64.0
 offset_top = 251.0
@@ -66,7 +94,7 @@ theme_override_styles/focus = SubResource("StyleBoxEmpty_flat")
 text = "게임 시작"
 alignment = 0
 
-[node name="LoadButton" type="Button" parent="." unique_id=402116560]
+[node name="LoadButton" type="Button" parent="ParallaxRoot" unique_id=402116560]
 layout_mode = 0
 offset_left = 64.0
 offset_top = 305.0
@@ -88,7 +116,7 @@ theme_override_styles/focus = SubResource("StyleBoxEmpty_flat")
 text = "이어하기"
 alignment = 0
 
-[node name="LoadHint" type="Label" parent="." unique_id=277712609]
+[node name="LoadHint" type="Label" parent="ParallaxRoot" unique_id=277712609]
 layout_mode = 0
 offset_left = 64.0
 offset_top = 337.0

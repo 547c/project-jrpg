@@ -2,6 +2,17 @@ extends Control
 
 const UiTranslator := preload("res://systems/ui_translator.gd")
 const TWINKLE_SHADER := preload("res://ui/title_screen_twinkle.gdshader")
+const LOGO_SHINE_SHADER := preload("res://ui/title_screen_logo_shine.gdshader")
+const BUTTON_SHINE_SHADER := preload("res://ui/title_screen_button_shine.gdshader")
+
+class ButtonFx:
+	var button: Button
+	var glow: TextureRect
+	var material: ShaderMaterial
+	var width := 0.0
+	var proximity := 0.0
+	var slide := 0.0
+	var phase := 0.0
 
 # 연출은 전부 배경 PNG 위에 코드로만 얹는다 (에셋 자체는 건드리지 않는다).
 # 각 항목을 따로 끌 수 있게 나눠 뒀으니, 거슬리는 게 있으면 인스펙터에서 그것만 꺼서 보면 된다
@@ -16,15 +27,29 @@ const TWINKLE_SHADER := preload("res://ui/title_screen_twinkle.gdshader")
 @export var mote_count := 48
 @export var twinkle_enabled := true
 @export var twinkle_strength := 0.75
+@export_group("로고 / 메뉴 빛")
+@export var logo_shine_enabled := true
+@export var logo_glints_enabled := true
+@export var button_shine_enabled := true
+@export var button_glow_enabled := true
 
 # 패럴랙스로 배경을 밀어도 가장자리가 비지 않을 만큼만 키워 둔다 (parallax_strength 14px ≈ 2.4%)
 const BASE_ZOOM := 1.035
 const PARALLAX_SMOOTHING := 3.0
+const LOGO_UV_RECT := Vector4(0.0397, 0.0864, 0.4761, 0.3488)
+const SHINE_CYCLE := 7.0
+const BUTTON_SWEEP_DELAYS := [1.5, 1.75]
+const PROXIMITY_RANGE := 160.0
+const HOVER_SLIDE := 5.0
+const FX_SMOOTHING := 9.0
+const GLOW_PAD := Vector2(40, 14)
 
-@onready var _background: TextureRect = $Background/TextureRect
-@onready var _play_button: Button = $PlayButton
-@onready var _load_button: Button = $LoadButton
-@onready var _load_hint: Label = $LoadHint
+@onready var _parallax_root: Control = $ParallaxRoot
+@onready var _background: TextureRect = $ParallaxRoot/Background/TextureRect
+@onready var _play_button: Button = $ParallaxRoot/PlayButton
+@onready var _load_button: Button = $ParallaxRoot/LoadButton
+@onready var _load_hint: Label = $ParallaxRoot/LoadHint
+@onready var _subtitle: Label = $ParallaxRoot/Subtitle
 @onready var _settings_button: Button = $SettingsButton
 @onready var _settings_overlay: Control = $SettingsOverlay
 @onready var _settings_close_button: Button = $SettingsOverlay/Panel/CloseButton
@@ -33,12 +58,14 @@ const PARALLAX_SMOOTHING := 3.0
 
 var _elapsed := 0.0
 var _parallax := Vector2.ZERO
-var _twinkle_layer: TextureRect
 var _motes: CPUParticles2D
+var _logo_material: ShaderMaterial
+var _menu_base_positions := {}
+var _button_fx: Array[ButtonFx] = []
 
 
 func _ready() -> void:
-	UiTranslator.bind(self)
+	UiTranslator.bind(self, _layout_button_fx)
 	_play_button.pressed.connect(_on_play_pressed)
 	_load_button.pressed.connect(_on_load_pressed)
 	_record_button.pressed.connect(_on_record_pressed)
@@ -58,11 +85,16 @@ func _ready() -> void:
 
 
 func _setup_effects() -> void:
+	for node: Control in [_subtitle, _play_button, _load_button, _load_hint]:
+		_menu_base_positions[node] = node.position
 	if twinkle_enabled:
-		_build_twinkle_layer()
+		_add_background_overlay(TWINKLE_SHADER).set_shader_parameter("strength", twinkle_strength)
+	if logo_shine_enabled or logo_glints_enabled:
+		_build_logo_layer()
 	if motes_enabled:
 		_build_motes()
-	set_process(parallax_enabled or ken_burns_enabled)
+	if button_shine_enabled or button_glow_enabled:
+		_build_button_fx()
 	_apply_background_transform()
 
 
@@ -73,6 +105,7 @@ func _process(delta: float) -> void:
 		var from_center := (get_local_mouse_position() - half) / maxf(1.0, half.x)
 		var target := -from_center.limit_length(1.0) * parallax_strength
 		_parallax = _parallax.lerp(target, 1.0 - exp(-PARALLAX_SMOOTHING * delta))
+	_update_button_fx(delta)
 	_apply_background_transform()
 
 
@@ -83,24 +116,125 @@ func _apply_background_transform() -> void:
 		zoom += ken_burns_amount * (0.5 - 0.5 * cos(TAU * _elapsed / ken_burns_period))
 	_background.pivot_offset = _background.size * 0.5
 	_background.scale = Vector2.ONE * zoom
-	_background.position = _parallax
+	_parallax_root.position = _parallax
+
+	# 메뉴 글자까지 같이 확대하면 픽셀 폰트가 뭉개지니, 배경 확대로 로고가 밀려나는 만큼만 옮겨서 따라가게 한다
+	var pivot := _parallax_root.size * 0.5
+	for node: Control in _menu_base_positions:
+		var base: Vector2 = _menu_base_positions[node]
+		var anchor := base + Vector2(0, node.size.y * 0.5)
+		node.position = base + (anchor - pivot) * (zoom - 1.0)
+	for fx in _button_fx:
+		fx.button.position.x += fx.slide
 
 
-# 배경과 똑같은 그림을 한 장 더 겹쳐 깔고, 셰이더가 그중 "하늘의 작은 밝은 점"만 가산 합성으로
-# 밝혔다 어둡게 한다. 배경의 자식이라 패럴랙스/줌을 그대로 따라간다
-func _build_twinkle_layer() -> void:
-	_twinkle_layer = TextureRect.new()
-	_twinkle_layer.texture = _background.texture
-	_twinkle_layer.expand_mode = _background.expand_mode
-	_twinkle_layer.stretch_mode = _background.stretch_mode
-	_twinkle_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_twinkle_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
-
+func _add_background_overlay(shader: Shader) -> ShaderMaterial:
+	var layer := TextureRect.new()
+	layer.texture = _background.texture
+	layer.expand_mode = _background.expand_mode
+	layer.stretch_mode = _background.stretch_mode
+	layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	layer.set_anchors_preset(Control.PRESET_FULL_RECT)
 	var material := ShaderMaterial.new()
-	material.shader = TWINKLE_SHADER
-	material.set_shader_parameter("strength", twinkle_strength)
-	_twinkle_layer.material = material
-	_background.add_child(_twinkle_layer)
+	material.shader = shader
+	layer.material = material
+	_background.add_child(layer)
+	return material
+
+
+func _build_logo_layer() -> void:
+	_logo_material = _add_background_overlay(LOGO_SHINE_SHADER)
+	_logo_material.set_shader_parameter("logo_rect", LOGO_UV_RECT)
+	_logo_material.set_shader_parameter("cycle", SHINE_CYCLE)
+	_logo_material.set_shader_parameter("shine_strength", 1.0 if logo_shine_enabled else 0.0)
+	_logo_material.set_shader_parameter("glint_strength", 1.0 if logo_glints_enabled else 0.0)
+	_background.resized.connect(_update_logo_scale)
+	_update_logo_scale()
+
+
+func _update_logo_scale() -> void:
+	var texture_size := _background.texture.get_size()
+	var cover := maxf(_background.size.x / texture_size.x, _background.size.y / texture_size.y)
+	_logo_material.set_shader_parameter("texel_per_px", 1.0 / maxf(cover, 0.0001))
+
+
+func _build_button_fx() -> void:
+	var glow_texture := _build_glow_texture()
+	var buttons: Array[Button] = [_play_button, _load_button]
+	for i in buttons.size():
+		var fx := ButtonFx.new()
+		fx.button = buttons[i]
+		fx.phase = i * 1.9
+		if button_shine_enabled:
+			fx.material = ShaderMaterial.new()
+			fx.material.shader = BUTTON_SHINE_SHADER
+			fx.material.set_shader_parameter("cycle", SHINE_CYCLE)
+			fx.material.set_shader_parameter("sweep_delay", BUTTON_SWEEP_DELAYS[i])
+			fx.button.material = fx.material
+		if button_glow_enabled:
+			fx.glow = TextureRect.new()
+			fx.glow.texture = glow_texture
+			fx.glow.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			fx.glow.stretch_mode = TextureRect.STRETCH_SCALE
+			fx.glow.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+			fx.glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			fx.glow.show_behind_parent = true
+			var additive := CanvasItemMaterial.new()
+			additive.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+			fx.glow.material = additive
+			fx.button.add_child(fx.glow)
+		_button_fx.append(fx)
+	_layout_button_fx()
+	_update_button_fx(0.0)
+
+
+func _layout_button_fx() -> void:
+	for fx in _button_fx:
+		var font := fx.button.get_theme_font("font")
+		var font_size := fx.button.get_theme_font_size("font_size")
+		fx.width = font.get_string_size(fx.button.text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
+		if fx.material:
+			fx.material.set_shader_parameter("text_width", fx.width)
+		if fx.glow:
+			fx.glow.position = -GLOW_PAD
+			fx.glow.size = Vector2(fx.width, fx.button.size.y) + GLOW_PAD * 2.0
+
+
+func _update_button_fx(delta: float) -> void:
+	var blend := 1.0 - exp(-FX_SMOOTHING * delta) if delta > 0.0 else 1.0
+	for fx in _button_fx:
+		var live := not fx.button.disabled
+		var target := 0.0
+		if live:
+			var mouse := fx.button.get_local_mouse_position()
+			var nearest := mouse.clamp(Vector2.ZERO, Vector2(fx.width, fx.button.size.y))
+			target = 1.0 - smoothstep(0.0, PROXIMITY_RANGE, mouse.distance_to(nearest))
+		fx.proximity = lerpf(fx.proximity, target, blend)
+		var hovered := live and fx.button.is_hovered()
+		fx.slide = lerpf(fx.slide, HOVER_SLIDE if hovered else 0.0, blend)
+		if fx.material:
+			fx.material.set_shader_parameter("proximity", fx.proximity)
+			fx.material.set_shader_parameter("active", 1.0 if live else 0.0)
+		if fx.glow:
+			fx.glow.visible = live
+			var breath := 0.5 + 0.5 * sin(_elapsed * 1.6 + fx.phase)
+			fx.glow.modulate.a = 0.35 + 0.3 * breath + 0.45 * fx.proximity
+
+
+func _build_glow_texture() -> GradientTexture2D:
+	var gradient := Gradient.new()
+	gradient.offsets = PackedFloat32Array([0.0, 0.45, 1.0])
+	gradient.colors = PackedColorArray([
+		Color(1.0, 0.78, 0.42, 0.42), Color(1.0, 0.66, 0.32, 0.14), Color(1.0, 0.6, 0.3, 0.0),
+	])
+	var texture := GradientTexture2D.new()
+	texture.gradient = gradient
+	texture.fill = GradientTexture2D.FILL_RADIAL
+	texture.fill_from = Vector2(0.5, 0.5)
+	texture.fill_to = Vector2(1.0, 0.5)
+	texture.width = 64
+	texture.height = 64
+	return texture
 
 
 func _build_motes() -> void:
